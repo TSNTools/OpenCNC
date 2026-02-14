@@ -1,0 +1,120 @@
+syntax = "proto3";
+
+package tsn;
+
+/*
+ * Defines TSN traffic types and their mappings to ports and VLANs.
+ *
+ * References:
+ * - IEEE 802.1Q-2022 Clause 8.6.6.1: Priority to traffic class mapping (per port)
+ * - Clause 8.6.8.2: Transmission selection per traffic class
+ * - Clause 8.6.9: Time-aware scheduling (Qbv)
+ * - Clause 8.6.10: Frame preemption (Qbu)
+ * - Clause 9.3.2: VLAN tag structure (PCP, DEI, VID)
+ * - Clause 6.8: Transmission selection algorithms
+ * - Clause 12.29 / 12.30: Stream identification and filtering (Qci)
+ * - Annex D: User priority regeneration
+ * - Annex L: Managed objects and configuration models (YANG alignment)
+ */
+
+enum DeliveryMode {
+  NONE = 0;
+  DEADLINE = 1; // Deadline-based delivery (relative to cycle start)
+  LATENCY = 2;  // Latency-bound delivery (relative to transmission start)
+}
+
+enum Shaper {
+  UNSPECIFIED = 0;
+  QBV = 1; // Time-Aware Shaper (802.1Qbv)
+  QAV = 2; // Credit-Based Shaper (802.1Qav)
+  SP  = 3; // Strict Priority (legacy)
+}
+
+message TrafficType {
+  string id = 1;                 // Unique ID in the CNC system (e.g., "tc_critical_motion")
+  string name = 2;               // Human-readable name (e.g., "Critical Motion Control")
+  string description = 3;        // Operator-facing purpose or domain
+  TrafficTypeProperties properties = 4;
+  DeliveryMode delivery_mode = 5;
+  Shaper shaper = 6;             // Minimum shaping requirement
+  uint32 mtu = 7;                // Recommended maximum frame size (bytes)
+}
+
+/*
+ * Properties describe behavioral and functional requirements of a traffic type.
+ */
+message TrafficTypeProperties {
+  bool is_preemptable = 1;           // Qbu: Class can be preempted
+  bool is_periodic = 2;              // True if stream emission is periodic
+  bool is_time_triggered = 3;        // True if stream start is aligned to a schedule
+  bool jitter_tolerant = 4;          // True if latency variation is acceptable
+  bool packet_loss_tolerant = 5;     // True if retransmissions aren't required
+  bool frame_size_variable = 6;      // True if frames may vary in size
+  bool drop_eligible = 7;            // True if class supports DEI marking (Clause 9.3.2)
+
+  bool requires_reservation = 8;     // Class A/B: Requires SR (stream reservation) capability
+  bool requires_scheduling = 9;      // True if time-aware gate scheduling (Qbv) is required
+  bool requires_psfp = 10;           // True if ingress filtering/policing (Qci) is required
+
+  bool cycle_aligned = 11;           // True if streams in this class must be cycle-synchronized
+}
+
+/*
+ * Maps a traffic type to a specific queue on a port.
+ * IEEE 802.1Q-2022 Clause 8.6.8.2
+ */
+message PortTrafficMapping {
+  string port_id = 1;              // Port identifier (e.g., "sw1:port3")
+  string traffic_type_id = 2;     // Reference to a defined TrafficType
+  uint32 queue_id = 3;             // Queue index (0-7). Nonstandard to support multiple queues here.
+}
+
+/*
+ * Maps a traffic type to VLAN-based identification.
+ * IEEE 802.1Q Clause 6.9 (classification) and 9.3.2 (VLAN tagging)
+ */
+message VlanTrafficMapping {
+  string traffic_type_id = 1;
+
+  uint16 vlan_id = 2; // Optional: VLAN ID to classify traffic into this class
+  uint32 pcp = 3;     // Priority Code Point (0–7)
+}
+
+/*
+ * ProfileType categorizes sets of traffic types per domain.
+ * May be used to filter or recommend TSN configurations.
+ */
+enum ProfileType {
+  INDUSTRIAL = 0;
+  AUTOMOTIVE = 1;
+  AEROSPACE = 2;
+}
+
+/*
+ * Indicates the capabilities a device or profile supports.
+ * Maps to 802.1Q features and associated shaping mechanisms.
+ */
+message ProfileCapabilities {
+  bool support_cbs = 1;   // Credit-Based Shaper (Qav)
+  bool support_tas = 2;   // Time-Aware Shaper (Qbv)
+  bool support_cqf = 3;   // Cyclic Queuing and Forwarding (Qch)
+  bool support_ats = 4;   // Asynchronous Traffic Shaping (802.1Qcr)
+  bool support_psfp = 5;  // Per-Stream Filtering & Policing (Qci)
+  bool support_frer = 6;  // Frame Replication and Elimination (802.1CB)
+}
+
+/*
+ * A profile represents a bundle of traffic types and their mappings.
+ * Intended to define domain-specific configurations (e.g., Automotive TSN profile).
+ */
+message Profile {
+  string id = 1;
+  string name = 2;
+
+  repeated TrafficType traffic_types = 3;
+  repeated PortTrafficMapping port_mappings = 4;
+  repeated VlanTrafficMapping vlan_mappings = 5;
+
+  ProfileType type = 6;
+  ProfileCapabilities capabilities = 7;
+}

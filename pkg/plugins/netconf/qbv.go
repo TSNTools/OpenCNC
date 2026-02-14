@@ -2,16 +2,14 @@ package netconf
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
 	"log"
 
 	opencncModel "OpenCNC_config_service/opencnc_model"
-	"OpenCNC_config_service/pkg/managementSessions"
+	managementSessions "OpenCNC_config_service/pkg/managementSessions"
 	"OpenCNC_config_service/pkg/plugins"
 	devicemodelregistry "OpenCNC_config_service/pkg/structures/devicemodelregistry"
 	qbv "OpenCNC_config_service/pkg/structures/qbv"
-	utils "OpenCNC_config_service/pkg/utils"
 
 	"github.com/golang/protobuf/proto"
 	"github.com/openconfig/ygot/ygot"
@@ -37,15 +35,28 @@ func (p *QbvNetconfPlugin) FeatureName() string {
 }
 
 func (p *QbvNetconfPlugin) SupportedByDevice(model *devicemodelregistry.DeviceModel) bool {
-	required_Yangs := []string{"ieee802-dot1q-sched.yang", "ieee802-dot1q-sched-bridge.yang"}
-
-	present := make(map[string]bool)
-	for _, yf := range model.YangFiles {
-		present[yf.Name] = true
+	requiredYangs := []devicemodelregistry.YangFile{
+		{
+			Name:     "ieee802-dot1q-sched.yang",
+			Revision: "2021-04-09",
+		},
+		{
+			Name:     "ieee802-dot1q-sched-bridge.yang",
+			Revision: "2021-04-09",
+		},
 	}
 
-	for _, req := range required_Yangs {
-		if !present[req] {
+	for _, req := range requiredYangs {
+		found := false
+
+		for _, yf := range model.YangFiles {
+			if yf.Name == req.Name && yf.Revision == req.Revision {
+				found = true
+				break
+			}
+		}
+
+		if !found {
 			return false
 		}
 	}
@@ -121,56 +132,31 @@ func (p *QbvNetconfPlugin) Map(msg proto.Message) (any, error) {
 }
 
 func (p *QbvNetconfPlugin) Push(mapped any, target managementSessions.DeviceTarget) error {
-
 	// ---------- check input ----------
 	root, ok := mapped.(*opencncModel.IETFInterfaces_Interfaces_Interface_BridgePort_GateParameterTable)
 	if !ok {
 		return fmt.Errorf("invalid mapped type for Push: %T", mapped)
 	}
 
-	// -------- warp GCL in a device ---------
-	device := &opencncModel.Device{
-		Interfaces: &opencncModel.IETFInterfaces_Interfaces{
-			Interface: map[string]*opencncModel.IETFInterfaces_Interfaces_Interface{
-				target.InterfaceName: {
-					Name: ygot.String(target.InterfaceName),
-					BridgePort: &opencncModel.IETFInterfaces_Interfaces_Interface_BridgePort{
-						GateParameterTable: root,
-					},
-				},
-			},
-		},
+	// Automatically populate AdminGateStates from the first entry if not set
+	if root.AdminGateStates == nil && root.AdminControlList != nil && len(root.AdminControlList.GateControlEntry) > 0 {
+		for _, entry := range root.AdminControlList.GateControlEntry {
+			if entry.GateStatesValue != nil {
+				root.AdminGateStates = ygot.Uint8(*entry.GateStatesValue)
+				break
+			}
+		}
 	}
 
-	// -------- export config to annotated json ---------
-	jsonConfig := &ygot.EmitJSONConfig{
-		Format: ygot.RFC7951,
-		Indent: "  ",
-		RFC7951Config: &ygot.RFC7951JSONConfig{
-			AppendModuleName: true, // ✅ this enables module prefixes
-		},
-	}
-	jsonStr, err := ygot.EmitJSON(device, jsonConfig)
+	// -------- build XML directly ----------
+	xmlStr, err := p.BuildXML(root, target)
 	if err != nil {
-		log.Fatalf("Failed to emit JSON: %v", err)
+		return fmt.Errorf("failed to build XML: %w", err)
 	}
-	//fmt.Println(string(jsonStr))
 
-	// -------- Convert Json to XML ---------
-	var data interface{}
-	if err := json.Unmarshal([]byte(jsonStr), &data); err != nil {
-		log.Fatalf("Failed to unmarshal emitted JSON: %v", err)
-	}
-	var buf bytes.Buffer
-	if err := utils.ConvertToXML(data, &buf, 0); err != nil {
-		log.Fatalf("Conversion failed: %v", err)
-	}
-	//fmt.Println(buf.String())
+	p.logger.Printf("[QBV] XML generated for interface %s:\n%s", target.InterfaceName, xmlStr)
 
 	// ---------- Push via NETCONF ----------
-
-	// TODO: use existing session with full device/port push. you find it in target.Session
-
 	session, err := managementSessions.CreateSession(
 		target.Info.IpAddress,
 		target.Info.UserName,
@@ -181,11 +167,90 @@ func (p *QbvNetconfPlugin) Push(mapped any, target managementSessions.DeviceTarg
 	}
 	defer session.Close()
 
-	if err := managementSessions.EditConfig(session, buf.String()); err != nil {
+	if err := managementSessions.EditConfig(session, xmlStr); err != nil {
 		return fmt.Errorf("edit-config failed: %w", err)
 	}
 
-	target.Logger.Println("✅ Config pushed successfully")
-
+	p.logger.Println("✅ Config pushed successfully")
 	return nil
+}
+
+func (p *QbvNetconfPlugin) BuildXML(
+	root *opencncModel.IETFInterfaces_Interfaces_Interface_BridgePort_GateParameterTable,
+	target managementSessions.DeviceTarget,
+) (string, error) {
+
+	var buf bytes.Buffer
+
+	nsIf := "urn:ietf:params:xml:ns:yang:ietf-interfaces"
+	nsSched := "urn:ieee:std:802.1Q:yang:ieee802-dot1q-sched"
+
+	//buf.WriteString(`<config>`)
+
+	// Interfaces
+	buf.WriteString(fmt.Sprintf(`<interfaces xmlns="%s">`, nsIf))
+	buf.WriteString(`<interface>`)
+	buf.WriteString(fmt.Sprintf(`<name>%s</name>`, target.InterfaceName))
+
+	// Bridge-port
+	buf.WriteString(`<bridge-port>`)
+
+	// Gate parameter table
+	buf.WriteString(fmt.Sprintf(`<gate-parameter-table xmlns="%s">`, nsSched))
+
+	// Gate enabled
+	if root.GateEnabled != nil {
+		buf.WriteString(fmt.Sprintf(`<gate-enabled>%t</gate-enabled>`, *root.GateEnabled))
+	}
+
+	// Base time
+	if root.AdminBaseTime != nil {
+		buf.WriteString(`<admin-base-time>`)
+		buf.WriteString(fmt.Sprintf(`<seconds>%d</seconds>`, *root.AdminBaseTime.Seconds))
+		buf.WriteString(fmt.Sprintf(`<nanoseconds>%d</nanoseconds>`, *root.AdminBaseTime.Nanoseconds))
+		buf.WriteString(`</admin-base-time>`)
+	}
+
+	// Admin cycle time
+	if root.AdminCycleTime != nil {
+		buf.WriteString(`<admin-cycle-time>`)
+		buf.WriteString(fmt.Sprintf(`<numerator>%d</numerator>`, *root.AdminCycleTime.Numerator))
+		buf.WriteString(fmt.Sprintf(`<denominator>%d</denominator>`, *root.AdminCycleTime.Denominator))
+		buf.WriteString(`</admin-cycle-time>`)
+	}
+
+	// Admin gate states
+	if root.AdminGateStates != nil {
+		buf.WriteString(fmt.Sprintf(`<admin-gate-states>%d</admin-gate-states>`, *root.AdminGateStates))
+	}
+
+	// Control list
+	if root.AdminControlList != nil {
+		buf.WriteString(`<admin-control-list>`)
+
+		for _, entry := range root.AdminControlList.GateControlEntry {
+			buf.WriteString(`<gate-control-entry>`)
+
+			buf.WriteString(fmt.Sprintf(`<index>%d</index>`, *entry.Index))
+			buf.WriteString(fmt.Sprintf(`<operation-name>%s</operation-name>`, entry.OperationName.String()))
+			buf.WriteString(fmt.Sprintf(`<time-interval-value>%d</time-interval-value>`, *entry.TimeIntervalValue))
+
+			if entry.GateStatesValue != nil {
+				buf.WriteString(fmt.Sprintf(`<gate-states-value>%d</gate-states-value>`, *entry.GateStatesValue))
+			}
+
+			buf.WriteString(`</gate-control-entry>`)
+		}
+
+		buf.WriteString(`</admin-control-list>`)
+	}
+
+	// Close tags
+	buf.WriteString(`</gate-parameter-table>`)
+	buf.WriteString(`</bridge-port>`)
+	buf.WriteString(`</interface>`)
+	buf.WriteString(`</interfaces>`)
+	//buf.WriteString(`</config>`)
+
+	return buf.String(), nil
 }

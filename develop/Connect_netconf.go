@@ -124,8 +124,8 @@ func main() {
 		log.Fatal("Cannot use -g (get) and -e (edit) at the same time")
 	}
 
-	user := "sys-admin"
-	pass := "sys-admin"
+	user := "root"
+	pass := ""
 
 	session, err := createSession(*host, user, pass)
 	if err != nil {
@@ -167,7 +167,7 @@ func main() {
 		if err != nil {
 			log.Fatalf("Error executing edit-config: %v", err)
 		}
-		fmt.Println("edit-config completed successfully.")
+		fmt.Println("edit-config completed.")
 	} else {
 		fmt.Println("You must specify either -g to get config or -e to edit config.")
 		flag.Usage()

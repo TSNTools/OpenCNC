@@ -1,0 +1,25 @@
+{
+  "model-name": "TTTech-EVB",
+  "yang-files": [
+    {
+      "file-name": "ieee802-dot1q-sched.yang", 
+      "file-revision": "2018-09-10",
+      "description":"802.1Qbv configuration"
+    },
+    {
+      "file-name": "ieee802-dot1q-bridge.yang",
+      "file-revision": "2018-03-07",
+      "description": "add or modify filtering entries and vlan entries"
+    },
+    {
+      "file-name": "ieee802-dot1q-stream-filters-gates.yang",
+      "file-revision": "2020-11-06",
+      "description": "PSFP configuration"
+    },
+    {
+      "file-name": "ietf-interfaces.yang",
+      "file-revision": "2018-02-20",
+      "description": ""
+    }
+  ]
+}
