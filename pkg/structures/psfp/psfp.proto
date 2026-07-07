@@ -1,0 +1,102 @@
+syntax = "proto3";
+
+package psfp;
+
+/*
+ * Per-Stream Filtering and Policing (PSFP) Configuration
+ * Based on IEEE 802.1Qci (2022) and aligned with Annex F YANG model.
+ * 
+ * References:
+ * - Clause 8.6.5.1: Stream filter components (Match, Gate, Meter)
+ * - Annex F: YANG modules (ieee802-dot1q-stream-filters-gates)
+ */
+
+// Match criteria for identifying frames (Clause 8.6.5.1)
+message MatchCriteria {
+  optional uint32 vlan_id = 1;         // VLAN ID from 802.1Q tag
+  optional uint32 priority = 2;        // PCP: Priority Code Point (0–7)
+  optional string dst_mac = 3;         // Destination MAC address
+  optional string src_mac = 4;         // Source MAC address (future expansion)
+  optional string ethertype = 5;       // Ethertype match (e.g., 0x0800 for IPv4)
+  optional string ingress_port_id = 6; // Optional: ingress port match
+}
+
+// Defines rules for frame validation and exceed behavior
+message FilterSpecification {
+  MatchCriteria match = 1;
+  uint32 max_sdu_size = 2;        // Max allowed frame size (bytes)
+  bool block_on_exceed = 3;       // If true, block entire stream after violation
+}
+
+// Describes a single gate control entry for stream gating
+message GateControlEntry {
+  uint64 time_interval_ns = 1;       // Slot duration in nanoseconds
+  GateState gate_state = 2;          // Gate open/closed state for this slot
+
+  // Priority override during this slot.
+  // Matches "internal priority" from Clause 8.6.5.1 and YANG "priority-spec"
+  uint32 priority_override = 3;      // Queue priority to assign during slot (e.g., 0–7)
+}
+
+// Gate control instance for a stream
+message StreamGateInstance {
+  string name = 1; // Unique identifier for this gate instance
+
+  // Initial gate states bitmap (LSB = TC0). Follows 802.1Qci Annex F YANG
+  bytes admin_gate_states = 2;
+
+  repeated GateControlEntry gate_control_list = 3;
+
+  // Optional scheduling parameters (aligned with QBV/Qci YANG)
+  uint64 base_time_ns = 4;      // Reference start time of schedule
+  uint64 cycle_time_ns = 5;     // Cycle duration (nanoseconds)
+
+  string description = 6;       // Human-readable explanation
+}
+
+// Gate slot state (Clause 8.6.5.1)
+enum GateState {
+  GATE_STATE_UNSPECIFIED = 0;
+  OPEN = 1;
+  CLOSED = 2;
+}
+
+// Metering: defines CIR/PIR and actions when limits are exceeded
+message FlowMeterInstance {
+  string name = 1;                  // Unique meter instance name
+
+  uint64 cir = 2;                   // Committed Information Rate (bps)
+  uint64 cbs = 3;                   // Committed Burst Size (bytes)
+
+  ExceededAction exceeded_action = 4; // Action on exceeding committed rate
+
+  uint64 pir = 5;                   // Peak Information Rate (bps)
+  uint64 pbs = 6;                   // Peak Burst Size (bytes)
+
+  string description = 7;          // Optional notes or comments
+}
+
+enum ExceededAction {
+  ACTION_UNSPECIFIED = 0;
+  DROP = 1;    // Drop packets
+  MARK = 2;    // Mark packets as exceeded (e.g., color marking)
+  POLICE = 3;  // Apply further shaping/policing
+}
+
+// Complete stream filter instance (Clause 8.6.5.1)
+message StreamFilterInstance {
+  uint32 index = 1;                       // Unique per device
+
+  FilterSpecification filter_spec = 2;   // Identification + validation rules
+
+  string gate_instance_name = 3;         // Reference to StreamGateInstance
+  string meter_instance_name = 4;        // Reference to FlowMeterInstance
+
+  string egress_queue_id = 5;           // egress queue id == traffic class
+
+  string ingress_port_id = 6;            // Apply this filter on ingress port
+
+  bool enabled = 7;                      // Defaults to true
+
+  string description = 8;                // Optional human-readable comment
+}

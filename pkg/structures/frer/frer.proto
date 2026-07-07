@@ -1,0 +1,94 @@
+syntax = "proto3";
+
+package tsn.frer;
+
+import "tsn/stream.proto";
+
+/*
+ * Frame Replication and Elimination for Reliability (FRER)
+ * Configuration model based on IEEE 802.1CB-2017
+ *
+ * References:
+ * - Clause 6: Operation
+ * - Clause 8.4: Configuration mechanisms
+ * - Clause 8.6: Sequence recovery process
+ */
+
+// === 1. Recovery Algorithm (Clause 8.4.4) ===
+
+message FrerRecoveryAlgorithm {
+  uint32 sequence_history_length = 1;   // Clause 8.6 — number of sequence IDs to track for elimination
+  uint32 reorder_window_size = 2;       // Clause 8.4.4.4 — maximum tolerated reordering range
+  uint64 hold_off_time_ns = 3;          // Clause 8.4.4.4 — time to wait before aging entries
+  bool discard_old_frames = 4;          // Clause 8.4.4.4 — whether to drop frames outside window
+}
+
+// === 2. Redundancy Group — shared config (Clause 8.4.1) ===
+
+message RedundancyGroup {
+  string group_id = 1;  // Unique Redundancy Group ID, can be referenced by stream configs
+
+  repeated tsn.stream.StreamID member_stream_ids = 2;  // Streams participating in this group
+
+  FrerRecoveryAlgorithm recovery_algorithm = 3; // Shared recovery settings
+}
+
+// === 3. Per-stream FRER Configuration (Clause 6.6 / 6.7 / 6.8) ===
+
+message FrerStreamConfig {
+  string redundancy_group_id = 1;  // Reference to RedundancyGroup
+
+  bool enable_recovery = 2;                 // Enable duplicate elimination at listener (Clause 6.7)
+  bool enable_transmit_duplication = 3;     // Enable duplication at talker (Clause 6.6)
+  bool enable_receive_combining = 4;        // Enable frame combining at receiver (Clause 6.8)
+
+  repeated FrerPathSelection path_selections = 5;  // Explicit per-path configuration (Clause 6.6.2)
+
+  FrerMode mode = 6;                         // Selection mode for stream identity (Clause 6.4.2)
+  string profile_id = 7;                     // Optional profile alignment (e.g., TSN automotive)
+
+  // Optional sequence generation control for talker (Clause 8.4.4.1)
+  bool enable_sequence_generation = 8;       // Whether this stream should generate sequence IDs
+  uint64 sequence_id_start = 9;              // Starting value (usually 0)
+  uint32 sequence_modulus = 10;              // Sequence wrap-around modulus (e.g., 256, 4096)
+}
+
+// === 4. Explicit Replication Path (Clause 6.6.2) ===
+
+message FrerPathSelection {
+  string egress_port_id = 1;     // Port used to replicate frame
+  string nexthop_mac = 2;        // Next-hop MAC address for replication
+  uint32 vlan_id = 3;            // VLAN to apply on this path
+}
+
+// === 5. Stream Identity Mode (Clause 6.4.2) ===
+
+enum FrerMode {
+  MODE_UNSPECIFIED = 0;      // Default stream ID selection
+  MAC_DA_SELECTION = 1;      // Use MAC DA + VLAN ID (Clause 6.4.3)
+  VLAN_ID_SELECTION = 2;     // Use VLAN ID only
+  EXPLICIT_PATH = 3;         // Custom CNC-controlled identification (Clause 6.6.2)
+}
+
+// === 6. Profile-level Policy Guidance ===
+
+message FrerProfilePolicy {
+  string profile_id = 1;                   // Matches tsn.Profile.id if profiles exist
+
+  bool allow_partial_streams = 2;          // Whether some listeners can skip FRER
+  uint32 max_path_divergence = 3;          // Max hops where paths may differ (Clause 8.3 Note)
+  bool require_disjoint_paths = 4;         // Whether all FRER paths must be disjoint (Clause 6.6 Note)
+  bool allow_mac_multiplexing = 5;         // Allow multiple stream IDs on same MAC path
+  bool allow_stream_fragmentation = 6;     // Permit stream slicing (used in some profiles)
+}
+
+// === 7. Global Config (Clause 8.4.2) ===
+
+message FrerGlobalConfiguration {
+  bool enabled = 1;                                  // Global FRER enable
+  FrerRecoveryAlgorithm default_algorithm = 2;       // Default recovery fallback
+
+  repeated RedundancyGroup redundancy_groups = 3;    // Configured recovery domains
+
+  uint32 version = 4;                                // Schema version for evolution (default: 1)
+}

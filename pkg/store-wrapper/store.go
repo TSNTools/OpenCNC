@@ -63,7 +63,7 @@ func GetDeviceModel(name string) (*devicemodelregistry.DeviceModel, error) {
 	urn := "device-models." + name
 
 	// Send request to specific path in k/v store "device-models"
-	rawData, err := getFromStore(urn)
+	rawData, err := GetFromStore(urn)
 	if err != nil {
 		log.Errorf("Failed getting request data from store: %v", err)
 		return &devicemodelregistry.DeviceModel{}, err
@@ -96,7 +96,7 @@ func GetModuleRegistry() (*moduleregistry.ModuleRegistry, error) {
 	// Build the URN for the request data
 	urn := "yang-modules."
 
-	rawData, err := getFromStore(urn)
+	rawData, err := GetFromStore(urn)
 	if err != nil {
 		log.Errorf("Failed getting request data from store: %v", err)
 		return &moduleregistry.ModuleRegistry{}, err
@@ -115,7 +115,7 @@ func GetConfiguration(confId string) (*schedule.GclConfiguration, error) {
 	urn := "configurations.tsn-configuration." + confId
 
 	// Get the raw bytes from the store
-	rawConf, err := getFromStore(urn)
+	rawConf, err := GetFromStore(urn)
 	if err != nil {
 		// log.Errorf("Failed to retrieve configuration: %v", err)
 		return nil, err

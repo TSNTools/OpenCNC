@@ -2,6 +2,8 @@ syntax = "proto3";
 
 package qbv;
 
+option go_package = "OpenCNC_config_service/pkg/structures/qbv;qbv";
+
 /*
  * IEEE 802.1Qbv Gate Control List (GCL)
  *

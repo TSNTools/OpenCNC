@@ -1,0 +1,63 @@
+syntax = "proto3";
+
+package psfp_status;
+
+import "syncdiag.proto";
+
+/*
+ * PSFP Runtime Status Model
+ * 
+ * References:
+ * - IEEE 802.1Qci-2022 Clause 8.6.5.1: Stream filter behavior
+ * - IEEE 802.1Qci Annex F: Internal priority, meter, gate interaction
+ * - IEEE 802.1Q Table 12-30: Managed objects for stream filters
+ * - IEEE 802.1Q Clause 12.30.1.1: Stream filter instance status and counters
+ */
+
+// Status of a stream filter instance at runtime
+message StreamFilterStatus {
+  uint32 filter_index = 1;         // Matches psfp.StreamFilterInstance.index
+  bool currently_blocked = 2;      // Clause 8.6.5.1(e): stream blocked due to exceed
+  uint64 frames_filtered = 3;      // Annex F: frames matched before meter/gate
+  uint64 frames_passed = 4;        // Frames passed both gate and meter
+  uint64 frames_dropped_meter = 5; // Clause 8.6.5.1(c,d): dropped by meter
+  uint64 frames_blocked_gate = 6;  // Clause 8.6.5.1(f): blocked due to closed gate
+  uint64 frames_dropped_sdu = 7;   // Clause 8.6.5.1(g): exceeded max SDU size
+  uint64 last_exceed_time_ns = 8;  // Time of last exceed event
+  string last_exceed_port = 9;     // Port where last exceed was observed
+}
+
+// Status of a flow meter instance
+message FlowMeterStatus {
+  string name = 1;                 // Matches psfp.FlowMeterInstance.name
+  uint64 total_bytes = 2;          // Clause 12.30.1.1.3: total bytes metered
+  uint64 total_packets = 3;        // Total packets metered
+  uint64 exceed_events = 4;        // Clause 8.6.5.1(c): rate exceed events
+  uint64 last_exceed_time_ns = 5;  // Timestamp of last exceed
+  bool in_exceed_state = 6;        // Meter is actively exceeding CIR/PIR
+}
+
+// Status of a gate instance
+message StreamGateStatus {
+  string name = 1;                       // Matches psfp.StreamGateInstance.name
+  uint64 last_cycle_start_time_ns = 2;  // Time of last base_time + N * cycle_time
+  uint32 current_slot_index = 3;         // Clause 8.6.5.1(f): index of active GCL entry
+  bool gate_open = 4;                    // Overall state (OR across active gate bits)
+  bytes current_gate_states = 5;         // Current per-TC gate state bitmap (LSB = TC0)
+  uint64 frames_blocked = 6;             // Frames blocked while gate closed
+  syncdiag.GateSyncDiagnostics sync_diag = 10; // Optional: current sync status
+}
+
+enum TimestampReference {
+  UNKNOWN = 0;
+  UNIX_EPOCH = 1;       // Timestamp is nanoseconds since Unix epoch
+  DEVICE_BOOT_TIME = 2; // Timestamp is nanoseconds since device boot time
+}
+
+// Aggregated status structure
+message PsfpRuntimeStatus {
+  TimestampReference timestamp_reference = 1; // Reference time of this runtime status snapshot
+  repeated StreamFilterStatus filter_status = 2;
+  repeated FlowMeterStatus meter_status = 3;
+  repeated StreamGateStatus gate_status = 4;
+}

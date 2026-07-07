@@ -31,6 +31,8 @@ message Node {
     InventoryInfo inventory_info = 6 [json_name = "inventoryInfo"];
 
     NodeProperties properties = 7 [json_name = "properties"];
+
+    optional string node_config_id = 8; // refernce to the configuration applied to this node
 }
 
 enum NodeRole {

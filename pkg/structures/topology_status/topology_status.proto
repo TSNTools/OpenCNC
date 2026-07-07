@@ -1,0 +1,57 @@
+syntax = "proto3";
+
+package topology_status;
+
+option go_package = "/topology_status";
+
+/*
+ * Runtime status of nodes, ports, and links.
+ * Populated via telemetry or network monitoring agents.
+ * NOT part of static or intended config.
+ */
+
+message TopologyStatus {
+  repeated NodeStatus node_statuses = 1;
+  repeated LinkStatus link_statuses = 2;
+}
+
+message NodeStatus {
+  string node_id = 1;                  // Matches topology.Node.name
+  repeated PortStatus ports = 2;
+
+  uint64 timestamp_ns = 3;            // Snapshot capture time (nanoseconds since epoch)
+  string reason = 4;                  // Optional descriptive reason for node status or alerts
+}
+
+message PortStatus {
+  string port_id = 1;                 // Matches topology.Port.id
+  OperStatus oper_status = 2;        // YANG-style interface operational status
+
+  bool link_detected = 3;
+
+  uint64 rx_bytes = 4;
+  uint64 tx_bytes = 5;
+  uint64 rx_errors = 6;
+  uint64 tx_errors = 7;
+
+  uint64 timestamp_ns = 8;            // Snapshot capture time for port status
+  string reason = 9;                  // Optional description for port status changes or alerts
+}
+
+message LinkStatus {
+  string link_id = 1;
+  OperStatus oper_status = 2;
+
+  int64 measured_latency_ns = 3;      // Optional measured latency in nanoseconds
+  int64 measured_bandwidth_bps = 4;   // Optional measured bandwidth in bits per second
+
+  uint64 timestamp_ns = 5;            // Snapshot capture time for link status
+  string reason = 6;                  // Optional description for link status changes or alerts
+}
+
+enum OperStatus {
+  OPER_UNKNOWN = 0;
+  UP = 1;
+  DOWN = 2;
+  FAULTED = 3;
+}

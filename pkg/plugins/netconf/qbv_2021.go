@@ -34,6 +34,18 @@ func (p *QbvNetconfPlugin) FeatureName() string {
 	return "qbv"
 }
 
+func (p *QbvNetconfPlugin) Supports(msg proto.Message) bool {
+	// returns true if the message can be mapped by this features
+	_, ok := msg.(*qbv.GateControlList)
+	return ok
+}
+
+func (p *QbvNetconfPlugin) SupportedFields() []string {
+	return []string{
+		"Gcl",
+	}
+}
+
 func (p *QbvNetconfPlugin) SupportedByDevice(model *devicemodelregistry.DeviceModel) bool {
 	requiredYangs := []devicemodelregistry.YangFile{
 		{
@@ -62,12 +74,6 @@ func (p *QbvNetconfPlugin) SupportedByDevice(model *devicemodelregistry.DeviceMo
 	}
 
 	return true
-}
-
-func (p *QbvNetconfPlugin) Supports(msg proto.Message) bool {
-	// returns true if the message can be mapped by this features
-	_, ok := msg.(*qbv.GateControlList)
-	return ok
 }
 
 func (p *QbvNetconfPlugin) Map(msg proto.Message) (any, error) {
@@ -154,7 +160,7 @@ func (p *QbvNetconfPlugin) Push(mapped any, target managementSessions.DeviceTarg
 		return fmt.Errorf("failed to build XML: %w", err)
 	}
 
-	p.logger.Printf("[QBV] XML generated for interface %s:\n%s", target.InterfaceName, xmlStr)
+	//p.logger.Printf("[QBV] XML generated for interface %s:\n%s", target.InterfaceName, xmlStr)
 
 	// ---------- Push via NETCONF ----------
 	session, err := managementSessions.CreateSession(
@@ -171,7 +177,7 @@ func (p *QbvNetconfPlugin) Push(mapped any, target managementSessions.DeviceTarg
 		return fmt.Errorf("edit-config failed: %w", err)
 	}
 
-	p.logger.Println("✅ Config pushed successfully")
+	//p.logger.Println("✅ Config pushed successfully")
 	return nil
 }
 

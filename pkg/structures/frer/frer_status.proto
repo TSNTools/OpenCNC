@@ -1,0 +1,37 @@
+syntax = "proto3";
+
+package tsn.frer_status;
+
+import "tsn/stream.proto";
+
+//
+// FRER (Frame Replication and Elimination for Reliability) Runtime State (Clause 8 - Status Group)
+//
+
+// Per-stream runtime state (talker, relay, or listener)
+message FrerStreamStatus {
+  tsn.stream.StreamID stream_id = 1;    // Reference to the stream
+  string node_id = 2;                    // Node reporting the status
+  string port_id = 3;                    // Port reporting the status
+
+  uint64 last_sequence_number = 4;      // Last received sequence number
+  uint64 frames_received = 5;            // Total frames received
+  uint64 frames_recovered = 6;           // Frames successfully recovered by FRER
+  uint64 duplicates_discarded = 7;       // Duplicate frames discarded
+  uint64 out_of_order_dropped = 8;       // Out-of-order frames dropped
+
+  uint64 status_timestamp_ns = 9;        // Timestamp of this status (nanoseconds since epoch)
+}
+
+// Aggregated FRER group status (optional)
+message FrerGroupStatus {
+  string group_id = 1;                   // Group identifier
+
+  repeated FrerStreamStatus stream_statuses = 2; // Statuses of all streams in the group
+
+  uint64 total_recovered_frames = 3;    // Total recovered frames across all streams
+  uint64 total_duplicate_frames = 4;    // Total duplicate frames discarded
+  uint64 total_dropped_frames = 5;      // Total frames dropped due to errors
+
+  uint64 last_updated_ns = 6;            // Last update timestamp (nanoseconds since epoch)
+}

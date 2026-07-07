@@ -1,6 +1,8 @@
 syntax = "proto3";
 
-package tsn;
+package traffic_type;
+
+option go_package = "OpenCNC_config_service/pkg/structures/trafficType;traffic_type";
 
 /*
  * Defines TSN traffic types and their mappings to ports and VLANs.
@@ -64,9 +66,13 @@ message TrafficTypeProperties {
  * IEEE 802.1Q-2022 Clause 8.6.8.2
  */
 message PortTrafficMapping {
+  string traffic_type_id = 1;      // Reference to a defined TrafficType
+  uint32 queue_id = 2;             // Queue index (0-7). Nonstandard to support multiple queues here.
+}
+
+message PortTrafficMappings {
   string port_id = 1;              // Port identifier (e.g., "sw1:port3")
-  string traffic_type_id = 2;     // Reference to a defined TrafficType
-  uint32 queue_id = 3;             // Queue index (0-7). Nonstandard to support multiple queues here.
+  repeated PortTrafficMapping mappings = 2;
 }
 
 /*
@@ -76,8 +82,13 @@ message PortTrafficMapping {
 message VlanTrafficMapping {
   string traffic_type_id = 1;
 
-  uint16 vlan_id = 2; // Optional: VLAN ID to classify traffic into this class
+  uint32 vlan_id = 2; // Optional: VLAN ID to classify traffic into this class
   uint32 pcp = 3;     // Priority Code Point (0–7)
+}
+
+message VlanTrafficMappings {
+  string port_id = 1;
+  repeated VlanTrafficMapping mappings = 2;
 }
 
 /*

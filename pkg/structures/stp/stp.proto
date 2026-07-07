@@ -1,0 +1,63 @@
+syntax = "proto3";
+
+package stp;
+
+option go_package = "OpenCNC_config_service/pkg/structures/stp;stp";
+
+/*
+ * STP (Spanning Tree Protocol) configuration.
+ * Reference: IEEE 802.1Q-2022 Clause 13 (Spanning Tree and VLAN Bridges)
+ *
+ * Models the configuration and state of spanning tree protocol instances and
+ * per-port spanning tree roles and states on bridges.
+ */
+
+message StpConfiguration {
+  // Clause 13.5.1 — Global Bridge Control
+  // Enable or disable STP on the bridge
+  optional bool stp_enabled = 1;
+
+  // Clause 13.25 — Multiple Spanning Tree Instances (MSTIs)
+  repeated SpanningTreeInstance spanning_tree_instances = 2;
+}
+
+message SpanningTreeInstance {
+  string instance_id = 1;      // e.g., "cist", "mst0", "mst1"
+  string root_bridge_id = 2;   // Bridge ID for this MSTI root
+
+  // Per-port state/configuration within this instance
+  repeated StpPortState port_states = 3;
+}
+
+message StpPortState {
+  string port_id = 1;
+
+  // Port role within the STP instance (Clause 13.25.5)
+  PortRole role = 2;
+
+  // Port state within the STP instance (Clause 13.25.6)
+  PortState state = 3;
+
+  // Indicates if this port is currently forwarding frames.
+  // This is often derived from state but provided explicitly for convenience.
+  bool forwarding = 4;
+}
+
+// Port roles according to Clause 13.25.5
+enum PortRole {
+  PORT_ROLE_UNSPECIFIED = 0;            // Unknown or not assigned
+  PORT_ROLE_ROOT = 1;                   // Root port
+  PORT_ROLE_DESIGNATED = 2;             // Designated port
+  PORT_ROLE_ALTERNATE = 3;              // Alternate port
+  PORT_ROLE_BACKUP = 4;                 // Backup port
+  PORT_ROLE_MASTER = 5;                 // MSTI master port (Clause 13.27.2)
+  PORT_ROLE_NON_PARTICIPATING = 6;      // Disabled or not participating in STP
+}
+
+// Port states according to Clause 13.25.6
+enum PortState {
+  PORT_STATE_UNSPECIFIED = 0;             // Unknown or not assigned
+  PORT_STATE_DISCARDING = 1;              // Not forwarding or learning
+  PORT_STATE_LEARNING = 2;                // Learning MAC addresses but not forwarding
+  PORT_STATE_FORWARDING = 3;              // Forwarding frames
+}

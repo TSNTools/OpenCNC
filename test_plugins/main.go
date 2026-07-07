@@ -3,10 +3,12 @@
 package main
 
 func main() {
+	TestNetconfProtocol()
 	// Run all plugin tests here
-	TestQbvPlugin()
-	TestQbvPlugin_tttech()
-	// Add other plugin tests:
-	// testplugins.TestCbsPlugin()
-	// testplugins.TestFrerPlugin()
+	//TestVlanPlugin_tttech()
+	//TestPriorityPlugin_tttech()
+	//TestTCPlugin_tttech()
+	//TestQbvPlugin()
+	// TestQbvPlugin_tttech()
+
 }

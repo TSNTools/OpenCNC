@@ -29,7 +29,7 @@ func createEtcdClient() (*clientv3.Client, error) {
 
 // Takes in an object as a byte slice, a URN in the format of "storeName.Resource",
 // //and stores the structure at the URN
-func sendToStore(obj []byte, urn string) error {
+func SendToStore(obj []byte, urn string) error {
 	// Connect to ETCD
 	client, err := createEtcdClient()
 	if err != nil {
@@ -66,7 +66,7 @@ func sendToStoreRepeated(client *clientv3.Client, obj []byte, urn string) error 
 }
 
 // Get any data from a k/v store
-func getFromStore(urn string) ([]byte, error) {
+func GetFromStore(urn string) ([]byte, error) {
 	// Connect to ETCD
 	client, err := createEtcdClient()
 	if err != nil {

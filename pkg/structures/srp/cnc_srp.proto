@@ -1,0 +1,47 @@
+syntax = "proto3";
+
+package tsn.cnc_srp;
+
+import "tsn/stream.proto";
+import "tsn/stream_config.proto";
+
+/*
+ * CNC-CENTRIC SRP PROTOCOL (Qcc Distributed User Configuration Model)
+ *
+ * +-----------+                +--------+                 +-----------+
+ * | Talker    | --Declare----->|  CNC   |<---Engage-------| Listener  |
+ * +-----------+                +--------+                 +-----------+
+ *                                   |
+ *                        +----------v-----------+
+ *                        |  Config & Confirm    |
+ *                        +----------------------+
+ *
+ * Summary:
+ * - Talker declares stream metadata
+ * - Listeners engage by expressing interest & describing interfaces
+ * - CNC computes configuration and confirms/rejects
+ */
+
+// === Declaration & Engagement ===
+
+enum DeclarationEngagementStatus {
+  STATUS_UNSPECIFIED = 0;
+  DECLARE = 1;
+  WITHDRAW = 2;
+}
+
+message TalkerDeclaration {
+  string talker_node_id = 1;                                  // Talker node identity
+  repeated string talker_ports = 2;                           // Talker port identifiers
+  tsn.stream.TrafficSpecification traffic_specification = 3;  // Stream offered traffic specification
+  DeclarationEngagementStatus status = 4;                     // Declare or withdraw status
+  uint64 timestamp_ns = 5;                                    // Time of declaration
+}
+
+message ListenerEngagement {
+  string listener_node_id = 1;                                           // Listener node identity
+  repeated string listener_ports = 2;                                    // Listener port identifiers
+  tsn.stream.UserToNetworkRequirements user_to_network_requirements = 3; // Required QoS params
+  DeclarationEngagementStatus status = 4;                                // Declare or withdraw status
+  uint64 timestamp_ns = 5;                                               // Time of declaration
+}

@@ -37,6 +37,19 @@ It receives the full configuration and:
 - For each node, selects the appropriate ProtocolBackend based on `ManagementInfo.protocol`
 - Delegates mapping and pushing to the right plugin
 
+What it does now
+- accepts a full Topology and TopologyConfig
+- finds the matching node config by node_id
+- finds the matching port config by port_id
+- selects the correct backend from ManagementInfo.protocol
+- builds a DeviceTarget
+- dispatches the config to the backend/plugin for mapping and push
+- validate that the topology and config are consistent before applying anything
+- resolve global profile context before per-node/port config is applied
+- group and apply feature-specific messages in a deterministic order
+- report per-node/per-port success and failure clearly
+- support dry-run, rollback, and retry behavior
+- track applied state so later reconfiguration can be reconciled safely
 ---
 
 ## 📁 Code Structure
@@ -50,9 +63,9 @@ It receives the full configuration and:
 │ │ ├── qbv.go # QbvNetconfPlugin
 │ │ └── psfp.go # PsfpNetconfPlugin
 │ └── snmp/
-│ └── qbv.go # QbvSnmpPlugin
+│   └── qbv.go # QbvSnmpPlugin
 │
-├── protocolbackends/ # Protocol-level orchestrators
+├── protocolbackends/ # Protocol-level orchestrators 
 │ ├── netconf.go # NetconfBackend implementation
 │ └── snmp.go # SnmpBackend implementation
 │

@@ -73,3 +73,20 @@ func main() {
 		logger.Fatalf("gRPC server failed: %v", err)
 	}
 }
+
+/*
+plugin_qbv := netconf.NewQbvNetconfPlugin_tttech(logger)
+	plugin_pcp := netconf.NewPcpMappingNetconfPlugin(logger)
+	//plugin_tc := netconf.NewTrafficClassNetconfPlugin(logger)
+
+	backend := protocolbackends.NewNetconfBackend("netconf", plugin_qbv, plugin_pcp)
+
+	backend.MapAndPush(nodecfg, target)
+
+engine := NewMappingEngine(log.New(io.Discard, "", 0))
+engine.RegisterBackend(NetconfBackend(topology.ManagementProtocol_NETCONF, "netconf", stub))
+
+if err := engine.ApplyConfiguration(topo, cfg, "secret"); err != nil {
+		t.Fatalf("ApplyConfiguration returned error: %v", err)
+	}
+*/

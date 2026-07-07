@@ -6,10 +6,8 @@ package main
 // go run Connect_netconf.go -s 192.168.4.64 -g -f filter.xml
 
 import (
-	"flag"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"log/slog"
 	"os"
 
@@ -105,6 +103,7 @@ func loadXMLFromFile(path string) (string, error) {
 	return string(data), nil
 }
 
+/*
 func main() {
 	// Define command-line flags
 	host := flag.String("s", "", "IP address of the switch (e.g. 192.168.0.1)")
@@ -173,3 +172,4 @@ func main() {
 		flag.Usage()
 	}
 }
+*/

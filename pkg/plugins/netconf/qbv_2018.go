@@ -61,6 +61,12 @@ func (p *OldQbvNetconfPlugin) Supports(msg proto.Message) bool {
 	return ok
 }
 
+func (p *OldQbvNetconfPlugin) SupportedFields() []string {
+	return []string{
+		"Gcl",
+	}
+}
+
 func (p *OldQbvNetconfPlugin) Map(msg proto.Message) (any, error) {
 	gcl, ok := msg.(*qbv.GateControlList)
 	if !ok {
@@ -206,7 +212,7 @@ func (p *OldQbvNetconfPlugin) Push(mapped any, target managementSessions.DeviceT
 		return fmt.Errorf("failed to build XML: %w", err)
 	}
 
-	p.logger.Printf("[OldQBV] XML generated for interface %s", target.InterfaceName)
+	//p.logger.Printf("[OldQBV] XML generated for interface %s", target.InterfaceName)
 
 	session, err := managementSessions.CreateSession(target.Info.IpAddress, target.Info.UserName, target.Secret)
 	if err != nil {
@@ -218,6 +224,6 @@ func (p *OldQbvNetconfPlugin) Push(mapped any, target managementSessions.DeviceT
 		return fmt.Errorf("edit-config failed: %w", err)
 	}
 
-	p.logger.Println("✅ Config pushed successfully")
+	//p.logger.Println("✅ Config pushed successfully")
 	return nil
 }
