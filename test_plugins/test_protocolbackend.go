@@ -3,7 +3,7 @@ package main
 import (
 	"log"
 
-	netconf "OpenCNC_config_service/pkg/plugins/netconf"
+	"OpenCNC_config_service/pkg/plugins"
 	"OpenCNC_config_service/pkg/protocolbackends"
 	"OpenCNC_config_service/pkg/structures/qbv"
 	"OpenCNC_config_service/pkg/structures/topology"
@@ -17,20 +17,54 @@ var logger = log.New(log.Writer(), "[TEST-tttech-TRAFFIC-CLASSES] ", log.LstdFla
 
 func TestNetconfProtocol() {
 
-	plugin_qbv := netconf.NewQbvNetconfPlugin_tttech(logger)
-	plugin_pcp := netconf.NewPcpMappingNetconfPlugin(logger)
+	//plugin_qbv := netconf.NewQbvNetconfPlugin_tttech(logger)
+	//plugin_pcp := netconf.NewPcpMappingNetconfPlugin(logger)
 	//plugin_tc := netconf.NewTrafficClassNetconfPlugin(logger)
+	netconfPlugins := plugins.ForProtocol(
+		topology.ManagementProtocol_NETCONF,
+		logger,
+	)
 
-	backend := protocolbackends.NewNetconfBackend("netconf", plugin_qbv, plugin_pcp)
+	backend := protocolbackends.NewNetconfBackend(
+		"netconf",
+		netconfPlugins...,
+	)
+	//backend := protocolbackends.NewNetconfBackend("netconf", plugin_qbv, plugin_pcp)
 
-	backend.MapAndPush(nodecfg, target)
+	backend.MapAndPush(nodecfg, *target)
 }
 
-var target = topology.ManagementInfo{
-	IpAddress:      "192.168.0.1", // IP address
-	UserName:       "root",        // username
-	ManagementPort: 830,           // default NETCONF port
-	Protocol:       topology.ManagementProtocol_NETCONF,
+var target = &topology.Node{
+	Name: "bridge-1",
+	Type: topology.NodeRole_BRIDGE,
+	Ports: []*topology.Port{
+		{
+			Id:             "sw0p3",
+			Name:           "sw0p3",
+			NumberOfQueues: 8,
+			Capabilities: &topology.InterfaceCapabilities{
+				PortSpeed:        1000,
+				SupportsTimeSync: true,
+				SupportsTas:      true,
+				SupportsCbs:      true,
+			},
+		},
+	},
+	ManagementInfo: &topology.ManagementInfo{
+		IpAddress:      "192.168.0.1",
+		UserName:       "root",
+		ManagementPort: 830,
+		Protocol:       topology.ManagementProtocol_NETCONF,
+	},
+	Properties: &topology.NodeProperties{
+		Bridge: &topology.BridgeProperties{
+			ProcessingDelayNs: 800,
+		},
+	},
+	NodeConfigId: proto.String("config-1"),
+	DeviceInfo: &topology.DeviceInfo{
+		DeviceModel: "tttech-bridge",
+	},
 }
 
 var nodecfg = &topology_config.NodeConfig{
