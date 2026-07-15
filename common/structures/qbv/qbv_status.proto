@@ -1,0 +1,53 @@
+syntax = "proto3";
+
+package qbv_status;
+
+option go_package = "OpenCNC_config_service/common/structures/qbv;qbv";
+
+import "common/structures/sync/syncdiag.proto";
+
+enum GateState {
+  GATE_STATE_UNSPECIFIED = 0;
+  OPEN = 1;
+  CLOSED = 2;
+}
+
+// Represents the runtime state of a single gate control entry (timeslot)
+message GateControlEntryState {
+  uint32 slot_id = 1;             // Timeslot index in the schedule
+  uint64 start_time_ns = 2;       // Absolute start time (ns since epoch or base time)
+  uint64 duration_ns = 3;         // Duration of the slot in nanoseconds
+  GateState gate_state = 4;       // Current state of the gate (open/closed)
+
+  uint64 gate_open_count = 5;     // Number of times gate was opened during this slot
+  uint64 gate_close_count = 6;    // Number of times gate was closed during this slot
+  uint64 gate_open_time_ns = 7;   // Cumulative gate open time in ns within this slot
+  uint64 gate_close_time_ns = 8;  // Cumulative gate close time in ns within this slot
+
+  uint64 elapsed_time_ns = 9;     // Elapsed time since slot start
+  uint64 remaining_time_ns = 10;  // Remaining time until slot end
+
+  uint64 gate_error_count = 11;   // Number of errors detected on the gate (e.g., unexpected transitions)
+}
+
+// Represents the runtime state of a full TAS schedule on a port
+message QbvScheduleState {
+  string schedule_id = 1;          // Unique schedule identifier
+  string port_id = 2;              // Port to which this schedule applies
+
+  uint64 base_time_ns = 3;         // Base reference time for schedule cycles
+  uint64 cycle_time_ns = 4;        // Duration of one cycle
+  uint64 current_time_ns = 5;      // Current time (for reference within the cycle)
+  uint64 cycle_count = 6;          // Number of cycles completed
+  uint32 current_cycle_index = 7;  // Index of the current slot in the cycle
+
+  repeated GateControlEntryState slots_state = 8;  // States of individual gate control entries (timeslots)
+
+  syncdiag.GateSyncDiagnostics sync_diagnostics = 9;  // Diagnostics info for gate synchronization
+  uint64 timestamp_ns = 10;          // Timestamp of this status snapshot (nanoseconds since epoch)
+}
+
+// Overall TAS runtime state report containing multiple schedules
+message QbvStateReport {
+  repeated QbvScheduleState schedules = 1;
+}

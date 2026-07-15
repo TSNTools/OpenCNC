@@ -1,0 +1,119 @@
+syntax = "proto3";
+
+package vlan;
+
+option go_package = "/vlan;vlan";
+
+/*
+ * VLAN configuration domain model aligned with IEEE 802.1Q bridge concepts.
+ *
+ * Scope:
+ * - Bridge-level VLAN registration and VID->FID mapping
+ * - Per-port membership and advanced bridge-port VLAN controls
+ *
+ * Non-goals:
+ * - MST resource mapping (modeled in stp.proto)
+ */
+
+message BridgeVlanConfig {
+  repeated VlanRegistrationEntry vlan_registration_entries = 1;
+  repeated VidToFidMapping vid_to_fid_mappings = 2;
+
+  // Optional advanced protocol-based VLAN grouping.
+  repeated ProtocolGroupDatabaseEntry protocol_group_database = 3;
+}
+
+enum VlanRegistrationEntryType {
+  VLAN_REG_ENTRY_TYPE_UNSPECIFIED = 0;
+  VLAN_REG_ENTRY_TYPE_STATIC = 1;
+  VLAN_REG_ENTRY_TYPE_DYNAMIC = 2;
+}
+
+message VlanRegistrationEntry {
+  uint32 database_id = 1;
+  repeated uint32 vlan_ids = 2; // 1..4094
+  VlanRegistrationEntryType entry_type = 3;
+  repeated VlanPortMap port_maps = 4;
+}
+
+enum RegistrarAdminControl {
+  REGISTRAR_ADMIN_CONTROL_UNSPECIFIED = 0;
+  REGISTRAR_ADMIN_CONTROL_FIXED_NEW_IGNORED = 1;
+  REGISTRAR_ADMIN_CONTROL_FIXED_NEW_PROPAGATED = 2;
+  REGISTRAR_ADMIN_CONTROL_FORBIDDEN = 3;
+  REGISTRAR_ADMIN_CONTROL_NORMAL = 4;
+}
+
+enum VlanTransmitted {
+  VLAN_TRANSMITTED_UNSPECIFIED = 0;
+  VLAN_TRANSMITTED_TAGGED = 1;
+  VLAN_TRANSMITTED_UNTAGGED = 2;
+}
+
+message VlanPortMap {
+  string port_id = 1;
+  RegistrarAdminControl registrar_admin_control = 2;
+  VlanTransmitted vlan_transmitted = 3;
+}
+
+message VidToFidMapping {
+  uint32 vid = 1; // 1..4094
+  uint32 fid = 2;
+}
+
+message VlanMembership {
+  uint32 vlan_id = 1; // 1..4094
+  bool tagged = 2;
+}
+
+enum AcceptableFrameType {
+  ACCEPTABLE_FRAME_TYPE_UNSPECIFIED = 0;
+  ACCEPTABLE_FRAME_TYPE_ADMIT_ONLY_VLAN_TAGGED = 1;
+  ACCEPTABLE_FRAME_TYPE_ADMIT_ONLY_UNTAGGED_AND_PRIORITY_TAGGED = 2;
+  ACCEPTABLE_FRAME_TYPE_ADMIT_ALL_FRAMES = 3;
+}
+
+message VidTranslation {
+  uint32 local_vid = 1;
+  uint32 relay_vid = 2;
+}
+
+enum ProtocolFrameFormatType {
+  PROTOCOL_FRAME_FORMAT_UNSPECIFIED = 0;
+  PROTOCOL_FRAME_FORMAT_ETHERNET = 1;
+  PROTOCOL_FRAME_FORMAT_RFC1042 = 2;
+  PROTOCOL_FRAME_FORMAT_SNAP8021H = 3;
+  PROTOCOL_FRAME_FORMAT_SNAP_OTHER = 4;
+  PROTOCOL_FRAME_FORMAT_LLC_OTHER = 5;
+}
+
+message ProtocolGroupDatabaseEntry {
+  uint32 db_index = 1;
+  ProtocolFrameFormatType frame_format_type = 2;
+
+  // Exactly one discriminator payload should be set depending on frame_format_type.
+  optional uint32 ethertype = 3;
+  optional string protocol_id = 4;     // xx-xx-xx-xx-xx
+  optional string llc_address_pair = 5; // xx-xx (dsap-ssap)
+
+  uint32 group_id = 6;
+}
+
+message ProtocolGroupVidSet {
+  uint32 group_id = 1;
+  repeated uint32 vlan_ids = 2; // 1..4094
+}
+
+message PortVlanAdvancedConfig {
+  optional AcceptableFrameType acceptable_frame = 1;
+  optional bool ingress_filtering_enabled = 2;
+  optional bool restricted_vlan_registration_enabled = 3;
+
+  optional bool vid_translation_table_enabled = 4;
+  optional bool egress_vid_translation_table_enabled = 5;
+  repeated VidTranslation vid_translations = 6;
+  repeated VidTranslation egress_vid_translations = 7;
+
+  // Optional mapping from protocol groups to VLAN sets for ingress classification.
+  repeated ProtocolGroupVidSet protocol_group_vid_sets = 8;
+}

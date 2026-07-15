@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+package service;
+
+option go_package = "common/structures/service;service";
+
+import "google/protobuf/any.proto";
+
+// Messages
+message ConfigurationRequest {
+  string id = 1;                    // configuration identifier
+  google.protobuf.Any payload = 2;  // optional: gNMI SetRequest or internal model
+}
+
+message ConfigurationResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+// gRPC service
+service ConfigService {
+  rpc ApplyConfiguration(ConfigurationRequest) returns (ConfigurationResponse);
+  rpc Ping(ConfigurationRequest) returns (ConfigurationResponse);
+}

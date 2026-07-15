@@ -1,0 +1,57 @@
+syntax = "proto3";
+
+package qav;
+
+option go_package = "OpenCNC_config_service/common/structures/qav;qav";
+
+/*
+ * QAV (Credit‑Based Shaper) configuration aligned with IEEE 802.1Q-2022 CBS model.
+ * Based on P802.1Qdx‑2024 YANG data model for CBS.
+ * Clause 8.6.8 (CBS), Clause 12.30.1.1.3 (Managed Objects for Traffic Shaping)
+ */
+
+enum TimestampReference {
+  UNKNOWN = 0;
+  UNIX_EPOCH = 1;
+  DEVICE_BOOT_TIME = 2;
+}
+
+enum AdminState {
+  DISABLED = 0;
+  ENABLED = 1;
+}
+
+/*
+ * Per‑queue traffic‑class shaping parameters according to YANG module ieee802‑dot1q‑sched.yang.
+ * The shaping is applied at the egress port queue mapped to a traffic class.
+ */
+message CbsQueueConfig {
+  uint32 egress_queue_id = 1;         // YANG key leaf: traffic-class (0-7)
+  AdminState admin_state = 2;       // Enable/disable CBS on this queue
+
+  uint64 admin_idle_slope_bps = 3;        // IdleSlope (bytes per second) – reserved bandwidth
+
+  // NON-YANG compliant fields:
+  uint64 send_slope_bps = 4;        // SendSlope (bps), typically negative
+  uint64 hi_credit_bytes = 5;       // Maximum credit (bytes)
+  uint64 lo_credit_bytes = 6;       // Minimum (negative) credit threshold (bytes)
+
+  string description = 7;           // Human‑readable note
+}
+
+/*
+ * CBS configuration for a specific device port.
+ */
+message QavPortConfig {
+  string node_id = 1;               // Node/device identifier
+  string port_id = 2;               // Port identifier (matches topology)
+  repeated CbsQueueConfig queues = 3;
+  TimestampReference time_reference = 4;
+}
+
+/*
+ * Global QAV configuration grouping all configured ports.
+ */
+message QavConfig {
+  repeated QavPortConfig port_configs = 1;
+}

@@ -1,0 +1,273 @@
+syntax = "proto3";
+
+package opencnc.observability.v1;
+
+option go_package = "github.com/TSNTools/opencnc_kafka-exporter/proto/opencnc/observability/v1;observabilityv1";
+
+import "google/protobuf/duration.proto";
+import "google/protobuf/struct.proto";
+import "google/protobuf/timestamp.proto";
+
+// -----------------------------------------------------------------------------
+// Top-level Envelope
+// -----------------------------------------------------------------------------
+// EventEnvelope is the canonical message published to observability topics.
+//
+// Suggested topic routing:
+// - opencnc.logs   -> payload.log
+// - opencnc.events -> payload.domain
+// - opencnc.metrics -> payload.metric
+// - opencnc.audit  -> payload.audit
+// - opencnc.health -> payload.health
+message EventEnvelope {
+  // Contract version for compatibility checks, e.g. "1.0.0".
+  string schema_version = 1;
+
+  // Globally unique event id (UUID or ULID preferred).
+  string event_id = 2;
+
+  // Producer timestamp in UTC.
+  google.protobuf.Timestamp occurred_at = 3;
+
+  // Source metadata for filtering and ownership.
+  Source source = 4;
+
+  // End-to-end tracing/correlation metadata.
+  TraceContext trace = 5;
+
+  // Coarse event classification and severity.
+  EventKind kind = 6;
+  Severity severity = 7;
+
+  // User-defined dimensions for query and routing.
+  map<string, string> labels = 8;
+
+  // Free-form metadata for forward-compatible extension.
+  google.protobuf.Struct metadata = 9;
+
+  oneof payload {
+    LogEvent log = 20;
+    DomainEvent domain = 21;
+    MetricEvent metric = 22;
+    AuditEvent audit = 23;
+    HealthEvent health = 24;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Shared Context
+// -----------------------------------------------------------------------------
+
+// Source identifies where the event was produced.
+message Source {
+  string service = 1;
+  string component = 2;
+  string instance_id = 3;
+  string namespace = 4;
+  string node = 5;
+  string cluster = 6;
+  string version = 7;
+}
+
+// TraceContext links related records across services and workflows.
+message TraceContext {
+  // Business/request correlation id.
+  string correlation_id = 1;
+
+  // Optional OpenTelemetry style trace identifiers.
+  string trace_id = 2;
+  string span_id = 3;
+  string parent_span_id = 4;
+
+  // Session or workflow grouping id.
+  string workflow_id = 5;
+}
+
+// EventKind is the coarse category used for routing and filtering.
+enum EventKind {
+  EVENT_KIND_UNSPECIFIED = 0;
+  EVENT_KIND_LOG = 1;
+  EVENT_KIND_DOMAIN = 2;
+  EVENT_KIND_METRIC = 3;
+  EVENT_KIND_AUDIT = 4;
+  EVENT_KIND_HEALTH = 5;
+}
+
+// Severity represents operational urgency across all event kinds.
+enum Severity {
+  SEVERITY_UNSPECIFIED = 0;
+  SEVERITY_DEBUG = 1;
+  SEVERITY_INFO = 2;
+  SEVERITY_WARN = 3;
+  SEVERITY_ERROR = 4;
+  SEVERITY_CRITICAL = 5;
+}
+
+// -----------------------------------------------------------------------------
+// Payload: Logs
+// -----------------------------------------------------------------------------
+
+// LogEvent carries application logging records.
+message LogEvent {
+  string logger = 1;
+  string message = 2;
+  string code = 3;
+  string stacktrace = 4;
+
+  // Optional source code location for diagnostics.
+  string file = 5;
+  uint32 line = 6;
+
+  repeated Field fields = 7;
+}
+
+// -----------------------------------------------------------------------------
+// Payload: Domain Events
+// -----------------------------------------------------------------------------
+
+// DomainEvent carries business lifecycle state transitions.
+message DomainEvent {
+  // Example: "stream.lifecycle", "config.apply", "topology.update".
+  string domain = 1;
+
+  // Example: "requested", "validated", "applied", "failed".
+  string action = 2;
+
+  DomainResult result = 3;
+
+  // Primary business object for the event.
+  string subject_type = 4;
+  string subject_id = 5;
+
+  // Human-readable summary.
+  string summary = 6;
+
+  // Structured event-specific payload.
+  google.protobuf.Struct details = 7;
+}
+
+// DomainResult is a normalized outcome for domain events.
+enum DomainResult {
+  DOMAIN_RESULT_UNSPECIFIED = 0;
+  DOMAIN_RESULT_ACCEPTED = 1;
+  DOMAIN_RESULT_REJECTED = 2;
+  DOMAIN_RESULT_SUCCEEDED = 3;
+  DOMAIN_RESULT_FAILED = 4;
+  DOMAIN_RESULT_TIMEOUT = 5;
+}
+
+// -----------------------------------------------------------------------------
+// Payload: Metrics
+// -----------------------------------------------------------------------------
+
+// MetricEvent carries numeric telemetry points and histogram aggregates.
+message MetricEvent {
+  string name = 1;
+  MetricType type = 2;
+
+  // For gauge/counter and summary aggregates.
+  double value = 3;
+
+  // Unit examples: "ms", "bytes", "percent", "count".
+  string unit = 4;
+
+  // Dimensions for aggregation, e.g. device_id, queue, direction.
+  map<string, string> attributes = 5;
+
+  // Optional for histogram support.
+  repeated HistogramBucket buckets = 6;
+  uint64 count = 7;
+  double sum = 8;
+}
+
+// MetricType identifies the aggregation semantics of a metric sample.
+enum MetricType {
+  METRIC_TYPE_UNSPECIFIED = 0;
+  METRIC_TYPE_GAUGE = 1;
+  METRIC_TYPE_COUNTER = 2;
+  METRIC_TYPE_HISTOGRAM = 3;
+}
+
+// HistogramBucket represents one cumulative histogram boundary.
+message HistogramBucket {
+  double upper_bound = 1;
+  uint64 cumulative_count = 2;
+}
+
+// -----------------------------------------------------------------------------
+// Payload: Audit
+// -----------------------------------------------------------------------------
+
+// AuditEvent records actor actions and authorization/operation outcomes.
+message AuditEvent {
+  string actor = 1;
+  string action = 2;
+  string target_type = 3;
+  string target_id = 4;
+
+  AuditResult result = 5;
+
+  // Optional reason on deny/failure.
+  string reason = 6;
+
+  // Structured context for policy decisions.
+  google.protobuf.Struct context = 7;
+}
+
+// AuditResult captures policy and execution outcomes for audit records.
+enum AuditResult {
+  AUDIT_RESULT_UNSPECIFIED = 0;
+  AUDIT_RESULT_ALLOWED = 1;
+  AUDIT_RESULT_DENIED = 2;
+  AUDIT_RESULT_SUCCEEDED = 3;
+  AUDIT_RESULT_FAILED = 4;
+}
+
+// -----------------------------------------------------------------------------
+// Payload: Health
+// -----------------------------------------------------------------------------
+
+// HealthEvent carries service and subsystem health checks/probes.
+message HealthEvent {
+  string check = 1;
+  HealthStatus status = 2;
+
+  // Optional probe or operation latency.
+  google.protobuf.Duration latency = 3;
+
+  string message = 4;
+
+  // Optional subsystem/state snapshot.
+  google.protobuf.Struct details = 5;
+}
+
+// HealthStatus represents readiness/liveness style states.
+enum HealthStatus {
+  HEALTH_STATUS_UNSPECIFIED = 0;
+  HEALTH_STATUS_HEALTHY = 1;
+  HEALTH_STATUS_DEGRADED = 2;
+  HEALTH_STATUS_UNHEALTHY = 3;
+}
+
+// -----------------------------------------------------------------------------
+// Generic Structured Field Values
+// -----------------------------------------------------------------------------
+
+// Field carries one structured key/value entry.
+message Field {
+  string key = 1;
+  Value value = 2;
+}
+
+// Value is a typed value container used in generic structured fields.
+message Value {
+  oneof kind {
+    string string_value = 1;
+    int64 int_value = 2;
+    uint64 uint_value = 3;
+    double double_value = 4;
+    bool bool_value = 5;
+    bytes bytes_value = 6;
+    google.protobuf.Struct struct_value = 7;
+  }
+}

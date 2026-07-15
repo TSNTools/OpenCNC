@@ -1,0 +1,53 @@
+syntax = "proto3";
+
+package qav_status;
+
+option go_package = "OpenCNC_config_service/common/structures/qav;qav";
+
+import "google/protobuf/timestamp.proto";
+
+/*
+ * IEEE 802.1Qav Credit-Based Shaper (CBS) Runtime Status
+ *
+ * References:
+ * - IEEE 802.1Q-2022 Clause 8.6.8: Credit-Based Shaping Behavior
+ * - IEEE 802.1Q Clause 12.30.1.1.3: Stream shaping and managed counters
+ * - YANG: ieee802-dot1q-sched.yang
+ */
+
+/*
+ * Runtime state per traffic class on a given port.
+ */
+message CbsTrafficClassStatus {
+  uint32 traffic_class = 1;          // Traffic class index (0–7)
+  
+  int64 current_credit_bytes = 2;    // Current credit level (can be negative)
+  uint64 frames_transmitted = 3;     // Total frames transmitted under CBS
+  uint64 bytes_transmitted = 4;      // Total bytes transmitted under CBS
+
+  uint64 idle_slope_bps = 5;         // Configured idle slope (bps)
+  uint64 send_slope_bps = 6;         // Configured send slope (bps)
+  uint64 hi_credit_bytes = 7;        // Configured high credit limit
+  uint64 lo_credit_bytes = 8;        // Configured low credit threshold
+
+  bool shaping_active = 9;           // Is CBS currently active for this class
+}
+
+/*
+ * CBS runtime state on a single egress port.
+ */
+message QavPortStatus {
+  string node_id = 1;                // Matches Node.name
+  string port_id = 2;                // Matches Port.id
+
+  repeated CbsTrafficClassStatus traffic_classes = 3;
+
+  google.protobuf.Timestamp last_updated = 4;
+}
+
+/*
+ * System-wide report of CBS runtime states.
+ */
+message QavStatusReport {
+  repeated QavPortStatus ports = 1;
+}
