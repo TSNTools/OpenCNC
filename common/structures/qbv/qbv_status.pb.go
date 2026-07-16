@@ -55,11 +55,11 @@ func (x GateState) String() string {
 }
 
 func (GateState) Descriptor() protoreflect.EnumDescriptor {
-	return file_pkg_structures_qbv_qbv_status_proto_enumTypes[0].Descriptor()
+	return file_common_structures_qbv_qbv_status_proto_enumTypes[0].Descriptor()
 }
 
 func (GateState) Type() protoreflect.EnumType {
-	return &file_pkg_structures_qbv_qbv_status_proto_enumTypes[0]
+	return &file_common_structures_qbv_qbv_status_proto_enumTypes[0]
 }
 
 func (x GateState) Number() protoreflect.EnumNumber {
@@ -68,7 +68,7 @@ func (x GateState) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use GateState.Descriptor instead.
 func (GateState) EnumDescriptor() ([]byte, []int) {
-	return file_pkg_structures_qbv_qbv_status_proto_rawDescGZIP(), []int{0}
+	return file_common_structures_qbv_qbv_status_proto_rawDescGZIP(), []int{0}
 }
 
 // Represents the runtime state of a single gate control entry (timeslot)
@@ -91,7 +91,7 @@ type GateControlEntryState struct {
 
 func (x *GateControlEntryState) Reset() {
 	*x = GateControlEntryState{}
-	mi := &file_pkg_structures_qbv_qbv_status_proto_msgTypes[0]
+	mi := &file_common_structures_qbv_qbv_status_proto_msgTypes[0]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -103,7 +103,7 @@ func (x *GateControlEntryState) String() string {
 func (*GateControlEntryState) ProtoMessage() {}
 
 func (x *GateControlEntryState) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_structures_qbv_qbv_status_proto_msgTypes[0]
+	mi := &file_common_structures_qbv_qbv_status_proto_msgTypes[0]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -116,7 +116,7 @@ func (x *GateControlEntryState) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GateControlEntryState.ProtoReflect.Descriptor instead.
 func (*GateControlEntryState) Descriptor() ([]byte, []int) {
-	return file_pkg_structures_qbv_qbv_status_proto_rawDescGZIP(), []int{0}
+	return file_common_structures_qbv_qbv_status_proto_rawDescGZIP(), []int{0}
 }
 
 func (x *GateControlEntryState) GetSlotId() uint32 {
@@ -215,7 +215,7 @@ type QbvScheduleState struct {
 
 func (x *QbvScheduleState) Reset() {
 	*x = QbvScheduleState{}
-	mi := &file_pkg_structures_qbv_qbv_status_proto_msgTypes[1]
+	mi := &file_common_structures_qbv_qbv_status_proto_msgTypes[1]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -227,7 +227,7 @@ func (x *QbvScheduleState) String() string {
 func (*QbvScheduleState) ProtoMessage() {}
 
 func (x *QbvScheduleState) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_structures_qbv_qbv_status_proto_msgTypes[1]
+	mi := &file_common_structures_qbv_qbv_status_proto_msgTypes[1]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -240,7 +240,7 @@ func (x *QbvScheduleState) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use QbvScheduleState.ProtoReflect.Descriptor instead.
 func (*QbvScheduleState) Descriptor() ([]byte, []int) {
-	return file_pkg_structures_qbv_qbv_status_proto_rawDescGZIP(), []int{1}
+	return file_common_structures_qbv_qbv_status_proto_rawDescGZIP(), []int{1}
 }
 
 func (x *QbvScheduleState) GetScheduleId() string {
@@ -323,7 +323,7 @@ type QbvStateReport struct {
 
 func (x *QbvStateReport) Reset() {
 	*x = QbvStateReport{}
-	mi := &file_pkg_structures_qbv_qbv_status_proto_msgTypes[2]
+	mi := &file_common_structures_qbv_qbv_status_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -335,7 +335,7 @@ func (x *QbvStateReport) String() string {
 func (*QbvStateReport) ProtoMessage() {}
 
 func (x *QbvStateReport) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_structures_qbv_qbv_status_proto_msgTypes[2]
+	mi := &file_common_structures_qbv_qbv_status_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -348,7 +348,7 @@ func (x *QbvStateReport) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use QbvStateReport.ProtoReflect.Descriptor instead.
 func (*QbvStateReport) Descriptor() ([]byte, []int) {
-	return file_pkg_structures_qbv_qbv_status_proto_rawDescGZIP(), []int{2}
+	return file_common_structures_qbv_qbv_status_proto_rawDescGZIP(), []int{2}
 }
 
 func (x *QbvStateReport) GetSchedules() []*QbvScheduleState {
@@ -358,12 +358,12 @@ func (x *QbvStateReport) GetSchedules() []*QbvScheduleState {
 	return nil
 }
 
-var File_pkg_structures_qbv_qbv_status_proto protoreflect.FileDescriptor
+var File_common_structures_qbv_qbv_status_proto protoreflect.FileDescriptor
 
-const file_pkg_structures_qbv_qbv_status_proto_rawDesc = "" +
+const file_common_structures_qbv_qbv_status_proto_rawDesc = "" +
 	"\n" +
-	"#common/structures/qbv/qbv_status.proto\x12\n" +
-	"qbv_status\x1a\"common/structures/sync/syncdiag.proto\"\xd3\x03\n" +
+	"&common/structures/qbv/qbv_status.proto\x12\n" +
+	"qbv_status\x1a%common/structures/sync/syncdiag.proto\"\xd3\x03\n" +
 	"\x15GateControlEntryState\x12\x17\n" +
 	"\aslot_id\x18\x01 \x01(\rR\x06slotId\x12\"\n" +
 	"\rstart_time_ns\x18\x02 \x01(\x04R\vstartTimeNs\x12\x1f\n" +
@@ -401,30 +401,30 @@ const file_pkg_structures_qbv_qbv_status_proto_rawDesc = "" +
 	"\x16GATE_STATE_UNSPECIFIED\x10\x00\x12\b\n" +
 	"\x04OPEN\x10\x01\x12\n" +
 	"\n" +
-	"\x06CLOSED\x10\x02B/Z-OpenCNC_config_service/common/structures/qbv;qbvb\x06proto3"
+	"\x06CLOSED\x10\x02B2Z0OpenCNC_config_service/common/structures/qbv;qbvb\x06proto3"
 
 var (
-	file_pkg_structures_qbv_qbv_status_proto_rawDescOnce sync1.Once
-	file_pkg_structures_qbv_qbv_status_proto_rawDescData []byte
+	file_common_structures_qbv_qbv_status_proto_rawDescOnce sync1.Once
+	file_common_structures_qbv_qbv_status_proto_rawDescData []byte
 )
 
-func file_pkg_structures_qbv_qbv_status_proto_rawDescGZIP() []byte {
-	file_pkg_structures_qbv_qbv_status_proto_rawDescOnce.Do(func() {
-		file_pkg_structures_qbv_qbv_status_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_pkg_structures_qbv_qbv_status_proto_rawDesc), len(file_pkg_structures_qbv_qbv_status_proto_rawDesc)))
+func file_common_structures_qbv_qbv_status_proto_rawDescGZIP() []byte {
+	file_common_structures_qbv_qbv_status_proto_rawDescOnce.Do(func() {
+		file_common_structures_qbv_qbv_status_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_common_structures_qbv_qbv_status_proto_rawDesc), len(file_common_structures_qbv_qbv_status_proto_rawDesc)))
 	})
-	return file_pkg_structures_qbv_qbv_status_proto_rawDescData
+	return file_common_structures_qbv_qbv_status_proto_rawDescData
 }
 
-var file_pkg_structures_qbv_qbv_status_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_pkg_structures_qbv_qbv_status_proto_msgTypes = make([]protoimpl.MessageInfo, 3)
-var file_pkg_structures_qbv_qbv_status_proto_goTypes = []any{
+var file_common_structures_qbv_qbv_status_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
+var file_common_structures_qbv_qbv_status_proto_msgTypes = make([]protoimpl.MessageInfo, 3)
+var file_common_structures_qbv_qbv_status_proto_goTypes = []any{
 	(GateState)(0),                   // 0: qbv_status.GateState
 	(*GateControlEntryState)(nil),    // 1: qbv_status.GateControlEntryState
 	(*QbvScheduleState)(nil),         // 2: qbv_status.QbvScheduleState
 	(*QbvStateReport)(nil),           // 3: qbv_status.QbvStateReport
 	(*sync.GateSyncDiagnostics)(nil), // 4: syncdiag.GateSyncDiagnostics
 }
-var file_pkg_structures_qbv_qbv_status_proto_depIdxs = []int32{
+var file_common_structures_qbv_qbv_status_proto_depIdxs = []int32{
 	0, // 0: qbv_status.GateControlEntryState.gate_state:type_name -> qbv_status.GateState
 	1, // 1: qbv_status.QbvScheduleState.slots_state:type_name -> qbv_status.GateControlEntryState
 	4, // 2: qbv_status.QbvScheduleState.sync_diagnostics:type_name -> syncdiag.GateSyncDiagnostics
@@ -436,27 +436,27 @@ var file_pkg_structures_qbv_qbv_status_proto_depIdxs = []int32{
 	0, // [0:4] is the sub-list for field type_name
 }
 
-func init() { file_pkg_structures_qbv_qbv_status_proto_init() }
-func file_pkg_structures_qbv_qbv_status_proto_init() {
-	if File_pkg_structures_qbv_qbv_status_proto != nil {
+func init() { file_common_structures_qbv_qbv_status_proto_init() }
+func file_common_structures_qbv_qbv_status_proto_init() {
+	if File_common_structures_qbv_qbv_status_proto != nil {
 		return
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
-			RawDescriptor: unsafe.Slice(unsafe.StringData(file_pkg_structures_qbv_qbv_status_proto_rawDesc), len(file_pkg_structures_qbv_qbv_status_proto_rawDesc)),
+			RawDescriptor: unsafe.Slice(unsafe.StringData(file_common_structures_qbv_qbv_status_proto_rawDesc), len(file_common_structures_qbv_qbv_status_proto_rawDesc)),
 			NumEnums:      1,
 			NumMessages:   3,
 			NumExtensions: 0,
 			NumServices:   0,
 		},
-		GoTypes:           file_pkg_structures_qbv_qbv_status_proto_goTypes,
-		DependencyIndexes: file_pkg_structures_qbv_qbv_status_proto_depIdxs,
-		EnumInfos:         file_pkg_structures_qbv_qbv_status_proto_enumTypes,
-		MessageInfos:      file_pkg_structures_qbv_qbv_status_proto_msgTypes,
+		GoTypes:           file_common_structures_qbv_qbv_status_proto_goTypes,
+		DependencyIndexes: file_common_structures_qbv_qbv_status_proto_depIdxs,
+		EnumInfos:         file_common_structures_qbv_qbv_status_proto_enumTypes,
+		MessageInfos:      file_common_structures_qbv_qbv_status_proto_msgTypes,
 	}.Build()
-	File_pkg_structures_qbv_qbv_status_proto = out.File
-	file_pkg_structures_qbv_qbv_status_proto_goTypes = nil
-	file_pkg_structures_qbv_qbv_status_proto_depIdxs = nil
+	File_common_structures_qbv_qbv_status_proto = out.File
+	file_common_structures_qbv_qbv_status_proto_goTypes = nil
+	file_common_structures_qbv_qbv_status_proto_depIdxs = nil
 }

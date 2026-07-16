@@ -59,11 +59,11 @@ func (x AdminState) String() string {
 }
 
 func (AdminState) Descriptor() protoreflect.EnumDescriptor {
-	return file_pkg_structures_topology_config_topology_config_proto_enumTypes[0].Descriptor()
+	return file_common_structures_topology_config_topology_config_proto_enumTypes[0].Descriptor()
 }
 
 func (AdminState) Type() protoreflect.EnumType {
-	return &file_pkg_structures_topology_config_topology_config_proto_enumTypes[0]
+	return &file_common_structures_topology_config_topology_config_proto_enumTypes[0]
 }
 
 func (x AdminState) Number() protoreflect.EnumNumber {
@@ -72,7 +72,7 @@ func (x AdminState) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use AdminState.Descriptor instead.
 func (AdminState) EnumDescriptor() ([]byte, []int) {
-	return file_pkg_structures_topology_config_topology_config_proto_rawDescGZIP(), []int{0}
+	return file_common_structures_topology_config_topology_config_proto_rawDescGZIP(), []int{0}
 }
 
 type GptpRole int32
@@ -114,11 +114,11 @@ func (x GptpRole) String() string {
 }
 
 func (GptpRole) Descriptor() protoreflect.EnumDescriptor {
-	return file_pkg_structures_topology_config_topology_config_proto_enumTypes[1].Descriptor()
+	return file_common_structures_topology_config_topology_config_proto_enumTypes[1].Descriptor()
 }
 
 func (GptpRole) Type() protoreflect.EnumType {
-	return &file_pkg_structures_topology_config_topology_config_proto_enumTypes[1]
+	return &file_common_structures_topology_config_topology_config_proto_enumTypes[1]
 }
 
 func (x GptpRole) Number() protoreflect.EnumNumber {
@@ -127,7 +127,7 @@ func (x GptpRole) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use GptpRole.Descriptor instead.
 func (GptpRole) EnumDescriptor() ([]byte, []int) {
-	return file_pkg_structures_topology_config_topology_config_proto_rawDescGZIP(), []int{1}
+	return file_common_structures_topology_config_topology_config_proto_rawDescGZIP(), []int{1}
 }
 
 type SchedulingModel int32
@@ -169,11 +169,11 @@ func (x SchedulingModel) String() string {
 }
 
 func (SchedulingModel) Descriptor() protoreflect.EnumDescriptor {
-	return file_pkg_structures_topology_config_topology_config_proto_enumTypes[2].Descriptor()
+	return file_common_structures_topology_config_topology_config_proto_enumTypes[2].Descriptor()
 }
 
 func (SchedulingModel) Type() protoreflect.EnumType {
-	return &file_pkg_structures_topology_config_topology_config_proto_enumTypes[2]
+	return &file_common_structures_topology_config_topology_config_proto_enumTypes[2]
 }
 
 func (x SchedulingModel) Number() protoreflect.EnumNumber {
@@ -182,7 +182,7 @@ func (x SchedulingModel) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use SchedulingModel.Descriptor instead.
 func (SchedulingModel) EnumDescriptor() ([]byte, []int) {
-	return file_pkg_structures_topology_config_topology_config_proto_rawDescGZIP(), []int{2}
+	return file_common_structures_topology_config_topology_config_proto_rawDescGZIP(), []int{2}
 }
 
 type LinkStateOverride int32
@@ -218,11 +218,11 @@ func (x LinkStateOverride) String() string {
 }
 
 func (LinkStateOverride) Descriptor() protoreflect.EnumDescriptor {
-	return file_pkg_structures_topology_config_topology_config_proto_enumTypes[3].Descriptor()
+	return file_common_structures_topology_config_topology_config_proto_enumTypes[3].Descriptor()
 }
 
 func (LinkStateOverride) Type() protoreflect.EnumType {
-	return &file_pkg_structures_topology_config_topology_config_proto_enumTypes[3]
+	return &file_common_structures_topology_config_topology_config_proto_enumTypes[3]
 }
 
 func (x LinkStateOverride) Number() protoreflect.EnumNumber {
@@ -231,7 +231,7 @@ func (x LinkStateOverride) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use LinkStateOverride.Descriptor instead.
 func (LinkStateOverride) EnumDescriptor() ([]byte, []int) {
-	return file_pkg_structures_topology_config_topology_config_proto_rawDescGZIP(), []int{3}
+	return file_common_structures_topology_config_topology_config_proto_rawDescGZIP(), []int{3}
 }
 
 type TopologyConfig struct {
@@ -245,7 +245,7 @@ type TopologyConfig struct {
 
 func (x *TopologyConfig) Reset() {
 	*x = TopologyConfig{}
-	mi := &file_pkg_structures_topology_config_topology_config_proto_msgTypes[0]
+	mi := &file_common_structures_topology_config_topology_config_proto_msgTypes[0]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -257,7 +257,7 @@ func (x *TopologyConfig) String() string {
 func (*TopologyConfig) ProtoMessage() {}
 
 func (x *TopologyConfig) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_structures_topology_config_topology_config_proto_msgTypes[0]
+	mi := &file_common_structures_topology_config_topology_config_proto_msgTypes[0]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -270,7 +270,7 @@ func (x *TopologyConfig) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use TopologyConfig.ProtoReflect.Descriptor instead.
 func (*TopologyConfig) Descriptor() ([]byte, []int) {
-	return file_pkg_structures_topology_config_topology_config_proto_rawDescGZIP(), []int{0}
+	return file_common_structures_topology_config_topology_config_proto_rawDescGZIP(), []int{0}
 }
 
 func (x *TopologyConfig) GetConfigId() string {
@@ -308,7 +308,7 @@ type NodeConfig struct {
 
 func (x *NodeConfig) Reset() {
 	*x = NodeConfig{}
-	mi := &file_pkg_structures_topology_config_topology_config_proto_msgTypes[1]
+	mi := &file_common_structures_topology_config_topology_config_proto_msgTypes[1]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -320,7 +320,7 @@ func (x *NodeConfig) String() string {
 func (*NodeConfig) ProtoMessage() {}
 
 func (x *NodeConfig) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_structures_topology_config_topology_config_proto_msgTypes[1]
+	mi := &file_common_structures_topology_config_topology_config_proto_msgTypes[1]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -333,7 +333,7 @@ func (x *NodeConfig) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use NodeConfig.ProtoReflect.Descriptor instead.
 func (*NodeConfig) Descriptor() ([]byte, []int) {
-	return file_pkg_structures_topology_config_topology_config_proto_rawDescGZIP(), []int{1}
+	return file_common_structures_topology_config_topology_config_proto_rawDescGZIP(), []int{1}
 }
 
 func (x *NodeConfig) GetNodeId() string {
@@ -384,7 +384,7 @@ type BridgeConfig struct {
 
 func (x *BridgeConfig) Reset() {
 	*x = BridgeConfig{}
-	mi := &file_pkg_structures_topology_config_topology_config_proto_msgTypes[2]
+	mi := &file_common_structures_topology_config_topology_config_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -396,7 +396,7 @@ func (x *BridgeConfig) String() string {
 func (*BridgeConfig) ProtoMessage() {}
 
 func (x *BridgeConfig) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_structures_topology_config_topology_config_proto_msgTypes[2]
+	mi := &file_common_structures_topology_config_topology_config_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -409,7 +409,7 @@ func (x *BridgeConfig) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use BridgeConfig.ProtoReflect.Descriptor instead.
 func (*BridgeConfig) Descriptor() ([]byte, []int) {
-	return file_pkg_structures_topology_config_topology_config_proto_rawDescGZIP(), []int{2}
+	return file_common_structures_topology_config_topology_config_proto_rawDescGZIP(), []int{2}
 }
 
 func (x *BridgeConfig) GetStp() *stp.StpConfiguration {
@@ -456,7 +456,7 @@ type EndStationConfig struct {
 
 func (x *EndStationConfig) Reset() {
 	*x = EndStationConfig{}
-	mi := &file_pkg_structures_topology_config_topology_config_proto_msgTypes[3]
+	mi := &file_common_structures_topology_config_topology_config_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -468,7 +468,7 @@ func (x *EndStationConfig) String() string {
 func (*EndStationConfig) ProtoMessage() {}
 
 func (x *EndStationConfig) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_structures_topology_config_topology_config_proto_msgTypes[3]
+	mi := &file_common_structures_topology_config_topology_config_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -481,7 +481,7 @@ func (x *EndStationConfig) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use EndStationConfig.ProtoReflect.Descriptor instead.
 func (*EndStationConfig) Descriptor() ([]byte, []int) {
-	return file_pkg_structures_topology_config_topology_config_proto_rawDescGZIP(), []int{3}
+	return file_common_structures_topology_config_topology_config_proto_rawDescGZIP(), []int{3}
 }
 
 func (x *EndStationConfig) GetParticipateInTimeSync() bool {
@@ -500,7 +500,7 @@ type BridgedEndStationConfig struct {
 
 func (x *BridgedEndStationConfig) Reset() {
 	*x = BridgedEndStationConfig{}
-	mi := &file_pkg_structures_topology_config_topology_config_proto_msgTypes[4]
+	mi := &file_common_structures_topology_config_topology_config_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -512,7 +512,7 @@ func (x *BridgedEndStationConfig) String() string {
 func (*BridgedEndStationConfig) ProtoMessage() {}
 
 func (x *BridgedEndStationConfig) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_structures_topology_config_topology_config_proto_msgTypes[4]
+	mi := &file_common_structures_topology_config_topology_config_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -525,7 +525,7 @@ func (x *BridgedEndStationConfig) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use BridgedEndStationConfig.ProtoReflect.Descriptor instead.
 func (*BridgedEndStationConfig) Descriptor() ([]byte, []int) {
-	return file_pkg_structures_topology_config_topology_config_proto_rawDescGZIP(), []int{4}
+	return file_common_structures_topology_config_topology_config_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *BridgedEndStationConfig) GetForwardingEnabled() bool {
@@ -561,7 +561,7 @@ type PortConfig struct {
 
 func (x *PortConfig) Reset() {
 	*x = PortConfig{}
-	mi := &file_pkg_structures_topology_config_topology_config_proto_msgTypes[5]
+	mi := &file_common_structures_topology_config_topology_config_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -573,7 +573,7 @@ func (x *PortConfig) String() string {
 func (*PortConfig) ProtoMessage() {}
 
 func (x *PortConfig) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_structures_topology_config_topology_config_proto_msgTypes[5]
+	mi := &file_common_structures_topology_config_topology_config_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -586,7 +586,7 @@ func (x *PortConfig) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PortConfig.ProtoReflect.Descriptor instead.
 func (*PortConfig) Descriptor() ([]byte, []int) {
-	return file_pkg_structures_topology_config_topology_config_proto_rawDescGZIP(), []int{5}
+	return file_common_structures_topology_config_topology_config_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *PortConfig) GetPortId() string {
@@ -713,7 +713,7 @@ type TrafficClassTableEntry struct {
 
 func (x *TrafficClassTableEntry) Reset() {
 	*x = TrafficClassTableEntry{}
-	mi := &file_pkg_structures_topology_config_topology_config_proto_msgTypes[6]
+	mi := &file_common_structures_topology_config_topology_config_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -725,7 +725,7 @@ func (x *TrafficClassTableEntry) String() string {
 func (*TrafficClassTableEntry) ProtoMessage() {}
 
 func (x *TrafficClassTableEntry) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_structures_topology_config_topology_config_proto_msgTypes[6]
+	mi := &file_common_structures_topology_config_topology_config_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -738,7 +738,7 @@ func (x *TrafficClassTableEntry) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use TrafficClassTableEntry.ProtoReflect.Descriptor instead.
 func (*TrafficClassTableEntry) Descriptor() ([]byte, []int) {
-	return file_pkg_structures_topology_config_topology_config_proto_rawDescGZIP(), []int{6}
+	return file_common_structures_topology_config_topology_config_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *TrafficClassTableEntry) GetPcp() uint32 {
@@ -769,7 +769,7 @@ type QueueConfig struct {
 
 func (x *QueueConfig) Reset() {
 	*x = QueueConfig{}
-	mi := &file_pkg_structures_topology_config_topology_config_proto_msgTypes[7]
+	mi := &file_common_structures_topology_config_topology_config_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -781,7 +781,7 @@ func (x *QueueConfig) String() string {
 func (*QueueConfig) ProtoMessage() {}
 
 func (x *QueueConfig) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_structures_topology_config_topology_config_proto_msgTypes[7]
+	mi := &file_common_structures_topology_config_topology_config_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -794,7 +794,7 @@ func (x *QueueConfig) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use QueueConfig.ProtoReflect.Descriptor instead.
 func (*QueueConfig) Descriptor() ([]byte, []int) {
-	return file_pkg_structures_topology_config_topology_config_proto_rawDescGZIP(), []int{7}
+	return file_common_structures_topology_config_topology_config_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *QueueConfig) GetQueueId() uint32 {
@@ -842,7 +842,7 @@ type LinkConfig struct {
 
 func (x *LinkConfig) Reset() {
 	*x = LinkConfig{}
-	mi := &file_pkg_structures_topology_config_topology_config_proto_msgTypes[8]
+	mi := &file_common_structures_topology_config_topology_config_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -854,7 +854,7 @@ func (x *LinkConfig) String() string {
 func (*LinkConfig) ProtoMessage() {}
 
 func (x *LinkConfig) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_structures_topology_config_topology_config_proto_msgTypes[8]
+	mi := &file_common_structures_topology_config_topology_config_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -867,7 +867,7 @@ func (x *LinkConfig) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LinkConfig.ProtoReflect.Descriptor instead.
 func (*LinkConfig) Descriptor() ([]byte, []int) {
-	return file_pkg_structures_topology_config_topology_config_proto_rawDescGZIP(), []int{8}
+	return file_common_structures_topology_config_topology_config_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *LinkConfig) GetLinkId() string {
@@ -884,11 +884,11 @@ func (x *LinkConfig) GetStateOverride() LinkStateOverride {
 	return LinkStateOverride_UNDEFINED
 }
 
-var File_pkg_structures_topology_config_topology_config_proto protoreflect.FileDescriptor
+var File_common_structures_topology_config_topology_config_proto protoreflect.FileDescriptor
 
-const file_pkg_structures_topology_config_topology_config_proto_rawDesc = "" +
+const file_common_structures_topology_config_topology_config_proto_rawDesc = "" +
 	"\n" +
-	"4common/structures/topology_config/topology_config.proto\x12\x0ftopology_config\x1a\x1ccommon/structures/qbv/qbv.proto\x1a\x1ccommon/structures/qav/qav.proto\x1a\x1ccommon/structures/stp/stp.proto\x1a\x1ecommon/structures/vlan/vlan.proto\"\xad\x01\n" +
+	"7common/structures/topology_config/topology_config.proto\x12\x0ftopology_config\x1a\x1fcommon/structures/qbv/qbv.proto\x1a\x1fcommon/structures/qav/qav.proto\x1a\x1fcommon/structures/stp/stp.proto\x1a!common/structures/vlan/vlan.proto\"\xad\x01\n" +
 	"\x0eTopologyConfig\x12\x1b\n" +
 	"\tconfig_id\x18\x01 \x01(\tR\bconfigId\x12>\n" +
 	"\fnode_configs\x18\x02 \x03(\v2\x1b.topology_config.NodeConfigR\vnodeConfigs\x12>\n" +
@@ -999,20 +999,20 @@ const file_pkg_structures_topology_config_topology_config_proto_rawDesc = "" +
 	"FORCE_DOWN\x10\x02B\x12Z\x10/topology_configb\x06proto3"
 
 var (
-	file_pkg_structures_topology_config_topology_config_proto_rawDescOnce sync.Once
-	file_pkg_structures_topology_config_topology_config_proto_rawDescData []byte
+	file_common_structures_topology_config_topology_config_proto_rawDescOnce sync.Once
+	file_common_structures_topology_config_topology_config_proto_rawDescData []byte
 )
 
-func file_pkg_structures_topology_config_topology_config_proto_rawDescGZIP() []byte {
-	file_pkg_structures_topology_config_topology_config_proto_rawDescOnce.Do(func() {
-		file_pkg_structures_topology_config_topology_config_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_pkg_structures_topology_config_topology_config_proto_rawDesc), len(file_pkg_structures_topology_config_topology_config_proto_rawDesc)))
+func file_common_structures_topology_config_topology_config_proto_rawDescGZIP() []byte {
+	file_common_structures_topology_config_topology_config_proto_rawDescOnce.Do(func() {
+		file_common_structures_topology_config_topology_config_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_common_structures_topology_config_topology_config_proto_rawDesc), len(file_common_structures_topology_config_topology_config_proto_rawDesc)))
 	})
-	return file_pkg_structures_topology_config_topology_config_proto_rawDescData
+	return file_common_structures_topology_config_topology_config_proto_rawDescData
 }
 
-var file_pkg_structures_topology_config_topology_config_proto_enumTypes = make([]protoimpl.EnumInfo, 4)
-var file_pkg_structures_topology_config_topology_config_proto_msgTypes = make([]protoimpl.MessageInfo, 9)
-var file_pkg_structures_topology_config_topology_config_proto_goTypes = []any{
+var file_common_structures_topology_config_topology_config_proto_enumTypes = make([]protoimpl.EnumInfo, 4)
+var file_common_structures_topology_config_topology_config_proto_msgTypes = make([]protoimpl.MessageInfo, 9)
+var file_common_structures_topology_config_topology_config_proto_goTypes = []any{
 	(AdminState)(0),                     // 0: topology_config.AdminState
 	(GptpRole)(0),                       // 1: topology_config.GptpRole
 	(SchedulingModel)(0),                // 2: topology_config.SchedulingModel
@@ -1034,7 +1034,7 @@ var file_pkg_structures_topology_config_topology_config_proto_goTypes = []any{
 	(*vlan.PortVlanAdvancedConfig)(nil), // 18: vlan.PortVlanAdvancedConfig
 	(*qav.CbsQueueConfig)(nil),          // 19: qav.CbsQueueConfig
 }
-var file_pkg_structures_topology_config_topology_config_proto_depIdxs = []int32{
+var file_common_structures_topology_config_topology_config_proto_depIdxs = []int32{
 	5,  // 0: topology_config.TopologyConfig.node_configs:type_name -> topology_config.NodeConfig
 	12, // 1: topology_config.TopologyConfig.link_configs:type_name -> topology_config.LinkConfig
 	6,  // 2: topology_config.NodeConfig.bridge:type_name -> topology_config.BridgeConfig
@@ -1061,34 +1061,34 @@ var file_pkg_structures_topology_config_topology_config_proto_depIdxs = []int32{
 	0,  // [0:19] is the sub-list for field type_name
 }
 
-func init() { file_pkg_structures_topology_config_topology_config_proto_init() }
-func file_pkg_structures_topology_config_topology_config_proto_init() {
-	if File_pkg_structures_topology_config_topology_config_proto != nil {
+func init() { file_common_structures_topology_config_topology_config_proto_init() }
+func file_common_structures_topology_config_topology_config_proto_init() {
+	if File_common_structures_topology_config_topology_config_proto != nil {
 		return
 	}
-	file_pkg_structures_topology_config_topology_config_proto_msgTypes[1].OneofWrappers = []any{}
-	file_pkg_structures_topology_config_topology_config_proto_msgTypes[2].OneofWrappers = []any{}
-	file_pkg_structures_topology_config_topology_config_proto_msgTypes[3].OneofWrappers = []any{}
-	file_pkg_structures_topology_config_topology_config_proto_msgTypes[4].OneofWrappers = []any{}
-	file_pkg_structures_topology_config_topology_config_proto_msgTypes[5].OneofWrappers = []any{}
-	file_pkg_structures_topology_config_topology_config_proto_msgTypes[7].OneofWrappers = []any{}
-	file_pkg_structures_topology_config_topology_config_proto_msgTypes[8].OneofWrappers = []any{}
+	file_common_structures_topology_config_topology_config_proto_msgTypes[1].OneofWrappers = []any{}
+	file_common_structures_topology_config_topology_config_proto_msgTypes[2].OneofWrappers = []any{}
+	file_common_structures_topology_config_topology_config_proto_msgTypes[3].OneofWrappers = []any{}
+	file_common_structures_topology_config_topology_config_proto_msgTypes[4].OneofWrappers = []any{}
+	file_common_structures_topology_config_topology_config_proto_msgTypes[5].OneofWrappers = []any{}
+	file_common_structures_topology_config_topology_config_proto_msgTypes[7].OneofWrappers = []any{}
+	file_common_structures_topology_config_topology_config_proto_msgTypes[8].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
-			RawDescriptor: unsafe.Slice(unsafe.StringData(file_pkg_structures_topology_config_topology_config_proto_rawDesc), len(file_pkg_structures_topology_config_topology_config_proto_rawDesc)),
+			RawDescriptor: unsafe.Slice(unsafe.StringData(file_common_structures_topology_config_topology_config_proto_rawDesc), len(file_common_structures_topology_config_topology_config_proto_rawDesc)),
 			NumEnums:      4,
 			NumMessages:   9,
 			NumExtensions: 0,
 			NumServices:   0,
 		},
-		GoTypes:           file_pkg_structures_topology_config_topology_config_proto_goTypes,
-		DependencyIndexes: file_pkg_structures_topology_config_topology_config_proto_depIdxs,
-		EnumInfos:         file_pkg_structures_topology_config_topology_config_proto_enumTypes,
-		MessageInfos:      file_pkg_structures_topology_config_topology_config_proto_msgTypes,
+		GoTypes:           file_common_structures_topology_config_topology_config_proto_goTypes,
+		DependencyIndexes: file_common_structures_topology_config_topology_config_proto_depIdxs,
+		EnumInfos:         file_common_structures_topology_config_topology_config_proto_enumTypes,
+		MessageInfos:      file_common_structures_topology_config_topology_config_proto_msgTypes,
 	}.Build()
-	File_pkg_structures_topology_config_topology_config_proto = out.File
-	file_pkg_structures_topology_config_topology_config_proto_goTypes = nil
-	file_pkg_structures_topology_config_topology_config_proto_depIdxs = nil
+	File_common_structures_topology_config_topology_config_proto = out.File
+	file_common_structures_topology_config_topology_config_proto_goTypes = nil
+	file_common_structures_topology_config_topology_config_proto_depIdxs = nil
 }

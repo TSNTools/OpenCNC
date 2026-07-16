@@ -54,11 +54,11 @@ func (x DeliveryMode) String() string {
 }
 
 func (DeliveryMode) Descriptor() protoreflect.EnumDescriptor {
-	return file_pkg_structures_trafficType_trafficType_proto_enumTypes[0].Descriptor()
+	return file_common_structures_trafficType_trafficType_proto_enumTypes[0].Descriptor()
 }
 
 func (DeliveryMode) Type() protoreflect.EnumType {
-	return &file_pkg_structures_trafficType_trafficType_proto_enumTypes[0]
+	return &file_common_structures_trafficType_trafficType_proto_enumTypes[0]
 }
 
 func (x DeliveryMode) Number() protoreflect.EnumNumber {
@@ -67,7 +67,7 @@ func (x DeliveryMode) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use DeliveryMode.Descriptor instead.
 func (DeliveryMode) EnumDescriptor() ([]byte, []int) {
-	return file_pkg_structures_trafficType_trafficType_proto_rawDescGZIP(), []int{0}
+	return file_common_structures_trafficType_trafficType_proto_rawDescGZIP(), []int{0}
 }
 
 type Shaper int32
@@ -106,11 +106,11 @@ func (x Shaper) String() string {
 }
 
 func (Shaper) Descriptor() protoreflect.EnumDescriptor {
-	return file_pkg_structures_trafficType_trafficType_proto_enumTypes[1].Descriptor()
+	return file_common_structures_trafficType_trafficType_proto_enumTypes[1].Descriptor()
 }
 
 func (Shaper) Type() protoreflect.EnumType {
-	return &file_pkg_structures_trafficType_trafficType_proto_enumTypes[1]
+	return &file_common_structures_trafficType_trafficType_proto_enumTypes[1]
 }
 
 func (x Shaper) Number() protoreflect.EnumNumber {
@@ -119,7 +119,7 @@ func (x Shaper) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use Shaper.Descriptor instead.
 func (Shaper) EnumDescriptor() ([]byte, []int) {
-	return file_pkg_structures_trafficType_trafficType_proto_rawDescGZIP(), []int{1}
+	return file_common_structures_trafficType_trafficType_proto_rawDescGZIP(), []int{1}
 }
 
 //
@@ -158,11 +158,11 @@ func (x ProfileType) String() string {
 }
 
 func (ProfileType) Descriptor() protoreflect.EnumDescriptor {
-	return file_pkg_structures_trafficType_trafficType_proto_enumTypes[2].Descriptor()
+	return file_common_structures_trafficType_trafficType_proto_enumTypes[2].Descriptor()
 }
 
 func (ProfileType) Type() protoreflect.EnumType {
-	return &file_pkg_structures_trafficType_trafficType_proto_enumTypes[2]
+	return &file_common_structures_trafficType_trafficType_proto_enumTypes[2]
 }
 
 func (x ProfileType) Number() protoreflect.EnumNumber {
@@ -171,7 +171,7 @@ func (x ProfileType) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use ProfileType.Descriptor instead.
 func (ProfileType) EnumDescriptor() ([]byte, []int) {
-	return file_pkg_structures_trafficType_trafficType_proto_rawDescGZIP(), []int{2}
+	return file_common_structures_trafficType_trafficType_proto_rawDescGZIP(), []int{2}
 }
 
 type TrafficType struct {
@@ -189,7 +189,7 @@ type TrafficType struct {
 
 func (x *TrafficType) Reset() {
 	*x = TrafficType{}
-	mi := &file_pkg_structures_trafficType_trafficType_proto_msgTypes[0]
+	mi := &file_common_structures_trafficType_trafficType_proto_msgTypes[0]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -201,7 +201,7 @@ func (x *TrafficType) String() string {
 func (*TrafficType) ProtoMessage() {}
 
 func (x *TrafficType) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_structures_trafficType_trafficType_proto_msgTypes[0]
+	mi := &file_common_structures_trafficType_trafficType_proto_msgTypes[0]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -214,7 +214,7 @@ func (x *TrafficType) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use TrafficType.ProtoReflect.Descriptor instead.
 func (*TrafficType) Descriptor() ([]byte, []int) {
-	return file_pkg_structures_trafficType_trafficType_proto_rawDescGZIP(), []int{0}
+	return file_common_structures_trafficType_trafficType_proto_rawDescGZIP(), []int{0}
 }
 
 func (x *TrafficType) GetId() string {
@@ -287,7 +287,7 @@ type TrafficTypeProperties struct {
 
 func (x *TrafficTypeProperties) Reset() {
 	*x = TrafficTypeProperties{}
-	mi := &file_pkg_structures_trafficType_trafficType_proto_msgTypes[1]
+	mi := &file_common_structures_trafficType_trafficType_proto_msgTypes[1]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -299,7 +299,7 @@ func (x *TrafficTypeProperties) String() string {
 func (*TrafficTypeProperties) ProtoMessage() {}
 
 func (x *TrafficTypeProperties) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_structures_trafficType_trafficType_proto_msgTypes[1]
+	mi := &file_common_structures_trafficType_trafficType_proto_msgTypes[1]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -312,7 +312,7 @@ func (x *TrafficTypeProperties) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use TrafficTypeProperties.ProtoReflect.Descriptor instead.
 func (*TrafficTypeProperties) Descriptor() ([]byte, []int) {
-	return file_pkg_structures_trafficType_trafficType_proto_rawDescGZIP(), []int{1}
+	return file_common_structures_trafficType_trafficType_proto_rawDescGZIP(), []int{1}
 }
 
 func (x *TrafficTypeProperties) GetIsPreemptable() bool {
@@ -405,7 +405,7 @@ type PortTrafficMapping struct {
 
 func (x *PortTrafficMapping) Reset() {
 	*x = PortTrafficMapping{}
-	mi := &file_pkg_structures_trafficType_trafficType_proto_msgTypes[2]
+	mi := &file_common_structures_trafficType_trafficType_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -417,7 +417,7 @@ func (x *PortTrafficMapping) String() string {
 func (*PortTrafficMapping) ProtoMessage() {}
 
 func (x *PortTrafficMapping) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_structures_trafficType_trafficType_proto_msgTypes[2]
+	mi := &file_common_structures_trafficType_trafficType_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -430,7 +430,7 @@ func (x *PortTrafficMapping) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PortTrafficMapping.ProtoReflect.Descriptor instead.
 func (*PortTrafficMapping) Descriptor() ([]byte, []int) {
-	return file_pkg_structures_trafficType_trafficType_proto_rawDescGZIP(), []int{2}
+	return file_common_structures_trafficType_trafficType_proto_rawDescGZIP(), []int{2}
 }
 
 func (x *PortTrafficMapping) GetTrafficTypeId() string {
@@ -457,7 +457,7 @@ type PortTrafficMappings struct {
 
 func (x *PortTrafficMappings) Reset() {
 	*x = PortTrafficMappings{}
-	mi := &file_pkg_structures_trafficType_trafficType_proto_msgTypes[3]
+	mi := &file_common_structures_trafficType_trafficType_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -469,7 +469,7 @@ func (x *PortTrafficMappings) String() string {
 func (*PortTrafficMappings) ProtoMessage() {}
 
 func (x *PortTrafficMappings) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_structures_trafficType_trafficType_proto_msgTypes[3]
+	mi := &file_common_structures_trafficType_trafficType_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -482,7 +482,7 @@ func (x *PortTrafficMappings) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PortTrafficMappings.ProtoReflect.Descriptor instead.
 func (*PortTrafficMappings) Descriptor() ([]byte, []int) {
-	return file_pkg_structures_trafficType_trafficType_proto_rawDescGZIP(), []int{3}
+	return file_common_structures_trafficType_trafficType_proto_rawDescGZIP(), []int{3}
 }
 
 func (x *PortTrafficMappings) GetPortId() string {
@@ -522,7 +522,7 @@ type VlanTrafficMapping struct {
 
 func (x *VlanTrafficMapping) Reset() {
 	*x = VlanTrafficMapping{}
-	mi := &file_pkg_structures_trafficType_trafficType_proto_msgTypes[4]
+	mi := &file_common_structures_trafficType_trafficType_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -534,7 +534,7 @@ func (x *VlanTrafficMapping) String() string {
 func (*VlanTrafficMapping) ProtoMessage() {}
 
 func (x *VlanTrafficMapping) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_structures_trafficType_trafficType_proto_msgTypes[4]
+	mi := &file_common_structures_trafficType_trafficType_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -547,7 +547,7 @@ func (x *VlanTrafficMapping) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use VlanTrafficMapping.ProtoReflect.Descriptor instead.
 func (*VlanTrafficMapping) Descriptor() ([]byte, []int) {
-	return file_pkg_structures_trafficType_trafficType_proto_rawDescGZIP(), []int{4}
+	return file_common_structures_trafficType_trafficType_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *VlanTrafficMapping) GetTrafficTypeId() string {
@@ -588,7 +588,7 @@ type VlanTrafficMappings struct {
 
 func (x *VlanTrafficMappings) Reset() {
 	*x = VlanTrafficMappings{}
-	mi := &file_pkg_structures_trafficType_trafficType_proto_msgTypes[5]
+	mi := &file_common_structures_trafficType_trafficType_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -600,7 +600,7 @@ func (x *VlanTrafficMappings) String() string {
 func (*VlanTrafficMappings) ProtoMessage() {}
 
 func (x *VlanTrafficMappings) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_structures_trafficType_trafficType_proto_msgTypes[5]
+	mi := &file_common_structures_trafficType_trafficType_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -613,7 +613,7 @@ func (x *VlanTrafficMappings) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use VlanTrafficMappings.ProtoReflect.Descriptor instead.
 func (*VlanTrafficMappings) Descriptor() ([]byte, []int) {
-	return file_pkg_structures_trafficType_trafficType_proto_rawDescGZIP(), []int{5}
+	return file_common_structures_trafficType_trafficType_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *VlanTrafficMappings) GetPortId() string {
@@ -647,7 +647,7 @@ type ProfileCapabilities struct {
 
 func (x *ProfileCapabilities) Reset() {
 	*x = ProfileCapabilities{}
-	mi := &file_pkg_structures_trafficType_trafficType_proto_msgTypes[6]
+	mi := &file_common_structures_trafficType_trafficType_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -659,7 +659,7 @@ func (x *ProfileCapabilities) String() string {
 func (*ProfileCapabilities) ProtoMessage() {}
 
 func (x *ProfileCapabilities) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_structures_trafficType_trafficType_proto_msgTypes[6]
+	mi := &file_common_structures_trafficType_trafficType_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -672,7 +672,7 @@ func (x *ProfileCapabilities) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ProfileCapabilities.ProtoReflect.Descriptor instead.
 func (*ProfileCapabilities) Descriptor() ([]byte, []int) {
-	return file_pkg_structures_trafficType_trafficType_proto_rawDescGZIP(), []int{6}
+	return file_common_structures_trafficType_trafficType_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *ProfileCapabilities) GetSupportCbs() bool {
@@ -735,7 +735,7 @@ type Profile struct {
 
 func (x *Profile) Reset() {
 	*x = Profile{}
-	mi := &file_pkg_structures_trafficType_trafficType_proto_msgTypes[7]
+	mi := &file_common_structures_trafficType_trafficType_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -747,7 +747,7 @@ func (x *Profile) String() string {
 func (*Profile) ProtoMessage() {}
 
 func (x *Profile) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_structures_trafficType_trafficType_proto_msgTypes[7]
+	mi := &file_common_structures_trafficType_trafficType_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -760,7 +760,7 @@ func (x *Profile) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Profile.ProtoReflect.Descriptor instead.
 func (*Profile) Descriptor() ([]byte, []int) {
-	return file_pkg_structures_trafficType_trafficType_proto_rawDescGZIP(), []int{7}
+	return file_common_structures_trafficType_trafficType_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *Profile) GetId() string {
@@ -812,11 +812,11 @@ func (x *Profile) GetCapabilities() *ProfileCapabilities {
 	return nil
 }
 
-var File_pkg_structures_trafficType_trafficType_proto protoreflect.FileDescriptor
+var File_common_structures_trafficType_trafficType_proto protoreflect.FileDescriptor
 
-const file_pkg_structures_trafficType_trafficType_proto_rawDesc = "" +
+const file_common_structures_trafficType_trafficType_proto_rawDesc = "" +
 	"\n" +
-	",common/structures/trafficType/trafficType.proto\x12\ftraffic_type\"\x99\x02\n" +
+	"/common/structures/trafficType/trafficType.proto\x12\ftraffic_type\"\x99\x02\n" +
 	"\vTrafficType\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12 \n" +
@@ -889,23 +889,23 @@ const file_pkg_structures_trafficType_trafficType_proto_rawDesc = "" +
 	"INDUSTRIAL\x10\x00\x12\x0e\n" +
 	"\n" +
 	"AUTOMOTIVE\x10\x01\x12\r\n" +
-	"\tAEROSPACE\x10\x02B@Z>OpenCNC_config_service/common/structures/trafficType;traffic_typeb\x06proto3"
+	"\tAEROSPACE\x10\x02BCZAOpenCNC_config_service/common/structures/trafficType;traffic_typeb\x06proto3"
 
 var (
-	file_pkg_structures_trafficType_trafficType_proto_rawDescOnce sync.Once
-	file_pkg_structures_trafficType_trafficType_proto_rawDescData []byte
+	file_common_structures_trafficType_trafficType_proto_rawDescOnce sync.Once
+	file_common_structures_trafficType_trafficType_proto_rawDescData []byte
 )
 
-func file_pkg_structures_trafficType_trafficType_proto_rawDescGZIP() []byte {
-	file_pkg_structures_trafficType_trafficType_proto_rawDescOnce.Do(func() {
-		file_pkg_structures_trafficType_trafficType_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_pkg_structures_trafficType_trafficType_proto_rawDesc), len(file_pkg_structures_trafficType_trafficType_proto_rawDesc)))
+func file_common_structures_trafficType_trafficType_proto_rawDescGZIP() []byte {
+	file_common_structures_trafficType_trafficType_proto_rawDescOnce.Do(func() {
+		file_common_structures_trafficType_trafficType_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_common_structures_trafficType_trafficType_proto_rawDesc), len(file_common_structures_trafficType_trafficType_proto_rawDesc)))
 	})
-	return file_pkg_structures_trafficType_trafficType_proto_rawDescData
+	return file_common_structures_trafficType_trafficType_proto_rawDescData
 }
 
-var file_pkg_structures_trafficType_trafficType_proto_enumTypes = make([]protoimpl.EnumInfo, 3)
-var file_pkg_structures_trafficType_trafficType_proto_msgTypes = make([]protoimpl.MessageInfo, 8)
-var file_pkg_structures_trafficType_trafficType_proto_goTypes = []any{
+var file_common_structures_trafficType_trafficType_proto_enumTypes = make([]protoimpl.EnumInfo, 3)
+var file_common_structures_trafficType_trafficType_proto_msgTypes = make([]protoimpl.MessageInfo, 8)
+var file_common_structures_trafficType_trafficType_proto_goTypes = []any{
 	(DeliveryMode)(0),             // 0: traffic_type.DeliveryMode
 	(Shaper)(0),                   // 1: traffic_type.Shaper
 	(ProfileType)(0),              // 2: traffic_type.ProfileType
@@ -918,7 +918,7 @@ var file_pkg_structures_trafficType_trafficType_proto_goTypes = []any{
 	(*ProfileCapabilities)(nil),   // 9: traffic_type.ProfileCapabilities
 	(*Profile)(nil),               // 10: traffic_type.Profile
 }
-var file_pkg_structures_trafficType_trafficType_proto_depIdxs = []int32{
+var file_common_structures_trafficType_trafficType_proto_depIdxs = []int32{
 	4,  // 0: traffic_type.TrafficType.properties:type_name -> traffic_type.TrafficTypeProperties
 	0,  // 1: traffic_type.TrafficType.delivery_mode:type_name -> traffic_type.DeliveryMode
 	1,  // 2: traffic_type.TrafficType.shaper:type_name -> traffic_type.Shaper
@@ -936,28 +936,28 @@ var file_pkg_structures_trafficType_trafficType_proto_depIdxs = []int32{
 	0,  // [0:10] is the sub-list for field type_name
 }
 
-func init() { file_pkg_structures_trafficType_trafficType_proto_init() }
-func file_pkg_structures_trafficType_trafficType_proto_init() {
-	if File_pkg_structures_trafficType_trafficType_proto != nil {
+func init() { file_common_structures_trafficType_trafficType_proto_init() }
+func file_common_structures_trafficType_trafficType_proto_init() {
+	if File_common_structures_trafficType_trafficType_proto != nil {
 		return
 	}
-	file_pkg_structures_trafficType_trafficType_proto_msgTypes[4].OneofWrappers = []any{}
+	file_common_structures_trafficType_trafficType_proto_msgTypes[4].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
-			RawDescriptor: unsafe.Slice(unsafe.StringData(file_pkg_structures_trafficType_trafficType_proto_rawDesc), len(file_pkg_structures_trafficType_trafficType_proto_rawDesc)),
+			RawDescriptor: unsafe.Slice(unsafe.StringData(file_common_structures_trafficType_trafficType_proto_rawDesc), len(file_common_structures_trafficType_trafficType_proto_rawDesc)),
 			NumEnums:      3,
 			NumMessages:   8,
 			NumExtensions: 0,
 			NumServices:   0,
 		},
-		GoTypes:           file_pkg_structures_trafficType_trafficType_proto_goTypes,
-		DependencyIndexes: file_pkg_structures_trafficType_trafficType_proto_depIdxs,
-		EnumInfos:         file_pkg_structures_trafficType_trafficType_proto_enumTypes,
-		MessageInfos:      file_pkg_structures_trafficType_trafficType_proto_msgTypes,
+		GoTypes:           file_common_structures_trafficType_trafficType_proto_goTypes,
+		DependencyIndexes: file_common_structures_trafficType_trafficType_proto_depIdxs,
+		EnumInfos:         file_common_structures_trafficType_trafficType_proto_enumTypes,
+		MessageInfos:      file_common_structures_trafficType_trafficType_proto_msgTypes,
 	}.Build()
-	File_pkg_structures_trafficType_trafficType_proto = out.File
-	file_pkg_structures_trafficType_trafficType_proto_goTypes = nil
-	file_pkg_structures_trafficType_trafficType_proto_depIdxs = nil
+	File_common_structures_trafficType_trafficType_proto = out.File
+	file_common_structures_trafficType_trafficType_proto_goTypes = nil
+	file_common_structures_trafficType_trafficType_proto_depIdxs = nil
 }

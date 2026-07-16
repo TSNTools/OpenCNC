@@ -2,17 +2,13 @@ package main
 
 import (
 	"context"
-	"crypto/tls"
-	"crypto/x509"
 	"log"
 	"net"
-	"os"
 	"time"
 
 	"OpenCNC_config_service/common/observability"
 
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/reflection"
 
 	service "OpenCNC_config_service/common/structures/service"
@@ -24,74 +20,69 @@ import (
 )
 
 func main() {
-	logger := log.New(os.Stdout, "[Config-Service] ", log.LstdFlags)
-
 	obsClient, err := observability.NewFromEnv("config-service")
 	if err != nil {
-		logger.Fatalf("Observability init failed: %v", err)
+		log.Fatalf("Observability init failed: %v", err)
 	}
 	if obsClient != nil {
 		defer func() {
-			if err := obsClient.Close(); err != nil {
-				logger.Printf("Observability producer close error: %v", err)
-			}
+			_ = obsClient.Close()
 		}()
 
 		startupCtx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 		defer cancel()
-		if err := obsClient.EmitHealthStarted(startupCtx, "config-service-startup", "config-service started"); err != nil {
-			logger.Printf("Observability startup publish failed: %v", err)
-		}
+		_ = obsClient.EmitHealthStarted(startupCtx, "config-service-startup", "config-service started")
 	}
 
 	// --- Load server certificate and key ---
-	serverCert, err := tls.LoadX509KeyPair("/certs/tls.crt", "/certs/tls.key")
-	if err != nil {
-		logger.Fatalf("Failed to load server TLS cert/key: %v", err)
-	}
+	/*
+		serverCert, err := tls.LoadX509KeyPair("/certs/tls.crt", "/certs/tls.key")
+		if err != nil {
+			obsClient.FatalF("Failed to load server TLS cert/key: %v", err)
+		}
 
-	// --- Load CA certificate to verify clients ---
-	caCertPEM, err := os.ReadFile("/certs/ca.crt")
-	if err != nil {
-		logger.Fatalf("Failed to load CA certificate: %v", err)
-	}
+		// --- Load CA certificate to verify clients ---
+		caCertPEM, err := os.ReadFile("/certs/ca.crt")
+		if err != nil {
+			obsClient.FatalF("Failed to load CA certificate: %v", err)
+		}
 
-	caCertPool := x509.NewCertPool()
-	if !caCertPool.AppendCertsFromPEM(caCertPEM) {
-		logger.Fatalf("Failed to append CA certificate to pool")
-	}
+		caCertPool := x509.NewCertPool()
+		if !caCertPool.AppendCertsFromPEM(caCertPEM) {
+			obsClient.FatalF("Failed to append CA certificate to pool")
+		}
 
-	// --- Configure mutual TLS ---
-	tlsConfig := &tls.Config{
-		Certificates: []tls.Certificate{serverCert}, // server identity
-		ClientCAs:    caCertPool,                    // trust clients signed by this CA
-		ClientAuth:   tls.NoClientCert,              // only server authenticates
-		// //tls.RequireAndVerifyClientCert, // 🔒 require valid client cert
-		MinVersion: tls.VersionTLS13, // enforce modern TLS
-	}
+		// --- Configure mutual TLS ---
+		tlsConfig := &tls.Config{
+			Certificates: []tls.Certificate{serverCert}, // server identity
+			ClientCAs:    caCertPool,                    // trust clients signed by this CA
+			ClientAuth:   tls.NoClientCert,              // only server authenticates
+			// //tls.RequireAndVerifyClientCert, // 🔒 require valid client cert
+			MinVersion: tls.VersionTLS13, // enforce modern TLS
+		}
 
-	creds := credentials.NewTLS(tlsConfig)
-
+		creds := credentials.NewTLS(tlsConfig)
+	*/
 	// --- Create TCP listener ---
 	listener, err := net.Listen("tcp", ":5150")
 	if err != nil {
-		logger.Fatalf("Failed to listen on :5150: %v", err)
+		obsClient.FatalF("Failed to listen on :5150: %v", err)
 	}
 
 	// --- Create gRPC server with TLS credentials ---
-	grpcServer := grpc.NewServer(grpc.Creds(creds))
-	//grpcServer := grpc.NewServer()
+	//grpcServer := grpc.NewServer(grpc.Creds(creds))
+	grpcServer := grpc.NewServer()
 	//logger.Println("Starting gRPC server without TLS (for testing)...")
 
 	// --- Create the configuration engine and register backends ---
-	engine := engine.NewMappingEngine(logger)
+	engine := engine.NewMappingEngine(obsClient)
 	// register the Netconf backend
-	netconfPlugins := plugins.ForProtocol(topology.ManagementProtocol_NETCONF, logger)
-	netconf_backend := protocolbackends.NewNetconfBackend("netconf", netconfPlugins...)
+	netconfPlugins := plugins.ForProtocol(topology.ManagementProtocol_NETCONF, obsClient)
+	netconf_backend := protocolbackends.NewNetconfBackend("netconf", obsClient, netconfPlugins...)
 	engine.RegisterBackend(netconf_backend)
 
 	// --- Register ConfigService and gNMI service ---
-	svc := service.NewConfigServiceServerImpl(logger, engine)
+	svc := service.NewConfigServiceServerImpl(obsClient, engine)
 	service.RegisterConfigServiceServer(grpcServer, svc)
 
 	//gnmi.RegisterGNMIServer(grpcServer, gnmiImpl.NewGNMIService(logger))
@@ -99,18 +90,18 @@ func main() {
 	// --- Optional: reflection ---
 	reflection.Register(grpcServer)
 
-	logger.Println("🔐 gRPC server with TLS started on port 5150")
+	if obsClient != nil {
+		obsClient.Println("gRPC server with TLS started on port 5150")
+	}
 
 	// --- Start serving ---
 	if err := grpcServer.Serve(listener); err != nil {
 		if obsClient != nil {
 			errCtx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 			defer cancel()
-			if emitErr := obsClient.EmitHealthError(errCtx, "config-service-serve", err.Error(), ""); emitErr != nil {
-				logger.Printf("Observability serve-failure publish failed: %v", emitErr)
-			}
+			_ = obsClient.EmitHealthError(errCtx, "config-service-serve", err.Error(), "")
 		}
-		logger.Fatalf("gRPC server failed: %v", err)
+		obsClient.FatalF("gRPC server failed: %v", err)
 	}
 
 }

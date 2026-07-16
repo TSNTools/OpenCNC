@@ -2,7 +2,8 @@ package gnmi
 
 import (
 	"context"
-	"log"
+
+	"OpenCNC_config_service/common/observability"
 
 	gnmi "github.com/openconfig/gnmi/proto/gnmi"
 	"google.golang.org/grpc"
@@ -11,11 +12,11 @@ import (
 // GNMIService implements gnmi.gNMI
 type GNMIService struct {
 	gnmi.UnimplementedGNMIServer
-	logger *log.Logger
+	logger observability.Logger
 }
 
-func NewGNMIService(logger *log.Logger) *GNMIService {
-	return &GNMIService{logger: logger}
+func NewGNMIService(logger observability.Logger) *GNMIService {
+	return &GNMIService{logger: observability.NormalizeLogger(logger)}
 }
 
 func (s *GNMIService) Get(ctx context.Context, req *gnmi.GetRequest) (*gnmi.GetResponse, error) {

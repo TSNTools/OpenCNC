@@ -46,7 +46,6 @@ var (
 type Config struct {
 	Enabled               bool
 	KafkaEnabled          bool
-	FailOpen              bool
 	Brokers               []string
 	TopicMap              map[observabilityv1.EventKind]string
 	RequiredSchemaVersion string
@@ -152,9 +151,6 @@ func (p *Producer) Publish(ctx context.Context, event *observabilityv1.EventEnve
 	}
 
 	if err := writer.WriteMessages(ctx, msg); err != nil {
-		if p.cfg.FailOpen {
-			return nil
-		}
 		return err
 	}
 

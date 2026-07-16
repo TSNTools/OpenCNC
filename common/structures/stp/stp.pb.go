@@ -67,11 +67,11 @@ func (x PortRole) String() string {
 }
 
 func (PortRole) Descriptor() protoreflect.EnumDescriptor {
-	return file_pkg_structures_stp_stp_proto_enumTypes[0].Descriptor()
+	return file_common_structures_stp_stp_proto_enumTypes[0].Descriptor()
 }
 
 func (PortRole) Type() protoreflect.EnumType {
-	return &file_pkg_structures_stp_stp_proto_enumTypes[0]
+	return &file_common_structures_stp_stp_proto_enumTypes[0]
 }
 
 func (x PortRole) Number() protoreflect.EnumNumber {
@@ -80,7 +80,7 @@ func (x PortRole) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use PortRole.Descriptor instead.
 func (PortRole) EnumDescriptor() ([]byte, []int) {
-	return file_pkg_structures_stp_stp_proto_rawDescGZIP(), []int{0}
+	return file_common_structures_stp_stp_proto_rawDescGZIP(), []int{0}
 }
 
 // Port states according to Clause 13.25.6
@@ -120,11 +120,11 @@ func (x PortState) String() string {
 }
 
 func (PortState) Descriptor() protoreflect.EnumDescriptor {
-	return file_pkg_structures_stp_stp_proto_enumTypes[1].Descriptor()
+	return file_common_structures_stp_stp_proto_enumTypes[1].Descriptor()
 }
 
 func (PortState) Type() protoreflect.EnumType {
-	return &file_pkg_structures_stp_stp_proto_enumTypes[1]
+	return &file_common_structures_stp_stp_proto_enumTypes[1]
 }
 
 func (x PortState) Number() protoreflect.EnumNumber {
@@ -133,7 +133,7 @@ func (x PortState) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use PortState.Descriptor instead.
 func (PortState) EnumDescriptor() ([]byte, []int) {
-	return file_pkg_structures_stp_stp_proto_rawDescGZIP(), []int{1}
+	return file_common_structures_stp_stp_proto_rawDescGZIP(), []int{1}
 }
 
 type StpConfiguration struct {
@@ -149,7 +149,7 @@ type StpConfiguration struct {
 
 func (x *StpConfiguration) Reset() {
 	*x = StpConfiguration{}
-	mi := &file_pkg_structures_stp_stp_proto_msgTypes[0]
+	mi := &file_common_structures_stp_stp_proto_msgTypes[0]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -161,7 +161,7 @@ func (x *StpConfiguration) String() string {
 func (*StpConfiguration) ProtoMessage() {}
 
 func (x *StpConfiguration) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_structures_stp_stp_proto_msgTypes[0]
+	mi := &file_common_structures_stp_stp_proto_msgTypes[0]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -174,7 +174,7 @@ func (x *StpConfiguration) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use StpConfiguration.ProtoReflect.Descriptor instead.
 func (*StpConfiguration) Descriptor() ([]byte, []int) {
-	return file_pkg_structures_stp_stp_proto_rawDescGZIP(), []int{0}
+	return file_common_structures_stp_stp_proto_rawDescGZIP(), []int{0}
 }
 
 func (x *StpConfiguration) GetStpEnabled() bool {
@@ -208,7 +208,7 @@ type BridgeMstConfig struct {
 
 func (x *BridgeMstConfig) Reset() {
 	*x = BridgeMstConfig{}
-	mi := &file_pkg_structures_stp_stp_proto_msgTypes[1]
+	mi := &file_common_structures_stp_stp_proto_msgTypes[1]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -220,7 +220,7 @@ func (x *BridgeMstConfig) String() string {
 func (*BridgeMstConfig) ProtoMessage() {}
 
 func (x *BridgeMstConfig) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_structures_stp_stp_proto_msgTypes[1]
+	mi := &file_common_structures_stp_stp_proto_msgTypes[1]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -233,7 +233,7 @@ func (x *BridgeMstConfig) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use BridgeMstConfig.ProtoReflect.Descriptor instead.
 func (*BridgeMstConfig) Descriptor() ([]byte, []int) {
-	return file_pkg_structures_stp_stp_proto_rawDescGZIP(), []int{1}
+	return file_common_structures_stp_stp_proto_rawDescGZIP(), []int{1}
 }
 
 func (x *BridgeMstConfig) GetSupportedMstIds() []uint32 {
@@ -267,7 +267,7 @@ type FidToMstidMapping struct {
 
 func (x *FidToMstidMapping) Reset() {
 	*x = FidToMstidMapping{}
-	mi := &file_pkg_structures_stp_stp_proto_msgTypes[2]
+	mi := &file_common_structures_stp_stp_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -279,7 +279,7 @@ func (x *FidToMstidMapping) String() string {
 func (*FidToMstidMapping) ProtoMessage() {}
 
 func (x *FidToMstidMapping) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_structures_stp_stp_proto_msgTypes[2]
+	mi := &file_common_structures_stp_stp_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -292,7 +292,7 @@ func (x *FidToMstidMapping) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use FidToMstidMapping.ProtoReflect.Descriptor instead.
 func (*FidToMstidMapping) Descriptor() ([]byte, []int) {
-	return file_pkg_structures_stp_stp_proto_rawDescGZIP(), []int{2}
+	return file_common_structures_stp_stp_proto_rawDescGZIP(), []int{2}
 }
 
 func (x *FidToMstidMapping) GetFid() uint32 {
@@ -319,7 +319,7 @@ type FidRangeToMstidAllocation struct {
 
 func (x *FidRangeToMstidAllocation) Reset() {
 	*x = FidRangeToMstidAllocation{}
-	mi := &file_pkg_structures_stp_stp_proto_msgTypes[3]
+	mi := &file_common_structures_stp_stp_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -331,7 +331,7 @@ func (x *FidRangeToMstidAllocation) String() string {
 func (*FidRangeToMstidAllocation) ProtoMessage() {}
 
 func (x *FidRangeToMstidAllocation) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_structures_stp_stp_proto_msgTypes[3]
+	mi := &file_common_structures_stp_stp_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -344,7 +344,7 @@ func (x *FidRangeToMstidAllocation) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use FidRangeToMstidAllocation.ProtoReflect.Descriptor instead.
 func (*FidRangeToMstidAllocation) Descriptor() ([]byte, []int) {
-	return file_pkg_structures_stp_stp_proto_rawDescGZIP(), []int{3}
+	return file_common_structures_stp_stp_proto_rawDescGZIP(), []int{3}
 }
 
 func (x *FidRangeToMstidAllocation) GetFids() []uint32 {
@@ -373,7 +373,7 @@ type SpanningTreeInstance struct {
 
 func (x *SpanningTreeInstance) Reset() {
 	*x = SpanningTreeInstance{}
-	mi := &file_pkg_structures_stp_stp_proto_msgTypes[4]
+	mi := &file_common_structures_stp_stp_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -385,7 +385,7 @@ func (x *SpanningTreeInstance) String() string {
 func (*SpanningTreeInstance) ProtoMessage() {}
 
 func (x *SpanningTreeInstance) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_structures_stp_stp_proto_msgTypes[4]
+	mi := &file_common_structures_stp_stp_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -398,7 +398,7 @@ func (x *SpanningTreeInstance) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SpanningTreeInstance.ProtoReflect.Descriptor instead.
 func (*SpanningTreeInstance) Descriptor() ([]byte, []int) {
-	return file_pkg_structures_stp_stp_proto_rawDescGZIP(), []int{4}
+	return file_common_structures_stp_stp_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *SpanningTreeInstance) GetInstanceId() string {
@@ -438,7 +438,7 @@ type StpPortState struct {
 
 func (x *StpPortState) Reset() {
 	*x = StpPortState{}
-	mi := &file_pkg_structures_stp_stp_proto_msgTypes[5]
+	mi := &file_common_structures_stp_stp_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -450,7 +450,7 @@ func (x *StpPortState) String() string {
 func (*StpPortState) ProtoMessage() {}
 
 func (x *StpPortState) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_structures_stp_stp_proto_msgTypes[5]
+	mi := &file_common_structures_stp_stp_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -463,7 +463,7 @@ func (x *StpPortState) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use StpPortState.ProtoReflect.Descriptor instead.
 func (*StpPortState) Descriptor() ([]byte, []int) {
-	return file_pkg_structures_stp_stp_proto_rawDescGZIP(), []int{5}
+	return file_common_structures_stp_stp_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *StpPortState) GetPortId() string {
@@ -494,11 +494,11 @@ func (x *StpPortState) GetForwarding() bool {
 	return false
 }
 
-var File_pkg_structures_stp_stp_proto protoreflect.FileDescriptor
+var File_common_structures_stp_stp_proto protoreflect.FileDescriptor
 
-const file_pkg_structures_stp_stp_proto_rawDesc = "" +
+const file_common_structures_stp_stp_proto_rawDesc = "" +
 	"\n" +
-	"\x1ccommon/structures/stp/stp.proto\x12\x03stp\"\x9b\x01\n" +
+	"\x1fcommon/structures/stp/stp.proto\x12\x03stp\"\x9b\x01\n" +
 	"\x10StpConfiguration\x12$\n" +
 	"\vstp_enabled\x18\x01 \x01(\bH\x00R\n" +
 	"stpEnabled\x88\x01\x01\x12Q\n" +
@@ -539,23 +539,23 @@ const file_pkg_structures_stp_stp_proto_rawDesc = "" +
 	"\x16PORT_STATE_UNSPECIFIED\x10\x00\x12\x19\n" +
 	"\x15PORT_STATE_DISCARDING\x10\x01\x12\x17\n" +
 	"\x13PORT_STATE_LEARNING\x10\x02\x12\x19\n" +
-	"\x15PORT_STATE_FORWARDING\x10\x03B/Z-OpenCNC_config_service/common/structures/stp;stpb\x06proto3"
+	"\x15PORT_STATE_FORWARDING\x10\x03B2Z0OpenCNC_config_service/common/structures/stp;stpb\x06proto3"
 
 var (
-	file_pkg_structures_stp_stp_proto_rawDescOnce sync.Once
-	file_pkg_structures_stp_stp_proto_rawDescData []byte
+	file_common_structures_stp_stp_proto_rawDescOnce sync.Once
+	file_common_structures_stp_stp_proto_rawDescData []byte
 )
 
-func file_pkg_structures_stp_stp_proto_rawDescGZIP() []byte {
-	file_pkg_structures_stp_stp_proto_rawDescOnce.Do(func() {
-		file_pkg_structures_stp_stp_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_pkg_structures_stp_stp_proto_rawDesc), len(file_pkg_structures_stp_stp_proto_rawDesc)))
+func file_common_structures_stp_stp_proto_rawDescGZIP() []byte {
+	file_common_structures_stp_stp_proto_rawDescOnce.Do(func() {
+		file_common_structures_stp_stp_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_common_structures_stp_stp_proto_rawDesc), len(file_common_structures_stp_stp_proto_rawDesc)))
 	})
-	return file_pkg_structures_stp_stp_proto_rawDescData
+	return file_common_structures_stp_stp_proto_rawDescData
 }
 
-var file_pkg_structures_stp_stp_proto_enumTypes = make([]protoimpl.EnumInfo, 2)
-var file_pkg_structures_stp_stp_proto_msgTypes = make([]protoimpl.MessageInfo, 6)
-var file_pkg_structures_stp_stp_proto_goTypes = []any{
+var file_common_structures_stp_stp_proto_enumTypes = make([]protoimpl.EnumInfo, 2)
+var file_common_structures_stp_stp_proto_msgTypes = make([]protoimpl.MessageInfo, 6)
+var file_common_structures_stp_stp_proto_goTypes = []any{
 	(PortRole)(0),                     // 0: stp.PortRole
 	(PortState)(0),                    // 1: stp.PortState
 	(*StpConfiguration)(nil),          // 2: stp.StpConfiguration
@@ -565,7 +565,7 @@ var file_pkg_structures_stp_stp_proto_goTypes = []any{
 	(*SpanningTreeInstance)(nil),      // 6: stp.SpanningTreeInstance
 	(*StpPortState)(nil),              // 7: stp.StpPortState
 }
-var file_pkg_structures_stp_stp_proto_depIdxs = []int32{
+var file_common_structures_stp_stp_proto_depIdxs = []int32{
 	6, // 0: stp.StpConfiguration.spanning_tree_instances:type_name -> stp.SpanningTreeInstance
 	4, // 1: stp.BridgeMstConfig.fid_to_mstid_mappings:type_name -> stp.FidToMstidMapping
 	5, // 2: stp.BridgeMstConfig.fid_to_mstid_allocations:type_name -> stp.FidRangeToMstidAllocation
@@ -579,28 +579,28 @@ var file_pkg_structures_stp_stp_proto_depIdxs = []int32{
 	0, // [0:6] is the sub-list for field type_name
 }
 
-func init() { file_pkg_structures_stp_stp_proto_init() }
-func file_pkg_structures_stp_stp_proto_init() {
-	if File_pkg_structures_stp_stp_proto != nil {
+func init() { file_common_structures_stp_stp_proto_init() }
+func file_common_structures_stp_stp_proto_init() {
+	if File_common_structures_stp_stp_proto != nil {
 		return
 	}
-	file_pkg_structures_stp_stp_proto_msgTypes[0].OneofWrappers = []any{}
+	file_common_structures_stp_stp_proto_msgTypes[0].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
-			RawDescriptor: unsafe.Slice(unsafe.StringData(file_pkg_structures_stp_stp_proto_rawDesc), len(file_pkg_structures_stp_stp_proto_rawDesc)),
+			RawDescriptor: unsafe.Slice(unsafe.StringData(file_common_structures_stp_stp_proto_rawDesc), len(file_common_structures_stp_stp_proto_rawDesc)),
 			NumEnums:      2,
 			NumMessages:   6,
 			NumExtensions: 0,
 			NumServices:   0,
 		},
-		GoTypes:           file_pkg_structures_stp_stp_proto_goTypes,
-		DependencyIndexes: file_pkg_structures_stp_stp_proto_depIdxs,
-		EnumInfos:         file_pkg_structures_stp_stp_proto_enumTypes,
-		MessageInfos:      file_pkg_structures_stp_stp_proto_msgTypes,
+		GoTypes:           file_common_structures_stp_stp_proto_goTypes,
+		DependencyIndexes: file_common_structures_stp_stp_proto_depIdxs,
+		EnumInfos:         file_common_structures_stp_stp_proto_enumTypes,
+		MessageInfos:      file_common_structures_stp_stp_proto_msgTypes,
 	}.Build()
-	File_pkg_structures_stp_stp_proto = out.File
-	file_pkg_structures_stp_stp_proto_goTypes = nil
-	file_pkg_structures_stp_stp_proto_depIdxs = nil
+	File_common_structures_stp_stp_proto = out.File
+	file_common_structures_stp_stp_proto_goTypes = nil
+	file_common_structures_stp_stp_proto_depIdxs = nil
 }

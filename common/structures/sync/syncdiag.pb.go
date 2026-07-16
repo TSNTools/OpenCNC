@@ -58,11 +58,11 @@ func (x GateSyncDiagnostics_SyncState) String() string {
 }
 
 func (GateSyncDiagnostics_SyncState) Descriptor() protoreflect.EnumDescriptor {
-	return file_pkg_structures_sync_syncdiag_proto_enumTypes[0].Descriptor()
+	return file_common_structures_sync_syncdiag_proto_enumTypes[0].Descriptor()
 }
 
 func (GateSyncDiagnostics_SyncState) Type() protoreflect.EnumType {
-	return &file_pkg_structures_sync_syncdiag_proto_enumTypes[0]
+	return &file_common_structures_sync_syncdiag_proto_enumTypes[0]
 }
 
 func (x GateSyncDiagnostics_SyncState) Number() protoreflect.EnumNumber {
@@ -71,7 +71,7 @@ func (x GateSyncDiagnostics_SyncState) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use GateSyncDiagnostics_SyncState.Descriptor instead.
 func (GateSyncDiagnostics_SyncState) EnumDescriptor() ([]byte, []int) {
-	return file_pkg_structures_sync_syncdiag_proto_rawDescGZIP(), []int{0, 0}
+	return file_common_structures_sync_syncdiag_proto_rawDescGZIP(), []int{0, 0}
 }
 
 // Represents the synchronization state of a gate control mechanism
@@ -99,7 +99,7 @@ type GateSyncDiagnostics struct {
 
 func (x *GateSyncDiagnostics) Reset() {
 	*x = GateSyncDiagnostics{}
-	mi := &file_pkg_structures_sync_syncdiag_proto_msgTypes[0]
+	mi := &file_common_structures_sync_syncdiag_proto_msgTypes[0]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -111,7 +111,7 @@ func (x *GateSyncDiagnostics) String() string {
 func (*GateSyncDiagnostics) ProtoMessage() {}
 
 func (x *GateSyncDiagnostics) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_structures_sync_syncdiag_proto_msgTypes[0]
+	mi := &file_common_structures_sync_syncdiag_proto_msgTypes[0]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -124,7 +124,7 @@ func (x *GateSyncDiagnostics) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GateSyncDiagnostics.ProtoReflect.Descriptor instead.
 func (*GateSyncDiagnostics) Descriptor() ([]byte, []int) {
-	return file_pkg_structures_sync_syncdiag_proto_rawDescGZIP(), []int{0}
+	return file_common_structures_sync_syncdiag_proto_rawDescGZIP(), []int{0}
 }
 
 func (x *GateSyncDiagnostics) GetGateInstanceName() string {
@@ -190,11 +190,11 @@ func (x *GateSyncDiagnostics) GetStatusMessage() string {
 	return ""
 }
 
-var File_pkg_structures_sync_syncdiag_proto protoreflect.FileDescriptor
+var File_common_structures_sync_syncdiag_proto protoreflect.FileDescriptor
 
-const file_pkg_structures_sync_syncdiag_proto_rawDesc = "" +
+const file_common_structures_sync_syncdiag_proto_rawDesc = "" +
 	"\n" +
-	"\"common/structures/sync/syncdiag.proto\x12\bsyncdiag\"\x82\x04\n" +
+	"%common/structures/sync/syncdiag.proto\x12\bsyncdiag\"\x82\x04\n" +
 	"\x13GateSyncDiagnostics\x12,\n" +
 	"\x12gate_instance_name\x18\x01 \x01(\tR\x10gateInstanceName\x12)\n" +
 	"\x11last_sync_time_ns\x18\x02 \x01(\x04R\x0elastSyncTimeNs\x12,\n" +
@@ -210,27 +210,27 @@ const file_pkg_structures_sync_syncdiag_proto_rawDesc = "" +
 	"\x16SYNC_STATE_UNSPECIFIED\x10\x00\x12\v\n" +
 	"\aON_TIME\x10\x01\x12\b\n" +
 	"\x04LATE\x10\x02\x12\t\n" +
-	"\x05EARLY\x10\x03B5Z3OpenCNC_config_service/common/structures/sync;syncdiagb\x06proto3"
+	"\x05EARLY\x10\x03B8Z6OpenCNC_config_service/common/structures/sync;syncdiagb\x06proto3"
 
 var (
-	file_pkg_structures_sync_syncdiag_proto_rawDescOnce sync.Once
-	file_pkg_structures_sync_syncdiag_proto_rawDescData []byte
+	file_common_structures_sync_syncdiag_proto_rawDescOnce sync.Once
+	file_common_structures_sync_syncdiag_proto_rawDescData []byte
 )
 
-func file_pkg_structures_sync_syncdiag_proto_rawDescGZIP() []byte {
-	file_pkg_structures_sync_syncdiag_proto_rawDescOnce.Do(func() {
-		file_pkg_structures_sync_syncdiag_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_pkg_structures_sync_syncdiag_proto_rawDesc), len(file_pkg_structures_sync_syncdiag_proto_rawDesc)))
+func file_common_structures_sync_syncdiag_proto_rawDescGZIP() []byte {
+	file_common_structures_sync_syncdiag_proto_rawDescOnce.Do(func() {
+		file_common_structures_sync_syncdiag_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_common_structures_sync_syncdiag_proto_rawDesc), len(file_common_structures_sync_syncdiag_proto_rawDesc)))
 	})
-	return file_pkg_structures_sync_syncdiag_proto_rawDescData
+	return file_common_structures_sync_syncdiag_proto_rawDescData
 }
 
-var file_pkg_structures_sync_syncdiag_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_pkg_structures_sync_syncdiag_proto_msgTypes = make([]protoimpl.MessageInfo, 1)
-var file_pkg_structures_sync_syncdiag_proto_goTypes = []any{
+var file_common_structures_sync_syncdiag_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
+var file_common_structures_sync_syncdiag_proto_msgTypes = make([]protoimpl.MessageInfo, 1)
+var file_common_structures_sync_syncdiag_proto_goTypes = []any{
 	(GateSyncDiagnostics_SyncState)(0), // 0: syncdiag.GateSyncDiagnostics.SyncState
 	(*GateSyncDiagnostics)(nil),        // 1: syncdiag.GateSyncDiagnostics
 }
-var file_pkg_structures_sync_syncdiag_proto_depIdxs = []int32{
+var file_common_structures_sync_syncdiag_proto_depIdxs = []int32{
 	0, // 0: syncdiag.GateSyncDiagnostics.sync_state:type_name -> syncdiag.GateSyncDiagnostics.SyncState
 	1, // [1:1] is the sub-list for method output_type
 	1, // [1:1] is the sub-list for method input_type
@@ -239,27 +239,27 @@ var file_pkg_structures_sync_syncdiag_proto_depIdxs = []int32{
 	0, // [0:1] is the sub-list for field type_name
 }
 
-func init() { file_pkg_structures_sync_syncdiag_proto_init() }
-func file_pkg_structures_sync_syncdiag_proto_init() {
-	if File_pkg_structures_sync_syncdiag_proto != nil {
+func init() { file_common_structures_sync_syncdiag_proto_init() }
+func file_common_structures_sync_syncdiag_proto_init() {
+	if File_common_structures_sync_syncdiag_proto != nil {
 		return
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
-			RawDescriptor: unsafe.Slice(unsafe.StringData(file_pkg_structures_sync_syncdiag_proto_rawDesc), len(file_pkg_structures_sync_syncdiag_proto_rawDesc)),
+			RawDescriptor: unsafe.Slice(unsafe.StringData(file_common_structures_sync_syncdiag_proto_rawDesc), len(file_common_structures_sync_syncdiag_proto_rawDesc)),
 			NumEnums:      1,
 			NumMessages:   1,
 			NumExtensions: 0,
 			NumServices:   0,
 		},
-		GoTypes:           file_pkg_structures_sync_syncdiag_proto_goTypes,
-		DependencyIndexes: file_pkg_structures_sync_syncdiag_proto_depIdxs,
-		EnumInfos:         file_pkg_structures_sync_syncdiag_proto_enumTypes,
-		MessageInfos:      file_pkg_structures_sync_syncdiag_proto_msgTypes,
+		GoTypes:           file_common_structures_sync_syncdiag_proto_goTypes,
+		DependencyIndexes: file_common_structures_sync_syncdiag_proto_depIdxs,
+		EnumInfos:         file_common_structures_sync_syncdiag_proto_enumTypes,
+		MessageInfos:      file_common_structures_sync_syncdiag_proto_msgTypes,
 	}.Build()
-	File_pkg_structures_sync_syncdiag_proto = out.File
-	file_pkg_structures_sync_syncdiag_proto_goTypes = nil
-	file_pkg_structures_sync_syncdiag_proto_depIdxs = nil
+	File_common_structures_sync_syncdiag_proto = out.File
+	file_common_structures_sync_syncdiag_proto_goTypes = nil
+	file_common_structures_sync_syncdiag_proto_depIdxs = nil
 }

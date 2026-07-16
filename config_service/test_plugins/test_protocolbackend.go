@@ -3,12 +3,12 @@ package main
 import (
 	"log"
 
-	"OpenCNC_config_service/config_service/pkg/plugins"
-	"OpenCNC_config_service/config_service/pkg/protocolbackends"
 	"OpenCNC_config_service/common/structures/qbv"
 	"OpenCNC_config_service/common/structures/topology"
 	topology_config "OpenCNC_config_service/common/structures/topology_config"
 	vlan "OpenCNC_config_service/common/structures/vlan"
+	"OpenCNC_config_service/config_service/pkg/plugins"
+	"OpenCNC_config_service/config_service/pkg/protocolbackends"
 
 	"github.com/openconfig/ygot/ygot"
 	"google.golang.org/protobuf/proto"
@@ -28,11 +28,12 @@ func TestNetconfProtocol() {
 
 	backend := protocolbackends.NewNetconfBackend(
 		"netconf",
+		logger,
 		netconfPlugins...,
 	)
 	//backend := protocolbackends.NewNetconfBackend("netconf", plugin_qbv, plugin_pcp)
 
-	backend.MapAndPush(nodecfg, *target)
+	backend.MapAndPush(nodecfg, target)
 }
 
 var target = &topology.Node{

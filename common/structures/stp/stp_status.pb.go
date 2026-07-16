@@ -30,7 +30,7 @@ type StpStatusReport struct {
 
 func (x *StpStatusReport) Reset() {
 	*x = StpStatusReport{}
-	mi := &file_pkg_structures_stp_stp_status_proto_msgTypes[0]
+	mi := &file_common_structures_stp_stp_status_proto_msgTypes[0]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -42,7 +42,7 @@ func (x *StpStatusReport) String() string {
 func (*StpStatusReport) ProtoMessage() {}
 
 func (x *StpStatusReport) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_structures_stp_stp_status_proto_msgTypes[0]
+	mi := &file_common_structures_stp_stp_status_proto_msgTypes[0]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -55,7 +55,7 @@ func (x *StpStatusReport) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use StpStatusReport.ProtoReflect.Descriptor instead.
 func (*StpStatusReport) Descriptor() ([]byte, []int) {
-	return file_pkg_structures_stp_stp_status_proto_rawDescGZIP(), []int{0}
+	return file_common_structures_stp_stp_status_proto_rawDescGZIP(), []int{0}
 }
 
 func (x *StpStatusReport) GetBridges() []*BridgeStpStatus {
@@ -79,7 +79,7 @@ type BridgeStpStatus struct {
 
 func (x *BridgeStpStatus) Reset() {
 	*x = BridgeStpStatus{}
-	mi := &file_pkg_structures_stp_stp_status_proto_msgTypes[1]
+	mi := &file_common_structures_stp_stp_status_proto_msgTypes[1]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -91,7 +91,7 @@ func (x *BridgeStpStatus) String() string {
 func (*BridgeStpStatus) ProtoMessage() {}
 
 func (x *BridgeStpStatus) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_structures_stp_stp_status_proto_msgTypes[1]
+	mi := &file_common_structures_stp_stp_status_proto_msgTypes[1]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -104,7 +104,7 @@ func (x *BridgeStpStatus) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use BridgeStpStatus.ProtoReflect.Descriptor instead.
 func (*BridgeStpStatus) Descriptor() ([]byte, []int) {
-	return file_pkg_structures_stp_stp_status_proto_rawDescGZIP(), []int{1}
+	return file_common_structures_stp_stp_status_proto_rawDescGZIP(), []int{1}
 }
 
 func (x *BridgeStpStatus) GetBridgeId() string {
@@ -162,7 +162,7 @@ type StpInstanceStatus struct {
 
 func (x *StpInstanceStatus) Reset() {
 	*x = StpInstanceStatus{}
-	mi := &file_pkg_structures_stp_stp_status_proto_msgTypes[2]
+	mi := &file_common_structures_stp_stp_status_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -174,7 +174,7 @@ func (x *StpInstanceStatus) String() string {
 func (*StpInstanceStatus) ProtoMessage() {}
 
 func (x *StpInstanceStatus) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_structures_stp_stp_status_proto_msgTypes[2]
+	mi := &file_common_structures_stp_stp_status_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -187,7 +187,7 @@ func (x *StpInstanceStatus) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use StpInstanceStatus.ProtoReflect.Descriptor instead.
 func (*StpInstanceStatus) Descriptor() ([]byte, []int) {
-	return file_pkg_structures_stp_stp_status_proto_rawDescGZIP(), []int{2}
+	return file_common_structures_stp_stp_status_proto_rawDescGZIP(), []int{2}
 }
 
 func (x *StpInstanceStatus) GetInstanceId() string {
@@ -246,7 +246,7 @@ type PortStpStatus struct {
 
 func (x *PortStpStatus) Reset() {
 	*x = PortStpStatus{}
-	mi := &file_pkg_structures_stp_stp_status_proto_msgTypes[3]
+	mi := &file_common_structures_stp_stp_status_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -258,7 +258,7 @@ func (x *PortStpStatus) String() string {
 func (*PortStpStatus) ProtoMessage() {}
 
 func (x *PortStpStatus) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_structures_stp_stp_status_proto_msgTypes[3]
+	mi := &file_common_structures_stp_stp_status_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -271,7 +271,7 @@ func (x *PortStpStatus) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PortStpStatus.ProtoReflect.Descriptor instead.
 func (*PortStpStatus) Descriptor() ([]byte, []int) {
-	return file_pkg_structures_stp_stp_status_proto_rawDescGZIP(), []int{3}
+	return file_common_structures_stp_stp_status_proto_rawDescGZIP(), []int{3}
 }
 
 func (x *PortStpStatus) GetPortId() string {
@@ -365,12 +365,12 @@ func (x *PortStpStatus) GetAgreement() bool {
 	return false
 }
 
-var File_pkg_structures_stp_stp_status_proto protoreflect.FileDescriptor
+var File_common_structures_stp_stp_status_proto protoreflect.FileDescriptor
 
-const file_pkg_structures_stp_stp_status_proto_rawDesc = "" +
+const file_common_structures_stp_stp_status_proto_rawDesc = "" +
 	"\n" +
-	"#common/structures/stp/stp_status.proto\x12\n" +
-	"stp_status\x1a\x1ccommon/structures/stp/stp.proto\"H\n" +
+	"&common/structures/stp/stp_status.proto\x12\n" +
+	"stp_status\x1a\x1fcommon/structures/stp/stp.proto\"H\n" +
 	"\x0fStpStatusReport\x125\n" +
 	"\abridges\x18\x01 \x03(\v2\x1b.stp_status.BridgeStpStatusR\abridges\"\xf6\x01\n" +
 	"\x0fBridgeStpStatus\x12\x1b\n" +
@@ -405,22 +405,22 @@ const file_pkg_structures_stp_stp_status_proto_rawDesc = "" +
 	" \x01(\bR\x11topologyChangeAck\x12%\n" +
 	"\x0etc_propagation\x18\v \x01(\bR\rtcPropagation\x12+\n" +
 	"\x11proposal_received\x18\f \x01(\bR\x10proposalReceived\x12\x1c\n" +
-	"\tagreement\x18\r \x01(\bR\tagreementB/Z-OpenCNC_config_service/common/structures/stp;stpb\x06proto3"
+	"\tagreement\x18\r \x01(\bR\tagreementB2Z0OpenCNC_config_service/common/structures/stp;stpb\x06proto3"
 
 var (
-	file_pkg_structures_stp_stp_status_proto_rawDescOnce sync.Once
-	file_pkg_structures_stp_stp_status_proto_rawDescData []byte
+	file_common_structures_stp_stp_status_proto_rawDescOnce sync.Once
+	file_common_structures_stp_stp_status_proto_rawDescData []byte
 )
 
-func file_pkg_structures_stp_stp_status_proto_rawDescGZIP() []byte {
-	file_pkg_structures_stp_stp_status_proto_rawDescOnce.Do(func() {
-		file_pkg_structures_stp_stp_status_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_pkg_structures_stp_stp_status_proto_rawDesc), len(file_pkg_structures_stp_stp_status_proto_rawDesc)))
+func file_common_structures_stp_stp_status_proto_rawDescGZIP() []byte {
+	file_common_structures_stp_stp_status_proto_rawDescOnce.Do(func() {
+		file_common_structures_stp_stp_status_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_common_structures_stp_stp_status_proto_rawDesc), len(file_common_structures_stp_stp_status_proto_rawDesc)))
 	})
-	return file_pkg_structures_stp_stp_status_proto_rawDescData
+	return file_common_structures_stp_stp_status_proto_rawDescData
 }
 
-var file_pkg_structures_stp_stp_status_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
-var file_pkg_structures_stp_stp_status_proto_goTypes = []any{
+var file_common_structures_stp_stp_status_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
+var file_common_structures_stp_stp_status_proto_goTypes = []any{
 	(*StpStatusReport)(nil),   // 0: stp_status.StpStatusReport
 	(*BridgeStpStatus)(nil),   // 1: stp_status.BridgeStpStatus
 	(*StpInstanceStatus)(nil), // 2: stp_status.StpInstanceStatus
@@ -428,7 +428,7 @@ var file_pkg_structures_stp_stp_status_proto_goTypes = []any{
 	(PortRole)(0),             // 4: stp.PortRole
 	(PortState)(0),            // 5: stp.PortState
 }
-var file_pkg_structures_stp_stp_status_proto_depIdxs = []int32{
+var file_common_structures_stp_stp_status_proto_depIdxs = []int32{
 	1, // 0: stp_status.StpStatusReport.bridges:type_name -> stp_status.BridgeStpStatus
 	2, // 1: stp_status.BridgeStpStatus.instances:type_name -> stp_status.StpInstanceStatus
 	3, // 2: stp_status.StpInstanceStatus.port_states:type_name -> stp_status.PortStpStatus
@@ -441,27 +441,27 @@ var file_pkg_structures_stp_stp_status_proto_depIdxs = []int32{
 	0, // [0:5] is the sub-list for field type_name
 }
 
-func init() { file_pkg_structures_stp_stp_status_proto_init() }
-func file_pkg_structures_stp_stp_status_proto_init() {
-	if File_pkg_structures_stp_stp_status_proto != nil {
+func init() { file_common_structures_stp_stp_status_proto_init() }
+func file_common_structures_stp_stp_status_proto_init() {
+	if File_common_structures_stp_stp_status_proto != nil {
 		return
 	}
-	file_pkg_structures_stp_stp_proto_init()
+	file_common_structures_stp_stp_proto_init()
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
-			RawDescriptor: unsafe.Slice(unsafe.StringData(file_pkg_structures_stp_stp_status_proto_rawDesc), len(file_pkg_structures_stp_stp_status_proto_rawDesc)),
+			RawDescriptor: unsafe.Slice(unsafe.StringData(file_common_structures_stp_stp_status_proto_rawDesc), len(file_common_structures_stp_stp_status_proto_rawDesc)),
 			NumEnums:      0,
 			NumMessages:   4,
 			NumExtensions: 0,
 			NumServices:   0,
 		},
-		GoTypes:           file_pkg_structures_stp_stp_status_proto_goTypes,
-		DependencyIndexes: file_pkg_structures_stp_stp_status_proto_depIdxs,
-		MessageInfos:      file_pkg_structures_stp_stp_status_proto_msgTypes,
+		GoTypes:           file_common_structures_stp_stp_status_proto_goTypes,
+		DependencyIndexes: file_common_structures_stp_stp_status_proto_depIdxs,
+		MessageInfos:      file_common_structures_stp_stp_status_proto_msgTypes,
 	}.Build()
-	File_pkg_structures_stp_stp_status_proto = out.File
-	file_pkg_structures_stp_stp_status_proto_goTypes = nil
-	file_pkg_structures_stp_stp_status_proto_depIdxs = nil
+	File_common_structures_stp_stp_status_proto = out.File
+	file_common_structures_stp_stp_status_proto_goTypes = nil
+	file_common_structures_stp_stp_status_proto_depIdxs = nil
 }

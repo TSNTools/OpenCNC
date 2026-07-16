@@ -2,19 +2,17 @@ package protocolbackends
 
 import (
 	"fmt"
-	"log"
 	"reflect"
 
-	"OpenCNC_config_service/config_service/pkg/managementSessions"
-	"OpenCNC_config_service/config_service/pkg/plugins"
+	"OpenCNC_config_service/common/observability"
 	storewrapper "OpenCNC_config_service/common/store-wrapper"
 	"OpenCNC_config_service/common/structures/topology"
 	topology_config "OpenCNC_config_service/common/structures/topology_config"
+	"OpenCNC_config_service/config_service/pkg/managementSessions"
+	"OpenCNC_config_service/config_service/pkg/plugins"
 
 	"github.com/golang/protobuf/proto"
 )
-
-var logger = log.New(log.Writer(), "[TEST-tttech-TRAFFIC-CLASSES] ", log.LstdFlags)
 
 var _ ProtocolBackend = (*NetconfBackend)(nil)
 
@@ -22,13 +20,15 @@ type NetconfBackend struct {
 	name     string
 	protocol topology.ManagementProtocol
 	plugins  []plugins.Plugin
+	logger   observability.Logger
 }
 
-func NewNetconfBackend(name string, plugins ...plugins.Plugin) *NetconfBackend {
+func NewNetconfBackend(name string, logger observability.Logger, plugins ...plugins.Plugin) *NetconfBackend {
 	return &NetconfBackend{
 		name:     name,
 		protocol: topology.ManagementProtocol_NETCONF,
 		plugins:  plugins,
+		logger:   observability.NormalizeLogger(logger),
 	}
 }
 
@@ -47,7 +47,7 @@ func (b *NetconfBackend) AddPlugin(plugin plugins.Plugin) {
 /*
 func (b *PluginBackend) GetPlugin(feature string) (plugins.Plugin, bool) {
 	for _, plugin := range b.plugins {
-		if plugin.FeatureName() == feature {
+	// TODO: Very important, it needs to filter according to device model
 			return plugin, true
 		}
 	}
@@ -59,7 +59,12 @@ func (b *NetconfBackend) Plugins() []plugins.Plugin {
 	return b.plugins
 }
 
-func (b *NetconfBackend) MapAndPush(msg proto.Message, node topology.Node) error {
+func (b *NetconfBackend) MapAndPush(msg proto.Message, node *topology.Node) error {
+	logger := b.logger
+	if node == nil {
+		return fmt.Errorf("MapAndPush: node is nil")
+	}
+
 	// TODO: Very important, it needs to filter according to device model
 	// need to pass the node instead of mgnInfo and get deviceModel from deviceInfo
 	// then use supportedbydevice() to filterout the plugins that are not supported by the device model

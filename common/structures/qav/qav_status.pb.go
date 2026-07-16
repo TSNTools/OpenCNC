@@ -41,7 +41,7 @@ type CbsTrafficClassStatus struct {
 
 func (x *CbsTrafficClassStatus) Reset() {
 	*x = CbsTrafficClassStatus{}
-	mi := &file_pkg_structures_qav_qav_status_proto_msgTypes[0]
+	mi := &file_common_structures_qav_qav_status_proto_msgTypes[0]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -53,7 +53,7 @@ func (x *CbsTrafficClassStatus) String() string {
 func (*CbsTrafficClassStatus) ProtoMessage() {}
 
 func (x *CbsTrafficClassStatus) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_structures_qav_qav_status_proto_msgTypes[0]
+	mi := &file_common_structures_qav_qav_status_proto_msgTypes[0]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -66,7 +66,7 @@ func (x *CbsTrafficClassStatus) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CbsTrafficClassStatus.ProtoReflect.Descriptor instead.
 func (*CbsTrafficClassStatus) Descriptor() ([]byte, []int) {
-	return file_pkg_structures_qav_qav_status_proto_rawDescGZIP(), []int{0}
+	return file_common_structures_qav_qav_status_proto_rawDescGZIP(), []int{0}
 }
 
 func (x *CbsTrafficClassStatus) GetTrafficClass() uint32 {
@@ -146,7 +146,7 @@ type QavPortStatus struct {
 
 func (x *QavPortStatus) Reset() {
 	*x = QavPortStatus{}
-	mi := &file_pkg_structures_qav_qav_status_proto_msgTypes[1]
+	mi := &file_common_structures_qav_qav_status_proto_msgTypes[1]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -158,7 +158,7 @@ func (x *QavPortStatus) String() string {
 func (*QavPortStatus) ProtoMessage() {}
 
 func (x *QavPortStatus) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_structures_qav_qav_status_proto_msgTypes[1]
+	mi := &file_common_structures_qav_qav_status_proto_msgTypes[1]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -171,7 +171,7 @@ func (x *QavPortStatus) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use QavPortStatus.ProtoReflect.Descriptor instead.
 func (*QavPortStatus) Descriptor() ([]byte, []int) {
-	return file_pkg_structures_qav_qav_status_proto_rawDescGZIP(), []int{1}
+	return file_common_structures_qav_qav_status_proto_rawDescGZIP(), []int{1}
 }
 
 func (x *QavPortStatus) GetNodeId() string {
@@ -213,7 +213,7 @@ type QavStatusReport struct {
 
 func (x *QavStatusReport) Reset() {
 	*x = QavStatusReport{}
-	mi := &file_pkg_structures_qav_qav_status_proto_msgTypes[2]
+	mi := &file_common_structures_qav_qav_status_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -225,7 +225,7 @@ func (x *QavStatusReport) String() string {
 func (*QavStatusReport) ProtoMessage() {}
 
 func (x *QavStatusReport) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_structures_qav_qav_status_proto_msgTypes[2]
+	mi := &file_common_structures_qav_qav_status_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -238,7 +238,7 @@ func (x *QavStatusReport) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use QavStatusReport.ProtoReflect.Descriptor instead.
 func (*QavStatusReport) Descriptor() ([]byte, []int) {
-	return file_pkg_structures_qav_qav_status_proto_rawDescGZIP(), []int{2}
+	return file_common_structures_qav_qav_status_proto_rawDescGZIP(), []int{2}
 }
 
 func (x *QavStatusReport) GetPorts() []*QavPortStatus {
@@ -248,11 +248,11 @@ func (x *QavStatusReport) GetPorts() []*QavPortStatus {
 	return nil
 }
 
-var File_pkg_structures_qav_qav_status_proto protoreflect.FileDescriptor
+var File_common_structures_qav_qav_status_proto protoreflect.FileDescriptor
 
-const file_pkg_structures_qav_qav_status_proto_rawDesc = "" +
+const file_common_structures_qav_qav_status_proto_rawDesc = "" +
 	"\n" +
-	"#common/structures/qav/qav_status.proto\x12\n" +
+	"&common/structures/qav/qav_status.proto\x12\n" +
 	"qav_status\x1a\x1fgoogle/protobuf/timestamp.proto\"\x8d\x03\n" +
 	"\x15CbsTrafficClassStatus\x12#\n" +
 	"\rtraffic_class\x18\x01 \x01(\rR\ftrafficClass\x120\n" +
@@ -270,28 +270,28 @@ const file_pkg_structures_qav_qav_status_proto_rawDesc = "" +
 	"\x0ftraffic_classes\x18\x03 \x03(\v2!.qav_status.CbsTrafficClassStatusR\x0etrafficClasses\x12=\n" +
 	"\flast_updated\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\vlastUpdated\"B\n" +
 	"\x0fQavStatusReport\x12/\n" +
-	"\x05ports\x18\x01 \x03(\v2\x19.qav_status.QavPortStatusR\x05portsB/Z-OpenCNC_config_service/common/structures/qav;qavb\x06proto3"
+	"\x05ports\x18\x01 \x03(\v2\x19.qav_status.QavPortStatusR\x05portsB2Z0OpenCNC_config_service/common/structures/qav;qavb\x06proto3"
 
 var (
-	file_pkg_structures_qav_qav_status_proto_rawDescOnce sync.Once
-	file_pkg_structures_qav_qav_status_proto_rawDescData []byte
+	file_common_structures_qav_qav_status_proto_rawDescOnce sync.Once
+	file_common_structures_qav_qav_status_proto_rawDescData []byte
 )
 
-func file_pkg_structures_qav_qav_status_proto_rawDescGZIP() []byte {
-	file_pkg_structures_qav_qav_status_proto_rawDescOnce.Do(func() {
-		file_pkg_structures_qav_qav_status_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_pkg_structures_qav_qav_status_proto_rawDesc), len(file_pkg_structures_qav_qav_status_proto_rawDesc)))
+func file_common_structures_qav_qav_status_proto_rawDescGZIP() []byte {
+	file_common_structures_qav_qav_status_proto_rawDescOnce.Do(func() {
+		file_common_structures_qav_qav_status_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_common_structures_qav_qav_status_proto_rawDesc), len(file_common_structures_qav_qav_status_proto_rawDesc)))
 	})
-	return file_pkg_structures_qav_qav_status_proto_rawDescData
+	return file_common_structures_qav_qav_status_proto_rawDescData
 }
 
-var file_pkg_structures_qav_qav_status_proto_msgTypes = make([]protoimpl.MessageInfo, 3)
-var file_pkg_structures_qav_qav_status_proto_goTypes = []any{
+var file_common_structures_qav_qav_status_proto_msgTypes = make([]protoimpl.MessageInfo, 3)
+var file_common_structures_qav_qav_status_proto_goTypes = []any{
 	(*CbsTrafficClassStatus)(nil), // 0: qav_status.CbsTrafficClassStatus
 	(*QavPortStatus)(nil),         // 1: qav_status.QavPortStatus
 	(*QavStatusReport)(nil),       // 2: qav_status.QavStatusReport
 	(*timestamppb.Timestamp)(nil), // 3: google.protobuf.Timestamp
 }
-var file_pkg_structures_qav_qav_status_proto_depIdxs = []int32{
+var file_common_structures_qav_qav_status_proto_depIdxs = []int32{
 	0, // 0: qav_status.QavPortStatus.traffic_classes:type_name -> qav_status.CbsTrafficClassStatus
 	3, // 1: qav_status.QavPortStatus.last_updated:type_name -> google.protobuf.Timestamp
 	1, // 2: qav_status.QavStatusReport.ports:type_name -> qav_status.QavPortStatus
@@ -302,26 +302,26 @@ var file_pkg_structures_qav_qav_status_proto_depIdxs = []int32{
 	0, // [0:3] is the sub-list for field type_name
 }
 
-func init() { file_pkg_structures_qav_qav_status_proto_init() }
-func file_pkg_structures_qav_qav_status_proto_init() {
-	if File_pkg_structures_qav_qav_status_proto != nil {
+func init() { file_common_structures_qav_qav_status_proto_init() }
+func file_common_structures_qav_qav_status_proto_init() {
+	if File_common_structures_qav_qav_status_proto != nil {
 		return
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
-			RawDescriptor: unsafe.Slice(unsafe.StringData(file_pkg_structures_qav_qav_status_proto_rawDesc), len(file_pkg_structures_qav_qav_status_proto_rawDesc)),
+			RawDescriptor: unsafe.Slice(unsafe.StringData(file_common_structures_qav_qav_status_proto_rawDesc), len(file_common_structures_qav_qav_status_proto_rawDesc)),
 			NumEnums:      0,
 			NumMessages:   3,
 			NumExtensions: 0,
 			NumServices:   0,
 		},
-		GoTypes:           file_pkg_structures_qav_qav_status_proto_goTypes,
-		DependencyIndexes: file_pkg_structures_qav_qav_status_proto_depIdxs,
-		MessageInfos:      file_pkg_structures_qav_qav_status_proto_msgTypes,
+		GoTypes:           file_common_structures_qav_qav_status_proto_goTypes,
+		DependencyIndexes: file_common_structures_qav_qav_status_proto_depIdxs,
+		MessageInfos:      file_common_structures_qav_qav_status_proto_msgTypes,
 	}.Build()
-	File_pkg_structures_qav_qav_status_proto = out.File
-	file_pkg_structures_qav_qav_status_proto_goTypes = nil
-	file_pkg_structures_qav_qav_status_proto_depIdxs = nil
+	File_common_structures_qav_qav_status_proto = out.File
+	file_common_structures_qav_qav_status_proto_goTypes = nil
+	file_common_structures_qav_qav_status_proto_depIdxs = nil
 }

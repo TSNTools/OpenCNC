@@ -1,8 +1,8 @@
 package protocolbackends
 
 import (
-	"OpenCNC_config_service/config_service/pkg/plugins"
 	"OpenCNC_config_service/common/structures/topology"
+	"OpenCNC_config_service/config_service/pkg/plugins"
 
 	"github.com/golang/protobuf/proto"
 )
@@ -14,5 +14,5 @@ type ProtocolBackend interface {
 	AddPlugin(plugin plugins.Plugin)
 	Plugins() []plugins.Plugin
 
-	MapAndPush(msg proto.Message, target topology.Node) error
+	MapAndPush(msg proto.Message, target *topology.Node) error
 }

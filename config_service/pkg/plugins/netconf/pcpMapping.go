@@ -3,15 +3,15 @@ package netconf
 import (
 	"bytes"
 	"fmt"
-	"log"
 	"sort"
 
-	opencncModel "OpenCNC_config_service/config_service/opencnc_model"
-	managementSessions "OpenCNC_config_service/config_service/pkg/managementSessions"
-	"OpenCNC_config_service/config_service/pkg/plugins"
+	"OpenCNC_config_service/common/observability"
 	devicemodelregistry "OpenCNC_config_service/common/structures/devicemodelregistry"
 	"OpenCNC_config_service/common/structures/topology"
 	topology_config "OpenCNC_config_service/common/structures/topology_config"
+	opencncModel "OpenCNC_config_service/config_service/opencnc_model"
+	managementSessions "OpenCNC_config_service/config_service/pkg/managementSessions"
+	"OpenCNC_config_service/config_service/pkg/plugins"
 
 	"github.com/golang/protobuf/proto"
 	"github.com/openconfig/ygot/ygot"
@@ -20,18 +20,18 @@ import (
 var _ plugins.Plugin = (*PcpMappingNetconfPlugin)(nil)
 
 type PcpMappingNetconfPlugin struct {
-	logger *log.Logger
+	logger observability.Logger
 }
 
-func NewPcpMappingNetconfPlugin(logger *log.Logger) *PcpMappingNetconfPlugin {
-	return &PcpMappingNetconfPlugin{logger: logger}
+func NewPcpMappingNetconfPlugin(logger observability.Logger) *PcpMappingNetconfPlugin {
+	return &PcpMappingNetconfPlugin{logger: observability.NormalizeLogger(logger)}
 }
 
 // plugin registers itself
 func init() {
 	plugins.Register(plugins.PluginFactory{
 		Protocol: topology.ManagementProtocol_NETCONF,
-		New: func(logger *log.Logger) plugins.Plugin {
+		New: func(logger observability.Logger) plugins.Plugin {
 			return NewPcpMappingNetconfPlugin(logger)
 		},
 	})

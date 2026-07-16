@@ -3,16 +3,16 @@ package netconf
 import (
 	"bytes"
 	"fmt"
-	"log"
 	"sort"
 
-	opencncModel "OpenCNC_config_service/config_service/opencnc_model"
-	managementSessions "OpenCNC_config_service/config_service/pkg/managementSessions"
-	"OpenCNC_config_service/config_service/pkg/plugins"
+	"OpenCNC_config_service/common/observability"
 	devicemodelregistry "OpenCNC_config_service/common/structures/devicemodelregistry"
 	qbv "OpenCNC_config_service/common/structures/qbv"
 	"OpenCNC_config_service/common/structures/topology"
 	topology_config "OpenCNC_config_service/common/structures/topology_config"
+	opencncModel "OpenCNC_config_service/config_service/opencnc_model"
+	managementSessions "OpenCNC_config_service/config_service/pkg/managementSessions"
+	"OpenCNC_config_service/config_service/pkg/plugins"
 
 	"github.com/golang/protobuf/proto"
 	"github.com/openconfig/ygot/ygot"
@@ -22,18 +22,18 @@ import (
 var _ plugins.Plugin = (*OldQbvNetconfPlugin)(nil)
 
 type OldQbvNetconfPlugin struct {
-	logger *log.Logger
+	logger observability.Logger
 }
 
-func NewQbvNetconfPlugin_tttech(logger *log.Logger) *OldQbvNetconfPlugin {
-	return &OldQbvNetconfPlugin{logger: logger}
+func NewQbvNetconfPlugin_tttech(logger observability.Logger) *OldQbvNetconfPlugin {
+	return &OldQbvNetconfPlugin{logger: observability.NormalizeLogger(logger)}
 }
 
 // plugin registers itself
 func init() {
 	plugins.Register(plugins.PluginFactory{
 		Protocol: topology.ManagementProtocol_NETCONF,
-		New: func(logger *log.Logger) plugins.Plugin {
+		New: func(logger observability.Logger) plugins.Plugin {
 			return NewQbvNetconfPlugin_tttech(logger)
 		},
 	})
@@ -53,7 +53,8 @@ func (p *OldQbvNetconfPlugin) SupportedByDevice(model *devicemodelregistry.Devic
 		{Name: "ieee802-dot1q-bridge.yang", Revision: "2018-03-07"},
 	}
 
-	for _, req := range requiredYangs {
+	for i := range requiredYangs {
+		req := &requiredYangs[i]
 		found := false
 		for _, yf := range model.YangFiles {
 			if yf.Name == req.Name && yf.Revision == req.Revision {

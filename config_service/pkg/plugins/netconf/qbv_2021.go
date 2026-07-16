@@ -3,15 +3,15 @@ package netconf
 import (
 	"bytes"
 	"fmt"
-	"log"
 
-	opencncModel "OpenCNC_config_service/config_service/opencnc_model"
-	managementSessions "OpenCNC_config_service/config_service/pkg/managementSessions"
-	"OpenCNC_config_service/config_service/pkg/plugins"
+	"OpenCNC_config_service/common/observability"
 	devicemodelregistry "OpenCNC_config_service/common/structures/devicemodelregistry"
 	qbv "OpenCNC_config_service/common/structures/qbv"
 	"OpenCNC_config_service/common/structures/topology"
 	topology_config "OpenCNC_config_service/common/structures/topology_config"
+	opencncModel "OpenCNC_config_service/config_service/opencnc_model"
+	managementSessions "OpenCNC_config_service/config_service/pkg/managementSessions"
+	"OpenCNC_config_service/config_service/pkg/plugins"
 
 	"github.com/golang/protobuf/proto"
 	"github.com/openconfig/ygot/ygot"
@@ -21,18 +21,18 @@ import (
 var _ plugins.Plugin = (*QbvNetconfPlugin)(nil)
 
 type QbvNetconfPlugin struct {
-	logger *log.Logger
+	logger observability.Logger
 }
 
-func NewQbvNetconfPlugin(logger *log.Logger) *QbvNetconfPlugin {
-	return &QbvNetconfPlugin{logger: logger}
+func NewQbvNetconfPlugin(logger observability.Logger) *QbvNetconfPlugin {
+	return &QbvNetconfPlugin{logger: observability.NormalizeLogger(logger)}
 }
 
 // plugin register itself
 func init() {
 	plugins.Register(plugins.PluginFactory{
 		Protocol: topology.ManagementProtocol_NETCONF,
-		New: func(logger *log.Logger) plugins.Plugin {
+		New: func(logger observability.Logger) plugins.Plugin {
 			return NewQbvNetconfPlugin(logger)
 		},
 	})
@@ -68,7 +68,8 @@ func (p *QbvNetconfPlugin) SupportedByDevice(model *devicemodelregistry.DeviceMo
 		},
 	}
 
-	for _, req := range requiredYangs {
+	for i := range requiredYangs {
+		req := &requiredYangs[i]
 		found := false
 
 		for _, yf := range model.YangFiles {

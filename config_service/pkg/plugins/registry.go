@@ -2,14 +2,13 @@
 package plugins
 
 import (
-	"log"
-
+	"OpenCNC_config_service/common/observability"
 	"OpenCNC_config_service/common/structures/topology"
 )
 
 type PluginFactory struct {
 	Protocol topology.ManagementProtocol
-	New      func(*log.Logger) Plugin
+	New      func(observability.Logger) Plugin
 }
 
 var registry = []PluginFactory{}
@@ -18,8 +17,9 @@ func Register(f PluginFactory) {
 	registry = append(registry, f)
 }
 
-func ForProtocol(protocol topology.ManagementProtocol, logger *log.Logger) []Plugin {
+func ForProtocol(protocol topology.ManagementProtocol, logger observability.Logger) []Plugin {
 	var result []Plugin
+	logger = observability.NormalizeLogger(logger)
 
 	for _, factory := range registry {
 		if factory.Protocol == protocol {

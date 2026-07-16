@@ -2,22 +2,22 @@ package engine
 
 import (
 	"fmt"
-	"log"
 
-	protocolbackends "OpenCNC_config_service/config_service/pkg/protocolbackends"
+	"OpenCNC_config_service/common/observability"
 	"OpenCNC_config_service/common/structures/topology"
 	"OpenCNC_config_service/common/structures/topology_config"
+	protocolbackends "OpenCNC_config_service/config_service/pkg/protocolbackends"
 )
 
 // MappingEngine is the top-level orchestrator for applying a topology-wide configuration.
 type MappingEngine struct {
-	logger   *log.Logger
+	logger   observability.Logger
 	backends map[topology.ManagementProtocol]protocolbackends.ProtocolBackend
 }
 
-func NewMappingEngine(logger *log.Logger) *MappingEngine {
+func NewMappingEngine(logger observability.Logger) *MappingEngine {
 	return &MappingEngine{
-		logger:   logger,
+		logger:   observability.NormalizeLogger(logger),
 		backends: make(map[topology.ManagementProtocol]protocolbackends.ProtocolBackend),
 	}
 }
@@ -52,7 +52,7 @@ func (m *MappingEngine) ApplyConfiguration(
 			}
 			continue
 		}
-		backend.MapAndPush(nodeCfg, *node)
+		backend.MapAndPush(nodeCfg, node)
 	}
 
 	return nil

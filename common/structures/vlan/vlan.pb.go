@@ -54,11 +54,11 @@ func (x VlanRegistrationEntryType) String() string {
 }
 
 func (VlanRegistrationEntryType) Descriptor() protoreflect.EnumDescriptor {
-	return file_pkg_structures_vlan_vlan_proto_enumTypes[0].Descriptor()
+	return file_common_structures_vlan_vlan_proto_enumTypes[0].Descriptor()
 }
 
 func (VlanRegistrationEntryType) Type() protoreflect.EnumType {
-	return &file_pkg_structures_vlan_vlan_proto_enumTypes[0]
+	return &file_common_structures_vlan_vlan_proto_enumTypes[0]
 }
 
 func (x VlanRegistrationEntryType) Number() protoreflect.EnumNumber {
@@ -67,7 +67,7 @@ func (x VlanRegistrationEntryType) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use VlanRegistrationEntryType.Descriptor instead.
 func (VlanRegistrationEntryType) EnumDescriptor() ([]byte, []int) {
-	return file_pkg_structures_vlan_vlan_proto_rawDescGZIP(), []int{0}
+	return file_common_structures_vlan_vlan_proto_rawDescGZIP(), []int{0}
 }
 
 type RegistrarAdminControl int32
@@ -109,11 +109,11 @@ func (x RegistrarAdminControl) String() string {
 }
 
 func (RegistrarAdminControl) Descriptor() protoreflect.EnumDescriptor {
-	return file_pkg_structures_vlan_vlan_proto_enumTypes[1].Descriptor()
+	return file_common_structures_vlan_vlan_proto_enumTypes[1].Descriptor()
 }
 
 func (RegistrarAdminControl) Type() protoreflect.EnumType {
-	return &file_pkg_structures_vlan_vlan_proto_enumTypes[1]
+	return &file_common_structures_vlan_vlan_proto_enumTypes[1]
 }
 
 func (x RegistrarAdminControl) Number() protoreflect.EnumNumber {
@@ -122,7 +122,7 @@ func (x RegistrarAdminControl) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use RegistrarAdminControl.Descriptor instead.
 func (RegistrarAdminControl) EnumDescriptor() ([]byte, []int) {
-	return file_pkg_structures_vlan_vlan_proto_rawDescGZIP(), []int{1}
+	return file_common_structures_vlan_vlan_proto_rawDescGZIP(), []int{1}
 }
 
 type VlanTransmitted int32
@@ -158,11 +158,11 @@ func (x VlanTransmitted) String() string {
 }
 
 func (VlanTransmitted) Descriptor() protoreflect.EnumDescriptor {
-	return file_pkg_structures_vlan_vlan_proto_enumTypes[2].Descriptor()
+	return file_common_structures_vlan_vlan_proto_enumTypes[2].Descriptor()
 }
 
 func (VlanTransmitted) Type() protoreflect.EnumType {
-	return &file_pkg_structures_vlan_vlan_proto_enumTypes[2]
+	return &file_common_structures_vlan_vlan_proto_enumTypes[2]
 }
 
 func (x VlanTransmitted) Number() protoreflect.EnumNumber {
@@ -171,7 +171,7 @@ func (x VlanTransmitted) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use VlanTransmitted.Descriptor instead.
 func (VlanTransmitted) EnumDescriptor() ([]byte, []int) {
-	return file_pkg_structures_vlan_vlan_proto_rawDescGZIP(), []int{2}
+	return file_common_structures_vlan_vlan_proto_rawDescGZIP(), []int{2}
 }
 
 type AcceptableFrameType int32
@@ -210,11 +210,11 @@ func (x AcceptableFrameType) String() string {
 }
 
 func (AcceptableFrameType) Descriptor() protoreflect.EnumDescriptor {
-	return file_pkg_structures_vlan_vlan_proto_enumTypes[3].Descriptor()
+	return file_common_structures_vlan_vlan_proto_enumTypes[3].Descriptor()
 }
 
 func (AcceptableFrameType) Type() protoreflect.EnumType {
-	return &file_pkg_structures_vlan_vlan_proto_enumTypes[3]
+	return &file_common_structures_vlan_vlan_proto_enumTypes[3]
 }
 
 func (x AcceptableFrameType) Number() protoreflect.EnumNumber {
@@ -223,7 +223,7 @@ func (x AcceptableFrameType) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use AcceptableFrameType.Descriptor instead.
 func (AcceptableFrameType) EnumDescriptor() ([]byte, []int) {
-	return file_pkg_structures_vlan_vlan_proto_rawDescGZIP(), []int{3}
+	return file_common_structures_vlan_vlan_proto_rawDescGZIP(), []int{3}
 }
 
 type ProtocolFrameFormatType int32
@@ -268,11 +268,11 @@ func (x ProtocolFrameFormatType) String() string {
 }
 
 func (ProtocolFrameFormatType) Descriptor() protoreflect.EnumDescriptor {
-	return file_pkg_structures_vlan_vlan_proto_enumTypes[4].Descriptor()
+	return file_common_structures_vlan_vlan_proto_enumTypes[4].Descriptor()
 }
 
 func (ProtocolFrameFormatType) Type() protoreflect.EnumType {
-	return &file_pkg_structures_vlan_vlan_proto_enumTypes[4]
+	return &file_common_structures_vlan_vlan_proto_enumTypes[4]
 }
 
 func (x ProtocolFrameFormatType) Number() protoreflect.EnumNumber {
@@ -281,7 +281,7 @@ func (x ProtocolFrameFormatType) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use ProtocolFrameFormatType.Descriptor instead.
 func (ProtocolFrameFormatType) EnumDescriptor() ([]byte, []int) {
-	return file_pkg_structures_vlan_vlan_proto_rawDescGZIP(), []int{4}
+	return file_common_structures_vlan_vlan_proto_rawDescGZIP(), []int{4}
 }
 
 type BridgeVlanConfig struct {
@@ -296,7 +296,7 @@ type BridgeVlanConfig struct {
 
 func (x *BridgeVlanConfig) Reset() {
 	*x = BridgeVlanConfig{}
-	mi := &file_pkg_structures_vlan_vlan_proto_msgTypes[0]
+	mi := &file_common_structures_vlan_vlan_proto_msgTypes[0]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -308,7 +308,7 @@ func (x *BridgeVlanConfig) String() string {
 func (*BridgeVlanConfig) ProtoMessage() {}
 
 func (x *BridgeVlanConfig) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_structures_vlan_vlan_proto_msgTypes[0]
+	mi := &file_common_structures_vlan_vlan_proto_msgTypes[0]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -321,7 +321,7 @@ func (x *BridgeVlanConfig) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use BridgeVlanConfig.ProtoReflect.Descriptor instead.
 func (*BridgeVlanConfig) Descriptor() ([]byte, []int) {
-	return file_pkg_structures_vlan_vlan_proto_rawDescGZIP(), []int{0}
+	return file_common_structures_vlan_vlan_proto_rawDescGZIP(), []int{0}
 }
 
 func (x *BridgeVlanConfig) GetVlanRegistrationEntries() []*VlanRegistrationEntry {
@@ -357,7 +357,7 @@ type VlanRegistrationEntry struct {
 
 func (x *VlanRegistrationEntry) Reset() {
 	*x = VlanRegistrationEntry{}
-	mi := &file_pkg_structures_vlan_vlan_proto_msgTypes[1]
+	mi := &file_common_structures_vlan_vlan_proto_msgTypes[1]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -369,7 +369,7 @@ func (x *VlanRegistrationEntry) String() string {
 func (*VlanRegistrationEntry) ProtoMessage() {}
 
 func (x *VlanRegistrationEntry) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_structures_vlan_vlan_proto_msgTypes[1]
+	mi := &file_common_structures_vlan_vlan_proto_msgTypes[1]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -382,7 +382,7 @@ func (x *VlanRegistrationEntry) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use VlanRegistrationEntry.ProtoReflect.Descriptor instead.
 func (*VlanRegistrationEntry) Descriptor() ([]byte, []int) {
-	return file_pkg_structures_vlan_vlan_proto_rawDescGZIP(), []int{1}
+	return file_common_structures_vlan_vlan_proto_rawDescGZIP(), []int{1}
 }
 
 func (x *VlanRegistrationEntry) GetDatabaseId() uint32 {
@@ -424,7 +424,7 @@ type VlanPortMap struct {
 
 func (x *VlanPortMap) Reset() {
 	*x = VlanPortMap{}
-	mi := &file_pkg_structures_vlan_vlan_proto_msgTypes[2]
+	mi := &file_common_structures_vlan_vlan_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -436,7 +436,7 @@ func (x *VlanPortMap) String() string {
 func (*VlanPortMap) ProtoMessage() {}
 
 func (x *VlanPortMap) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_structures_vlan_vlan_proto_msgTypes[2]
+	mi := &file_common_structures_vlan_vlan_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -449,7 +449,7 @@ func (x *VlanPortMap) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use VlanPortMap.ProtoReflect.Descriptor instead.
 func (*VlanPortMap) Descriptor() ([]byte, []int) {
-	return file_pkg_structures_vlan_vlan_proto_rawDescGZIP(), []int{2}
+	return file_common_structures_vlan_vlan_proto_rawDescGZIP(), []int{2}
 }
 
 func (x *VlanPortMap) GetPortId() string {
@@ -483,7 +483,7 @@ type VidToFidMapping struct {
 
 func (x *VidToFidMapping) Reset() {
 	*x = VidToFidMapping{}
-	mi := &file_pkg_structures_vlan_vlan_proto_msgTypes[3]
+	mi := &file_common_structures_vlan_vlan_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -495,7 +495,7 @@ func (x *VidToFidMapping) String() string {
 func (*VidToFidMapping) ProtoMessage() {}
 
 func (x *VidToFidMapping) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_structures_vlan_vlan_proto_msgTypes[3]
+	mi := &file_common_structures_vlan_vlan_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -508,7 +508,7 @@ func (x *VidToFidMapping) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use VidToFidMapping.ProtoReflect.Descriptor instead.
 func (*VidToFidMapping) Descriptor() ([]byte, []int) {
-	return file_pkg_structures_vlan_vlan_proto_rawDescGZIP(), []int{3}
+	return file_common_structures_vlan_vlan_proto_rawDescGZIP(), []int{3}
 }
 
 func (x *VidToFidMapping) GetVid() uint32 {
@@ -535,7 +535,7 @@ type VlanMembership struct {
 
 func (x *VlanMembership) Reset() {
 	*x = VlanMembership{}
-	mi := &file_pkg_structures_vlan_vlan_proto_msgTypes[4]
+	mi := &file_common_structures_vlan_vlan_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -547,7 +547,7 @@ func (x *VlanMembership) String() string {
 func (*VlanMembership) ProtoMessage() {}
 
 func (x *VlanMembership) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_structures_vlan_vlan_proto_msgTypes[4]
+	mi := &file_common_structures_vlan_vlan_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -560,7 +560,7 @@ func (x *VlanMembership) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use VlanMembership.ProtoReflect.Descriptor instead.
 func (*VlanMembership) Descriptor() ([]byte, []int) {
-	return file_pkg_structures_vlan_vlan_proto_rawDescGZIP(), []int{4}
+	return file_common_structures_vlan_vlan_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *VlanMembership) GetVlanId() uint32 {
@@ -587,7 +587,7 @@ type VidTranslation struct {
 
 func (x *VidTranslation) Reset() {
 	*x = VidTranslation{}
-	mi := &file_pkg_structures_vlan_vlan_proto_msgTypes[5]
+	mi := &file_common_structures_vlan_vlan_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -599,7 +599,7 @@ func (x *VidTranslation) String() string {
 func (*VidTranslation) ProtoMessage() {}
 
 func (x *VidTranslation) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_structures_vlan_vlan_proto_msgTypes[5]
+	mi := &file_common_structures_vlan_vlan_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -612,7 +612,7 @@ func (x *VidTranslation) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use VidTranslation.ProtoReflect.Descriptor instead.
 func (*VidTranslation) Descriptor() ([]byte, []int) {
-	return file_pkg_structures_vlan_vlan_proto_rawDescGZIP(), []int{5}
+	return file_common_structures_vlan_vlan_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *VidTranslation) GetLocalVid() uint32 {
@@ -644,7 +644,7 @@ type ProtocolGroupDatabaseEntry struct {
 
 func (x *ProtocolGroupDatabaseEntry) Reset() {
 	*x = ProtocolGroupDatabaseEntry{}
-	mi := &file_pkg_structures_vlan_vlan_proto_msgTypes[6]
+	mi := &file_common_structures_vlan_vlan_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -656,7 +656,7 @@ func (x *ProtocolGroupDatabaseEntry) String() string {
 func (*ProtocolGroupDatabaseEntry) ProtoMessage() {}
 
 func (x *ProtocolGroupDatabaseEntry) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_structures_vlan_vlan_proto_msgTypes[6]
+	mi := &file_common_structures_vlan_vlan_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -669,7 +669,7 @@ func (x *ProtocolGroupDatabaseEntry) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ProtocolGroupDatabaseEntry.ProtoReflect.Descriptor instead.
 func (*ProtocolGroupDatabaseEntry) Descriptor() ([]byte, []int) {
-	return file_pkg_structures_vlan_vlan_proto_rawDescGZIP(), []int{6}
+	return file_common_structures_vlan_vlan_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *ProtocolGroupDatabaseEntry) GetDbIndex() uint32 {
@@ -724,7 +724,7 @@ type ProtocolGroupVidSet struct {
 
 func (x *ProtocolGroupVidSet) Reset() {
 	*x = ProtocolGroupVidSet{}
-	mi := &file_pkg_structures_vlan_vlan_proto_msgTypes[7]
+	mi := &file_common_structures_vlan_vlan_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -736,7 +736,7 @@ func (x *ProtocolGroupVidSet) String() string {
 func (*ProtocolGroupVidSet) ProtoMessage() {}
 
 func (x *ProtocolGroupVidSet) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_structures_vlan_vlan_proto_msgTypes[7]
+	mi := &file_common_structures_vlan_vlan_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -749,7 +749,7 @@ func (x *ProtocolGroupVidSet) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ProtocolGroupVidSet.ProtoReflect.Descriptor instead.
 func (*ProtocolGroupVidSet) Descriptor() ([]byte, []int) {
-	return file_pkg_structures_vlan_vlan_proto_rawDescGZIP(), []int{7}
+	return file_common_structures_vlan_vlan_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *ProtocolGroupVidSet) GetGroupId() uint32 {
@@ -783,7 +783,7 @@ type PortVlanAdvancedConfig struct {
 
 func (x *PortVlanAdvancedConfig) Reset() {
 	*x = PortVlanAdvancedConfig{}
-	mi := &file_pkg_structures_vlan_vlan_proto_msgTypes[8]
+	mi := &file_common_structures_vlan_vlan_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -795,7 +795,7 @@ func (x *PortVlanAdvancedConfig) String() string {
 func (*PortVlanAdvancedConfig) ProtoMessage() {}
 
 func (x *PortVlanAdvancedConfig) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_structures_vlan_vlan_proto_msgTypes[8]
+	mi := &file_common_structures_vlan_vlan_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -808,7 +808,7 @@ func (x *PortVlanAdvancedConfig) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PortVlanAdvancedConfig.ProtoReflect.Descriptor instead.
 func (*PortVlanAdvancedConfig) Descriptor() ([]byte, []int) {
-	return file_pkg_structures_vlan_vlan_proto_rawDescGZIP(), []int{8}
+	return file_common_structures_vlan_vlan_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *PortVlanAdvancedConfig) GetAcceptableFrame() AcceptableFrameType {
@@ -867,11 +867,11 @@ func (x *PortVlanAdvancedConfig) GetProtocolGroupVidSets() []*ProtocolGroupVidSe
 	return nil
 }
 
-var File_pkg_structures_vlan_vlan_proto protoreflect.FileDescriptor
+var File_common_structures_vlan_vlan_proto protoreflect.FileDescriptor
 
-const file_pkg_structures_vlan_vlan_proto_rawDesc = "" +
+const file_common_structures_vlan_vlan_proto_rawDesc = "" +
 	"\n" +
-	"\x1ecommon/structures/vlan/vlan.proto\x12\x04vlan\"\x8b\x02\n" +
+	"!common/structures/vlan/vlan.proto\x12\x04vlan\"\x8b\x02\n" +
 	"\x10BridgeVlanConfig\x12W\n" +
 	"\x19vlan_registration_entries\x18\x01 \x03(\v2\x1b.vlan.VlanRegistrationEntryR\x17vlanRegistrationEntries\x12D\n" +
 	"\x13vid_to_fid_mappings\x18\x02 \x03(\v2\x15.vlan.VidToFidMappingR\x10vidToFidMappings\x12X\n" +
@@ -954,20 +954,20 @@ const file_pkg_structures_vlan_vlan_proto_rawDesc = "" +
 	"/vlan;vlanb\x06proto3"
 
 var (
-	file_pkg_structures_vlan_vlan_proto_rawDescOnce sync.Once
-	file_pkg_structures_vlan_vlan_proto_rawDescData []byte
+	file_common_structures_vlan_vlan_proto_rawDescOnce sync.Once
+	file_common_structures_vlan_vlan_proto_rawDescData []byte
 )
 
-func file_pkg_structures_vlan_vlan_proto_rawDescGZIP() []byte {
-	file_pkg_structures_vlan_vlan_proto_rawDescOnce.Do(func() {
-		file_pkg_structures_vlan_vlan_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_pkg_structures_vlan_vlan_proto_rawDesc), len(file_pkg_structures_vlan_vlan_proto_rawDesc)))
+func file_common_structures_vlan_vlan_proto_rawDescGZIP() []byte {
+	file_common_structures_vlan_vlan_proto_rawDescOnce.Do(func() {
+		file_common_structures_vlan_vlan_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_common_structures_vlan_vlan_proto_rawDesc), len(file_common_structures_vlan_vlan_proto_rawDesc)))
 	})
-	return file_pkg_structures_vlan_vlan_proto_rawDescData
+	return file_common_structures_vlan_vlan_proto_rawDescData
 }
 
-var file_pkg_structures_vlan_vlan_proto_enumTypes = make([]protoimpl.EnumInfo, 5)
-var file_pkg_structures_vlan_vlan_proto_msgTypes = make([]protoimpl.MessageInfo, 9)
-var file_pkg_structures_vlan_vlan_proto_goTypes = []any{
+var file_common_structures_vlan_vlan_proto_enumTypes = make([]protoimpl.EnumInfo, 5)
+var file_common_structures_vlan_vlan_proto_msgTypes = make([]protoimpl.MessageInfo, 9)
+var file_common_structures_vlan_vlan_proto_goTypes = []any{
 	(VlanRegistrationEntryType)(0),     // 0: vlan.VlanRegistrationEntryType
 	(RegistrarAdminControl)(0),         // 1: vlan.RegistrarAdminControl
 	(VlanTransmitted)(0),               // 2: vlan.VlanTransmitted
@@ -983,7 +983,7 @@ var file_pkg_structures_vlan_vlan_proto_goTypes = []any{
 	(*ProtocolGroupVidSet)(nil),        // 12: vlan.ProtocolGroupVidSet
 	(*PortVlanAdvancedConfig)(nil),     // 13: vlan.PortVlanAdvancedConfig
 }
-var file_pkg_structures_vlan_vlan_proto_depIdxs = []int32{
+var file_common_structures_vlan_vlan_proto_depIdxs = []int32{
 	6,  // 0: vlan.BridgeVlanConfig.vlan_registration_entries:type_name -> vlan.VlanRegistrationEntry
 	8,  // 1: vlan.BridgeVlanConfig.vid_to_fid_mappings:type_name -> vlan.VidToFidMapping
 	11, // 2: vlan.BridgeVlanConfig.protocol_group_database:type_name -> vlan.ProtocolGroupDatabaseEntry
@@ -1003,29 +1003,29 @@ var file_pkg_structures_vlan_vlan_proto_depIdxs = []int32{
 	0,  // [0:12] is the sub-list for field type_name
 }
 
-func init() { file_pkg_structures_vlan_vlan_proto_init() }
-func file_pkg_structures_vlan_vlan_proto_init() {
-	if File_pkg_structures_vlan_vlan_proto != nil {
+func init() { file_common_structures_vlan_vlan_proto_init() }
+func file_common_structures_vlan_vlan_proto_init() {
+	if File_common_structures_vlan_vlan_proto != nil {
 		return
 	}
-	file_pkg_structures_vlan_vlan_proto_msgTypes[6].OneofWrappers = []any{}
-	file_pkg_structures_vlan_vlan_proto_msgTypes[8].OneofWrappers = []any{}
+	file_common_structures_vlan_vlan_proto_msgTypes[6].OneofWrappers = []any{}
+	file_common_structures_vlan_vlan_proto_msgTypes[8].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
-			RawDescriptor: unsafe.Slice(unsafe.StringData(file_pkg_structures_vlan_vlan_proto_rawDesc), len(file_pkg_structures_vlan_vlan_proto_rawDesc)),
+			RawDescriptor: unsafe.Slice(unsafe.StringData(file_common_structures_vlan_vlan_proto_rawDesc), len(file_common_structures_vlan_vlan_proto_rawDesc)),
 			NumEnums:      5,
 			NumMessages:   9,
 			NumExtensions: 0,
 			NumServices:   0,
 		},
-		GoTypes:           file_pkg_structures_vlan_vlan_proto_goTypes,
-		DependencyIndexes: file_pkg_structures_vlan_vlan_proto_depIdxs,
-		EnumInfos:         file_pkg_structures_vlan_vlan_proto_enumTypes,
-		MessageInfos:      file_pkg_structures_vlan_vlan_proto_msgTypes,
+		GoTypes:           file_common_structures_vlan_vlan_proto_goTypes,
+		DependencyIndexes: file_common_structures_vlan_vlan_proto_depIdxs,
+		EnumInfos:         file_common_structures_vlan_vlan_proto_enumTypes,
+		MessageInfos:      file_common_structures_vlan_vlan_proto_msgTypes,
 	}.Build()
-	File_pkg_structures_vlan_vlan_proto = out.File
-	file_pkg_structures_vlan_vlan_proto_goTypes = nil
-	file_pkg_structures_vlan_vlan_proto_depIdxs = nil
+	File_common_structures_vlan_vlan_proto = out.File
+	file_common_structures_vlan_vlan_proto_goTypes = nil
+	file_common_structures_vlan_vlan_proto_depIdxs = nil
 }
