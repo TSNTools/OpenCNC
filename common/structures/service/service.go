@@ -8,6 +8,7 @@ import (
 	"OpenCNC_config_service/common/observability"
 	storewrapper "OpenCNC_config_service/common/store-wrapper"
 	observabilityv1 "OpenCNC_config_service/common/structures/logging"
+	"OpenCNC_config_service/common/structures/topology_config"
 	"OpenCNC_config_service/config_service/pkg/engine"
 )
 
@@ -25,103 +26,132 @@ func NewConfigServiceServerImpl(obs *observability.Client, engine *engine.Mappin
 
 // ApplyConfiguration receives a config request ID, retrieves it from store,
 // maps it via the plugin, and pushes it to all NETCONF-capable devices.
-func (s *ConfigServiceServerImpl) ApplyConfiguration(
-	ctx context.Context,
-	req *ConfigurationRequest,
-) (*ConfigurationResponse, error) {
+func (s *ConfigServiceServerImpl) ApplyConfiguration(ctx context.Context, req *ConfigurationRequest) (*ConfigurationResponse, error) {
 
-	if s.obs != nil {
-		s.obs.Printf("[Config-Service] Received ApplyConfiguration request for ID: %s", req.Id)
-		_ = s.obs.Event(
-			ctx,
-			observabilityv1.Severity_SEVERITY_INFO,
-			"config.apply",
-			"requested",
-			observabilityv1.DomainResult_DOMAIN_RESULT_ACCEPTED,
-			"configuration",
-			req.Id,
-			"configuration apply request received",
-		)
+	cfg := req.GetConfiguration()
+	if cfg == nil {
+		return &ConfigurationResponse{
+			Success: false,
+			Message: "Configuration is nil",
+		}, fmt.Errorf("configuration is nil")
+	}
+
+	if err := s.deployConfiguration(ctx, cfg); err != nil {
+		return &ConfigurationResponse{
+			Success: false,
+			Message: err.Error(),
+		}, err
+	}
+
+	storewrapper.StoreConfiguration(cfg)
+
+	return &ConfigurationResponse{
+		Success: true,
+		Message: "Configuration applied successfully",
+	}, nil
+}
+
+func (s *ConfigServiceServerImpl) ApplyConfigurationById(ctx context.Context, req *ConfigurationRequest) (*ConfigurationResponse, error) {
+
+	configId := req.GetId()
+	if configId == "" {
+		return &ConfigurationResponse{
+			Success: false,
+			Message: "Configuration ID is empty",
+		}, fmt.Errorf("configuration ID is empty")
+	}
+
+	cfg, err := storewrapper.GetConfiguration(configId)
+	if err != nil {
+		return &ConfigurationResponse{
+			Success: false,
+			Message: err.Error(),
+		}, err
+	}
+
+	if err := s.deployConfiguration(ctx, cfg); err != nil {
+		return &ConfigurationResponse{
+			Success: false,
+			Message: err.Error(),
+		}, err
+	}
+	return &ConfigurationResponse{
+		Success: true,
+		Message: "Configuration applied successfully",
+	}, nil
+}
+
+func (s *ConfigServiceServerImpl) deployConfiguration(ctx context.Context, cfg *topology_config.TopologyConfig) error {
+
+	topo, err := storewrapper.GetTopology()
+	if err != nil {
+		return err
 	}
 
 	secret := os.Getenv("NETCONF_PASSWORD")
 
-	topoConf, err := storewrapper.GetConfiguration(req.Id)
-	if err != nil {
-		msg := fmt.Sprintf("Failed to get configuration from store: %v", err)
-		if s.obs != nil {
-			s.obs.Println(msg)
-			_ = s.obs.Event(
-				ctx,
-				observabilityv1.Severity_SEVERITY_ERROR,
-				"config.apply",
-				"store_fetch_failed",
-				observabilityv1.DomainResult_DOMAIN_RESULT_FAILED,
-				"configuration",
-				req.Id,
-				msg,
-			)
-		}
+	return s.engine.ApplyConfiguration(
+		topo,
+		cfg,
+		secret,
+	)
+}
 
-		return &ConfigurationResponse{
-			Success: false,
-			Message: msg,
-		}, err
-	}
+// Optional: simple health check RPC.
+func (s *ConfigServiceServerImpl) Ping(ctx context.Context, _ *ConfigurationRequest) (*ConfigurationResponse, error) {
+	return &ConfigurationResponse{Success: true, Message: "pong"}, nil
+}
 
-	topo, err := storewrapper.GetTopology()
-	if err != nil {
-		msg := fmt.Sprintf("Failed to get topology from store: %v", err)
-		if s.obs != nil {
-			s.obs.Println(msg)
-			_ = s.obs.Event(
-				ctx,
-				observabilityv1.Severity_SEVERITY_ERROR,
-				"config.apply",
-				"topology_fetch_failed",
-				observabilityv1.DomainResult_DOMAIN_RESULT_FAILED,
-				"configuration",
-				req.Id,
-				msg,
-			)
-		}
+func (s *ConfigServiceServerImpl) Rollback(ctx context.Context, req *RollbackRequest) (*ConfigurationResponse, error) {
 
-		return &ConfigurationResponse{
-			Success: false,
-			Message: msg,
-		}, err
+	if s.obs != nil {
+		s.obs.Println("[Config-Service] Received rollback request")
+
+		_ = s.obs.Event(
+			ctx,
+			observabilityv1.Severity_SEVERITY_INFO,
+			"config.rollback",
+			"requested",
+			observabilityv1.DomainResult_DOMAIN_RESULT_ACCEPTED,
+			"configuration",
+			"",
+			"configuration rollback request received",
+		)
 	}
 
 	if s.obs != nil {
-		s.obs.Println("[Config-Service] Applying configuration through engine...")
+		s.obs.Println("[Config-Service] Rolling back last configuration transaction...")
 	}
 
-	err = s.engine.ApplyConfiguration(
-		topo,
-		topoConf,
-		secret,
-	)
+	err := s.engine.Rollback()
 	if err != nil {
-		msg := fmt.Sprintf("Configuration apply failed: %v", err)
+
+		msg := fmt.Sprintf(
+			"Configuration rollback failed: %v",
+			err,
+		)
+
 		if s.obs != nil {
 			s.obs.Println(msg)
+
 			_ = s.obs.Event(
 				ctx,
 				observabilityv1.Severity_SEVERITY_ERROR,
-				"config.apply",
+				"config.rollback",
 				"failed",
 				observabilityv1.DomainResult_DOMAIN_RESULT_FAILED,
 				"configuration",
-				req.Id,
+				"",
 				msg,
 			)
+
 			_ = s.obs.Audit(
 				ctx,
 				observabilityv1.Severity_SEVERITY_ERROR,
 				"config-service",
-				"apply",
+				"rollback",
 				"configuration",
-				req.Id,
+				"",
 				observabilityv1.AuditResult_AUDIT_RESULT_FAILED,
 				err.Error(),
 			)
@@ -134,24 +164,26 @@ func (s *ConfigServiceServerImpl) ApplyConfiguration(
 	}
 
 	if s.obs != nil {
-		s.obs.Println("[Config-Service] Configuration applied successfully!")
+		s.obs.Println("[Config-Service] Configuration rollback completed successfully")
+
 		_ = s.obs.Event(
 			ctx,
 			observabilityv1.Severity_SEVERITY_INFO,
-			"config.apply",
+			"config.rollback",
 			"succeeded",
 			observabilityv1.DomainResult_DOMAIN_RESULT_SUCCEEDED,
 			"configuration",
-			req.Id,
-			"configuration applied successfully",
+			"",
+			"configuration rolled back successfully",
 		)
+
 		_ = s.obs.Audit(
 			ctx,
 			observabilityv1.Severity_SEVERITY_INFO,
 			"config-service",
-			"apply",
+			"rollback",
 			"configuration",
-			req.Id,
+			"",
 			observabilityv1.AuditResult_AUDIT_RESULT_SUCCEEDED,
 			"",
 		)
@@ -159,13 +191,8 @@ func (s *ConfigServiceServerImpl) ApplyConfiguration(
 
 	return &ConfigurationResponse{
 		Success: true,
-		Message: "Configuration applied successfully",
+		Message: "Configuration rolled back successfully",
 	}, nil
-}
-
-// Optional: simple health check RPC.
-func (s *ConfigServiceServerImpl) Ping(ctx context.Context, _ *ConfigurationRequest) (*ConfigurationResponse, error) {
-	return &ConfigurationResponse{Success: true, Message: "pong"}, nil
 }
 
 // Helper: apply last known configuration at startup
@@ -181,14 +208,15 @@ func (s *ConfigServiceServerImpl) ApplyLastConfiguration() {
 	if s.obs != nil {
 		s.obs.Println("Loaded last known configuration from store")
 	}
-	resp, err := s.ApplyConfiguration(context.Background(), &ConfigurationRequest{Id: id})
+	req := &ConfigurationRequest{Id: &id}
+	_, err = s.ApplyConfigurationById(context.Background(), req)
 	if err != nil {
 		if s.obs != nil {
 			s.obs.Printf("Failed to apply last configuration: %v", err)
 		}
 	} else {
 		if s.obs != nil {
-			s.obs.Println("Successfully applied last configuration:", resp.Message)
+			s.obs.Println("Successfully applied last configuration")
 		}
 	}
 

@@ -2,23 +2,32 @@ syntax = "proto3";
 
 package service;
 
-option go_package = "common/structures/service;service";
+option go_package = "OpenCNC_config_service/common/structures/service;service";
 
-import "google/protobuf/any.proto";
+import "common/structures/topology_config/topology_config.proto";
 
-// Messages
 message ConfigurationRequest {
-  string id = 1;                    // configuration identifier
-  google.protobuf.Any payload = 2;  // optional: gNMI SetRequest or internal model
+  optional string id = 1;
+  optional topology_config.TopologyConfig configuration = 2;
 }
+
+message RollbackRequest {}
 
 message ConfigurationResponse {
   bool success = 1;
   string message = 2;
 }
 
-// gRPC service
 service ConfigService {
-  rpc ApplyConfiguration(ConfigurationRequest) returns (ConfigurationResponse);
-  rpc Ping(ConfigurationRequest) returns (ConfigurationResponse);
+  rpc ApplyConfiguration(ConfigurationRequest)
+      returns (ConfigurationResponse);
+
+  rpc ApplyConfigurationById(ConfigurationRequest)
+      returns (ConfigurationResponse);
+
+  rpc Rollback(RollbackRequest)
+      returns (ConfigurationResponse);
+
+  rpc Ping(ConfigurationRequest)
+      returns (ConfigurationResponse);
 }

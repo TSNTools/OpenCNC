@@ -13,6 +13,7 @@ require (
 
 require (
 	github.com/Shopify/sarama v1.38.1 // indirect
+	github.com/beevik/etree v1.7.0 // indirect
 	github.com/eapache/go-resiliency v1.3.0 // indirect
 	github.com/eapache/go-xerial-snappy v0.0.0-20230111030713-bf00bc1b83b6 // indirect
 	github.com/eapache/queue v1.1.0 // indirect

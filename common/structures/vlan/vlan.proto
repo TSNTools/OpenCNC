@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package vlan;
 
-option go_package = "/vlan;vlan";
+option go_package = "OpenCNC_config_service/common/structures/vlan;vlan";
 
 /*
  * VLAN configuration domain model aligned with IEEE 802.1Q bridge concepts.

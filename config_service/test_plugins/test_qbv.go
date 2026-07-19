@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"log"
 
+	qbv "OpenCNC_config_service/common/structures/qbv"
+	"OpenCNC_config_service/common/structures/topology"
 	opencncModel "OpenCNC_config_service/config_service/opencnc_model"
 	managementSessions "OpenCNC_config_service/config_service/pkg/managementSessions"
 	netconf "OpenCNC_config_service/config_service/pkg/plugins/netconf"
-	qbv "OpenCNC_config_service/common/structures/qbv"
-	"OpenCNC_config_service/common/structures/topology"
 
 	"github.com/golang/protobuf/proto"
 	"github.com/openconfig/ygot/ygot"
@@ -48,15 +48,9 @@ func TestQbvPlugin() {
 		logger.Fatalf("Map failed: %v", err)
 	}
 
-	// Fake device target
-	target := managementSessions.DeviceTarget{
-		InterfaceName: "eth1",
-	}
-
 	// Build XML
-	xmlStr, err := plugin.BuildXML(
+	xmlStr, err := plugin.BuildFeatureXML(
 		mapped.(*opencncModel.IETFInterfaces_Interfaces_Interface_BridgePort_GateParameterTable),
-		target,
 	)
 	if err != nil {
 		logger.Fatalf("BuildXML failed: %v", err)

@@ -57,6 +57,7 @@ What it does now
 ├── common/
 │ ├── structures/ # Generated protobuf Go code
 │ └── store-wrapper/ # Store access helpers shared by services
+│ └── observability/ # kafka and cmd for observability
 │
 ├── config_service/
 │ ├── pkg/plugins/ # Per-feature plugins grouped by protocol

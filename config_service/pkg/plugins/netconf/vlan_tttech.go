@@ -239,6 +239,23 @@ func mapPortConfigToBridgePort(portCfg *topology_config.PortConfig) *opencncMode
 }
 
 func (v *VlanNetconfPlugin) Push(mapped any, target managementSessions.DeviceTarget) error {
+	featurexml, err := v.BuildFeatureXML(mapped)
+	if err != nil {
+		return fmt.Errorf("failed to build feature XML: %w", err)
+	}
+
+	xml := string(featurexml.XML)
+	if featurexml.Container == "bridge-port" {
+		if target.Info == nil {
+			return fmt.Errorf("device target info is nil")
+		}
+
+		xml, err = v.wrapXML(featurexml, target)
+		if err != nil {
+			return fmt.Errorf("failed to build XML: %w", err)
+		}
+	}
+
 	if target.Info == nil {
 		return fmt.Errorf("device target info is nil")
 	}
@@ -259,27 +276,32 @@ func (v *VlanNetconfPlugin) Push(mapped any, target managementSessions.DeviceTar
 		return nil
 	}
 
+	label := target.InterfaceName
+	if payload, ok := mapped.(*bridgeVlanPayload); ok {
+		label = payload.BridgeName
+	}
+
+	return pushXML(xml, label)
+}
+
+func (v *VlanNetconfPlugin) BuildFeatureXML(mapped any) (*plugins.FeatureXML, error) {
 	switch typed := mapped.(type) {
 	case *opencncModel.IETFInterfaces_Interfaces_Interface_BridgePort:
-		xml, err := v.BuildXML(typed, target)
-		if err != nil {
-			return err
-		}
-		return pushXML(xml, target.InterfaceName)
+		return v.buildBridgePortFeatureXML(typed)
 	case *bridgeVlanPayload:
-		xml, err := v.BuildBridgeVlanXML(typed)
+		xml, err := v.buildBridgeVlanXML(typed)
 		if err != nil {
-			return err
+			return nil, err
 		}
-		return pushXML(xml, typed.BridgeName)
+		return &plugins.FeatureXML{Container: "bridges", XML: xml}, nil
 	default:
-		return fmt.Errorf("VlanNetconfPlugin: invalid mapped type %T", mapped)
+		return nil, fmt.Errorf("VlanNetconfPlugin: invalid mapped type %T", mapped)
 	}
 }
 
-func (v *VlanNetconfPlugin) BuildBridgeVlanXML(payload *bridgeVlanPayload) (string, error) {
+func (v *VlanNetconfPlugin) buildBridgeVlanXML(payload *bridgeVlanPayload) ([]byte, error) {
 	if payload == nil || payload.Config == nil {
-		return "", fmt.Errorf("VlanNetconfPlugin: nil bridge VLAN payload")
+		return nil, fmt.Errorf("VlanNetconfPlugin: nil bridge VLAN payload")
 	}
 
 	bridgeName := payload.BridgeName
@@ -347,15 +369,12 @@ func (v *VlanNetconfPlugin) BuildBridgeVlanXML(payload *bridgeVlanPayload) (stri
 	buf.WriteString(`</bridge>`)
 	buf.WriteString(`</bridges>`)
 
-	return buf.String(), nil
+	return buf.Bytes(), nil
 }
 
-func (v *VlanNetconfPlugin) BuildXML(root *opencncModel.IETFInterfaces_Interfaces_Interface_BridgePort, target managementSessions.DeviceTarget) (string, error) {
+func (v *VlanNetconfPlugin) buildBridgePortFeatureXML(root *opencncModel.IETFInterfaces_Interfaces_Interface_BridgePort) (*plugins.FeatureXML, error) {
 	var buf bytes.Buffer
 
-	buf.WriteString(`<interfaces xmlns="urn:ietf:params:xml:ns:yang:ietf-interfaces">`)
-	buf.WriteString(`<interface>`)
-	buf.WriteString(fmt.Sprintf(`<name>%s</name>`, target.InterfaceName))
 	buf.WriteString(`<bridge-port xmlns="urn:ieee:std:802.1Q:yang:ieee802-dot1q-bridge">`)
 
 	if root.Pvid != nil {
@@ -430,6 +449,17 @@ func (v *VlanNetconfPlugin) BuildXML(root *opencncModel.IETFInterfaces_Interface
 	}
 
 	buf.WriteString(`</bridge-port>`)
+
+	return &plugins.FeatureXML{Container: "bridge-port", XML: buf.Bytes()}, nil
+}
+
+func (v *VlanNetconfPlugin) wrapXML(featurexml *plugins.FeatureXML, target managementSessions.DeviceTarget) (string, error) {
+	var buf bytes.Buffer
+
+	buf.WriteString(`<interfaces xmlns="urn:ietf:params:xml:ns:yang:ietf-interfaces">`)
+	buf.WriteString(`<interface>`)
+	buf.WriteString(fmt.Sprintf(`<name>%s</name>`, target.InterfaceName))
+	buf.WriteString(string(featurexml.XML))
 	buf.WriteString(`</interface>`)
 	buf.WriteString(`</interfaces>`)
 

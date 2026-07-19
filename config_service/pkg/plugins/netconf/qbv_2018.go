@@ -129,7 +129,12 @@ func (p *OldQbvNetconfPlugin) Map(msg proto.Message) (any, error) {
 	return ygotGcl, nil
 }
 
-func (p *OldQbvNetconfPlugin) BuildXML(root *opencncModel.IETFInterfaces_Interfaces_Interface_BridgePort_GateParameterTable, target managementSessions.DeviceTarget) (string, error) {
+func (p *OldQbvNetconfPlugin) BuildFeatureXML(mapped any) (*plugins.FeatureXML, error) {
+	root, ok := mapped.(*opencncModel.IETFInterfaces_Interfaces_Interface_BridgePort_GateParameterTable)
+	if !ok {
+		return nil, fmt.Errorf("invalid mapped type for OldQbvNetconfPlugin: %T", mapped)
+	}
+
 	const (
 		opSetAndHoldMac    = 1
 		opSetAndReleaseMac = 2
@@ -137,13 +142,9 @@ func (p *OldQbvNetconfPlugin) BuildXML(root *opencncModel.IETFInterfaces_Interfa
 	)
 
 	var buf bytes.Buffer
-	nsIf := "urn:ietf:params:xml:ns:yang:ietf-interfaces"
 	nsSched := "urn:ieee:std:802.1Q:yang:ieee802-dot1q-sched"
 
 	//buf.WriteString(`<config xmlns="urn:ietf:params:xml:ns:netconf:base:1.0">`)
-	buf.WriteString(fmt.Sprintf(`<interfaces xmlns="%s">`, nsIf))
-	buf.WriteString(`<interface>`)
-	buf.WriteString(fmt.Sprintf(`<name>%s</name>`, target.InterfaceName))
 	buf.WriteString(fmt.Sprintf(`<gate-parameters xmlns="%s">`, nsSched))
 
 	if root.GateEnabled != nil {
@@ -206,20 +207,22 @@ func (p *OldQbvNetconfPlugin) BuildXML(root *opencncModel.IETFInterfaces_Interfa
 	buf.WriteString(`<config-change>true</config-change>`)
 
 	buf.WriteString(`</gate-parameters>`)
-	buf.WriteString(`</interface>`)
-	buf.WriteString(`</interfaces>`)
 	//buf.WriteString(`</config>`)
 
-	return buf.String(), nil
+	return &plugins.FeatureXML{Container: "gate-parameters", XML: buf.Bytes()}, nil
 }
 
 func (p *OldQbvNetconfPlugin) Push(mapped any, target managementSessions.DeviceTarget) error {
-	root, ok := mapped.(*opencncModel.IETFInterfaces_Interfaces_Interface_BridgePort_GateParameterTable)
-	if !ok {
-		return fmt.Errorf("invalid mapped type for Push: %T", mapped)
+
+	featurexml, err := p.BuildFeatureXML(mapped)
+	if err != nil {
+		return fmt.Errorf("failed to build feature XML: %w", err)
 	}
 
-	xmlStr, err := p.BuildXML(root, target)
+	//------------------------------------------------------------
+	// Wrap the feature XML and send it to the device via NETCONF
+	//------------------------------------------------------------
+	xmlStr, err := p.wrapXML(featurexml, target)
 	if err != nil {
 		return fmt.Errorf("failed to build XML: %w", err)
 	}
@@ -238,4 +241,21 @@ func (p *OldQbvNetconfPlugin) Push(mapped any, target managementSessions.DeviceT
 
 	//p.logger.Println("✅ Config pushed successfully")
 	return nil
+}
+
+func (p *OldQbvNetconfPlugin) wrapXML(featurexml *plugins.FeatureXML, target managementSessions.DeviceTarget) (string, error) {
+
+	var buf bytes.Buffer
+	nsIf := "urn:ietf:params:xml:ns:yang:ietf-interfaces"
+
+	//buf.WriteString(`<config xmlns="urn:ietf:params:xml:ns:netconf:base:1.0">`)
+	buf.WriteString(fmt.Sprintf(`<interfaces xmlns="%s">`, nsIf))
+	buf.WriteString(`<interface>`)
+	buf.WriteString(fmt.Sprintf(`<name>%s</name>`, target.InterfaceName))
+	buf.WriteString(string(featurexml.XML))
+	buf.WriteString(`</interface>`)
+	buf.WriteString(`</interfaces>`)
+	//buf.WriteString(`</config>`)
+
+	return buf.String(), nil
 }

@@ -2,9 +2,9 @@ package protocolbackends
 
 import (
 	"OpenCNC_config_service/common/structures/topology"
+	topology_config "OpenCNC_config_service/common/structures/topology_config"
+	"OpenCNC_config_service/config_service/pkg/managementSessions"
 	"OpenCNC_config_service/config_service/pkg/plugins"
-
-	"github.com/golang/protobuf/proto"
 )
 
 type ProtocolBackend interface {
@@ -14,5 +14,18 @@ type ProtocolBackend interface {
 	AddPlugin(plugin plugins.Plugin)
 	Plugins() []plugins.Plugin
 
-	MapAndPush(msg proto.Message, target *topology.Node) error
+	PrepareSnapshot(msg *topology_config.NodeConfig, node *topology.Node) error
+	Commit(target *topology.Node) error
+	Rollback(target *topology.Node) error
+}
+
+type Snapshot interface {
+	Clone() Snapshot
+	Update(featureXML *plugins.FeatureXML, target managementSessions.DeviceTarget) error
+}
+
+type SnapshotSet[T any] struct {
+	Current    T
+	Working    T
+	LastStable T
 }

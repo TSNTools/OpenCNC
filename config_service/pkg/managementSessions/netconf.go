@@ -5,6 +5,7 @@ package managementSessions
 // go run Connect_netconf.go  -s 192.168.4.64 -e -f config.xml
 
 import (
+	"encoding/xml"
 	"fmt"
 	"io/ioutil"
 	"log/slog"
@@ -73,6 +74,10 @@ func EditConfig(session *netconf.Session, xmlData string) error {
 		return fmt.Errorf("empty reply from edit-config")
 	}
 
+	if err := checkNetconfOKReply(reply.RawReply); err != nil {
+		return fmt.Errorf("edit-config failed: %w", err)
+	}
+
 	fmt.Println("edit-config reply:")
 	fmt.Println(reply.RawReply)
 
@@ -86,4 +91,30 @@ func loadXMLFromFile(path string) (string, error) {
 		return "", fmt.Errorf("failed to read XML file: %w", err)
 	}
 	return string(data), nil
+}
+
+// function used to check if the NETCONF reply contains an <ok/> element, indicating success.
+func checkNetconfOKReply(rawReply string) error {
+
+	var rpcReply struct {
+		OK *struct{} `xml:"ok"`
+	}
+
+	if err := xml.Unmarshal(
+		[]byte(rawReply),
+		&rpcReply,
+	); err != nil {
+		return fmt.Errorf(
+			"failed parsing NETCONF reply: %w",
+			err,
+		)
+	}
+
+	if rpcReply.OK == nil {
+		return fmt.Errorf(
+			"NETCONF reply does not contain <ok/>",
+		)
+	}
+
+	return nil
 }

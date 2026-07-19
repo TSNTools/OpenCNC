@@ -154,3 +154,24 @@ func GetLastConfiguration() (*schedule.GclConfiguration, string, error) {
 
 	return &config, confId, nil
 }
+
+func StoreConfiguration(cfg *topology_config.TopologyConfig) error {
+	if cfg == nil {
+		return fmt.Errorf("cannot store nil configuration")
+	}
+
+	configBytes, err := proto.Marshal(cfg)
+	if err != nil {
+		return fmt.Errorf("failed to serialize configuration: %w", err)
+	}
+
+	err = SendToStore(
+		configBytes,
+		"configurations."+cfg.GetConfigId(),
+	)
+	if err != nil {
+		return fmt.Errorf("failed to store configuration: %w", err)
+	}
+
+	return nil
+}

@@ -163,22 +163,22 @@ func (p *PcpMappingNetconfPlugin) Map(msg proto.Message) (any, error) {
 }
 
 func (p *PcpMappingNetconfPlugin) Push(mapped any, target managementSessions.DeviceTarget) error {
-	bridgePort, ok := mapped.(*opencncModel.IETFInterfaces_Interfaces_Interface_BridgePort)
-	if !ok {
-		return fmt.Errorf("PcpMappingNetconfPlugin: invalid mapped type %T", mapped)
-	}
-
-	xml, err := p.BuildXML(bridgePort, target)
+	featurexml, err := p.BuildFeatureXML(mapped)
 	if err != nil {
-		return err
-	}
-
-	if p.logger != nil {
-		p.logger.Printf("[PcpMapping] XML generated for interface %s:\n%s", target.InterfaceName, xml)
+		return fmt.Errorf("failed to build feature XML: %w", err)
 	}
 
 	if target.Info == nil {
 		return fmt.Errorf("device target info is nil")
+	}
+
+	xml, err := p.wrapXML(featurexml, target)
+	if err != nil {
+		return fmt.Errorf("failed to build XML: %w", err)
+	}
+
+	if p.logger != nil {
+		p.logger.Printf("[PcpMapping] XML generated for interface %s:\n%s", target.InterfaceName, xml)
 	}
 
 	session, err := managementSessions.CreateSession(target.Info.IpAddress, target.Info.UserName, target.Secret)
@@ -194,12 +194,14 @@ func (p *PcpMappingNetconfPlugin) Push(mapped any, target managementSessions.Dev
 	return nil
 }
 
-func (p *PcpMappingNetconfPlugin) BuildXML(root *opencncModel.IETFInterfaces_Interfaces_Interface_BridgePort, target managementSessions.DeviceTarget) (string, error) {
+func (p *PcpMappingNetconfPlugin) BuildFeatureXML(mapped any) (*plugins.FeatureXML, error) {
+	root, ok := mapped.(*opencncModel.IETFInterfaces_Interfaces_Interface_BridgePort)
+	if !ok {
+		return nil, fmt.Errorf("PcpMappingNetconfPlugin: invalid mapped type %T", mapped)
+	}
+
 	var buf bytes.Buffer
 
-	buf.WriteString(`<interfaces xmlns="urn:ietf:params:xml:ns:yang:ietf-interfaces">`)
-	buf.WriteString(`<interface>`)
-	buf.WriteString(fmt.Sprintf(`<name>%s</name>`, target.InterfaceName))
 	buf.WriteString(`<bridge-port xmlns="urn:ieee:std:802.1Q:yang:ieee802-dot1q-bridge">`)
 
 	if root.DefaultPriority != nil {
@@ -311,6 +313,17 @@ func (p *PcpMappingNetconfPlugin) BuildXML(root *opencncModel.IETFInterfaces_Int
 	}
 
 	buf.WriteString(`</bridge-port>`)
+
+	return &plugins.FeatureXML{Container: "bridge-port", XML: buf.Bytes()}, nil
+}
+
+func (p *PcpMappingNetconfPlugin) wrapXML(featurexml *plugins.FeatureXML, target managementSessions.DeviceTarget) (string, error) {
+	var buf bytes.Buffer
+
+	buf.WriteString(`<interfaces xmlns="urn:ietf:params:xml:ns:yang:ietf-interfaces">`)
+	buf.WriteString(`<interface>`)
+	buf.WriteString(fmt.Sprintf(`<name>%s</name>`, target.InterfaceName))
+	buf.WriteString(string(featurexml.XML))
 	buf.WriteString(`</interface>`)
 	buf.WriteString(`</interfaces>`)
 

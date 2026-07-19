@@ -7,12 +7,13 @@
 package service
 
 import (
-	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
-	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
-	anypb "google.golang.org/protobuf/types/known/anypb"
+	topology_config "OpenCNC_config_service/common/structures/topology_config"
 	reflect "reflect"
 	sync "sync"
 	unsafe "unsafe"
+
+	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
+	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 )
 
 const (
@@ -22,11 +23,10 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-// Messages
 type ConfigurationRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`           // configuration identifier
-	Payload       *anypb.Any             `protobuf:"bytes,2,opt,name=payload,proto3" json:"payload,omitempty"` // optional: gNMI SetRequest or internal model
+	state         protoimpl.MessageState          `protogen:"open.v1"`
+	Id            *string                         `protobuf:"bytes,1,opt,name=id,proto3,oneof" json:"id,omitempty"`
+	Configuration *topology_config.TopologyConfig `protobuf:"bytes,2,opt,name=configuration,proto3,oneof" json:"configuration,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -62,17 +62,53 @@ func (*ConfigurationRequest) Descriptor() ([]byte, []int) {
 }
 
 func (x *ConfigurationRequest) GetId() string {
-	if x != nil {
-		return x.Id
+	if x != nil && x.Id != nil {
+		return *x.Id
 	}
 	return ""
 }
 
-func (x *ConfigurationRequest) GetPayload() *anypb.Any {
+func (x *ConfigurationRequest) GetConfiguration() *topology_config.TopologyConfig {
 	if x != nil {
-		return x.Payload
+		return x.Configuration
 	}
 	return nil
+}
+
+type RollbackRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *RollbackRequest) Reset() {
+	*x = RollbackRequest{}
+	mi := &file_common_structures_service_service_proto_msgTypes[1]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RollbackRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RollbackRequest) ProtoMessage() {}
+
+func (x *RollbackRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_common_structures_service_service_proto_msgTypes[1]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RollbackRequest.ProtoReflect.Descriptor instead.
+func (*RollbackRequest) Descriptor() ([]byte, []int) {
+	return file_common_structures_service_service_proto_rawDescGZIP(), []int{1}
 }
 
 type ConfigurationResponse struct {
@@ -85,7 +121,7 @@ type ConfigurationResponse struct {
 
 func (x *ConfigurationResponse) Reset() {
 	*x = ConfigurationResponse{}
-	mi := &file_common_structures_service_service_proto_msgTypes[1]
+	mi := &file_common_structures_service_service_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -97,7 +133,7 @@ func (x *ConfigurationResponse) String() string {
 func (*ConfigurationResponse) ProtoMessage() {}
 
 func (x *ConfigurationResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_common_structures_service_service_proto_msgTypes[1]
+	mi := &file_common_structures_service_service_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -110,7 +146,7 @@ func (x *ConfigurationResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ConfigurationResponse.ProtoReflect.Descriptor instead.
 func (*ConfigurationResponse) Descriptor() ([]byte, []int) {
-	return file_common_structures_service_service_proto_rawDescGZIP(), []int{1}
+	return file_common_structures_service_service_proto_rawDescGZIP(), []int{2}
 }
 
 func (x *ConfigurationResponse) GetSuccess() bool {
@@ -131,16 +167,21 @@ var File_common_structures_service_service_proto protoreflect.FileDescriptor
 
 const file_common_structures_service_service_proto_rawDesc = "" +
 	"\n" +
-	"'common/structures/service/service.proto\x12\aservice\x1a\x19google/protobuf/any.proto\"V\n" +
-	"\x14ConfigurationRequest\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\tR\x02id\x12.\n" +
-	"\apayload\x18\x02 \x01(\v2\x14.google.protobuf.AnyR\apayload\"K\n" +
+	"'common/structures/service/service.proto\x12\aservice\x1a7common/structures/topology_config/topology_config.proto\"\x90\x01\n" +
+	"\x14ConfigurationRequest\x12\x13\n" +
+	"\x02id\x18\x01 \x01(\tH\x00R\x02id\x88\x01\x01\x12J\n" +
+	"\rconfiguration\x18\x02 \x01(\v2\x1f.topology_config.TopologyConfigH\x01R\rconfiguration\x88\x01\x01B\x05\n" +
+	"\x03_idB\x10\n" +
+	"\x0e_configuration\"\x11\n" +
+	"\x0fRollbackRequest\"K\n" +
 	"\x15ConfigurationResponse\x12\x18\n" +
 	"\asuccess\x18\x01 \x01(\bR\asuccess\x12\x18\n" +
-	"\amessage\x18\x02 \x01(\tR\amessage2\xab\x01\n" +
+	"\amessage\x18\x02 \x01(\tR\amessage2\xca\x02\n" +
 	"\rConfigService\x12S\n" +
-	"\x12ApplyConfiguration\x12\x1d.service.ConfigurationRequest\x1a\x1e.service.ConfigurationResponse\x12E\n" +
-	"\x04Ping\x12\x1d.service.ConfigurationRequest\x1a\x1e.service.ConfigurationResponseB#Z!common/structures/service;serviceb\x06proto3"
+	"\x12ApplyConfiguration\x12\x1d.service.ConfigurationRequest\x1a\x1e.service.ConfigurationResponse\x12W\n" +
+	"\x16ApplyConfigurationById\x12\x1d.service.ConfigurationRequest\x1a\x1e.service.ConfigurationResponse\x12D\n" +
+	"\bRollback\x12\x18.service.RollbackRequest\x1a\x1e.service.ConfigurationResponse\x12E\n" +
+	"\x04Ping\x12\x1d.service.ConfigurationRequest\x1a\x1e.service.ConfigurationResponseB:Z8OpenCNC_config_service/common/structures/service;serviceb\x06proto3"
 
 var (
 	file_common_structures_service_service_proto_rawDescOnce sync.Once
@@ -154,20 +195,25 @@ func file_common_structures_service_service_proto_rawDescGZIP() []byte {
 	return file_common_structures_service_service_proto_rawDescData
 }
 
-var file_common_structures_service_service_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
+var file_common_structures_service_service_proto_msgTypes = make([]protoimpl.MessageInfo, 3)
 var file_common_structures_service_service_proto_goTypes = []any{
-	(*ConfigurationRequest)(nil),  // 0: service.ConfigurationRequest
-	(*ConfigurationResponse)(nil), // 1: service.ConfigurationResponse
-	(*anypb.Any)(nil),             // 2: google.protobuf.Any
+	(*ConfigurationRequest)(nil),           // 0: service.ConfigurationRequest
+	(*RollbackRequest)(nil),                // 1: service.RollbackRequest
+	(*ConfigurationResponse)(nil),          // 2: service.ConfigurationResponse
+	(*topology_config.TopologyConfig)(nil), // 3: topology_config.TopologyConfig
 }
 var file_common_structures_service_service_proto_depIdxs = []int32{
-	2, // 0: service.ConfigurationRequest.payload:type_name -> google.protobuf.Any
+	3, // 0: service.ConfigurationRequest.configuration:type_name -> topology_config.TopologyConfig
 	0, // 1: service.ConfigService.ApplyConfiguration:input_type -> service.ConfigurationRequest
-	0, // 2: service.ConfigService.Ping:input_type -> service.ConfigurationRequest
-	1, // 3: service.ConfigService.ApplyConfiguration:output_type -> service.ConfigurationResponse
-	1, // 4: service.ConfigService.Ping:output_type -> service.ConfigurationResponse
-	3, // [3:5] is the sub-list for method output_type
-	1, // [1:3] is the sub-list for method input_type
+	0, // 2: service.ConfigService.ApplyConfigurationById:input_type -> service.ConfigurationRequest
+	1, // 3: service.ConfigService.Rollback:input_type -> service.RollbackRequest
+	0, // 4: service.ConfigService.Ping:input_type -> service.ConfigurationRequest
+	2, // 5: service.ConfigService.ApplyConfiguration:output_type -> service.ConfigurationResponse
+	2, // 6: service.ConfigService.ApplyConfigurationById:output_type -> service.ConfigurationResponse
+	2, // 7: service.ConfigService.Rollback:output_type -> service.ConfigurationResponse
+	2, // 8: service.ConfigService.Ping:output_type -> service.ConfigurationResponse
+	5, // [5:9] is the sub-list for method output_type
+	1, // [1:5] is the sub-list for method input_type
 	1, // [1:1] is the sub-list for extension type_name
 	1, // [1:1] is the sub-list for extension extendee
 	0, // [0:1] is the sub-list for field type_name
@@ -178,13 +224,14 @@ func file_common_structures_service_service_proto_init() {
 	if File_common_structures_service_service_proto != nil {
 		return
 	}
+	file_common_structures_service_service_proto_msgTypes[0].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_common_structures_service_service_proto_rawDesc), len(file_common_structures_service_service_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   2,
+			NumMessages:   3,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
