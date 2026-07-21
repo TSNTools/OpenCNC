@@ -13,12 +13,12 @@ type Operation struct {
 	Node      *topology.Node
 	Config    *topology_config.NodeConfig
 	Backend   protocolbackends.ProtocolBackend
-	prepared  bool
-	committed bool
+	Prepared  bool
+	Committed bool
 }
 
 type ConfigurationTransaction struct {
-	configId   string
+	ConfigId   string
 	Operations []Operation
 }
 
@@ -39,7 +39,8 @@ func (t *ConfigurationTransaction) Commit() error {
 			)
 		}
 
-		op.committed = true
+		op.Committed = true
+		op.Prepared = false
 	}
 
 	return nil
@@ -53,7 +54,7 @@ func (t *ConfigurationTransaction) Rollback() error {
 
 		op := &t.Operations[i]
 
-		if !op.committed {
+		if !op.Committed {
 			continue
 		}
 
@@ -63,7 +64,7 @@ func (t *ConfigurationTransaction) Rollback() error {
 			}
 			continue
 		}
-		op.committed = false
+		op.Committed = false
 	}
 
 	return firstErr
@@ -84,7 +85,7 @@ func (t *ConfigurationTransaction) Prepare() error {
 			)
 		}
 
-		op.prepared = true
+		op.Prepared = true
 	}
 
 	return nil
@@ -92,7 +93,7 @@ func (t *ConfigurationTransaction) Prepare() error {
 
 func NewConfigurationTransaction(configId string) *ConfigurationTransaction {
 	return &ConfigurationTransaction{
-		configId: configId,
+		ConfigId: configId,
 	}
 }
 
@@ -124,7 +125,7 @@ func (m *MappingEngine) GetLastTransactionId() *string {
 	if m.lastTransaction == nil {
 		return nil
 	}
-	return &m.lastTransaction.configId
+	return &m.lastTransaction.ConfigId
 }
 
 func (m *MappingEngine) ApplyConfiguration(topo *topology.Topology, cfg *topology_config.TopologyConfig, secret string) error {

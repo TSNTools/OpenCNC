@@ -1,0 +1,55 @@
+syntax = "proto3";
+
+package monitoring;
+
+option go_package = "common/structures/monitoring;monitoring";
+
+
+message MonitoringEvent {
+
+    string id = 1;
+
+    string node_id = 2;
+
+    string source_metric = 3;
+
+    EventType type = 4;
+
+    EventAction action = 5;
+
+    string description = 6;
+}
+
+
+enum EventType {
+
+    EVENT_UNSPECIFIED = 0;
+
+    DEVICE_LOST = 1;
+
+    LINK_DOWN = 2;
+
+    CONGESTION = 3;
+
+    BUFFER_OVERFLOW = 4;
+
+    SYNCHRONIZATION_ERROR = 5;
+
+    CONFIGURATION_FAILURE = 6;
+
+    PERFORMANCE_DEGRADATION = 7;
+}
+
+
+enum EventAction {
+
+    ACTION_UNSPECIFIED = 0;
+
+    NOTIFY = 1;
+
+    CHANGE_MONITORING_LEVEL = 2;
+
+    REQUEST_RECONFIGURATION = 3;
+
+    REQUEST_ROLLBACK = 4;
+}

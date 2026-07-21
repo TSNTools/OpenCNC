@@ -1,0 +1,7 @@
+<interfaces xmlns="urn:ietf:params:xml:ns:yang:ietf-interfaces">
+    <interface>
+        <name>sw0p4</name>
+        <ethernet xmlns="urn:ieee:std:802.3:yang:ieee802-ethernet-interface">
+        </ethernet>
+    </interface>
+</interfaces>

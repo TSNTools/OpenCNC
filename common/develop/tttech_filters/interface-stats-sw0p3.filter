@@ -1,0 +1,11 @@
+<interfaces xmlns="urn:ietf:params:xml:ns:yang:ietf-interfaces">
+    <interface>
+        <name>sw0p3</name>
+        <ethernet xmlns="urn:ieee:std:802.3:yang:ieee802-ethernet-interface">
+           <statistics />
+        </ethernet>
+        <mac-merge xmlns="urn:ieee:std:802.1Q:yang:ieee802-dot1q-preempt">
+           <statistics />
+      </mac-merge>
+    </interface>
+</interfaces>

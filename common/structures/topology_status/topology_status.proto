@@ -36,6 +36,8 @@ message PortStatus {
 
   uint64 timestamp_ns = 8;            // Snapshot capture time for port status
   string reason = 9;                  // Optional description for port status changes or alerts
+  
+  repeated QueueStatus queues = 10;  // TO CHECK
 }
 
 message LinkStatus {
@@ -54,4 +56,17 @@ enum OperStatus {
   UP = 1;
   DOWN = 2;
   FAULTED = 3;
+}
+
+message QueueStatus {
+  
+  uint32 queue_id = 1;
+
+  uint64 occupancy_bytes = 2;
+  uint64 occupancy_packets = 3;
+
+  uint64 max_bytes = 4;
+
+  uint64 dropped_packets = 5;
+  uint64 dropped_bytes = 6;
 }

@@ -38,8 +38,8 @@ message StpInstanceStatus {
 
 message PortStpStatus {
   string port_id = 1;                     // Matches Port.id in topology
-  stp.PortRole role = 2;                      // Port role (Clause 13.25.5)
-  stp.PortState state = 3;                    // Port state (Clause 13.25.6)
+  stp.PortRole role = 2;                  // Port role (Clause 13.25.5)
+  stp.PortState state = 3;                // Port state (Clause 13.25.6)
   bool forwarding = 4;                    // Whether port is currently forwarding frames
   uint32 port_priority = 5;               // Admin or operational port priority
   uint32 port_path_cost = 6;              // Port cost (Clause 13.24.2)

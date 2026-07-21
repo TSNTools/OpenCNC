@@ -1,0 +1,44 @@
+syntax = "proto3";
+
+package resource_status;
+
+option go_package =
+"OpenCNC_config_service/common/structures/resource_status;resource_status";
+
+
+message ResourceStatus {
+
+  string node_id = 1;
+
+  double cpu_utilization = 2;
+
+  uint64 memory_used_bytes = 3;
+  uint64 memory_total_bytes = 4;
+
+  uint64 temperature_millicelsius = 5;
+
+  uint64 timestamp_ns = 6;
+}
+
+
+message ResourceAllocationStatus {
+
+  string node_id = 1;
+
+
+  // TAS
+  uint32 available_gate_entries = 2;
+  uint32 total_gate_entries = 3;
+
+
+  // PSFP
+  uint32 available_filters = 4;
+  uint32 total_filters = 5;
+
+
+  // Queues
+  uint32 available_queues = 6;
+
+
+  uint64 timestamp_ns = 7;
+}

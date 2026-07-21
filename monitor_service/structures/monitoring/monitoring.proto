@@ -1,0 +1,84 @@
+syntax = "proto3";
+
+package monitoring;
+
+option go_package = "common/structures/monitoring;monitoring";
+
+// Runtime settings for the monitoring service.
+message MonitoringSettings {
+  repeated Counter counters = 1; // Counters or operational values to collect from devices.
+  repeated Metric metrics = 2;   // Metrics derived from sampled counters.
+}
+
+// A raw value periodically read from a device.
+message Counter {
+  string id = 1;               // Unique identifier.
+  string name = 2;             // Human-readable name.
+  string path = 3;             // NETCONF XPath, gNMI path, SNMP OID, ...
+  uint32 poll_interval_ms = 4; // Sampling period.
+  string description = 5;      // Optional description.
+}
+
+// A metric computed from one or more counters.
+message Metric {
+  string name = 1;                   // Human-readable name.
+  MetricType type = 2;
+  uint32 evaluation_interval_ms = 3; // Evaluation interval (can differ from polling interval)
+  repeated string counter_ids = 4;   // Counters used to compute this metric.
+  uint32 window_size = 5;            // Number of samples used in the calculation. 
+  repeated Threshold thresholds = 6; // Alarm policy. e.g. 70% warning, 90% critical (those are 2 thresholds)
+  bool trigger_rollback  = 7;        // Automatically trigger a roll back if threshold violated
+  string description = 8;            // Optional description.
+}
+
+enum MetricType {
+
+  METRIC_TYPE_UNSPECIFIED = 0;
+
+
+  // Performance
+  UTILIZATION = 1;
+  THROUGHPUT = 2;
+  LOSS_RATE = 3;
+  ERROR_RATE = 4;
+  DISCARD_RATE = 5;
+  DELAY = 6;
+  JITTER = 7;
+
+
+  // TSN specific
+  QUEUE_OCCUPANCY = 8;
+  QUEUE_DROP_RATE = 9;
+  CLOCK_SYNC_ERROR = 10;
+  GATE_ERROR_RATE = 11;
+  CONFIGURATION_MISMATCH = 12;
+  RESOURCE_EXHAUSTION = 13;
+  DEVICE_UNREACHABLE = 14;
+  CONGESTION = 15;
+}
+
+// Thresholds for triggering alarms.
+message Threshold {
+  double value = 1;
+  Comparison comparison = 2; // how to read the threshold
+  Severity severity = 3;
+}
+
+enum Comparison {
+  COMPARISON_UNSPECIFIED = 0;
+
+  GREATER_THAN = 1;
+  GREATER_OR_EQUAL = 2;
+  LESS_THAN = 3;
+  LESS_OR_EQUAL = 4;
+  EQUAL = 5;
+  NOT_EQUAL = 6;
+}
+
+enum Severity {
+  SEVERITY_UNSPECIFIED = 0;
+
+  INFO     = 1;
+  WARNING  = 2;
+  CRITICAL = 3;
+}

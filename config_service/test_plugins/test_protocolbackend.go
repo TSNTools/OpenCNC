@@ -7,6 +7,7 @@ import (
 	"OpenCNC_config_service/common/structures/topology"
 	topology_config "OpenCNC_config_service/common/structures/topology_config"
 	vlan "OpenCNC_config_service/common/structures/vlan"
+	"OpenCNC_config_service/config_service/pkg/engine"
 	"OpenCNC_config_service/config_service/pkg/plugins"
 	"OpenCNC_config_service/config_service/pkg/protocolbackends"
 
@@ -32,8 +33,17 @@ func TestNetconfProtocol() {
 		netconfPlugins...,
 	)
 	//backend := protocolbackends.NewNetconfBackend("netconf", plugin_qbv, plugin_pcp)
+	operation := &engine.Operation{
+		Node:    target,
+		Config:  nodecfg,
+		Backend: backend,
+	}
+	tx := &engine.ConfigurationTransaction{
+		ConfigId:   "test-transaction-1",
+		Operations: []engine.Operation{*operation},
+	}
 
-	backend.MapAndPush(nodecfg, target)
+	tx.Commit()
 }
 
 var target = &topology.Node{

@@ -21,11 +21,9 @@ To read using etcdctl:
 import (
 	devicemodelregistry "OpenCNC_config_service/common/structures/devicemodelregistry"
 	moduleregistry "OpenCNC_config_service/common/structures/module-registry"
-	schedule "OpenCNC_config_service/common/structures/schedule"
 	"OpenCNC_config_service/common/structures/topology"
 	"OpenCNC_config_service/common/structures/topology_config"
 	"fmt"
-	"path"
 
 	"git.cs.kau.se/hamzchah/opencnc_kafka-exporter/logger/pkg/logger"
 	"google.golang.org/protobuf/proto"
@@ -131,30 +129,31 @@ func GetConfiguration(confId string) (*topology_config.TopologyConfig, error) {
 	return &config, nil
 }
 
-func GetLastConfiguration() (*schedule.GclConfiguration, string, error) {
-	const prefix = "configurations.tsn-configuration"
+/*
+	func GetLastConfiguration() (*schedule.GclConfiguration, string, error) {
+		const prefix = "configurations.tsn-configuration"
 
-	resp, err := getLastFromStoreWithPrefix(prefix)
-	if err != nil {
-		return nil, "", err
+		resp, err := getLastFromStoreWithPrefix(prefix)
+		if err != nil {
+			return nil, "", err
+		}
+		if len(resp.Kvs) == 0 {
+			return nil, "", fmt.Errorf("no configurations found")
+		}
+
+		kv := resp.Kvs[0]
+
+		// Convert the key back to your confId (if needed)
+		confId := path.Base(string(kv.Key)) // e.g. "4d8f7c72-f9e3-4d33-8210-3a5437b8a821"
+
+		var config schedule.GclConfiguration
+		if err := proto.Unmarshal(kv.Value, &config); err != nil {
+			return nil, "", fmt.Errorf("failed to unmarshal last config: %v", err)
+		}
+
+		return &config, confId, nil
 	}
-	if len(resp.Kvs) == 0 {
-		return nil, "", fmt.Errorf("no configurations found")
-	}
-
-	kv := resp.Kvs[0]
-
-	// Convert the key back to your confId (if needed)
-	confId := path.Base(string(kv.Key)) // e.g. "4d8f7c72-f9e3-4d33-8210-3a5437b8a821"
-
-	var config schedule.GclConfiguration
-	if err := proto.Unmarshal(kv.Value, &config); err != nil {
-		return nil, "", fmt.Errorf("failed to unmarshal last config: %v", err)
-	}
-
-	return &config, confId, nil
-}
-
+*/
 func StoreConfiguration(cfg *topology_config.TopologyConfig) error {
 	if cfg == nil {
 		return fmt.Errorf("cannot store nil configuration")

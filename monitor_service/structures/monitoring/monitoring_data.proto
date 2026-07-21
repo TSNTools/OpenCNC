@@ -1,0 +1,47 @@
+syntax = "proto3";
+
+package monitoring;
+
+option go_package = "common/structures/monitoring;monitoring";
+
+import "google/protobuf/timestamp.proto";
+
+
+// Raw data collected by plugins
+message CounterSample {
+
+  string counter_id = 1;
+
+  string node_id = 2;
+
+  google.protobuf.Timestamp timestamp = 3;
+
+  double value = 4;
+}
+
+
+// Output of the metric engine
+message MetricResult {
+
+  string metric_name = 1;
+
+  string node_id = 2;
+
+  google.protobuf.Timestamp timestamp = 3;
+
+  double value = 4;
+
+  MetricState state = 5;
+}
+
+
+enum MetricState {
+
+  METRIC_STATE_UNSPECIFIED = 0;
+
+  NORMAL = 1;
+
+  WARNING = 2;
+
+  VIOLATION = 3;
+}

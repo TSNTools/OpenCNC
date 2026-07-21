@@ -38,3 +38,19 @@ message GateSyncDiagnostics {
   // Optional human-readable status message or comment
   string status_message = 9;
 }
+
+
+message SyncStatus {
+
+  string node_id = 1;
+
+  bool synchronized = 2;
+
+  int64 offset_ns = 3;
+
+  uint64 sync_errors = 4;
+
+  string grandmaster_id = 5;
+
+  uint64 timestamp_ns = 6;
+}

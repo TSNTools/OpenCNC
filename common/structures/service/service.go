@@ -195,6 +195,7 @@ func (s *ConfigServiceServerImpl) Rollback(ctx context.Context, req *RollbackReq
 	}, nil
 }
 
+/*
 // Helper: apply last known configuration at startup
 func (s *ConfigServiceServerImpl) ApplyLastConfiguration() {
 	_, id, err := storewrapper.GetLastConfiguration()
@@ -221,3 +222,4 @@ func (s *ConfigServiceServerImpl) ApplyLastConfiguration() {
 	}
 
 }
+*/
