@@ -24,37 +24,37 @@ const (
 type EventType int32
 
 const (
-	EventType_EVENT_UNSPECIFIED       EventType = 0
-	EventType_DEVICE_LOST             EventType = 1
-	EventType_LINK_DOWN               EventType = 2
-	EventType_CONGESTION              EventType = 3
-	EventType_BUFFER_OVERFLOW         EventType = 4
-	EventType_SYNCHRONIZATION_ERROR   EventType = 5
-	EventType_CONFIGURATION_FAILURE   EventType = 6
-	EventType_PERFORMANCE_DEGRADATION EventType = 7
+	EventType_EVENT_TYPE_UNSPECIFIED        EventType = 0
+	EventType_EVENT_DEVICE_LOST             EventType = 1
+	EventType_EVENT_LINK_DOWN               EventType = 2
+	EventType_EVENT_CONGESTION              EventType = 3
+	EventType_EVENT_BUFFER_OVERFLOW         EventType = 4
+	EventType_EVENT_SYNCHRONIZATION_ERROR   EventType = 5
+	EventType_EVENT_CONFIGURATION_FAILURE   EventType = 6
+	EventType_EVENT_PERFORMANCE_DEGRADATION EventType = 7
 )
 
 // Enum value maps for EventType.
 var (
 	EventType_name = map[int32]string{
-		0: "EVENT_UNSPECIFIED",
-		1: "DEVICE_LOST",
-		2: "LINK_DOWN",
-		3: "CONGESTION",
-		4: "BUFFER_OVERFLOW",
-		5: "SYNCHRONIZATION_ERROR",
-		6: "CONFIGURATION_FAILURE",
-		7: "PERFORMANCE_DEGRADATION",
+		0: "EVENT_TYPE_UNSPECIFIED",
+		1: "EVENT_DEVICE_LOST",
+		2: "EVENT_LINK_DOWN",
+		3: "EVENT_CONGESTION",
+		4: "EVENT_BUFFER_OVERFLOW",
+		5: "EVENT_SYNCHRONIZATION_ERROR",
+		6: "EVENT_CONFIGURATION_FAILURE",
+		7: "EVENT_PERFORMANCE_DEGRADATION",
 	}
 	EventType_value = map[string]int32{
-		"EVENT_UNSPECIFIED":       0,
-		"DEVICE_LOST":             1,
-		"LINK_DOWN":               2,
-		"CONGESTION":              3,
-		"BUFFER_OVERFLOW":         4,
-		"SYNCHRONIZATION_ERROR":   5,
-		"CONFIGURATION_FAILURE":   6,
-		"PERFORMANCE_DEGRADATION": 7,
+		"EVENT_TYPE_UNSPECIFIED":        0,
+		"EVENT_DEVICE_LOST":             1,
+		"EVENT_LINK_DOWN":               2,
+		"EVENT_CONGESTION":              3,
+		"EVENT_BUFFER_OVERFLOW":         4,
+		"EVENT_SYNCHRONIZATION_ERROR":   5,
+		"EVENT_CONFIGURATION_FAILURE":   6,
+		"EVENT_PERFORMANCE_DEGRADATION": 7,
 	}
 )
 
@@ -88,28 +88,28 @@ func (EventType) EnumDescriptor() ([]byte, []int) {
 type EventAction int32
 
 const (
-	EventAction_ACTION_UNSPECIFIED      EventAction = 0
-	EventAction_NOTIFY                  EventAction = 1
-	EventAction_CHANGE_MONITORING_LEVEL EventAction = 2
-	EventAction_REQUEST_RECONFIGURATION EventAction = 3
-	EventAction_REQUEST_ROLLBACK        EventAction = 4
+	EventAction_EVENT_ACTION_UNSPECIFIED             EventAction = 0
+	EventAction_EVENT_ACTION_NOTIFY                  EventAction = 1
+	EventAction_EVENT_ACTION_CHANGE_MONITORING_LEVEL EventAction = 2
+	EventAction_EVENT_ACTION_REQUEST_RECONFIGURATION EventAction = 3
+	EventAction_EVENT_ACTION_REQUEST_ROLLBACK        EventAction = 4
 )
 
 // Enum value maps for EventAction.
 var (
 	EventAction_name = map[int32]string{
-		0: "ACTION_UNSPECIFIED",
-		1: "NOTIFY",
-		2: "CHANGE_MONITORING_LEVEL",
-		3: "REQUEST_RECONFIGURATION",
-		4: "REQUEST_ROLLBACK",
+		0: "EVENT_ACTION_UNSPECIFIED",
+		1: "EVENT_ACTION_NOTIFY",
+		2: "EVENT_ACTION_CHANGE_MONITORING_LEVEL",
+		3: "EVENT_ACTION_REQUEST_RECONFIGURATION",
+		4: "EVENT_ACTION_REQUEST_ROLLBACK",
 	}
 	EventAction_value = map[string]int32{
-		"ACTION_UNSPECIFIED":      0,
-		"NOTIFY":                  1,
-		"CHANGE_MONITORING_LEVEL": 2,
-		"REQUEST_RECONFIGURATION": 3,
-		"REQUEST_ROLLBACK":        4,
+		"EVENT_ACTION_UNSPECIFIED":             0,
+		"EVENT_ACTION_NOTIFY":                  1,
+		"EVENT_ACTION_CHANGE_MONITORING_LEVEL": 2,
+		"EVENT_ACTION_REQUEST_RECONFIGURATION": 3,
+		"EVENT_ACTION_REQUEST_ROLLBACK":        4,
 	}
 )
 
@@ -207,14 +207,14 @@ func (x *MonitoringEvent) GetType() EventType {
 	if x != nil {
 		return x.Type
 	}
-	return EventType_EVENT_UNSPECIFIED
+	return EventType_EVENT_TYPE_UNSPECIFIED
 }
 
 func (x *MonitoringEvent) GetAction() EventAction {
 	if x != nil {
 		return x.Action
 	}
-	return EventAction_ACTION_UNSPECIFIED
+	return EventAction_EVENT_ACTION_UNSPECIFIED
 }
 
 func (x *MonitoringEvent) GetDescription() string {
@@ -236,24 +236,22 @@ const file_monitor_service_structures_monitoring_monitoring_events_proto_rawDesc
 	"\rsource_metric\x18\x03 \x01(\tR\fsourceMetric\x12)\n" +
 	"\x04type\x18\x04 \x01(\x0e2\x15.monitoring.EventTypeR\x04type\x12/\n" +
 	"\x06action\x18\x05 \x01(\x0e2\x17.monitoring.EventActionR\x06action\x12 \n" +
-	"\vdescription\x18\x06 \x01(\tR\vdescription*\xba\x01\n" +
-	"\tEventType\x12\x15\n" +
-	"\x11EVENT_UNSPECIFIED\x10\x00\x12\x0f\n" +
-	"\vDEVICE_LOST\x10\x01\x12\r\n" +
-	"\tLINK_DOWN\x10\x02\x12\x0e\n" +
-	"\n" +
-	"CONGESTION\x10\x03\x12\x13\n" +
-	"\x0fBUFFER_OVERFLOW\x10\x04\x12\x19\n" +
-	"\x15SYNCHRONIZATION_ERROR\x10\x05\x12\x19\n" +
-	"\x15CONFIGURATION_FAILURE\x10\x06\x12\x1b\n" +
-	"\x17PERFORMANCE_DEGRADATION\x10\a*\x81\x01\n" +
-	"\vEventAction\x12\x16\n" +
-	"\x12ACTION_UNSPECIFIED\x10\x00\x12\n" +
-	"\n" +
-	"\x06NOTIFY\x10\x01\x12\x1b\n" +
-	"\x17CHANGE_MONITORING_LEVEL\x10\x02\x12\x1b\n" +
-	"\x17REQUEST_RECONFIGURATION\x10\x03\x12\x14\n" +
-	"\x10REQUEST_ROLLBACK\x10\x04B)Z'common/structures/monitoring;monitoringb\x06proto3"
+	"\vdescription\x18\x06 \x01(\tR\vdescription*\xe9\x01\n" +
+	"\tEventType\x12\x1a\n" +
+	"\x16EVENT_TYPE_UNSPECIFIED\x10\x00\x12\x15\n" +
+	"\x11EVENT_DEVICE_LOST\x10\x01\x12\x13\n" +
+	"\x0fEVENT_LINK_DOWN\x10\x02\x12\x14\n" +
+	"\x10EVENT_CONGESTION\x10\x03\x12\x19\n" +
+	"\x15EVENT_BUFFER_OVERFLOW\x10\x04\x12\x1f\n" +
+	"\x1bEVENT_SYNCHRONIZATION_ERROR\x10\x05\x12\x1f\n" +
+	"\x1bEVENT_CONFIGURATION_FAILURE\x10\x06\x12!\n" +
+	"\x1dEVENT_PERFORMANCE_DEGRADATION\x10\a*\xbb\x01\n" +
+	"\vEventAction\x12\x1c\n" +
+	"\x18EVENT_ACTION_UNSPECIFIED\x10\x00\x12\x17\n" +
+	"\x13EVENT_ACTION_NOTIFY\x10\x01\x12(\n" +
+	"$EVENT_ACTION_CHANGE_MONITORING_LEVEL\x10\x02\x12(\n" +
+	"$EVENT_ACTION_REQUEST_RECONFIGURATION\x10\x03\x12!\n" +
+	"\x1dEVENT_ACTION_REQUEST_ROLLBACK\x10\x04B)Z'common/structures/monitoring;monitoringb\x06proto3"
 
 var (
 	file_monitor_service_structures_monitoring_monitoring_events_proto_rawDescOnce sync.Once

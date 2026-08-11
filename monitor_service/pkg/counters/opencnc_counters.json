@@ -1,8 +1,9 @@
-[
+{
+  "counters":[
   {
     "id": "if_state_in_broadcast_pkts",
     "name": "Interface inbound broadcast packets",
-    "path": "/interfaces-state/interface[name=*]/statistics/in-broadcast-pkts",
+    "path": "/interfaces/interface/statistics/in-broadcast-pkts",
     "description": "Per-interface ingress broadcast packet counter from ietf-interfaces.",
     "defined at": {
       "yang_file_name": "ietf-interfaces.yang",
@@ -15,7 +16,7 @@
   {
     "id": "if_state_in_discards",
     "name": "Interface inbound discards",
-    "path": "/interfaces-state/interface[name=*]/statistics/in-discards",
+    "path": "/interfaces/interface/statistics/in-discards",
     "description": "Per-interface ingress discard counter from ietf-interfaces.",
     "defined at": {
       "yang_file_name": "ietf-interfaces.yang",
@@ -28,7 +29,7 @@
   {
     "id": "if_state_in_errors",
     "name": "Interface inbound errors",
-    "path": "/interfaces-state/interface[name=*]/statistics/in-errors",
+    "path": "/interfaces/interface/statistics/in-errors",
     "description": "Per-interface ingress error counter from ietf-interfaces.",
     "defined at": {
       "yang_file_name": "ietf-interfaces.yang",
@@ -41,7 +42,7 @@
   {
     "id": "if_state_in_multicast_pkts",
     "name": "Interface inbound multicast packets",
-    "path": "/interfaces-state/interface[name=*]/statistics/in-multicast-pkts",
+    "path": "/interfaces/interface/statistics/in-multicast-pkts",
     "description": "Per-interface ingress multicast packet counter from ietf-interfaces.",
     "defined at": {
       "yang_file_name": "ietf-interfaces.yang",
@@ -54,7 +55,7 @@
   {
     "id": "if_state_in_octets",
     "name": "Interface inbound octets",
-    "path": "/interfaces-state/interface[name=*]/statistics/in-octets",
+    "path": "/interfaces/interface/statistics/in-octets",
     "description": "Per-interface ingress octet counter from ietf-interfaces.",
     "defined at": {
       "yang_file_name": "ietf-interfaces.yang",
@@ -67,7 +68,7 @@
   {
     "id": "if_state_in_unicast_pkts",
     "name": "Interface inbound unicast packets",
-    "path": "/interfaces-state/interface[name=*]/statistics/in-unicast-pkts",
+    "path": "/interfaces/interface/statistics/in-unicast-pkts",
     "description": "Per-interface ingress unicast packet counter from ietf-interfaces.",
     "defined at": {
       "yang_file_name": "ietf-interfaces.yang",
@@ -80,7 +81,7 @@
   {
     "id": "if_state_in_unknown_protos",
     "name": "Interface inbound unknown protocols",
-    "path": "/interfaces-state/interface[name=*]/statistics/in-unknown-protos",
+    "path": "/interfaces/interface/statistics/in-unknown-protos",
     "description": "Per-interface ingress unknown-protocol counter from ietf-interfaces.",
     "defined at": {
       "yang_file_name": "ietf-interfaces.yang",
@@ -93,7 +94,7 @@
   {
     "id": "if_state_out_broadcast_pkts",
     "name": "Interface outbound broadcast packets",
-    "path": "/interfaces-state/interface[name=*]/statistics/out-broadcast-pkts",
+    "path": "/interfaces/interface/statistics/out-broadcast-pkts",
     "description": "Per-interface egress broadcast packet counter from ietf-interfaces.",
     "defined at": {
       "yang_file_name": "ietf-interfaces.yang",
@@ -106,7 +107,7 @@
   {
     "id": "if_state_out_discards",
     "name": "Interface outbound discards",
-    "path": "/interfaces-state/interface[name=*]/statistics/out-discards",
+    "path": "/interfaces/interface/statistics/out-discards",
     "description": "Per-interface egress discard counter from ietf-interfaces.",
     "defined at": {
       "yang_file_name": "ietf-interfaces.yang",
@@ -119,7 +120,7 @@
   {
     "id": "if_state_out_errors",
     "name": "Interface outbound errors",
-    "path": "/interfaces-state/interface[name=*]/statistics/out-errors",
+    "path": "/interfaces/interface/statistics/out-errors",
     "description": "Per-interface egress error counter from ietf-interfaces.",
     "defined at": {
       "yang_file_name": "ietf-interfaces.yang",
@@ -132,7 +133,7 @@
   {
     "id": "if_state_out_multicast_pkts",
     "name": "Interface outbound multicast packets",
-    "path": "/interfaces-state/interface[name=*]/statistics/out-multicast-pkts",
+    "path": "/interfaces/interface/statistics/out-multicast-pkts",
     "description": "Per-interface egress multicast packet counter from ietf-interfaces.",
     "defined at": {
       "yang_file_name": "ietf-interfaces.yang",
@@ -145,7 +146,7 @@
   {
     "id": "if_state_out_octets",
     "name": "Interface outbound octets",
-    "path": "/interfaces-state/interface[name=*]/statistics/out-octets",
+    "path": "/interfaces/interface/statistics/out-octets",
     "description": "Per-interface egress octet counter from ietf-interfaces.",
     "defined at": {
       "yang_file_name": "ietf-interfaces.yang",
@@ -158,7 +159,7 @@
   {
     "id": "if_state_out_unicast_pkts",
     "name": "Interface outbound unicast packets",
-    "path": "/interfaces-state/interface[name=*]/statistics/out-unicast-pkts",
+    "path": "/interfaces/interface/statistics/out-unicast-pkts",
     "description": "Per-interface egress unicast packet counter from ietf-interfaces.",
     "defined at": {
       "yang_file_name": "ietf-interfaces.yang",
@@ -171,7 +172,7 @@
   {
     "id": "bridge_delay_exceeded_discards",
     "name": "Bridge delay exceeded discards",
-    "path": "/interfaces/interface[name=*]/bridge-port/statistics/delay-exceeded-discards",
+    "path": "/interfaces/interface/bridge-port/statistics/delay-exceeded-discards",
     "description": "Discarded frames because bridge delay exceeded the configured limit.",
     "defined at": {
       "yang_file_name": "ieee802-dot1q-types.yang",
@@ -183,7 +184,7 @@
   {
     "id": "bridge_discard_inbound",
     "name": "Bridge inbound discards",
-    "path": "/interfaces/interface[name=*]/bridge-port/statistics/discard-inbound",
+    "path": "/interfaces/interface/bridge-port/statistics/discard-inbound",
     "description": "Frames discarded on ingress at the bridge port.",
     "defined at": {
       "yang_file_name": "ieee802-dot1q-types.yang",
@@ -195,7 +196,7 @@
   {
     "id": "bridge_discard_lack_of_buffers",
     "name": "Bridge discard lack of buffers",
-    "path": "/interfaces/interface[name=*]/bridge-port/statistics/discard-lack-of-buffers",
+    "path": "/interfaces/interface/bridge-port/statistics/discard-lack-of-buffers",
     "description": "Frames discarded because buffers were unavailable.",
     "defined at": {
       "yang_file_name": "ieee802-dot1q-types.yang",
@@ -207,7 +208,7 @@
   {
     "id": "bridge_discard_on_error",
     "name": "Bridge discard on error",
-    "path": "/interfaces/interface[name=*]/bridge-port/statistics/discard-on-error",
+    "path": "/interfaces/interface/bridge-port/statistics/discard-on-error",
     "description": "Frames discarded due to frame errors.",
     "defined at": {
       "yang_file_name": "ieee802-dot1q-types.yang",
@@ -219,7 +220,7 @@
   {
     "id": "bridge_discard_on_ingress_filtering",
     "name": "Bridge discard on ingress filtering",
-    "path": "/interfaces/interface[name=*]/bridge-port/statistics/discard-on-ingress-filtering",
+    "path": "/interfaces/interface/bridge-port/statistics/discard-on-ingress-filtering",
     "description": "Frames discarded by ingress filtering policy.",
     "defined at": {
       "yang_file_name": "ieee802-dot1q-bridge.yang",
@@ -231,7 +232,7 @@
   {
     "id": "bridge_discard_transit_delay_exceeded",
     "name": "Bridge transit delay exceeded discards",
-    "path": "/interfaces/interface[name=*]/bridge-port/statistics/discard-transit-delay-exceeded",
+    "path": "/interfaces/interface/bridge-port/statistics/discard-transit-delay-exceeded",
     "description": "Frames discarded because transit delay exceeded the configured limit.",
     "defined at": {
       "yang_file_name": "ieee802-dot1q-types.yang",
@@ -243,7 +244,7 @@
   {
     "id": "bridge_forward_outbound",
     "name": "Bridge outbound forwards",
-    "path": "/interfaces/interface[name=*]/bridge-port/statistics/forward-outbound",
+    "path": "/interfaces/interface/bridge-port/statistics/forward-outbound",
     "description": "Frames forwarded out of the bridge port.",
     "defined at": {
       "yang_file_name": "ieee802-dot1q-types.yang",
@@ -255,7 +256,7 @@
   {
     "id": "bridge_frame_rx",
     "name": "Bridge received frames",
-    "path": "/interfaces/interface[name=*]/bridge-port/statistics/frame-rx",
+    "path": "/interfaces/interface/bridge-port/statistics/frame-rx",
     "description": "Frames received by the bridge port.",
     "defined at": {
       "yang_file_name": "ieee802-dot1q-types.yang",
@@ -267,7 +268,7 @@
   {
     "id": "bridge_frame_tx",
     "name": "Bridge transmitted frames",
-    "path": "/interfaces/interface[name=*]/bridge-port/statistics/frame-tx",
+    "path": "/interfaces/interface/bridge-port/statistics/frame-tx",
     "description": "Frames transmitted by the bridge port.",
     "defined at": {
       "yang_file_name": "ieee802-dot1q-types.yang",
@@ -279,7 +280,7 @@
   {
     "id": "bridge_mtu_exceeded_discards",
     "name": "Bridge MTU exceeded discards",
-    "path": "/interfaces/interface[name=*]/bridge-port/statistics/mtu-exceeded-discards",
+    "path": "/interfaces/interface/bridge-port/statistics/mtu-exceeded-discards",
     "description": "Frames discarded because they exceeded MTU.",
     "defined at": {
       "yang_file_name": "ieee802-dot1q-types.yang",
@@ -291,7 +292,7 @@
   {
     "id": "bridge_octets_rx",
     "name": "Bridge received octets",
-    "path": "/interfaces/interface[name=*]/bridge-port/statistics/octets-rx",
+    "path": "/interfaces/interface/bridge-port/statistics/octets-rx",
     "description": "Octets received by the bridge port.",
     "defined at": {
       "yang_file_name": "ieee802-dot1q-types.yang",
@@ -303,7 +304,7 @@
   {
     "id": "bridge_octets_tx",
     "name": "Bridge transmitted octets",
-    "path": "/interfaces/interface[name=*]/bridge-port/statistics/octets-tx",
+    "path": "/interfaces/interface/bridge-port/statistics/octets-tx",
     "description": "Octets transmitted by the bridge port.",
     "defined at": {
       "yang_file_name": "ieee802-dot1q-types.yang",
@@ -315,7 +316,7 @@
   {
     "id": "eth_frame_in_broadcast_frames",
     "name": "Ethernet inbound broadcast frames",
-    "path": "/interfaces/interface[name=*]/ethernet/statistics/frame/in-broadcast-frames",
+    "path": "/interfaces/interface/ethernet/statistics/frame/in-broadcast-frames",
     "description": "Broadcast frame counter from ieee802-ethernet-interface.",
     "defined at": {
       "yang_file_name": "ieee802-ethernet-interface.yang",
@@ -327,7 +328,7 @@
   {
     "id": "eth_frame_in_error_fcs_frames",
     "name": "Ethernet inbound FCS error frames",
-    "path": "/interfaces/interface[name=*]/ethernet/statistics/frame/in-error-fcs-frames",
+    "path": "/interfaces/interface/ethernet/statistics/frame/in-error-fcs-frames",
     "description": "Ingress frames with bad FCS.",
     "defined at": {
       "yang_file_name": "ieee802-ethernet-interface.yang",
@@ -339,7 +340,7 @@
   {
     "id": "eth_frame_in_error_mac_internal_frames",
     "name": "Ethernet inbound MAC internal error frames",
-    "path": "/interfaces/interface[name=*]/ethernet/statistics/frame/in-error-mac-internal-frames",
+    "path": "/interfaces/interface/ethernet/statistics/frame/in-error-mac-internal-frames",
     "description": "Ingress frames with MAC internal errors.",
     "defined at": {
       "yang_file_name": "ieee802-ethernet-interface.yang",
@@ -351,7 +352,7 @@
   {
     "id": "eth_frame_in_error_oversize_frames",
     "name": "Ethernet inbound oversize error frames",
-    "path": "/interfaces/interface[name=*]/ethernet/statistics/frame/in-error-oversize-frames",
+    "path": "/interfaces/interface/ethernet/statistics/frame/in-error-oversize-frames",
     "description": "Ingress frames that were oversized.",
     "defined at": {
       "yang_file_name": "ieee802-ethernet-interface.yang",
@@ -363,7 +364,7 @@
   {
     "id": "eth_frame_in_error_undersize_frames",
     "name": "Ethernet inbound undersize error frames",
-    "path": "/interfaces/interface[name=*]/ethernet/statistics/frame/in-error-undersize-frames",
+    "path": "/interfaces/interface/ethernet/statistics/frame/in-error-undersize-frames",
     "description": "Ingress frames that were undersized.",
     "defined at": {
       "yang_file_name": "ieee802-ethernet-interface.yang",
@@ -375,7 +376,7 @@
   {
     "id": "eth_frame_in_frames",
     "name": "Ethernet inbound frames",
-    "path": "/interfaces/interface[name=*]/ethernet/statistics/frame/in-frames",
+    "path": "/interfaces/interface/ethernet/statistics/frame/in-frames",
     "description": "Total inbound Ethernet frames.",
     "defined at": {
       "yang_file_name": "ieee802-ethernet-interface.yang",
@@ -387,7 +388,7 @@
   {
     "id": "eth_frame_in_multicast_frames",
     "name": "Ethernet inbound multicast frames",
-    "path": "/interfaces/interface[name=*]/ethernet/statistics/frame/in-multicast-frames",
+    "path": "/interfaces/interface/ethernet/statistics/frame/in-multicast-frames",
     "description": "Ingress multicast frame counter.",
     "defined at": {
       "yang_file_name": "ieee802-ethernet-interface.yang",
@@ -399,7 +400,7 @@
   {
     "id": "eth_frame_in_total_frames",
     "name": "Ethernet inbound total frames",
-    "path": "/interfaces/interface[name=*]/ethernet/statistics/frame/in-total-frames",
+    "path": "/interfaces/interface/ethernet/statistics/frame/in-total-frames",
     "description": "Total ingress Ethernet frames.",
     "defined at": {
       "yang_file_name": "ieee802-ethernet-interface.yang",
@@ -411,7 +412,7 @@
   {
     "id": "eth_frame_in_total_octets",
     "name": "Ethernet inbound total octets",
-    "path": "/interfaces/interface[name=*]/ethernet/statistics/frame/in-total-octets",
+    "path": "/interfaces/interface/ethernet/statistics/frame/in-total-octets",
     "description": "Total ingress Ethernet octets.",
     "defined at": {
       "yang_file_name": "ieee802-ethernet-interface.yang",
@@ -423,7 +424,7 @@
   {
     "id": "eth_frame_out_broadcast_frames",
     "name": "Ethernet outbound broadcast frames",
-    "path": "/interfaces/interface[name=*]/ethernet/statistics/frame/out-broadcast-frames",
+    "path": "/interfaces/interface/ethernet/statistics/frame/out-broadcast-frames",
     "description": "Outbound broadcast frame counter.",
     "defined at": {
       "yang_file_name": "ieee802-ethernet-interface.yang",
@@ -435,7 +436,7 @@
   {
     "id": "eth_frame_out_error_mac_internal_frames",
     "name": "Ethernet outbound MAC internal error frames",
-    "path": "/interfaces/interface[name=*]/ethernet/statistics/frame/out-error-mac-internal-frames",
+    "path": "/interfaces/interface/ethernet/statistics/frame/out-error-mac-internal-frames",
     "description": "Egress frames with MAC internal errors.",
     "defined at": {
       "yang_file_name": "ieee802-ethernet-interface.yang",
@@ -447,7 +448,7 @@
   {
     "id": "eth_frame_out_frames",
     "name": "Ethernet outbound frames",
-    "path": "/interfaces/interface[name=*]/ethernet/statistics/frame/out-frames",
+    "path": "/interfaces/interface/ethernet/statistics/frame/out-frames",
     "description": "Total outbound Ethernet frames.",
     "defined at": {
       "yang_file_name": "ieee802-ethernet-interface.yang",
@@ -459,7 +460,7 @@
   {
     "id": "eth_frame_out_multicast_frames",
     "name": "Ethernet outbound multicast frames",
-    "path": "/interfaces/interface[name=*]/ethernet/statistics/frame/out-multicast-frames",
+    "path": "/interfaces/interface/ethernet/statistics/frame/out-multicast-frames",
     "description": "Egress multicast frame counter.",
     "defined at": {
       "yang_file_name": "ieee802-ethernet-interface.yang",
@@ -471,7 +472,7 @@
   {
     "id": "eth_mac_control_in_frames_extension",
     "name": "Ethernet MAC control inbound extension frames",
-    "path": "/interfaces/interface[name=*]/ethernet/statistics/mac-control/in-frames-mac-control-extension",
+    "path": "/interfaces/interface/ethernet/statistics/mac-control/in-frames-mac-control-extension",
     "description": "Received MAC control extension frames.",
     "defined at": {
       "yang_file_name": "ieee802-ethernet-interface.yang",
@@ -483,7 +484,7 @@
   {
     "id": "eth_mac_control_in_frames_unknown",
     "name": "Ethernet MAC control inbound unknown frames",
-    "path": "/interfaces/interface[name=*]/ethernet/statistics/mac-control/in-frames-mac-control-unknown",
+    "path": "/interfaces/interface/ethernet/statistics/mac-control/in-frames-mac-control-unknown",
     "description": "Received MAC control frames of unknown type.",
     "defined at": {
       "yang_file_name": "ieee802-ethernet-interface.yang",
@@ -495,7 +496,7 @@
   {
     "id": "eth_mac_control_out_frames_extension",
     "name": "Ethernet MAC control outbound extension frames",
-    "path": "/interfaces/interface[name=*]/ethernet/statistics/mac-control/out-frames-mac-control-extension",
+    "path": "/interfaces/interface/ethernet/statistics/mac-control/out-frames-mac-control-extension",
     "description": "Transmitted MAC control extension frames.",
     "defined at": {
       "yang_file_name": "ieee802-ethernet-interface.yang",
@@ -507,7 +508,7 @@
   {
     "id": "eth_pause_in_frames_pause",
     "name": "Ethernet pause inbound frames",
-    "path": "/interfaces/interface[name=*]/ethernet/flow-control/pause/statistics/in-frames-pause",
+    "path": "/interfaces/interface/ethernet/flow-control/pause/statistics/in-frames-pause",
     "description": "Received pause frames.",
     "defined at": {
       "yang_file_name": "ieee802-ethernet-interface.yang",
@@ -519,7 +520,7 @@
   {
     "id": "eth_pause_out_frames_pause",
     "name": "Ethernet pause outbound frames",
-    "path": "/interfaces/interface[name=*]/ethernet/flow-control/pause/statistics/out-frames-pause",
+    "path": "/interfaces/interface/ethernet/flow-control/pause/statistics/out-frames-pause",
     "description": "Transmitted pause frames.",
     "defined at": {
       "yang_file_name": "ieee802-ethernet-interface.yang",
@@ -531,7 +532,7 @@
   {
     "id": "eth_pfc_in_frames_pfc",
     "name": "Ethernet PFC inbound frames",
-    "path": "/interfaces/interface[name=*]/ethernet/flow-control/pfc/statistics/in-frames-pfc",
+    "path": "/interfaces/interface/ethernet/flow-control/pfc/statistics/in-frames-pfc",
     "description": "Received priority flow control frames.",
     "defined at": {
       "yang_file_name": "ieee802-ethernet-interface.yang",
@@ -543,7 +544,7 @@
   {
     "id": "eth_pfc_out_frames_pfc",
     "name": "Ethernet PFC outbound frames",
-    "path": "/interfaces/interface[name=*]/ethernet/flow-control/pfc/statistics/out-frames-pfc",
+    "path": "/interfaces/interface/ethernet/flow-control/pfc/statistics/out-frames-pfc",
     "description": "Transmitted priority flow control frames.",
     "defined at": {
       "yang_file_name": "ieee802-ethernet-interface.yang",
@@ -555,7 +556,7 @@
   {
     "id": "eth_phy_in_error_symbol",
     "name": "Ethernet PHY symbol errors",
-    "path": "/interfaces/interface[name=*]/ethernet/statistics/phy/in-error-symbol",
+    "path": "/interfaces/interface/ethernet/statistics/phy/in-error-symbol",
     "description": "PHY symbol error counter.",
     "defined at": {
       "yang_file_name": "ieee802-ethernet-interface.yang",
@@ -567,7 +568,7 @@
   {
     "id": "eth_phy_lpi_in_transitions",
     "name": "Ethernet PHY LPI inbound transitions",
-    "path": "/interfaces/interface[name=*]/ethernet/statistics/phy/lpi/in-lpi-transitions",
+    "path": "/interfaces/interface/ethernet/statistics/phy/lpi/in-lpi-transitions",
     "description": "Low-power idle transitions on ingress.",
     "defined at": {
       "yang_file_name": "ieee802-ethernet-interface.yang",
@@ -579,7 +580,7 @@
   {
     "id": "eth_phy_lpi_out_transitions",
     "name": "Ethernet PHY LPI outbound transitions",
-    "path": "/interfaces/interface[name=*]/ethernet/statistics/phy/lpi/out-lpi-transitions",
+    "path": "/interfaces/interface/ethernet/statistics/phy/lpi/out-lpi-transitions",
     "description": "Low-power idle transitions on egress.",
     "defined at": {
       "yang_file_name": "ieee802-ethernet-interface.yang",
@@ -973,3 +974,4 @@
     }
   }
 ]
+}

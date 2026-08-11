@@ -9,13 +9,9 @@ import "google/protobuf/timestamp.proto";
 
 // Raw data collected by plugins
 message CounterSample {
-
   string counter_id = 1;
-
   string node_id = 2;
-
   google.protobuf.Timestamp timestamp = 3;
-
   double value = 4;
 }
 
@@ -39,9 +35,9 @@ enum MetricState {
 
   METRIC_STATE_UNSPECIFIED = 0;
 
-  NORMAL = 1;
+  METRIC_NORMAL = 1;
 
-  WARNING = 2;
+  METRIC_WARNING = 2;
 
-  VIOLATION = 3;
+  METRIC_VIOLATION = 3;
 }

@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OpenCNC GUI Service</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand-block">
+        <div class="brand-logo">OC</div>
+        <h1>OpenCNC</h1>
+      </div>
+
+      <nav class="nav-list">
+        <button class="nav-item is-active" data-screen="dashboard">Dashboard</button>
+        <button class="nav-item" data-screen="device-models">Device Models</button>
+        <button class="nav-item" data-screen="nodes">Nodes</button>
+        <button class="nav-item" data-screen="links">Links</button>
+        <button class="nav-item" data-screen="streams">Streams</button>
+        <button class="nav-item" data-screen="logs">Internal Logs</button>
+        <button class="nav-item" data-screen="settings">Settings</button>
+      </nav>
+
+      <div class="live-data-row">
+        <span>Live Data</span>
+        <label class="switch">
+          <input id="live-data-toggle" type="checkbox" disabled>
+          <span class="slider"></span>
+        </label>
+      </div>
+    </aside>
+
+    <main class="workspace">
+      <header class="topbar">
+        <div class="topbar-title-wrap">
+          <h2 id="screen-title">Dashboard</h2>
+        </div>
+        <div class="topbar-actions">
+          <button class="action-button" data-action="refreshData">Refresh</button>
+          <button class="action-button ghost">Admin</button>
+        </div>
+      </header>
+
+      <section class="screen is-visible" id="screen-dashboard">
+        <div class="content-grid dashboard-grid">
+          <section class="card network-card">
+            <h3>Network</h3>
+            <div id="topology-canvas" class="topology-canvas empty">
+              <p>Topology will appear here when backend data is available.</p>
+            </div>
+          </section>
+
+          <section class="card traffic-card">
+            <h3>Traffic Summary</h3>
+            <div class="traffic-metric-list">
+              <div class="metric-line"><span>Packets Forwarded</span><strong id="packets-forwarded">-</strong></div>
+              <div class="metric-line"><span>Packet Drops</span><strong id="packet-drops">-</strong></div>
+              <div class="metric-line"><span>Active Streams</span><strong id="active-streams">-</strong></div>
+            </div>
+
+            <div class="top-talkers">
+              <h4>Top Talkers</h4>
+              <ul id="top-talkers-list">
+                <li>No data available</li>
+              </ul>
+            </div>
+          </section>
+
+          <section class="card recent-events-card">
+            <h3>Recent Events</h3>
+            <table>
+              <thead>
+                <tr>
+                  <th>Time</th>
+                  <th>Type</th>
+                  <th>Severity</th>
+                  <th>Message</th>
+                </tr>
+              </thead>
+              <tbody id="recent-events-body">
+                <tr><td colspan="4" class="empty-cell">No recent events</td></tr>
+              </tbody>
+            </table>
+          </section>
+        </div>
+      </section>
+
+      <section class="screen" id="screen-device-models">
+        <div class="content-grid operation-grid">
+          <div class="left-column">
+            <div class="control-row">
+              <input id="device-model-search" type="text" placeholder="Search...">
+              <button class="action-button" data-action="uploadModel">Upload Model</button>
+            </div>
+
+            <section class="card list-card">
+              <h3>Model Library</h3>
+              <ul class="selectable-list" id="device-model-list">
+                <li class="selected">TTTech EVB</li>
+                <li>Relevum</li>
+                <li>BnR_k10</li>
+              </ul>
+            </section>
+
+            <section class="card recent-events-card">
+              <h3>Recent Events</h3>
+              <table>
+                <thead>
+                  <tr><th>Time</th><th>Type</th><th>Severity</th><th>Message</th></tr>
+                </thead>
+                <tbody><tr><td colspan="4" class="empty-cell">No recent events</td></tr></tbody>
+              </table>
+            </section>
+          </div>
+
+          <section class="card details-card">
+            <h3>Model Details</h3>
+            <dl>
+              <dt>Name</dt><dd id="model-name">-</dd>
+              <dt>Version</dt><dd id="model-version">-</dd>
+              <dt>Vendor</dt><dd id="model-vendor">-</dd>
+              <dt>YANG Files</dt><dd id="model-yang">-</dd>
+            </dl>
+          </section>
+        </div>
+      </section>
+
+      <section class="screen" id="screen-nodes">
+        <div class="content-grid operation-grid">
+          <div class="left-column">
+            <div class="control-row">
+              <input id="node-search" type="text" placeholder="Search...">
+              <button class="action-button" data-action="addNode">Add Node</button>
+            </div>
+
+            <section class="card list-card">
+              <h3>Available Nodes</h3>
+              <ul class="selectable-list" id="node-list">
+                <li class="selected">SW-05</li>
+                <li>SW-06</li>
+                <li>SW-10</li>
+                <li>SW-11</li>
+                <li>SW-12</li>
+              </ul>
+            </section>
+
+            <section class="card recent-events-card">
+              <h3>Recent Events</h3>
+              <table>
+                <thead>
+                  <tr><th>Time</th><th>Type</th><th>Severity</th><th>Message</th></tr>
+                </thead>
+                <tbody><tr><td colspan="4" class="empty-cell">No recent events</td></tr></tbody>
+              </table>
+            </section>
+          </div>
+
+          <section class="card details-card">
+            <h3>Node Details</h3>
+            <dl>
+              <dt>Name</dt><dd id="node-name">-</dd>
+              <dt>Type</dt><dd id="node-type">-</dd>
+              <dt>State</dt><dd id="node-state">-</dd>
+              <dt>Ports</dt><dd id="node-ports">-</dd>
+              <dt>Links</dt><dd id="node-links">-</dd>
+            </dl>
+
+            <div class="detail-actions">
+              <button class="action-button danger" data-action="deleteNode" data-confirm="Delete the selected node?">Delete Node</button>
+              <button class="action-button" data-action="editNode">Edit Node</button>
+            </div>
+          </section>
+        </div>
+      </section>
+
+      <section class="screen" id="screen-links">
+        <div class="content-grid operation-grid">
+          <div class="left-column">
+            <div class="control-row">
+              <input id="link-search" type="text" placeholder="Search...">
+            </div>
+
+            <div class="link-workspace">
+              <section class="card form-card">
+                <h3>Create Link</h3>
+                <label>Source
+                  <select id="link-source"><option>None</option></select>
+                </label>
+                <label>Destination
+                  <select id="link-destination"><option>None</option></select>
+                </label>
+                <label>Bandwidth
+                  <select id="link-bandwidth"><option>None</option></select>
+                </label>
+                <button class="action-button" data-action="addLink">Add Link</button>
+              </section>
+
+              <section class="card list-card">
+                <h3>Available Links</h3>
+                <ul class="selectable-list" id="link-list">
+                  <li class="selected">SW-05 -> SW-07</li>
+                  <li>SW-01 -> SW-02</li>
+                  <li>SW-10 -> SW-11</li>
+                </ul>
+              </section>
+            </div>
+
+            <section class="card recent-events-card">
+              <h3>Recent Events</h3>
+              <table>
+                <thead>
+                  <tr><th>Time</th><th>Type</th><th>Severity</th><th>Message</th></tr>
+                </thead>
+                <tbody><tr><td colspan="4" class="empty-cell">No recent events</td></tr></tbody>
+              </table>
+            </section>
+          </div>
+
+          <section class="card details-card">
+            <h3>Link Details</h3>
+            <dl>
+              <dt>Source</dt><dd id="link-detail-source">-</dd>
+              <dt>Destination</dt><dd id="link-detail-destination">-</dd>
+              <dt>State</dt><dd id="link-detail-state">-</dd>
+              <dt>Bandwidth</dt><dd id="link-detail-bandwidth">-</dd>
+            </dl>
+
+            <div class="detail-actions">
+              <button class="action-button danger" data-action="deleteLink" data-confirm="Delete the selected link?">Delete Link</button>
+              <button class="action-button" data-action="updateLink">Update Link</button>
+            </div>
+          </section>
+        </div>
+      </section>
+
+      <section class="screen" id="screen-streams">
+        <div class="content-grid operation-grid">
+          <div class="left-column">
+            <div class="control-row">
+              <input id="stream-search" type="text" placeholder="Search...">
+              <button class="action-button" data-action="addStream">Add Stream</button>
+            </div>
+
+            <section class="card list-card">
+              <h3>Available Streams</h3>
+              <ul class="selectable-list" id="stream-list">
+                <li class="selected">Str 1</li>
+                <li>Str 2</li>
+                <li>Str 3</li>
+                <li>Str 4</li>
+              </ul>
+            </section>
+
+            <section class="card recent-events-card">
+              <h3>Recent Events</h3>
+              <table>
+                <thead>
+                  <tr><th>Time</th><th>Type</th><th>Severity</th><th>Message</th></tr>
+                </thead>
+                <tbody><tr><td colspan="4" class="empty-cell">No recent events</td></tr></tbody>
+              </table>
+            </section>
+          </div>
+
+          <section class="card details-card">
+            <h3>Stream Details</h3>
+            <dl>
+              <dt>Name</dt><dd id="stream-name">-</dd>
+              <dt>Source</dt><dd id="stream-source">-</dd>
+              <dt>Listeners</dt><dd id="stream-listeners">-</dd>
+              <dt>Characteristics</dt><dd id="stream-characteristics">-</dd>
+            </dl>
+
+            <div class="detail-actions">
+              <button class="action-button danger" data-action="removeStream" data-confirm="Remove the selected stream?">Remove Stream</button>
+            </div>
+          </section>
+        </div>
+      </section>
+
+      <section class="screen" id="screen-logs">
+        <div class="content-grid operation-grid">
+          <div class="left-column">
+            <div class="control-row">
+              <select id="logs-filter" data-action="filterLogs">
+                <option value="all">All Severities</option>
+                <option value="info">Info</option>
+                <option value="warning">Warning</option>
+                <option value="error">Error</option>
+              </select>
+              <select id="logs-order" data-action="orderLogs">
+                <option value="time">Order by Time</option>
+                <option value="severity">Order by Severity</option>
+              </select>
+            </div>
+
+            <section class="card list-card logs-table-card">
+              <h3>Events</h3>
+              <table>
+                <thead>
+                  <tr>
+                    <th>Time</th>
+                    <th>Type</th>
+                    <th>Severity</th>
+                    <th>Message</th>
+                  </tr>
+                </thead>
+                <tbody id="internal-logs-body">
+                  <tr><td colspan="4" class="empty-cell">No internal logs</td></tr>
+                </tbody>
+              </table>
+            </section>
+          </div>
+
+          <section class="card details-card">
+            <h3>Event Details</h3>
+            <dl>
+              <dt>Time</dt><dd id="log-time">-</dd>
+              <dt>Severity</dt><dd id="log-severity">-</dd>
+              <dt>Topic</dt><dd id="log-topic">-</dd>
+              <dt>Correlation ID</dt><dd id="log-correlation-id">-</dd>
+              <dt>Message</dt><dd id="log-message">-</dd>
+            </dl>
+          </section>
+        </div>
+      </section>
+
+      <section class="screen" id="screen-settings">
+        <div class="content-grid operation-grid">
+          <section class="card settings-card">
+            <h3>Settings</h3>
+            <p class="empty-text">Settings will be added in a later iteration.</p>
+          </section>
+        </div>
+      </section>
+
+      <div id="toast" class="toast" aria-live="polite"></div>
+    </main>
+  </div>
+
+  <script src="/app.js"></script>
+</body>
+</html>

@@ -26,24 +26,24 @@ type MetricState int32
 
 const (
 	MetricState_METRIC_STATE_UNSPECIFIED MetricState = 0
-	MetricState_NORMAL                   MetricState = 1
-	MetricState_WARNING                  MetricState = 2
-	MetricState_VIOLATION                MetricState = 3
+	MetricState_METRIC_NORMAL            MetricState = 1
+	MetricState_METRIC_WARNING           MetricState = 2
+	MetricState_METRIC_VIOLATION         MetricState = 3
 )
 
 // Enum value maps for MetricState.
 var (
 	MetricState_name = map[int32]string{
 		0: "METRIC_STATE_UNSPECIFIED",
-		1: "NORMAL",
-		2: "WARNING",
-		3: "VIOLATION",
+		1: "METRIC_NORMAL",
+		2: "METRIC_WARNING",
+		3: "METRIC_VIOLATION",
 	}
 	MetricState_value = map[string]int32{
 		"METRIC_STATE_UNSPECIFIED": 0,
-		"NORMAL":                   1,
-		"WARNING":                  2,
-		"VIOLATION":                3,
+		"METRIC_NORMAL":            1,
+		"METRIC_WARNING":           2,
+		"METRIC_VIOLATION":         3,
 	}
 )
 
@@ -238,13 +238,12 @@ const file_monitor_service_structures_monitoring_monitoring_data_proto_rawDesc =
 	"\anode_id\x18\x02 \x01(\tR\x06nodeId\x128\n" +
 	"\ttimestamp\x18\x03 \x01(\v2\x1a.google.protobuf.TimestampR\ttimestamp\x12\x14\n" +
 	"\x05value\x18\x04 \x01(\x01R\x05value\x12-\n" +
-	"\x05state\x18\x05 \x01(\x0e2\x17.monitoring.MetricStateR\x05state*S\n" +
+	"\x05state\x18\x05 \x01(\x0e2\x17.monitoring.MetricStateR\x05state*h\n" +
 	"\vMetricState\x12\x1c\n" +
-	"\x18METRIC_STATE_UNSPECIFIED\x10\x00\x12\n" +
-	"\n" +
-	"\x06NORMAL\x10\x01\x12\v\n" +
-	"\aWARNING\x10\x02\x12\r\n" +
-	"\tVIOLATION\x10\x03B)Z'common/structures/monitoring;monitoringb\x06proto3"
+	"\x18METRIC_STATE_UNSPECIFIED\x10\x00\x12\x11\n" +
+	"\rMETRIC_NORMAL\x10\x01\x12\x12\n" +
+	"\x0eMETRIC_WARNING\x10\x02\x12\x14\n" +
+	"\x10METRIC_VIOLATION\x10\x03B)Z'common/structures/monitoring;monitoringb\x06proto3"
 
 var (
 	file_monitor_service_structures_monitoring_monitoring_data_proto_rawDescOnce sync.Once

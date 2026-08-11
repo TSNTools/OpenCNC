@@ -1,162 +1,397 @@
-# Config service — Architecture Overview
+# OpenCNC Monitoring Service Architecture
 
-This project implements a Configuration service for Time-Sensitive Networking (TSN).
-It receives a topology-wide Protobuf-based configuration and translates it into device-specific configurations,
-pushing them using various southbound protocols such as NETCONF and SNMP.
+## 1. Overview
+
+The Monitoring Service is responsible for observing the operational state of the managed TSN network. It continuously collects runtime information from devices, derives metrics from the collected data, detects abnormal conditions, and reports events or corrective actions such as rollback requests.
+
+The service is designed around four principles:
+
+- A standardized set of counters is defined by OpenCNC.
+- Protocol-specific logic is isolated inside protocol collectors.
+- The monitoring core is independent of communication protocols and device models.
+- Metrics and decisions operate only on normalized counter samples.
 
 ---
 
-## ✅ Key Concepts
+# 2. High-Level Architecture
 
-### Config Source: Protobuf
-All configuration data is defined using .proto files and stored in a key/value store.
-Core types include:
-- TopologyConfig
-- NodeConfig (contains ManagementInfo and DeviceInfo)
-- PortConfig, StreamConfig, etc.
-- Feature-specific configs: Qbv, PSFP, Qav, stp, frer, etc.
+```
+                 +------------------------------+
+                 |      Operation Manager       |
+                 |------------------------------|
+                 | Lifecycle                    |
+                 | Monitoring configuration     |
+                 | Scheduler                    |
+                 | Alert subscriptions          |
+                 +--------------+---------------+
+                                |
+                                v
+                 +------------------------------+
+                 |       Monitoring Engine      |
+                 |------------------------------|
+                 | Metric Engine                |
+                 | Decision Engine              |
+                 +--------------+---------------+
+                                |
+                                v
+                 +------------------------------+
+                 |         Collectors           |
+                 |------------------------------|
+                 | NETCONF Collector            |
+                 | gNMI Collector               |
+                 | SNMP Collector               |
+                 +--------------+---------------+
+                                |
+                                v
+                         Network Devices
+```
 
-### Plugins
-A **Plugin** is a per-feature, per-protocol implementation that knows how to:
-- Map a Protobuf config message to protocol-specific data (e.g., ygot, SNMP varbinds)
-- Optionally push the mapped config to a target device
-
-Example:
-- `QbvNetconfPlugin`: Handles mapping and applying Qbv config over NETCONF
-
-### Protocol Backends
-A **ProtocolBackend** is a group of plugins that share the same southbound protocol.
-Examples:
-- `NetconfBackend`: All NETCONF plugins (Qbv, PSFP, etc.)
-- `SnmpBackend`: All SNMP plugins (Qbv, etc.)
-
-### Mapping Engine
-The `MappingEngine` is the top-level orchestrator.
-It receives the full configuration and:
-- Iterates over the topology
-- For each node, selects the appropriate ProtocolBackend based on `ManagementInfo.protocol`
-- Delegates mapping and pushing to the right plugin
-
-What it does now
-- accepts a full Topology and TopologyConfig
-- finds the matching node config by node_id
-- finds the matching port config by port_id
-- selects the correct backend from ManagementInfo.protocol
-- builds a DeviceTarget
-- dispatches the config to the backend/plugin for mapping and push
-- validate that the topology and config are consistent before applying anything
-- resolve global profile context before per-node/port config is applied
-- group and apply feature-specific messages in a deterministic order
-- report per-node/per-port success and failure clearly
-- support dry-run, rollback, and retry behavior
-- track applied state so later reconfiguration can be reconciled safely
 ---
 
-## 📁 Code Structure
-/yourproject/
-├── common/
-│ ├── structures/ # Generated protobuf Go code
-│ └── store-wrapper/ # Store access helpers shared by services
-│ └── observability/ # kafka and cmd for observability
-│
-├── config_service/
-│ ├── pkg/plugins/ # Per-feature plugins grouped by protocol
-│ ├── netconf/
-│ │ ├── qbv.go # QbvNetconfPlugin
-│ │ └── psfp.go # PsfpNetconfPlugin
-│ └── snmp/
-│   └── qbv.go # QbvSnmpPlugin
-│
-├── config_service/pkg/protocolbackends/ # Protocol-level orchestrators 
-│ ├── netconf.go # NetconfBackend implementation
-│ └── snmp.go # SnmpBackend implementation
-│
-├── config_service/pkg/engine/ # Top-level config orchestrator
-│ └── mappingengine.go # Applies entire TopologyConfig
-│
-├── config_service/pkg/managementSessions/ # Device runtime metadata and session wrappers
-│ └── devicetarget.go # Wrapper for runtime connection info
-│
-└── config_service/pkg/utils/ # Shared helper utilities
-  └── logger.go
+# 3. Monitoring Model
 
-## 🔌 Plugin Interface
+The monitoring service operates on three kinds of information.
 
-Each plugin implements:
+## Topology Status
+
+Represents generic network operational state.
+
+Examples
+
+- Device reachability
+- Interface status
+- Link status
+- Packet counters
+- Error counters
+
+Defined by:
+
+- topology_status.proto
+
+---
+
+## Feature Status
+
+Represents runtime state of TSN mechanisms.
+
+Examples
+
+- STP
+- Qbv
+- Qav
+- PSFP
+- FRER
+
+Defined by
+
+- stp_status.proto
+- qbv_status.proto
+- qav_status.proto
+- psfp_status.proto
+- frer_status.proto
+
+---
+
+## System Status
+
+Represents the health of the device itself.
+
+Examples
+
+- CPU utilization
+- Memory usage
+- Queue occupancy
+- Buffer utilization
+- Synchronization state
+- Resource fragmentation
+
+---
+
+# 4. Standardized Counter Model
+
+The monitoring service does not allow arbitrary device-specific counters.
+
+Instead, OpenCNC defines a standardized catalog of supported counters.
+
+Each counter is described by `monitoring.proto`.
+
+Example
+
+```proto
+message Counter {
+    string id = 1;
+    string name = 2;
+    string path = 3;
+    uint32 poll_interval_ms = 4;
+    string description = 5;
+}
+```
+
+The `path` field represents the protocol-specific object to retrieve:
+
+- NETCONF XPath
+- gNMI path
+- SNMP OID
+- Vendor-specific path
+
+The catalog is distributed as JSON and generated from the OpenCNC YANG model.
+
+---
+
+# 5. Collector Layer
+
+A collector implements a single southbound protocol.
+
+Examples
+
+- NETCONF Collector
+- gNMI Collector
+- SNMP Collector
+
+A collector is responsible for
+
+- communicating with devices
+- understanding protocol semantics
+- translating OpenCNC counters into protocol requests
+- discovering which standardized counters are available on a device
+- collecting requested counters
+- converting protocol responses into normalized samples
+
+The monitoring engine never communicates directly with devices.
+
+---
+
+## Device Capability Discovery
+
+OpenCNC maintains a catalog of supported counters.
+
+Each device exposes its supported YANG modules and revisions.
+
+The collector determines the counters available on a device by computing the intersection between
+
+```
+OpenCNC Counter Catalog
+
+∩
+
+Device YANG Modules
+
+=
+
+Supported Counters
+```
+
+This ensures that metric definitions remain portable while still adapting to device capabilities.
+
+---
+
+# 6. Counter Collection
+
+The Operation Manager schedules counter collection according to the polling interval defined for each counter.
+
+Different counters may be collected at different rates.
+
+Example
+
+```
+CPU utilization      5 s
+
+Interface errors     1 s
+
+Queue occupancy      100 ms
+
+PTP synchronization  100 ms
+```
+
+Collectors may internally optimize protocol requests by grouping compatible counters into a single transaction.
+
+For example
+
+- multiple NETCONF XPaths in one `<get>`
+- multiple gNMI paths in one Subscribe request
+- multiple SNMP OIDs in one PDU
+
+This optimization is transparent to the monitoring engine.
+
+---
+
+# 7. Counter Samples
+
+Collectors convert raw protocol responses into normalized samples.
 
 ```go
-type Plugin interface {
-    Name() string                          // e.g. "qbv-netconf"
-    FeatureName() string                   // e.g. "qbv"
-    Supports(msg proto.Message) bool      // Accepts a proto message?
-    Map(msg proto.Message, model *DeviceModel) (any, error)
-    Push(mapped any, target DeviceTarget) error
+type CounterSample struct {
+    CounterID string
+    NodeID    string
+    Timestamp time.Time
+    Value     float64
 }
+```
 
-⚙️ ProtocolBackend Interface
+Regardless of whether a value originated from NETCONF, gNMI, SNMP, or another protocol, the monitoring engine always receives the same structure.
 
-type ProtocolBackend interface {
+---
+
+# 8. Metric Engine
+
+The Metric Engine consumes normalized samples and computes metrics defined in `monitoring.proto`.
+
+Examples include
+
+- Throughput
+- Utilization
+- Delay
+- Jitter
+- Queue occupancy
+- Error rate
+- Congestion
+- Clock synchronization error
+
+A metric may depend on one or several counters and may require historical samples.
+
+Example
+
+```
+rx_octets(t1)
+
+rx_octets(t2)
+
+↓
+
+Throughput
+
+↓
+
+900 Mbps
+```
+
+Output
+
+```go
+type MetricResult struct {
+    MetricName string
+    NodeID     string
+    Value      float64
+    Timestamp  time.Time
+}
+```
+
+---
+
+# 9. Decision Engine
+
+The Decision Engine evaluates computed metrics against the monitoring policies defined in `monitoring.proto`.
+
+Each metric may define multiple thresholds.
+
+Example
+
+```
+Queue Occupancy
+
+Warning  > 70%
+
+Critical > 90%
+```
+
+When a threshold is violated, the Decision Engine generates an alert.
+
+```go
+type Alert struct {
+    Metric      string
+    NodeID      string
+    Severity    monitoring.Severity
+    Description string
+    Action      AlertAction
+}
+```
+
+Possible actions include
+
+- Notify
+- Request rollback
+- Trigger reconfiguration
+
+The Decision Engine never performs these actions directly; it only emits requests.
+
+---
+
+# 10. Collector Interface
+
+```go
+type Collector interface {
+
     Name() string
-    AddPlugin(p Plugin)
-    GetPlugin(feature string) (Plugin, bool)
-    MapAndPush(msg proto.Message, model *DeviceModel, target DeviceTarget) error
-    SupportedFeatures() []string
+
+    Protocol() string
+
+    SupportedCounters(target Target) ([]*monitoring.Counter, error)
+
+    Collect(
+        target Target,
+        counters []*monitoring.Counter,
+    ) ([]*monitoring.CounterSample, error)
 }
+```
 
-🧠 DeviceTarget
-This struct lives in the managementSessions/ package. It wraps runtime device metadata (session info, IP, credentials, etc.).
-It is decoupled from raw Protobuf to allow future extension (e.g., session reuse, secrets injection).
+Target represents the managed device.
 
-type DeviceTarget struct {
-    Info   *ManagementInfo   // From proto
-    Secret string            // Runtime-injected credentials
-    Logger *log.Logger
-    // Optionally: cached session or retry logic
+```go
+type Target struct {
+    ID          string
+    Address     string
+    Port        uint16
+    YangModules []YangModule
 }
+```
 
-✅ Flow Summary
-CNC receives TopologyConfig
+```go
+type YangModule struct {
+    Name     string
+    Revision string
+}
+```
 
-Iterates over Nodes
+---
 
-For each node:
+# 11. Runtime Flow
 
-Reads ManagementProtocol (e.g., NETCONF)
+```
+Operation Manager
+        │
+        │ schedule collection
+        ▼
+Protocol Collector
+        │
+        │ Collect()
+        ▼
+CounterSample
+        │
+        ▼
+Metric Engine
+        │
+        ▼
+MetricResult
+        │
+        ▼
+Decision Engine
+        │
+        ▼
+Alert
+        │
+        ▼
+Configuration Service (optional rollback)
+```
 
-Selects corresponding ProtocolBackend
+---
 
-Dispatches feature configs to corresponding Plugins
+# 12. Summary
 
-Each plugin maps and (optionally) pushes config
+The Monitoring Service separates concerns into independent layers.
 
+- The **Operation Manager** determines *what* should be monitored and *when*.
+- **Collectors** determine *how* standardized counters are retrieved using a specific protocol.
+- The **Metric Engine** determines *what the collected data means*.
+- The **Decision Engine** determines *whether the observed behavior requires action*.
 
-🚀 Extending the CNC
-To add support for a new protocol: implement a new ProtocolBackend and corresponding Plugins
-
-To support a new feature: implement Plugin(s) for each protocol backend you want
-
-All config flows remain driven by the central Protobuf schema (TopologyConfig)
-
-
-This structure ensures a clean, modular, and future-proof configuration pipeline.
-Each layer is testable in isolation and extensible by design.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+By defining a fixed catalog of OpenCNC counters and discovering device support through YANG capabilities, metrics remain portable across vendors while collectors encapsulate all protocol-specific behavior. This architecture makes the monitoring service extensible, protocol-independent, and compatible with heterogeneous TSN deployments.
