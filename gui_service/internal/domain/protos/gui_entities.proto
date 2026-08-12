@@ -1,0 +1,60 @@
+syntax = "proto3";
+
+package gui.domain;
+
+option go_package = "OpenCNC_config_service/gui_service/internal/domain/protos;guiprotos";
+
+message DashboardData {
+  string packets_forwarded = 1;
+  string packet_drops = 2;
+  string active_streams = 3;
+  repeated string top_talkers = 4;
+  NetworkModel network_model = 5;
+}
+
+message NetworkModel{
+  repeated Node nodes = 1;
+  repeated Link links = 2;
+}
+
+message DeviceModel {
+  string id = 1;
+  string name = 2;
+  string version = 3;
+  string vendor = 4;
+  string yang = 5;
+}
+
+message Node {
+  string id = 1;
+  string name = 2;
+  string type = 3;
+  string state = 4;
+  string ports = 5;
+  string links = 6;
+}
+
+message Link {
+  string id = 1;
+  string source = 2;
+  string destination = 3;
+  string state = 4;
+  string bandwidth = 5;
+}
+
+message Stream {
+  string id = 1;
+  string name = 2;
+  string source = 3;
+  string listeners = 4;
+  string characteristics = 5;
+}
+
+message EventLog {
+  string time = 1;
+  string type = 2;
+  string severity = 3;
+  string message = 4;
+  string topic = 5;
+  string correlation_id = 6;
+}

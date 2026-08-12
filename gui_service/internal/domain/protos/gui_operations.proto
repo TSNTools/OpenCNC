@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+package gui.domain;
+
+option go_package = "OpenCNC_config_service/gui_service/internal/domain/protos;guiprotos";
+
+message OperationRequest {
+  string name = 1;
+  string query = 2;
+  string source = 3;
+  string destination = 4;
+  string bandwidth = 5;
+  string severity = 6;
+  string order_by = 7;
+}
+
+message OperationResponse {
+  bool success = 1;
+  string name = 2;
+  string message = 3;
+  map<string, string> data = 4;
+}
+
+message LogsQuery {
+  string severity = 1;
+  string order_by = 2;
+}

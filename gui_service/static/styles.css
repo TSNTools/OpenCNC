@@ -5,7 +5,6 @@
   --line: #bcc3cf;
   --text: #1d1e22;
   --danger: #9e2832;
-  --success: #2b8140;
 }
 
 * {
@@ -52,15 +51,16 @@ select {
   height: 46px;
   border-radius: 50%;
   border: 2px solid #d3d9e8;
+  overflow: hidden;
   display: grid;
   place-items: center;
   font-size: 13px;
   font-weight: 700;
 }
 
-.brand-block h1 {
+.brand-block h2 {
   margin: 0;
-  font-size: 44px;
+  font-size: 24px;
   font-weight: 600;
 }
 
@@ -78,7 +78,7 @@ select {
   padding: 10px 14px;
   background: transparent;
   color: #f5f8fe;
-  font-size: 39px;
+  font-size: 22px;
   cursor: pointer;
 }
 
@@ -317,6 +317,12 @@ select {
   background: #dce4f2;
 }
 
+.selectable-list li.empty-item {
+  color: #778090;
+  cursor: default;
+  background: transparent;
+}
+
 .link-workspace {
   display: grid;
   grid-template-columns: 220px 1fr;
@@ -491,216 +497,5 @@ thead th {
 
   .link-workspace {
     grid-template-columns: 1fr;
-  }
-}
-
-.accent-blue { background: linear-gradient(180deg, rgba(11, 95, 255, 0.08), #fff); }
-.accent-gold { background: linear-gradient(180deg, rgba(245, 158, 11, 0.12), #fff); }
-.accent-green { background: linear-gradient(180deg, rgba(2, 122, 72, 0.1), #fff); }
-.accent-red { background: linear-gradient(180deg, rgba(180, 35, 24, 0.08), #fff); }
-
-.mini-table,
-.table-card {
-  border: 1px solid var(--border);
-  border-radius: 18px;
-  overflow: hidden;
-  background: #fff;
-}
-
-.mini-table-header,
-.mini-table-row,
-.table-row {
-  display: grid;
-  align-items: center;
-  gap: 12px;
-  padding: 14px 16px;
-}
-
-.mini-table-header,
-.table-head {
-  font-weight: 800;
-  background: #f7f9fc;
-}
-
-.mini-table-header,
-.mini-table-row {
-  grid-template-columns: 1fr auto;
-}
-
-.table-row {
-  border-top: 1px solid #edf1f4;
-}
-
-.activity-list {
-  display: grid;
-  gap: 14px;
-}
-
-.activity-list article {
-  display: flex;
-  gap: 14px;
-  align-items: start;
-  padding: 16px;
-  border: 1px solid var(--border);
-  border-radius: 18px;
-  background: #fff;
-}
-
-.activity-list strong,
-.activity-list p,
-.detail-grid dt,
-.detail-grid dd {
-  margin: 0;
-}
-
-.activity-list p {
-  margin-top: 4px;
-  color: var(--muted);
-}
-
-.activity-dot {
-  width: 12px;
-  height: 12px;
-  margin-top: 4px;
-  border-radius: 50%;
-}
-
-.activity-dot.ok { background: var(--success); }
-.activity-dot.warn { background: var(--warning); }
-
-.list-stack {
-  display: grid;
-  gap: 10px;
-}
-
-.list-item {
-  border: 1px solid var(--border);
-  padding: 14px 16px;
-  background: #fff;
-  text-align: left;
-  cursor: pointer;
-}
-
-.list-item.is-selected {
-  border-color: rgba(11, 95, 255, 0.4);
-  background: rgba(11, 95, 255, 0.06);
-}
-
-.action-row,
-.filter-row {
-  display: flex;
-  gap: 12px;
-  flex-wrap: wrap;
-  margin-top: 18px;
-}
-
-.detail-grid {
-  display: grid;
-  gap: 16px;
-}
-
-.detail-grid div {
-  padding: 14px 0;
-  border-bottom: 1px solid #edf1f4;
-}
-
-.detail-grid dt {
-  color: var(--muted);
-  margin-bottom: 6px;
-}
-
-.form-grid {
-  display: grid;
-  gap: 14px;
-}
-
-.form-grid label {
-  display: grid;
-  gap: 8px;
-}
-
-.form-grid input,
-.form-grid select,
-.filter-row input,
-.filter-row select {
-  width: 100%;
-  padding: 12px 14px;
-  border-radius: 14px;
-  border: 1px solid var(--border);
-  background: #fff;
-}
-
-.table-row {
-  grid-template-columns: repeat(var(--columns, 3), minmax(0, 1fr));
-}
-
-#screen-device-models .table-row,
-#screen-nodes .table-row,
-#screen-links .table-row,
-#screen-streams .table-row {
-  --columns: 3;
-}
-
-#screen-logs .table-row {
-  --columns: 4;
-}
-
-.tag {
-  display: inline-flex;
-  width: fit-content;
-  padding: 6px 10px;
-  font-size: 12px;
-  font-weight: 800;
-}
-
-.tag.success { background: rgba(2, 122, 72, 0.12); color: var(--success); }
-.tag.pending, .tag.warning { background: rgba(181, 71, 8, 0.12); color: var(--warning); }
-.tag.danger { background: rgba(180, 35, 24, 0.12); color: var(--danger); }
-
-.empty-panel {
-  min-height: 340px;
-  display: grid;
-  place-content: center;
-  text-align: center;
-}
-
-@media (max-width: 1280px) {
-  .app-shell,
-  .dashboard-grid,
-  .two-column-layout,
-  .three-column-layout {
-    grid-template-columns: 1fr;
-  }
-
-  .dashboard-grid {
-    grid-template-areas:
-      "topology"
-      "metrics"
-      "activity";
-  }
-}
-
-@media (max-width: 900px) {
-  .workspace {
-    padding: 18px;
-  }
-
-  .topbar {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .topbar-actions,
-  .search-box,
-  .metric-cards {
-    width: 100%;
-  }
-
-  .metric-cards {
-    grid-template-columns: 1fr;
-  }
-
-  .topology-canvas {
-    min-height: 360px;
   }
 }

@@ -1,15 +1,13 @@
-# GUI Service Prototype
+# OpenCNC GUI Service
 
-This directory contains a separate GUI prototype service for OpenCNC.
+This directory contains a separate GUI service for OpenCNC.
 
 Current scope:
-- static multi-screen prototype for the CNC operator workflow
-- dashboard-first layout with topology and traffic summary
-- dedicated screens for device models, nodes, links, streams, logs, and settings
-- simple Go server so the UI can run without Node.js
-- React frontend scaffold ready for Node/Vite once frontend tooling is installed
-- SVG screen sketches for each main screen under `gui_service/mockups`
-- action buttons wired to Go stub handlers for backend integration points
+- multi-screen GUI aligned with the operator mockups
+- static frontend (no Node required to run the current GUI)
+- backend-driven view data endpoints (dashboard, models, nodes, links, streams, logs, recent events)
+- operation endpoints that call real backend functions and currently return hardcoded stub results
+- clean 4-layer service structure for incremental CNC integration
 
 Run from the repository root:
 
@@ -19,12 +17,73 @@ go run ./gui_service/cmd
 
 Then open `http://localhost:8080`.
 
-Notes:
-- the current UI uses mocked frontend data
-- the store connection is intentionally hidden from the GUI
-- this is a good base to later replace with a React frontend once Node tooling is available
-- all GUI action buttons call `/api/actions/<functionName>`
-- each action prints its function name in the GUI service CLI and returns a hardcoded JSON response
+## 4-Layer Structure
+
+1. Transport layer
+- Path: `internal/transport/http`
+- Responsibility: HTTP routing, request decoding, response encoding.
+- No business logic.
+
+2. Application layer
+- Path: `internal/app`
+- Responsibility: use-case functions per screen/action such as `AddNode`, `DeleteLink`, `GetDashboard`.
+- Calls domain ports.
+
+3. Domain layer
+- Path: `internal/domain`
+- Responsibility: core entities and ports/interfaces shared across layers.
+- Proto contracts are defined under `internal/domain/protos`.
+
+4. Adapter layer
+- Path: `internal/adapters`
+- Responsibility: infrastructure implementation of domain ports.
+- Current implementation: `internal/adapters/stub` with hardcoded responses.
+
+## Proto Contracts
+
+Proto files for entities and operations are under:
+- `internal/domain/protos/gui_entities.proto`
+- `internal/domain/protos/gui_operations.proto`
+
+These define the long-term contracts for:
+- dashboard data
+- models, nodes, links, streams, logs
+- operation request/response envelopes
+
+## API Surface (Current)
+
+Read endpoints:
+- `GET /api/v1/dashboard`
+- `GET /api/v1/device-models`
+- `GET /api/v1/nodes`
+- `GET /api/v1/links`
+- `GET /api/v1/streams`
+- `GET /api/v1/logs`
+- `GET /api/v1/events/recent`
+
+Operation endpoints:
+- `POST /api/v1/dashboard/refresh`
+- `POST /api/v1/device-models/upload`
+- `POST /api/v1/nodes`
+- `PATCH /api/v1/nodes/:id`
+- `DELETE /api/v1/nodes/:id`
+- `POST /api/v1/links`
+- `PATCH /api/v1/links/:id`
+- `DELETE /api/v1/links/:id`
+- `POST /api/v1/streams`
+- `DELETE /api/v1/streams/:id`
+- `POST /api/v1/logs/filter`
+- `POST /api/v1/logs/order`
+
+Health endpoint:
+- `GET /api/health`
+
+## Behavior Today
+
+- UI fields are loaded from backend endpoints and default to empty values when data is unavailable.
+- Button actions call application-layer functions through transport handlers.
+- Stub adapter functions print function invocation to CLI and return hardcoded responses.
+- This keeps call flow real while CNC-specific logic is still pending.
 
 React frontend:
 
