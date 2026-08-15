@@ -8,12 +8,14 @@ const state = {
   selectedNodeID: "",
   selectedLinkID: "",
   selectedStreamID: "",
+  selectedCounters: new Set(),
+  selectedMetrics: new Set(),
 };
 
 initializeNavigation();
 initializeActionButtons();
 initializeListSelection();
-initializeSelectActions();
+initializeMonitoringSelection();
 loadAllViews();
 
 function initializeNavigation() {
@@ -206,25 +208,41 @@ function initializeActionButtons() {
   }
 }
 
-function initializeSelectActions() {
-  const logsFilter = document.getElementById("logs-filter");
-  const logsOrder = document.getElementById("logs-order");
+function initializeMonitoringSelection() {
+  bindMonitoringSelection("monitoring-counter-list", "counter");
+  bindMonitoringSelection("monitoring-metric-list", "metric");
+}
 
-  if (logsFilter) {
-    logsFilter.addEventListener("change", async () => {
-      const response = await callAction("filterLogs", { severity: logsFilter.value });
-      showToast(response.message || "Logs filtered");
-      await loadLogs();
-    });
+function bindMonitoringSelection(listID, type) {
+  const list = document.getElementById(listID);
+  if (!list) {
+    return;
   }
 
-  if (logsOrder) {
-    logsOrder.addEventListener("change", async () => {
-      const response = await callAction("orderLogs", { orderBy: logsOrder.value });
-      showToast(response.message || "Log ordering changed");
-      await loadLogs();
-    });
-  }
+  list.addEventListener("change", (event) => {
+    const checkbox = event.target;
+    if (!(checkbox instanceof HTMLInputElement) || checkbox.type !== "checkbox") {
+      return;
+    }
+
+    const id = checkbox.dataset.id || "";
+    const label = checkbox.dataset.label || id;
+    if (!id) {
+      return;
+    }
+
+    const selectedSet = type === "counter"
+      ? state.selectedCounters
+      : state.selectedMetrics;
+
+    if (checkbox.checked) {
+      selectedSet.add(label);
+    } else {
+      selectedSet.delete(label);
+    }
+
+    updateSelectedMonitoringLists();
+  });
 }
 
 function initializeListSelection() {
@@ -288,7 +306,7 @@ async function loadAllViews() {
     loadNodes(),
     loadLinks(),
     loadStreams(),
-    loadLogs(),
+    loadMonitoring(),
     loadRecentEvents(),
   ]);
 }
@@ -332,8 +350,8 @@ async function loadView(screen) {
       ]);
       break;
 
-    case "logs":
-      await loadLogs();
+    case "monitoring":
+      await loadMonitoring();
       break;
 
     case "settings":
@@ -489,42 +507,148 @@ async function loadStreams() {
   clearStreamDetails();
 }
 
-async function loadLogs() {
-  const severity = getValue("logs-filter");
-  const orderBy = getValue("logs-order");
-  const params = new URLSearchParams();
-  if (severity && severity !== "all") {
-    params.set("severity", severity);
-  }
-  if (orderBy && orderBy !== "time") {
-    params.set("orderBy", orderBy);
+async function loadMonitoring() {
+  const fallbackCounters = [
+    { id: "rx_packets", label: "RX Packets" },
+    { id: "tx_packets", label: "TX Packets" },
+    { id: "rx_drops", label: "RX Drops" },
+    { id: "tx_drops", label: "TX Drops" },
+    { id: "stream_rejections", label: "Stream Rejections" },
+  ];
+
+  const fallbackMetrics = [
+    { id: "bandwidth_usage", label: "Bandwidth Usage" },
+    { id: "latency_mean", label: "Mean Latency" },
+    { id: "latency_p99", label: "P99 Latency" },
+    { id: "jitter", label: "Jitter" },
+    { id: "packet_loss_rate", label: "Packet Loss Rate" },
+  ];
+
+  const counters = await fetchMonitoringItems(
+    "/api/v1/monitoring/counters",
+    fallbackCounters
+  );
+  const metrics = await fetchMonitoringItems(
+    "/api/v1/monitoring/metrics",
+    fallbackMetrics
+  );
+
+  renderMonitoringOptions("monitoring-counter-list", counters, state.selectedCounters, "counter");
+  renderMonitoringOptions("monitoring-metric-list", metrics, state.selectedMetrics, "metric");
+  updateSelectedMonitoringLists();
+}
+
+async function fetchMonitoringItems(path, fallback) {
+  const items = await fetchJSON(path, fallback);
+  if (!Array.isArray(items)) {
+    return fallback;
   }
 
-  const suffix = params.toString() ? `?${params.toString()}` : "";
-  const logs = await fetchJSON(`/api/v1/logs${suffix}`, []);
-  const tbody = document.getElementById("internal-logs-body");
-  tbody.innerHTML = "";
+  return items
+    .map((entry) => {
+      if (typeof entry === "string") {
+        return { id: entry, label: entry };
+      }
 
-  if (!logs.length) {
-    tbody.innerHTML = '<tr><td colspan="4" class="empty-cell">No internal logs</td></tr>';
-    clearLogDetails();
+      if (!entry || typeof entry !== "object") {
+        return null;
+      }
+
+      const id = entry.id || entry.name || entry.key || "";
+      if (!id) {
+        return null;
+      }
+
+      return {
+        id,
+        label: entry.label || entry.displayName || entry.name || id,
+      };
+    })
+    .filter(Boolean);
+}
+
+function renderMonitoringOptions(listID, items, selectedSet, type) {
+  const list = document.getElementById(listID);
+  if (!list) {
     return;
   }
 
-  logs.forEach((entry) => {
-    const row = document.createElement("tr");
-    row.innerHTML = `<td>${entry.time || "-"}</td><td>${entry.type || "-"}</td><td>${entry.severity || "-"}</td><td>${entry.message || "-"}</td>`;
-    row.addEventListener("click", () => {
-      setText("log-time", entry.time || "-");
-      setText("log-severity", entry.severity || "-");
-      setText("log-topic", entry.topic || "-");
-      setText("log-correlation-id", entry.correlationId || "-");
-      setText("log-message", entry.message || "-");
-    });
-    tbody.appendChild(row);
+  list.innerHTML = "";
+  if (!items.length) {
+    const li = document.createElement("li");
+    li.className = "empty-item";
+    li.textContent = type === "counter"
+      ? "No counters available"
+      : "No metrics available";
+    list.appendChild(li);
+    return;
+  }
+
+  const availableLabels = new Set(items.map((item) => item.label));
+  selectedSet.forEach((label) => {
+    if (!availableLabels.has(label)) {
+      selectedSet.delete(label);
+    }
   });
 
-  clearLogDetails();
+  items.forEach((item) => {
+    const li = document.createElement("li");
+    li.className = "monitoring-option";
+
+    const label = document.createElement("label");
+    label.className = "monitoring-checkbox-label";
+
+    const input = document.createElement("input");
+    input.type = "checkbox";
+    input.dataset.id = item.id;
+    input.dataset.label = item.label;
+    input.checked = selectedSet.has(item.label);
+
+    const text = document.createElement("span");
+    text.textContent = item.label;
+
+    label.appendChild(input);
+    label.appendChild(text);
+    li.appendChild(label);
+    list.appendChild(li);
+  });
+}
+
+function updateSelectedMonitoringLists() {
+  renderSelectedItems(
+    "selected-counters-list",
+    Array.from(state.selectedCounters),
+    "No counters selected"
+  );
+
+  renderSelectedItems(
+    "selected-metrics-list",
+    Array.from(state.selectedMetrics),
+    "No metrics selected"
+  );
+}
+
+function renderSelectedItems(listID, items, emptyText) {
+  const list = document.getElementById(listID);
+  if (!list) {
+    return;
+  }
+
+  list.innerHTML = "";
+  if (!items.length) {
+    const li = document.createElement("li");
+    li.className = "empty-item";
+    li.textContent = emptyText;
+    list.appendChild(li);
+    return;
+  }
+
+  items.forEach((item) => {
+    const li = document.createElement("li");
+    li.className = "monitoring-selected-item";
+    li.textContent = item;
+    list.appendChild(li);
+  });
 }
 
 async function loadRecentEvents() {
@@ -652,14 +776,6 @@ function clearStreamDetails() {
   setText("stream-characteristics", "-");
 }
 
-function clearLogDetails() {
-  setText("log-time", "-");
-  setText("log-severity", "-");
-  setText("log-topic", "-");
-  setText("log-correlation-id", "-");
-  setText("log-message", "-");
-}
-
 async function gatherPayload(action) {
   switch (action) {
     case "addNode":
@@ -685,10 +801,6 @@ async function gatherPayload(action) {
     case "editModel":
     case "deleteModel":
       return { id: state.selectedModelID };
-    case "filterLogs":
-      return { severity: getValue("logs-filter") };
-    case "orderLogs":
-      return { orderBy: getValue("logs-order") };
     default:
       return {};
   }
@@ -726,8 +838,6 @@ async function callAction(action, payload) {
     deleteLink: { method: "DELETE", path: `/api/v1/links/${payload.id || "selected"}` },
     addStream: { method: "POST", path: "/api/v1/streams" },
     removeStream: { method: "DELETE", path: `/api/v1/streams/${payload.id || "selected"}` },
-    filterLogs: { method: "POST", path: "/api/v1/logs/filter" },
-    orderLogs: { method: "POST", path: "/api/v1/logs/order" },
   };
 
   const target = mapping[action];

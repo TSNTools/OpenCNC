@@ -6,41 +6,51 @@ import (
 	"OpenCNC_config_service/monitor_service/structures/monitoring"
 )
 
-var PacketRateMetric = &monitoring.Metric{
-	Name:                 "unicast-packet-rate",
-	Type:                 monitoring.MetricType_PACKET_RATE,
-	EvaluationIntervalMs: 1000,
-	InputIds: []string{
-		"in-unicast-pkts",
-		"out-unicast-pkts",
-	},
-	WindowSize:  2,
-	Description: "Combined incoming and outgoing unicast packet rate.",
-	Thresholds: []*monitoring.Threshold{
-		{
-			Value:      70000, // packets/sec
-			Comparison: monitoring.Comparison_GREATER_OR_EQUAL,
-			Event: &monitoring.MonitoringEvent{
-				Type:     monitoring.EventType_PERFORMANCE_DEGRADATION,
-				Severity: monitoring.Severity_WARNING,
-				Actions: []monitoring.EventAction{
-					monitoring.EventAction_NOTIFY,
+/*
+	var PacketRateMetric = &monitoring.Metric{
+		Name:                 "unicast-packet-rate",
+		Type:                 monitoring.MetricType_PACKET_RATE,
+		EvaluationIntervalMs: 1000,
+		InputIds: []string{
+			"in-unicast-pkts",
+			"out-unicast-pkts",
+		},
+		WindowSize:  2,
+		Description: "Combined incoming and outgoing unicast packet rate.",
+		Thresholds: []*monitoring.Threshold{
+			{
+				Value:      70000, // packets/sec
+				Comparison: monitoring.Comparison_GREATER_OR_EQUAL,
+				Event: &monitoring.MonitoringEvent{
+					Type:     monitoring.EventType_PERFORMANCE_DEGRADATION,
+					Severity: monitoring.Severity_WARNING,
+					Actions: []monitoring.EventAction{
+						monitoring.EventAction_NOTIFY,
+					},
+				},
+			},
+			{
+				Value:      90000, // packets/sec
+				Comparison: monitoring.Comparison_GREATER_OR_EQUAL,
+				Event: &monitoring.MonitoringEvent{
+					Type:     monitoring.EventType_CONGESTION,
+					Severity: monitoring.Severity_CRITICAL,
+					Actions: []monitoring.EventAction{
+						monitoring.EventAction_ALERT,
+						monitoring.EventAction_REQUEST_RECONFIGURATION,
+					},
 				},
 			},
 		},
-		{
-			Value:      90000, // packets/sec
-			Comparison: monitoring.Comparison_GREATER_OR_EQUAL,
-			Event: &monitoring.MonitoringEvent{
-				Type:     monitoring.EventType_CONGESTION,
-				Severity: monitoring.Severity_CRITICAL,
-				Actions: []monitoring.EventAction{
-					monitoring.EventAction_ALERT,
-					monitoring.EventAction_REQUEST_RECONFIGURATION,
-				},
-			},
+	}
+*/
+func init() {
+	Register(MeterFactory{
+		Type: monitoring.MetricType_PACKET_RATE,
+		New: func(resource *monitoring.ResourceKey, metric *monitoring.Metric) (Meter, error) {
+			return NewPacketRateMeter(resource, metric)
 		},
-	},
+	})
 }
 
 type PacketRateMeter struct {
@@ -50,7 +60,15 @@ type PacketRateMeter struct {
 	windows map[string]*SamplesWindow
 }
 
-func NewPacketRateMeter(nodeID string, portID string) (*PacketRateMeter, error) {
+func NewPacketRateMeter(resource *monitoring.ResourceKey, PacketRateMetric *monitoring.Metric) (*PacketRateMeter, error) {
+
+	if PacketRateMetric.Name != "unicast-packet-rate" {
+		return nil, fmt.Errorf(
+			"invalid metric: expected unicast-packet-rate, got %q",
+			PacketRateMetric.Name,
+		)
+	}
+
 	if PacketRateMetric.WindowSize < 2 {
 		return nil, fmt.Errorf(
 			"packet rate metric requires window size >= 2",
@@ -65,8 +83,8 @@ func NewPacketRateMeter(nodeID string, portID string) (*PacketRateMeter, error) 
 
 	return &PacketRateMeter{
 		metric:  PacketRateMetric,
-		nodeID:  nodeID,
-		portID:  portID,
+		nodeID:  resource.GetNodeId(),
+		portID:  resource.GetPortId(),
 		windows: windows,
 	}, nil
 }

@@ -122,10 +122,10 @@
 
         <button
           class="nav-item"
-          data-screen="logs"
+          data-screen="monitoring"
           type="button"
         >
-          Internal Logs
+          Monitoring
         </button>
 
 
@@ -1048,12 +1048,12 @@
 
 
       <!-- =====================================================
-           INTERNAL LOGS
+           MONITORING
            ===================================================== -->
 
       <section
         class="screen"
-        id="screen-logs"
+        id="screen-monitoring"
       >
 
         <div class="content-grid operation-grid">
@@ -1061,88 +1061,42 @@
 
           <div class="left-column">
 
-            <div class="control-row">
-
-              <select
-                id="logs-filter"
-                data-action="filterLogs"
-              >
-                <option value="all">
-                  All Severities
-                </option>
-
-                <option value="info">
-                  Info
-                </option>
-
-                <option value="warning">
-                  Warning
-                </option>
-
-                <option value="error">
-                  Error
-                </option>
-
-              </select>
-
-
-              <select
-                id="logs-order"
-                data-action="orderLogs"
-              >
-
-                <option value="time">
-                  Order by Time
-                </option>
-
-                <option value="severity">
-                  Order by Severity
-                </option>
-
-              </select>
-
-            </div>
-
-
             <section
-              class="card list-card logs-table-card"
+              class="card list-card monitoring-list-card"
             >
 
               <h3>
-                Events
+                Available Counters
               </h3>
 
+              <ul
+                class="selectable-list monitoring-options-list"
+                id="monitoring-counter-list"
+              >
+                <li class="empty-item">
+                  No counters available
+                </li>
+              </ul>
 
-              <table>
-
-                <thead>
-
-                  <tr>
-                    <th>Time</th>
-                    <th>Type</th>
-                    <th>Severity</th>
-                    <th>Message</th>
-                  </tr>
-
-                </thead>
+            </section>
 
 
-                <tbody id="internal-logs-body">
+            <section
+              class="card list-card monitoring-list-card"
+            >
 
-                  <tr>
+              <h3>
+                Available Metrics
+              </h3>
 
-                    <td
-                      colspan="4"
-                      class="empty-cell"
-                    >
-                      No internal logs
-                    </td>
-
-                  </tr>
-
-                </tbody>
-
-              </table>
+              <ul
+                class="selectable-list monitoring-options-list"
+                id="monitoring-metric-list"
+              >
+                <li class="empty-item">
+                  No metrics available
+                </li>
+              </ul>
 
             </section>
 
@@ -1152,28 +1106,35 @@
           <section class="card details-card">
 
             <h3>
-              Event Details
+              Selected Monitoring Items
             </h3>
 
 
-            <dl>
+            <div class="monitoring-selected-groups">
 
-              <dt>Time</dt>
-              <dd id="log-time">-</dd>
+              <div>
+                <h4>Counters to Display</h4>
 
-              <dt>Severity</dt>
-              <dd id="log-severity">-</dd>
+                <ul
+                  class="monitoring-selected-list"
+                  id="selected-counters-list"
+                >
+                  <li class="empty-item">No counters selected</li>
+                </ul>
+              </div>
 
-              <dt>Topic</dt>
-              <dd id="log-topic">-</dd>
+              <div>
+                <h4>Metrics to Display</h4>
 
-              <dt>Correlation ID</dt>
-              <dd id="log-correlation-id">-</dd>
+                <ul
+                  class="monitoring-selected-list"
+                  id="selected-metrics-list"
+                >
+                  <li class="empty-item">No metrics selected</li>
+                </ul>
+              </div>
 
-              <dt>Message</dt>
-              <dd id="log-message">-</dd>
-
-            </dl>
+            </div>
 
           </section>
 

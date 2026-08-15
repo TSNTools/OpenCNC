@@ -302,7 +302,7 @@ func (m *ResourceMonitor) collectAndFeedWith(collectorsSnapshot []collectors.Col
 			continue
 		}
 
-		counters = append(counters, &monitoring.Counter{Id: id})
+		counters = append(counters, &monitoring.Counter{Name: id})
 	}
 
 	var samples []*monitoring.DataSample
@@ -727,13 +727,13 @@ func buildSchedule(collectorsList []collectors.Collector, metersMap map[string]m
 		}
 
 		for _, counter := range supported {
-			if counter == nil || counter.Id == "" {
+			if counter == nil || counter.Name == "" {
 				continue
 			}
 
 			// First definition wins.
-			if _, exists := counterDefinitions[counter.Id]; !exists {
-				counterDefinitions[counter.Id] = counter
+			if _, exists := counterDefinitions[counter.Name]; !exists {
+				counterDefinitions[counter.Name] = counter
 			}
 		}
 	}

@@ -4,24 +4,29 @@ import (
 	"fmt"
 	"sync"
 
+	"OpenCNC_config_service/common/structures/topology"
+	"OpenCNC_config_service/monitor_service/pkg/catalog"
+	"OpenCNC_config_service/monitor_service/pkg/collectors"
+	"OpenCNC_config_service/monitor_service/pkg/managementSessions"
+	"OpenCNC_config_service/monitor_service/pkg/meters"
 	monitor "OpenCNC_config_service/monitor_service/pkg/monitors"
 	"OpenCNC_config_service/monitor_service/structures/monitoring"
 )
 
 type Engine struct {
+	Catalog  *catalog.Catalog
 	monitors map[string]monitor.Monitor
-
-	mu      sync.Mutex
-	running bool
+	mu       sync.Mutex // to protect the map
 }
 
-func NewEngine() *Engine {
+func NewEngine(catalog *catalog.Catalog) *Engine {
 	return &Engine{
+		Catalog:  catalog,
 		monitors: make(map[string]monitor.Monitor),
 	}
 }
 
-// AddMonitor registers a monitor with the engine.
+// AddMonitor registers a monitor with the engine and starts it. The monitor name must be unique.
 // The name must uniquely identify the monitored resource.
 func (e *Engine) AddMonitor(name string, m monitor.Monitor) error {
 	if m == nil {
@@ -33,22 +38,24 @@ func (e *Engine) AddMonitor(name string, m monitor.Monitor) error {
 	}
 
 	e.mu.Lock()
-	defer e.mu.Unlock()
-
-	if e.running {
-		return fmt.Errorf(
-			"cannot add monitor while engine is running",
-		)
-	}
 
 	if _, exists := e.monitors[name]; exists {
-		return fmt.Errorf(
-			"monitor %q already registered",
-			name,
-		)
+		e.mu.Unlock()
+		return fmt.Errorf("monitor %q already registered", name)
 	}
 
 	e.monitors[name] = m
+
+	e.mu.Unlock()
+
+	// Start outside the mutex.
+	if err := m.Start(); err != nil {
+		e.mu.Lock()
+		delete(e.monitors, name)
+		e.mu.Unlock()
+
+		return fmt.Errorf("start monitor %q: %w", name, err)
+	}
 
 	return nil
 }
@@ -57,108 +64,21 @@ func (e *Engine) AddMonitor(name string, m monitor.Monitor) error {
 // The monitor must not be running.
 func (e *Engine) RemoveMonitor(name string) error {
 	e.mu.Lock()
-	defer e.mu.Unlock()
 
-	if e.running {
-		return fmt.Errorf(
-			"cannot remove monitor while engine is running",
-		)
-	}
-
-	if _, exists := e.monitors[name]; !exists {
-		return fmt.Errorf(
-			"monitor %q not found",
-			name,
-		)
+	m, exists := e.monitors[name]
+	if !exists {
+		e.mu.Unlock()
+		return fmt.Errorf("monitor %q not found", name)
 	}
 
 	delete(e.monitors, name)
 
-	return nil
-}
-
-// Start starts all registered monitors.
-func (e *Engine) Start() error {
-	e.mu.Lock()
-
-	if e.running {
-		e.mu.Unlock()
-		return fmt.Errorf("engine is already running")
-	}
-
-	monitors := make(
-		[]monitor.Monitor,
-		0,
-		len(e.monitors),
-	)
-
-	for _, m := range e.monitors {
-		monitors = append(monitors, m)
-	}
-
-	e.running = true
-
 	e.mu.Unlock()
 
-	for _, m := range monitors {
-		if err := m.Start(); err != nil {
-			// Stop monitors that were already started.
-			for _, started := range monitors {
-				if started == m {
-					break
-				}
-
-				started.Stop()
-			}
-
-			e.mu.Lock()
-			e.running = false
-			e.mu.Unlock()
-
-			return fmt.Errorf(
-				"start monitor: %w",
-				err,
-			)
-		}
-	}
+	// Stop outside the mutex.
+	m.Stop()
 
 	return nil
-}
-
-// Stop stops all registered monitors.
-func (e *Engine) Stop() {
-	e.mu.Lock()
-
-	if !e.running {
-		e.mu.Unlock()
-		return
-	}
-
-	monitors := make(
-		[]monitor.Monitor,
-		0,
-		len(e.monitors),
-	)
-
-	for _, m := range e.monitors {
-		monitors = append(monitors, m)
-	}
-
-	e.running = false
-
-	e.mu.Unlock()
-
-	for _, m := range monitors {
-		m.Stop()
-	}
-}
-
-// IsRunning reports whether the engine is running.
-func (e *Engine) IsRunning() bool {
-	e.mu.Lock()
-	defer e.mu.Unlock()
-
-	return e.running
 }
 
 // Monitor returns a registered monitor by name.
@@ -169,6 +89,87 @@ func (e *Engine) Monitor(name string) (monitor.Monitor, bool) {
 	m, exists := e.monitors[name]
 
 	return m, exists
+}
+
+func (e *Engine) StartMonitoring(id string, resource *monitoring.ResourceKey, node *topology.Node, items []string) error {
+	if id == "" {
+		return fmt.Errorf("monitoring id is empty")
+	}
+
+	if resource == nil {
+		return fmt.Errorf("monitoring resource is nil")
+	}
+
+	if len(items) == 0 {
+		return fmt.Errorf("no monitoring items specified")
+	}
+
+	// ------------------------------------------------------------
+	// Check that this monitoring ID is not already active.
+	// the req id as used as the monitor name in the engine.
+	// The monitor name is the unique identifier.
+	// ------------------------------------------------------------
+	e.mu.Lock()
+	if _, exists := e.monitors[id]; exists {
+		e.mu.Unlock()
+		return fmt.Errorf("monitoring %q already exists", id)
+	}
+	e.mu.Unlock()
+
+	//------------------------------------------------------------
+	// Create monitor
+	session, err := managementSessions.CreateSession(
+		node.ManagementInfo.IpAddress,
+		node.ManagementInfo.UserName,
+		"",
+	)
+	if err != nil {
+		return fmt.Errorf("failed to reach target node: %w", err)
+	}
+
+	resourceMonitor := monitor.NewResourceMonitor(
+		resource,
+		e.HandleEvent,
+	)
+
+	for _, itemName := range items {
+		item := e.Catalog.GetItem(itemName)
+		if item == nil {
+			return fmt.Errorf("monitoring item %q not found in catalog", itemName)
+		}
+		if item.Kind == monitoring.DataType_RAW {
+			// TODO: make sure it is the right type of collector for the node, check the protocol
+			collector := collectors.NewNetconfCollector(resource, session, e.Catalog)
+			if collector == nil {
+				return fmt.Errorf("failed to collect item %q", itemName)
+			}
+			resourceMonitor.AddCollector(collector)
+		}
+
+		if item.Kind == monitoring.DataType_METRIC {
+			metric := e.Catalog.GetMetricByID(itemName)
+			//TODO: use the registry to select the right meter type based on the metric type.
+			meter, err := meters.NewPacketRateMeter(resource, metric)
+			if err != nil {
+				return fmt.Errorf("failed to create meter for item %q: %w", itemName, err)
+			}
+			resourceMonitor.AddMeter(meter)
+		}
+	}
+	// Start the monitor
+	if err := e.AddMonitor(id, resourceMonitor); err != nil {
+		return fmt.Errorf("failed to start monitoring: %w", err)
+	}
+
+	return nil
+}
+
+func (e *Engine) StopMonitoring(id string) error {
+	if id == "" {
+		return fmt.Errorf("monitoring id is empty")
+	}
+
+	return e.RemoveMonitor(id)
 }
 
 // HandleEvent receives events generated by monitors.

@@ -5,7 +5,7 @@ import (
 	"log"
 
 	"OpenCNC_config_service/common/structures/topology"
-	counters "OpenCNC_config_service/monitor_service/opencnc_counters_catalog"
+	"OpenCNC_config_service/monitor_service/pkg/catalog"
 	"OpenCNC_config_service/monitor_service/pkg/collectors"
 	"OpenCNC_config_service/monitor_service/pkg/managementSessions"
 	"OpenCNC_config_service/monitor_service/structures/monitoring"
@@ -63,9 +63,7 @@ func test_netconf_collector() {
 	//
 	// Load counter catalog
 	//
-	catalog, err := counters.LoadCatalog(
-		"/home/opencnc/OpenCNC/monitor_service/pkg/counters/opencnc_counters.json",
-	)
+	catalog, err := catalog.LoadCatalog()
 
 	if err != nil {
 		log.Fatalf(
@@ -77,8 +75,12 @@ func test_netconf_collector() {
 	//
 	// Create collector
 	//
+	resource := &monitoring.ResourceKey{
+		NodeId: target.Name,
+	}
+
 	collector := collectors.NewNetconfCollector(
-		target,
+		resource,
 		session,
 		catalog,
 	)
@@ -89,8 +91,8 @@ func test_netconf_collector() {
 	requestedCounters := []*monitoring.Counter{
 		//catalog.GetByID("if_state_in_errors"),
 		//catalog.GetByID("if_state_out_errors"),
-		catalog.GetByID("if_state_in_unicast_pkts"),
-		catalog.GetByID("if_state_out_unicast_pkts"),
+		catalog.GetCounterByID("if_state_in_unicast_pkts"),
+		catalog.GetCounterByID("if_state_out_unicast_pkts"),
 	}
 
 	//

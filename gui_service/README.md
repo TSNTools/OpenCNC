@@ -96,3 +96,10 @@ npm run dev
 React build output:
 - after `npm run build`, the Go server will automatically prefer `gui_service/frontend/dist`
 - until then, it continues to serve the existing static prototype
+
+
+## Current Limitations
+
+* **Topology object additions:** Currently, only one object at a time can be added to the topology object. This applies to **nodes, links, and device models**, which must be added individually using the JSON format.
+
+* **Topology propagation:** After the topology is updated, the entire OpenCNC system needs to be informed about the updated topology object. The updated topology should then be pulled again by all relevant microservices so that they operate on the latest topology state. **This propagation is not implemented yet.**

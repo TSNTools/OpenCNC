@@ -2,9 +2,21 @@ syntax = "proto3";
 
 package monitoring;
 
-option go_package = "common/structures/monitoring;monitoring";
+option go_package = "OpenCNC_config_service/monitor_service/structures/monitoring;monitoring";
 
 import "google/protobuf/timestamp.proto";
+
+enum DataType{
+  RAW = 0;
+  METRIC = 1;
+}
+
+// a capability is a counter or a metric
+message Capability {
+  string name = 1; //the id of counter or metric
+  string description = 2;
+  DataType kind = 3;
+}
 
 // Runtime settings for the monitoring service.
 message MonitoringSettings {
@@ -14,8 +26,7 @@ message MonitoringSettings {
 
 // A raw value periodically read from a device.
 message Counter {
-  string id = 1;               // Unique identifier.
-  string name = 2;             // Human-readable name.
+  string name = 1;             // Human-readable name/ that is the identifier as well
   string path = 3;             // NETCONF XPath, gNMI path, SNMP OID, ...
   uint32 poll_interval_ms = 4; // Sampling period.
   string description = 5;      // Optional description.
@@ -94,11 +105,6 @@ message DataSample {
 message ResourceKey {
   string node_id = 1;
   optional string port_id = 2;
-}
-
-enum DataType{
-  RAW = 0;
-  METRIC = 1;
 }
 
 ////////////////////////////

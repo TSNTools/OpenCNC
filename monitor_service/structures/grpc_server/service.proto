@@ -1,0 +1,41 @@
+syntax = "proto3";
+
+package service;
+
+option go_package = "OpenCNC_config_service/monitor_service/structures/grpc_service;service";
+
+import "monitor_service/structures/monitoring/monitoring.proto";
+
+message CapabilitiesRequest {}
+
+message CapabilitiesResponse {
+  repeated monitoring.Capability capabilities = 1;
+}
+///////////////
+
+message StartMonitoringRequest {
+  string id = 1;
+  monitoring.ResourceKey resource = 2;
+  repeated string items = 3;
+}
+
+message MonitoringResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message StopMonitoringRequest {
+  string id = 1;
+}
+
+//////////////
+service MonitorService {
+  rpc GetCapabilities(CapabilitiesRequest)
+      returns (CapabilitiesResponse);
+  
+  rpc StartMonitoring(StartMonitoringRequest)
+      returns (MonitoringResponse);
+
+  rpc StopMonitoring(StopMonitoringRequest)
+      returns (MonitoringResponse);
+}

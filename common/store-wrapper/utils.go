@@ -221,3 +221,221 @@ func splitKey(key string) []string {
 	}
 	return parts
 }
+
+func nodeStorePrefix(node *topology.Node) (string, error) {
+	if node == nil {
+		return "", fmt.Errorf("node cannot be nil")
+	}
+	if strings.TrimSpace(node.GetName()) == "" {
+		return "", fmt.Errorf("node name cannot be empty")
+	}
+
+	if props := node.GetProperties(); props != nil {
+		if props.GetBridge() != nil {
+			return "bridges", nil
+		}
+		if props.GetEndStation() != nil || props.GetBridgedEndStation() != nil {
+			return "endnodes", nil
+		}
+	}
+
+	switch node.GetType() {
+	case topology.NodeRole_BRIDGE:
+		return "bridges", nil
+	case topology.NodeRole_END_STATION,
+		topology.NodeRole_BRIDGED_END_STATION,
+		topology.NodeRole_UNKNOWN:
+		return "endnodes", nil
+	default:
+		return "", fmt.Errorf("unsupported node role: %v", node.GetType())
+	}
+}
+
+func getNode(client *clientv3.Client, name string) (*topology.Node, string, error) {
+	for _, prefix := range []string{"endnodes", "bridges"} {
+		key := strings.ReplaceAll(prefix+"."+name, ".", "/")
+
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		resp, err := client.Get(ctx, key)
+		cancel()
+		if err != nil {
+			return nil, "", fmt.Errorf("failed to get node %s from store: %w", name, err)
+		}
+		if len(resp.Kvs) == 0 {
+			continue
+		}
+
+		node := &topology.Node{}
+		if err := proto.Unmarshal(resp.Kvs[0].Value, node); err != nil {
+			return nil, "", fmt.Errorf("failed to unmarshal node %s: %w", name, err)
+		}
+
+		return node, prefix, nil
+	}
+
+	return nil, "", fmt.Errorf("node %s not found", name)
+}
+
+func storeNodeWithClient(client *clientv3.Client, node *topology.Node, requireExisting bool) error {
+	prefix, err := nodeStorePrefix(node)
+	if err != nil {
+		return err
+	}
+
+	obj, err := proto.Marshal(node)
+	if err != nil {
+		return fmt.Errorf("failed to marshal node object: %w", err)
+	}
+
+	if _, existingPrefix, err := getNode(client, node.GetName()); err == nil {
+		if existingPrefix != prefix {
+			oldKey := strings.ReplaceAll(existingPrefix+"."+node.GetName(), ".", "/")
+			if _, err := client.Delete(context.Background(), oldKey); err != nil {
+				return fmt.Errorf("failed to delete previous node entry %s: %w", node.GetName(), err)
+			}
+		}
+	} else {
+		if !strings.Contains(err.Error(), "not found") {
+			return err
+		}
+		if requireExisting {
+			return err
+		}
+	}
+
+	return sendToStoreRepeated(client, obj, prefix+"."+node.GetName())
+}
+
+func StoreNode(node *topology.Node) error {
+	client, err := createEtcdClient()
+	if err != nil {
+		return fmt.Errorf("failed to create etcd client: %w", err)
+	}
+	defer client.Close()
+
+	return storeNodeWithClient(client, node, false)
+}
+
+func EditNode(node *topology.Node) error {
+	client, err := createEtcdClient()
+	if err != nil {
+		return fmt.Errorf("failed to create etcd client: %w", err)
+	}
+	defer client.Close()
+
+	return storeNodeWithClient(client, node, true)
+}
+
+func StoreLink(link *topology.Link) error {
+	client, err := createEtcdClient()
+	if err != nil {
+		return fmt.Errorf("failed to create etcd client: %w", err)
+	}
+	defer client.Close()
+
+	return storeLinkWithClient(client, link, false)
+}
+
+func EditLink(link *topology.Link) error {
+	client, err := createEtcdClient()
+	if err != nil {
+		return fmt.Errorf("failed to create etcd client: %w", err)
+	}
+	defer client.Close()
+
+	return storeLinkWithClient(client, link, true)
+}
+
+func storeLinkWithClient(client *clientv3.Client, link *topology.Link, requireExisting bool) error {
+	if link == nil {
+		return fmt.Errorf("link cannot be nil")
+	}
+	if strings.TrimSpace(link.GetId()) == "" {
+		return fmt.Errorf("link ID cannot be empty")
+	}
+
+	key := "links/" + link.GetId()
+
+	if requireExisting {
+		resp, err := client.Get(context.Background(), key)
+		if err != nil {
+			return fmt.Errorf("failed to get link %s from store: %w", link.GetId(), err)
+		}
+		if len(resp.Kvs) == 0 {
+			return fmt.Errorf("link %s not found", link.GetId())
+		}
+	}
+
+	obj, err := proto.Marshal(link)
+	if err != nil {
+		return fmt.Errorf("failed to marshal link object: %w", err)
+	}
+
+	return sendToStoreRepeated(client, obj, key)
+}
+
+func getLink(client *clientv3.Client, name string) (*topology.Link, string, error) {
+	key := strings.ReplaceAll("links."+name, ".", "/")
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	resp, err := client.Get(ctx, key)
+	cancel()
+	if err != nil {
+		return nil, "", fmt.Errorf("failed to get link %s from store: %w", name, err)
+	}
+	if len(resp.Kvs) == 0 {
+		return nil, "", fmt.Errorf("link %s not found", name)
+	}
+
+	link := &topology.Link{}
+	if err := proto.Unmarshal(resp.Kvs[0].Value, link); err != nil {
+		return nil, "", fmt.Errorf("failed to unmarshal link %s: %w", name, err)
+	}
+
+	return link, "links", nil
+}
+
+func storeNodes(nodes []*topology.Node) error {
+	// Connect to ETCD
+	client, err := createEtcdClient()
+	if err != nil {
+		//log.Fatal(err)
+	}
+	defer client.Close()
+
+	for _, node := range nodes {
+		if err := storeNodeWithClient(client, node, false); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func storeLinks(links []*topology.Link) error {
+	// Connect to ETCD
+	client, err := createEtcdClient()
+	if err != nil {
+		//log.Fatal(err)
+	}
+	defer client.Close()
+
+	for _, link := range links {
+		// Serialize link object
+		obj, err := proto.Marshal(link)
+		if err != nil {
+			//log.Errorf("Failed to marshal node object: %v", err)
+			return err
+		}
+
+		// Create a URN where the serialized link object will be stored
+		urn := "links." + link.Id
+
+		// Send serialized link object to it's specific path in the store
+		err = sendToStoreRepeated(client, obj, urn)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}

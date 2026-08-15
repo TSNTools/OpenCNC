@@ -1,8 +1,8 @@
 {
   "counters":[
   {
-    "id": "if_state_in_broadcast_pkts",
-    "name": "Interface inbound broadcast packets",
+    "name": "if_state_in_broadcast_pkts",
+    "old": "Interface inbound broadcast packets",
     "path": "/interfaces/interface/statistics/in-broadcast-pkts",
     "description": "Per-interface ingress broadcast packet counter from ietf-interfaces.",
     "defined at": {
@@ -14,8 +14,8 @@
     }
   },
   {
-    "id": "if_state_in_discards",
-    "name": "Interface inbound discards",
+    "name": "if_state_in_discards",
+    "old": "Interface inbound discards",
     "path": "/interfaces/interface/statistics/in-discards",
     "description": "Per-interface ingress discard counter from ietf-interfaces.",
     "defined at": {
@@ -27,8 +27,8 @@
     }
   },
   {
-    "id": "if_state_in_errors",
-    "name": "Interface inbound errors",
+    "name": "if_state_in_errors",
+    "old": "Interface inbound errors",
     "path": "/interfaces/interface/statistics/in-errors",
     "description": "Per-interface ingress error counter from ietf-interfaces.",
     "defined at": {
@@ -40,8 +40,8 @@
     }
   },
   {
-    "id": "if_state_in_multicast_pkts",
-    "name": "Interface inbound multicast packets",
+    "name": "if_state_in_multicast_pkts",
+    "old": "Interface inbound multicast packets",
     "path": "/interfaces/interface/statistics/in-multicast-pkts",
     "description": "Per-interface ingress multicast packet counter from ietf-interfaces.",
     "defined at": {
@@ -53,8 +53,8 @@
     }
   },
   {
-    "id": "if_state_in_octets",
-    "name": "Interface inbound octets",
+    "name": "if_state_in_octets",
+    "old": "Interface inbound octets",
     "path": "/interfaces/interface/statistics/in-octets",
     "description": "Per-interface ingress octet counter from ietf-interfaces.",
     "defined at": {
@@ -66,8 +66,8 @@
     }
   },
   {
-    "id": "if_state_in_unicast_pkts",
-    "name": "Interface inbound unicast packets",
+    "name": "if_state_in_unicast_pkts",
+    "old": "Interface inbound unicast packets",
     "path": "/interfaces/interface/statistics/in-unicast-pkts",
     "description": "Per-interface ingress unicast packet counter from ietf-interfaces.",
     "defined at": {
@@ -79,8 +79,8 @@
     }
   },
   {
-    "id": "if_state_in_unknown_protos",
-    "name": "Interface inbound unknown protocols",
+    "name": "if_state_in_unknown_protos",
+    "old": "Interface inbound unknown protocols",
     "path": "/interfaces/interface/statistics/in-unknown-protos",
     "description": "Per-interface ingress unknown-protocol counter from ietf-interfaces.",
     "defined at": {
@@ -92,8 +92,8 @@
     }
   },
   {
-    "id": "if_state_out_broadcast_pkts",
-    "name": "Interface outbound broadcast packets",
+    "name": "if_state_out_broadcast_pkts",
+    "old": "Interface outbound broadcast packets",
     "path": "/interfaces/interface/statistics/out-broadcast-pkts",
     "description": "Per-interface egress broadcast packet counter from ietf-interfaces.",
     "defined at": {
@@ -105,8 +105,8 @@
     }
   },
   {
-    "id": "if_state_out_discards",
-    "name": "Interface outbound discards",
+    "name": "if_state_out_discards",
+    "old": "Interface outbound discards",
     "path": "/interfaces/interface/statistics/out-discards",
     "description": "Per-interface egress discard counter from ietf-interfaces.",
     "defined at": {
@@ -118,8 +118,8 @@
     }
   },
   {
-    "id": "if_state_out_errors",
-    "name": "Interface outbound errors",
+    "name": "if_state_out_errors",
+    "old": "Interface outbound errors",
     "path": "/interfaces/interface/statistics/out-errors",
     "description": "Per-interface egress error counter from ietf-interfaces.",
     "defined at": {
@@ -131,8 +131,8 @@
     }
   },
   {
-    "id": "if_state_out_multicast_pkts",
-    "name": "Interface outbound multicast packets",
+    "name": "if_state_out_multicast_pkts",
+    "old": "Interface outbound multicast packets",
     "path": "/interfaces/interface/statistics/out-multicast-pkts",
     "description": "Per-interface egress multicast packet counter from ietf-interfaces.",
     "defined at": {
@@ -144,8 +144,8 @@
     }
   },
   {
-    "id": "if_state_out_octets",
-    "name": "Interface outbound octets",
+    "name": "if_state_out_octets",
+    "old": "Interface outbound octets",
     "path": "/interfaces/interface/statistics/out-octets",
     "description": "Per-interface egress octet counter from ietf-interfaces.",
     "defined at": {
@@ -157,8 +157,8 @@
     }
   },
   {
-    "id": "if_state_out_unicast_pkts",
-    "name": "Interface outbound unicast packets",
+    "name": "if_state_out_unicast_pkts",
+    "old": "Interface outbound unicast packets",
     "path": "/interfaces/interface/statistics/out-unicast-pkts",
     "description": "Per-interface egress unicast packet counter from ietf-interfaces.",
     "defined at": {
@@ -170,8 +170,8 @@
     }
   },
   {
-    "id": "bridge_delay_exceeded_discards",
-    "name": "Bridge delay exceeded discards",
+    "name": "bridge_delay_exceeded_discards",
+    "old": "Bridge delay exceeded discards",
     "path": "/interfaces/interface/bridge-port/statistics/delay-exceeded-discards",
     "description": "Discarded frames because bridge delay exceeded the configured limit.",
     "defined at": {
@@ -182,8 +182,8 @@
     }
   },
   {
-    "id": "bridge_discard_inbound",
-    "name": "Bridge inbound discards",
+    "name": "bridge_discard_inbound",
+    "old": "Bridge inbound discards",
     "path": "/interfaces/interface/bridge-port/statistics/discard-inbound",
     "description": "Frames discarded on ingress at the bridge port.",
     "defined at": {
@@ -194,8 +194,8 @@
     }
   },
   {
-    "id": "bridge_discard_lack_of_buffers",
-    "name": "Bridge discard lack of buffers",
+    "name": "bridge_discard_lack_of_buffers",
+    "old": "Bridge discard lack of buffers",
     "path": "/interfaces/interface/bridge-port/statistics/discard-lack-of-buffers",
     "description": "Frames discarded because buffers were unavailable.",
     "defined at": {
@@ -206,8 +206,8 @@
     }
   },
   {
-    "id": "bridge_discard_on_error",
-    "name": "Bridge discard on error",
+    "name": "bridge_discard_on_error",
+    "old": "Bridge discard on error",
     "path": "/interfaces/interface/bridge-port/statistics/discard-on-error",
     "description": "Frames discarded due to frame errors.",
     "defined at": {
@@ -218,8 +218,8 @@
     }
   },
   {
-    "id": "bridge_discard_on_ingress_filtering",
-    "name": "Bridge discard on ingress filtering",
+    "name": "bridge_discard_on_ingress_filtering",
+    "old": "Bridge discard on ingress filtering",
     "path": "/interfaces/interface/bridge-port/statistics/discard-on-ingress-filtering",
     "description": "Frames discarded by ingress filtering policy.",
     "defined at": {
@@ -230,8 +230,8 @@
     }
   },
   {
-    "id": "bridge_discard_transit_delay_exceeded",
-    "name": "Bridge transit delay exceeded discards",
+    "name": "bridge_discard_transit_delay_exceeded",
+    "old": "Bridge transit delay exceeded discards",
     "path": "/interfaces/interface/bridge-port/statistics/discard-transit-delay-exceeded",
     "description": "Frames discarded because transit delay exceeded the configured limit.",
     "defined at": {
@@ -242,8 +242,8 @@
     }
   },
   {
-    "id": "bridge_forward_outbound",
-    "name": "Bridge outbound forwards",
+    "name": "bridge_forward_outbound",
+    "old": "Bridge outbound forwards",
     "path": "/interfaces/interface/bridge-port/statistics/forward-outbound",
     "description": "Frames forwarded out of the bridge port.",
     "defined at": {
@@ -254,8 +254,8 @@
     }
   },
   {
-    "id": "bridge_frame_rx",
-    "name": "Bridge received frames",
+    "name": "bridge_frame_rx",
+    "old": "Bridge received frames",
     "path": "/interfaces/interface/bridge-port/statistics/frame-rx",
     "description": "Frames received by the bridge port.",
     "defined at": {
@@ -266,8 +266,8 @@
     }
   },
   {
-    "id": "bridge_frame_tx",
-    "name": "Bridge transmitted frames",
+    "name": "bridge_frame_tx",
+    "old": "Bridge transmitted frames",
     "path": "/interfaces/interface/bridge-port/statistics/frame-tx",
     "description": "Frames transmitted by the bridge port.",
     "defined at": {
@@ -278,8 +278,8 @@
     }
   },
   {
-    "id": "bridge_mtu_exceeded_discards",
-    "name": "Bridge MTU exceeded discards",
+    "name": "bridge_mtu_exceeded_discards",
+    "old": "Bridge MTU exceeded discards",
     "path": "/interfaces/interface/bridge-port/statistics/mtu-exceeded-discards",
     "description": "Frames discarded because they exceeded MTU.",
     "defined at": {
@@ -290,8 +290,8 @@
     }
   },
   {
-    "id": "bridge_octets_rx",
-    "name": "Bridge received octets",
+    "name": "bridge_octets_rx",
+    "old": "Bridge received octets",
     "path": "/interfaces/interface/bridge-port/statistics/octets-rx",
     "description": "Octets received by the bridge port.",
     "defined at": {
@@ -302,8 +302,8 @@
     }
   },
   {
-    "id": "bridge_octets_tx",
-    "name": "Bridge transmitted octets",
+    "name": "bridge_octets_tx",
+    "old": "Bridge transmitted octets",
     "path": "/interfaces/interface/bridge-port/statistics/octets-tx",
     "description": "Octets transmitted by the bridge port.",
     "defined at": {
@@ -314,8 +314,8 @@
     }
   },
   {
-    "id": "eth_frame_in_broadcast_frames",
-    "name": "Ethernet inbound broadcast frames",
+    "name": "eth_frame_in_broadcast_frames",
+    "old": "Ethernet inbound broadcast frames",
     "path": "/interfaces/interface/ethernet/statistics/frame/in-broadcast-frames",
     "description": "Broadcast frame counter from ieee802-ethernet-interface.",
     "defined at": {
@@ -326,8 +326,8 @@
     }
   },
   {
-    "id": "eth_frame_in_error_fcs_frames",
-    "name": "Ethernet inbound FCS error frames",
+    "name": "eth_frame_in_error_fcs_frames",
+    "old": "Ethernet inbound FCS error frames",
     "path": "/interfaces/interface/ethernet/statistics/frame/in-error-fcs-frames",
     "description": "Ingress frames with bad FCS.",
     "defined at": {
@@ -338,8 +338,8 @@
     }
   },
   {
-    "id": "eth_frame_in_error_mac_internal_frames",
-    "name": "Ethernet inbound MAC internal error frames",
+    "name": "eth_frame_in_error_mac_internal_frames",
+    "old": "Ethernet inbound MAC internal error frames",
     "path": "/interfaces/interface/ethernet/statistics/frame/in-error-mac-internal-frames",
     "description": "Ingress frames with MAC internal errors.",
     "defined at": {
@@ -350,8 +350,8 @@
     }
   },
   {
-    "id": "eth_frame_in_error_oversize_frames",
-    "name": "Ethernet inbound oversize error frames",
+    "name": "eth_frame_in_error_oversize_frames",
+    "old": "Ethernet inbound oversize error frames",
     "path": "/interfaces/interface/ethernet/statistics/frame/in-error-oversize-frames",
     "description": "Ingress frames that were oversized.",
     "defined at": {
@@ -362,8 +362,8 @@
     }
   },
   {
-    "id": "eth_frame_in_error_undersize_frames",
-    "name": "Ethernet inbound undersize error frames",
+    "name": "eth_frame_in_error_undersize_frames",
+    "old": "Ethernet inbound undersize error frames",
     "path": "/interfaces/interface/ethernet/statistics/frame/in-error-undersize-frames",
     "description": "Ingress frames that were undersized.",
     "defined at": {
@@ -374,8 +374,8 @@
     }
   },
   {
-    "id": "eth_frame_in_frames",
-    "name": "Ethernet inbound frames",
+    "name": "eth_frame_in_frames",
+    "old": "Ethernet inbound frames",
     "path": "/interfaces/interface/ethernet/statistics/frame/in-frames",
     "description": "Total inbound Ethernet frames.",
     "defined at": {
@@ -386,8 +386,8 @@
     }
   },
   {
-    "id": "eth_frame_in_multicast_frames",
-    "name": "Ethernet inbound multicast frames",
+    "name": "eth_frame_in_multicast_frames",
+    "old": "Ethernet inbound multicast frames",
     "path": "/interfaces/interface/ethernet/statistics/frame/in-multicast-frames",
     "description": "Ingress multicast frame counter.",
     "defined at": {
@@ -398,8 +398,8 @@
     }
   },
   {
-    "id": "eth_frame_in_total_frames",
-    "name": "Ethernet inbound total frames",
+    "name": "eth_frame_in_total_frames",
+    "old": "Ethernet inbound total frames",
     "path": "/interfaces/interface/ethernet/statistics/frame/in-total-frames",
     "description": "Total ingress Ethernet frames.",
     "defined at": {
@@ -410,8 +410,8 @@
     }
   },
   {
-    "id": "eth_frame_in_total_octets",
-    "name": "Ethernet inbound total octets",
+    "name": "eth_frame_in_total_octets",
+    "old": "Ethernet inbound total octets",
     "path": "/interfaces/interface/ethernet/statistics/frame/in-total-octets",
     "description": "Total ingress Ethernet octets.",
     "defined at": {
@@ -422,8 +422,8 @@
     }
   },
   {
-    "id": "eth_frame_out_broadcast_frames",
-    "name": "Ethernet outbound broadcast frames",
+    "name": "eth_frame_out_broadcast_frames",
+    "old": "Ethernet outbound broadcast frames",
     "path": "/interfaces/interface/ethernet/statistics/frame/out-broadcast-frames",
     "description": "Outbound broadcast frame counter.",
     "defined at": {
@@ -434,8 +434,8 @@
     }
   },
   {
-    "id": "eth_frame_out_error_mac_internal_frames",
-    "name": "Ethernet outbound MAC internal error frames",
+    "name": "eth_frame_out_error_mac_internal_frames",
+    "old": "Ethernet outbound MAC internal error frames",
     "path": "/interfaces/interface/ethernet/statistics/frame/out-error-mac-internal-frames",
     "description": "Egress frames with MAC internal errors.",
     "defined at": {
@@ -446,8 +446,8 @@
     }
   },
   {
-    "id": "eth_frame_out_frames",
-    "name": "Ethernet outbound frames",
+    "name": "eth_frame_out_frames",
+    "old": "Ethernet outbound frames",
     "path": "/interfaces/interface/ethernet/statistics/frame/out-frames",
     "description": "Total outbound Ethernet frames.",
     "defined at": {
@@ -458,8 +458,8 @@
     }
   },
   {
-    "id": "eth_frame_out_multicast_frames",
-    "name": "Ethernet outbound multicast frames",
+    "name": "eth_frame_out_multicast_frames",
+    "old": "Ethernet outbound multicast frames",
     "path": "/interfaces/interface/ethernet/statistics/frame/out-multicast-frames",
     "description": "Egress multicast frame counter.",
     "defined at": {
@@ -470,8 +470,8 @@
     }
   },
   {
-    "id": "eth_mac_control_in_frames_extension",
-    "name": "Ethernet MAC control inbound extension frames",
+    "name": "eth_mac_control_in_frames_extension",
+    "old": "Ethernet MAC control inbound extension frames",
     "path": "/interfaces/interface/ethernet/statistics/mac-control/in-frames-mac-control-extension",
     "description": "Received MAC control extension frames.",
     "defined at": {
@@ -482,8 +482,8 @@
     }
   },
   {
-    "id": "eth_mac_control_in_frames_unknown",
-    "name": "Ethernet MAC control inbound unknown frames",
+    "name": "eth_mac_control_in_frames_unknown",
+    "old": "Ethernet MAC control inbound unknown frames",
     "path": "/interfaces/interface/ethernet/statistics/mac-control/in-frames-mac-control-unknown",
     "description": "Received MAC control frames of unknown type.",
     "defined at": {
@@ -494,8 +494,8 @@
     }
   },
   {
-    "id": "eth_mac_control_out_frames_extension",
-    "name": "Ethernet MAC control outbound extension frames",
+    "name": "eth_mac_control_out_frames_extension",
+    "old": "Ethernet MAC control outbound extension frames",
     "path": "/interfaces/interface/ethernet/statistics/mac-control/out-frames-mac-control-extension",
     "description": "Transmitted MAC control extension frames.",
     "defined at": {
@@ -506,8 +506,8 @@
     }
   },
   {
-    "id": "eth_pause_in_frames_pause",
-    "name": "Ethernet pause inbound frames",
+    "name": "eth_pause_in_frames_pause",
+    "old": "Ethernet pause inbound frames",
     "path": "/interfaces/interface/ethernet/flow-control/pause/statistics/in-frames-pause",
     "description": "Received pause frames.",
     "defined at": {
@@ -518,8 +518,8 @@
     }
   },
   {
-    "id": "eth_pause_out_frames_pause",
-    "name": "Ethernet pause outbound frames",
+    "name": "eth_pause_out_frames_pause",
+    "old": "Ethernet pause outbound frames",
     "path": "/interfaces/interface/ethernet/flow-control/pause/statistics/out-frames-pause",
     "description": "Transmitted pause frames.",
     "defined at": {
@@ -530,8 +530,8 @@
     }
   },
   {
-    "id": "eth_pfc_in_frames_pfc",
-    "name": "Ethernet PFC inbound frames",
+    "name": "eth_pfc_in_frames_pfc",
+    "old": "Ethernet PFC inbound frames",
     "path": "/interfaces/interface/ethernet/flow-control/pfc/statistics/in-frames-pfc",
     "description": "Received priority flow control frames.",
     "defined at": {
@@ -542,8 +542,8 @@
     }
   },
   {
-    "id": "eth_pfc_out_frames_pfc",
-    "name": "Ethernet PFC outbound frames",
+    "name": "eth_pfc_out_frames_pfc",
+    "old": "Ethernet PFC outbound frames",
     "path": "/interfaces/interface/ethernet/flow-control/pfc/statistics/out-frames-pfc",
     "description": "Transmitted priority flow control frames.",
     "defined at": {
@@ -554,8 +554,8 @@
     }
   },
   {
-    "id": "eth_phy_in_error_symbol",
-    "name": "Ethernet PHY symbol errors",
+    "name": "eth_phy_in_error_symbol",
+    "old": "Ethernet PHY symbol errors",
     "path": "/interfaces/interface/ethernet/statistics/phy/in-error-symbol",
     "description": "PHY symbol error counter.",
     "defined at": {
@@ -566,8 +566,8 @@
     }
   },
   {
-    "id": "eth_phy_lpi_in_transitions",
-    "name": "Ethernet PHY LPI inbound transitions",
+    "name": "eth_phy_lpi_in_transitions",
+    "old": "Ethernet PHY LPI inbound transitions",
     "path": "/interfaces/interface/ethernet/statistics/phy/lpi/in-lpi-transitions",
     "description": "Low-power idle transitions on ingress.",
     "defined at": {
@@ -578,8 +578,8 @@
     }
   },
   {
-    "id": "eth_phy_lpi_out_transitions",
-    "name": "Ethernet PHY LPI outbound transitions",
+    "name": "eth_phy_lpi_out_transitions",
+    "old": "Ethernet PHY LPI outbound transitions",
     "path": "/interfaces/interface/ethernet/statistics/phy/lpi/out-lpi-transitions",
     "description": "Low-power idle transitions on egress.",
     "defined at": {
@@ -590,8 +590,8 @@
     }
   },
   {
-    "id": "netconf_dropped_sessions",
-    "name": "NETCONF dropped sessions",
+    "name": "netconf_dropped_sessions",
+    "old": "NETCONF dropped sessions",
     "path": "/netconf-state/statistics/dropped-sessions",
     "description": "Dropped NETCONF sessions.",
     "defined at": {
@@ -602,8 +602,8 @@
     }
   },
   {
-    "id": "netconf_in_bad_hellos",
-    "name": "NETCONF bad hellos",
+    "name": "netconf_in_bad_hellos",
+    "old": "NETCONF bad hellos",
     "path": "/netconf-state/statistics/in-bad-hellos",
     "description": "Bad NETCONF hello messages received.",
     "defined at": {
@@ -614,8 +614,8 @@
     }
   },
   {
-    "id": "netconf_in_bad_rpcs",
-    "name": "NETCONF bad RPCs",
+    "name": "netconf_in_bad_rpcs",
+    "old": "NETCONF bad RPCs",
     "path": "/netconf-state/statistics/in-bad-rpcs",
     "description": "Bad NETCONF RPCs received.",
     "defined at": {
@@ -626,8 +626,8 @@
     }
   },
   {
-    "id": "netconf_in_rpcs",
-    "name": "NETCONF RPCs received",
+    "name": "netconf_in_rpcs",
+    "old": "NETCONF RPCs received",
     "path": "/netconf-state/statistics/in-rpcs",
     "description": "NETCONF RPCs received successfully.",
     "defined at": {
@@ -638,8 +638,8 @@
     }
   },
   {
-    "id": "netconf_in_sessions",
-    "name": "NETCONF sessions",
+    "name": "netconf_in_sessions",
+    "old": "NETCONF sessions",
     "path": "/netconf-state/statistics/in-sessions",
     "description": "NETCONF sessions established.",
     "defined at": {
@@ -650,8 +650,8 @@
     }
   },
   {
-    "id": "netconf_out_notifications",
-    "name": "NETCONF notifications sent",
+    "name": "netconf_out_notifications",
+    "old": "NETCONF notifications sent",
     "path": "/netconf-state/statistics/out-notifications",
     "description": "NETCONF notifications transmitted.",
     "defined at": {
@@ -662,8 +662,8 @@
     }
   },
   {
-    "id": "netconf_out_rpc_errors",
-    "name": "NETCONF RPC errors sent",
+    "name": "netconf_out_rpc_errors",
+    "old": "NETCONF RPC errors sent",
     "path": "/netconf-state/statistics/out-rpc-errors",
     "description": "NETCONF RPC errors transmitted.",
     "defined at": {
@@ -674,8 +674,8 @@
     }
   },
   {
-    "id": "ptp_pdelay_allowed_lost_exceeded_count",
-    "name": "PTP peer delay allowed lost exceeded",
+    "name": "ptp_pdelay_allowed_lost_exceeded_count",
+    "old": "PTP peer delay allowed lost exceeded",
     "path": "/ptp/common-services/cmlds/ports/port[port-index=*]/port-statistics-ds/pdelay-allowed-lost-exceeded-count",
     "description": "PTP peer-delay messages that exceeded the allowed lost threshold.",
     "defined at": {
@@ -686,8 +686,8 @@
     }
   },
   {
-    "id": "ptp_rx_packet_discard_count",
-    "name": "PTP received packet discards",
+    "name": "ptp_rx_packet_discard_count",
+    "old": "PTP received packet discards",
     "path": "/ptp/common-services/cmlds/ports/port[port-index=*]/port-statistics-ds/rx-packet-discard-count",
     "description": "PTP packets discarded on receive.",
     "defined at": {
@@ -698,8 +698,8 @@
     }
   },
   {
-    "id": "ptp_rx_pdelay_req_count",
-    "name": "PTP received peer delay requests",
+    "name": "ptp_rx_pdelay_req_count",
+    "old": "PTP received peer delay requests",
     "path": "/ptp/common-services/cmlds/ports/port[port-index=*]/port-statistics-ds/rx-pdelay-req-count",
     "description": "Received PDelay_Req messages.",
     "defined at": {
@@ -710,8 +710,8 @@
     }
   },
   {
-    "id": "ptp_rx_pdelay_resp_count",
-    "name": "PTP received peer delay responses",
+    "name": "ptp_rx_pdelay_resp_count",
+    "old": "PTP received peer delay responses",
     "path": "/ptp/common-services/cmlds/ports/port[port-index=*]/port-statistics-ds/rx-pdelay-resp-count",
     "description": "Received PDelay_Resp messages.",
     "defined at": {
@@ -722,8 +722,8 @@
     }
   },
   {
-    "id": "ptp_rx_pdelay_resp_follow_up_count",
-    "name": "PTP received peer delay response follow-ups",
+    "name": "ptp_rx_pdelay_resp_follow_up_count",
+    "old": "PTP received peer delay response follow-ups",
     "path": "/ptp/common-services/cmlds/ports/port[port-index=*]/port-statistics-ds/rx-pdelay-resp-follow-up-count",
     "description": "Received PDelay_Resp_Follow_Up messages.",
     "defined at": {
@@ -734,8 +734,8 @@
     }
   },
   {
-    "id": "ptp_tx_pdelay_req_count",
-    "name": "PTP transmitted peer delay requests",
+    "name": "ptp_tx_pdelay_req_count",
+    "old": "PTP transmitted peer delay requests",
     "path": "/ptp/common-services/cmlds/ports/port[port-index=*]/port-statistics-ds/tx-pdelay-req-count",
     "description": "Transmitted PDelay_Req messages.",
     "defined at": {
@@ -746,8 +746,8 @@
     }
   },
   {
-    "id": "ptp_tx_pdelay_resp_count",
-    "name": "PTP transmitted peer delay responses",
+    "name": "ptp_tx_pdelay_resp_count",
+    "old": "PTP transmitted peer delay responses",
     "path": "/ptp/common-services/cmlds/ports/port[port-index=*]/port-statistics-ds/tx-pdelay-resp-count",
     "description": "Transmitted PDelay_Resp messages.",
     "defined at": {
@@ -758,8 +758,8 @@
     }
   },
   {
-    "id": "ptp_tx_pdelay_resp_follow_up_count",
-    "name": "PTP transmitted peer delay response follow-ups",
+    "name": "ptp_tx_pdelay_resp_follow_up_count",
+    "old": "PTP transmitted peer delay response follow-ups",
     "path": "/ptp/common-services/cmlds/ports/port[port-index=*]/port-statistics-ds/tx-pdelay-resp-follow-up-count",
     "description": "Transmitted PDelay_Resp_Follow_Up messages.",
     "defined at": {
@@ -770,8 +770,8 @@
     }
   },
   {
-    "id": "ptp_announce_foreign_rx",
-    "name": "PTP announce foreign received",
+    "name": "ptp_announce_foreign_rx",
+    "old": "PTP announce foreign received",
     "path": "/ptp/common-services/cmlds/ports/port[port-index=*]/performance-monitoring-port-ds/record-list[index=*]/announce-foreign-rx",
     "description": "Foreign Announce messages received on a monitored PTP port.",
     "defined at": {
@@ -782,8 +782,8 @@
     }
   },
   {
-    "id": "ptp_announce_rx",
-    "name": "PTP announce received",
+    "name": "ptp_announce_rx",
+    "old": "PTP announce received",
     "path": "/ptp/common-services/cmlds/ports/port[port-index=*]/performance-monitoring-port-ds/record-list[index=*]/announce-rx",
     "description": "Announce messages received on a monitored PTP port.",
     "defined at": {
@@ -794,8 +794,8 @@
     }
   },
   {
-    "id": "ptp_announce_tx",
-    "name": "PTP announce transmitted",
+    "name": "ptp_announce_tx",
+    "old": "PTP announce transmitted",
     "path": "/ptp/common-services/cmlds/ports/port[port-index=*]/performance-monitoring-port-ds/record-list[index=*]/announce-tx",
     "description": "Announce messages transmitted on a monitored PTP port.",
     "defined at": {
@@ -806,8 +806,8 @@
     }
   },
   {
-    "id": "ptp_delay_req_rx",
-    "name": "PTP delay request received",
+    "name": "ptp_delay_req_rx",
+    "old": "PTP delay request received",
     "path": "/ptp/common-services/cmlds/ports/port[port-index=*]/performance-monitoring-port-ds/record-list[index=*]/delay-req-rx",
     "description": "Delay_Req messages received on a monitored PTP port.",
     "defined at": {
@@ -818,8 +818,8 @@
     }
   },
   {
-    "id": "ptp_delay_req_tx",
-    "name": "PTP delay request transmitted",
+    "name": "ptp_delay_req_tx",
+    "old": "PTP delay request transmitted",
     "path": "/ptp/common-services/cmlds/ports/port[port-index=*]/performance-monitoring-port-ds/record-list[index=*]/delay-req-tx",
     "description": "Delay_Req messages transmitted on a monitored PTP port.",
     "defined at": {
@@ -830,8 +830,8 @@
     }
   },
   {
-    "id": "ptp_delay_resp_rx",
-    "name": "PTP delay response received",
+    "name": "ptp_delay_resp_rx",
+    "old": "PTP delay response received",
     "path": "/ptp/common-services/cmlds/ports/port[port-index=*]/performance-monitoring-port-ds/record-list[index=*]/delay-resp-rx",
     "description": "Delay_Resp messages received on a monitored PTP port.",
     "defined at": {
@@ -842,8 +842,8 @@
     }
   },
   {
-    "id": "ptp_delay_resp_tx",
-    "name": "PTP delay response transmitted",
+    "name": "ptp_delay_resp_tx",
+    "old": "PTP delay response transmitted",
     "path": "/ptp/common-services/cmlds/ports/port[port-index=*]/performance-monitoring-port-ds/record-list[index=*]/delay-resp-tx",
     "description": "Delay_Resp messages transmitted on a monitored PTP port.",
     "defined at": {
@@ -854,8 +854,8 @@
     }
   },
   {
-    "id": "ptp_follow_up_rx",
-    "name": "PTP follow-up received",
+    "name": "ptp_follow_up_rx",
+    "old": "PTP follow-up received",
     "path": "/ptp/common-services/cmlds/ports/port[port-index=*]/performance-monitoring-port-ds/record-list[index=*]/follow-up-rx",
     "description": "Follow_Up messages received on a monitored PTP port.",
     "defined at": {
@@ -866,8 +866,8 @@
     }
   },
   {
-    "id": "ptp_follow_up_tx",
-    "name": "PTP follow-up transmitted",
+    "name": "ptp_follow_up_tx",
+    "old": "PTP follow-up transmitted",
     "path": "/ptp/common-services/cmlds/ports/port[port-index=*]/performance-monitoring-port-ds/record-list[index=*]/follow-up-tx",
     "description": "Follow_Up messages transmitted on a monitored PTP port.",
     "defined at": {
@@ -878,8 +878,8 @@
     }
   },
   {
-    "id": "ptp_pdelay_req_rx",
-    "name": "PTP peer delay request received",
+    "name": "ptp_pdelay_req_rx",
+    "old": "PTP peer delay request received",
     "path": "/ptp/common-services/cmlds/ports/port[port-index=*]/performance-monitoring-port-ds/record-list[index=*]/pdelay-req-rx",
     "description": "PDelay_Req messages received on a monitored PTP port.",
     "defined at": {
@@ -890,8 +890,8 @@
     }
   },
   {
-    "id": "ptp_pdelay_req_tx",
-    "name": "PTP peer delay request transmitted",
+    "name": "ptp_pdelay_req_tx",
+    "old": "PTP peer delay request transmitted",
     "path": "/ptp/common-services/cmlds/ports/port[port-index=*]/performance-monitoring-port-ds/record-list[index=*]/pdelay-req-tx",
     "description": "PDelay_Req messages transmitted on a monitored PTP port.",
     "defined at": {
@@ -902,8 +902,8 @@
     }
   },
   {
-    "id": "ptp_pdelay_resp_follow_up_rx",
-    "name": "PTP peer delay response follow-up received",
+    "name": "ptp_pdelay_resp_follow_up_rx",
+    "old": "PTP peer delay response follow-up received",
     "path": "/ptp/common-services/cmlds/ports/port[port-index=*]/performance-monitoring-port-ds/record-list[index=*]/pdelay-resp-follow-up-rx",
     "description": "PDelay_Resp_Follow_Up messages received on a monitored PTP port.",
     "defined at": {
@@ -914,8 +914,8 @@
     }
   },
   {
-    "id": "ptp_pdelay_resp_follow_up_tx",
-    "name": "PTP peer delay response follow-up transmitted",
+    "name": "ptp_pdelay_resp_follow_up_tx",
+    "old": "PTP peer delay response follow-up transmitted",
     "path": "/ptp/common-services/cmlds/ports/port[port-index=*]/performance-monitoring-port-ds/record-list[index=*]/pdelay-resp-follow-up-tx",
     "description": "PDelay_Resp_Follow_Up messages transmitted on a monitored PTP port.",
     "defined at": {
@@ -926,8 +926,8 @@
     }
   },
   {
-    "id": "ptp_pdelay_resp_rx",
-    "name": "PTP peer delay response received",
+    "name": "ptp_pdelay_resp_rx",
+    "old": "PTP peer delay response received",
     "path": "/ptp/common-services/cmlds/ports/port[port-index=*]/performance-monitoring-port-ds/record-list[index=*]/pdelay-resp-rx",
     "description": "PDelay_Resp messages received on a monitored PTP port.",
     "defined at": {
@@ -938,8 +938,8 @@
     }
   },
   {
-    "id": "ptp_pdelay_resp_tx",
-    "name": "PTP peer delay response transmitted",
+    "name": "ptp_pdelay_resp_tx",
+    "old": "PTP peer delay response transmitted",
     "path": "/ptp/common-services/cmlds/ports/port[port-index=*]/performance-monitoring-port-ds/record-list[index=*]/pdelay-resp-tx",
     "description": "PDelay_Resp messages transmitted on a monitored PTP port.",
     "defined at": {
@@ -950,8 +950,8 @@
     }
   },
   {
-    "id": "ptp_sync_rx",
-    "name": "PTP sync received",
+    "name": "ptp_sync_rx",
+    "old": "PTP sync received",
     "path": "/ptp/common-services/cmlds/ports/port[port-index=*]/performance-monitoring-port-ds/record-list[index=*]/sync-rx",
     "description": "Sync messages received on a monitored PTP port.",
     "defined at": {
@@ -962,8 +962,8 @@
     }
   },
   {
-    "id": "ptp_sync_tx",
-    "name": "PTP sync transmitted",
+    "name": "ptp_sync_tx",
+    "old": "PTP sync transmitted",
     "path": "/ptp/common-services/cmlds/ports/port[port-index=*]/performance-monitoring-port-ds/record-list[index=*]/sync-tx",
     "description": "Sync messages transmitted on a monitored PTP port.",
     "defined at": {

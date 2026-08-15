@@ -8,8 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"OpenCNC_config_service/common/structures/topology"
-	counters "OpenCNC_config_service/monitor_service/opencnc_counters_catalog"
+	counters "OpenCNC_config_service/monitor_service/pkg/catalog"
 	"OpenCNC_config_service/monitor_service/pkg/managementSessions"
 	"OpenCNC_config_service/monitor_service/structures/monitoring"
 
@@ -18,16 +17,12 @@ import (
 )
 
 type NetconfCollector struct {
-	target  *topology.Node
+	target  *monitoring.ResourceKey
 	session *netconf.Session
 	catalog *counters.Catalog
 }
 
-func NewNetconfCollector(
-	target *topology.Node,
-	session *netconf.Session,
-	catalog *counters.Catalog,
-) *NetconfCollector {
+func NewNetconfCollector(target *monitoring.ResourceKey, session *netconf.Session, catalog *counters.Catalog) *NetconfCollector {
 	return &NetconfCollector{
 		target:  target,
 		session: session,
@@ -89,7 +84,7 @@ func (c *NetconfCollector) Collect(requestedCounters []*monitoring.Counter) ([]*
 			samples,
 			&monitoring.DataSample{
 				Id:        id,
-				Source:    &monitoring.ResourceKey{NodeId: c.target.Name},
+				Source:    &monitoring.ResourceKey{NodeId: c.target.NodeId, PortId: c.target.PortId},
 				Timestamp: timestamp,
 				Value:     value,
 				Kind:      monitoring.DataType_RAW,
@@ -141,7 +136,7 @@ func buildFilter(requested []*monitoring.Counter) (string, error) {
 
 	buf.WriteString(fmt.Sprintf(`<interfaces xmlns="%s">`, nsIf))
 	buf.WriteString(`<interface>`)
-	//buf.WriteString(fmt.Sprintf(`<name>%s</name>`, c.target.InterfaceName))
+	//buf.WriteString(fmt.Sprintf(`<name>%s</name>`, c.target.NodeId))
 
 	if len(interfaceStatistics) > 0 {
 
@@ -251,7 +246,7 @@ func parseCounters(reply string, requested []*monitoring.Counter) (map[string]fl
 
 		leaf := parts[len(parts)-1]
 
-		leafToID[leaf] = counter.Id
+		leafToID[leaf] = counter.Name
 	}
 
 	values := make(map[string]float64)

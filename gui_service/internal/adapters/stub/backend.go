@@ -12,7 +12,10 @@ import (
 
 	storewrapper "OpenCNC_config_service/common/store-wrapper"
 	devicemodelregistry "OpenCNC_config_service/common/structures/devicemodelregistry"
+	"OpenCNC_config_service/common/structures/topology"
 	"OpenCNC_config_service/gui_service/internal/domain"
+
+	"google.golang.org/protobuf/encoding/protojson"
 )
 
 type uploadWrapper struct {
@@ -430,7 +433,54 @@ func (b *Backend) DeleteModel(_ context.Context, modelID string) (domain.Operati
 }
 
 func (b *Backend) AddNode(_ context.Context, query string) (domain.OperationResult, error) {
-	return b.result("addNode", map[string]string{"query": query, "nodeId": "node-stub-001"}), nil
+	if strings.TrimSpace(query) == "" {
+		return domain.OperationResult{
+			Success: false,
+			Name:    "addNode",
+			Message: "no JSON payload found; choose a node file first",
+			Data:    map[string]string{},
+		}, nil
+	}
+
+	var node topology.Node
+	if err := protojson.Unmarshal([]byte(query), &node); err != nil {
+		return domain.OperationResult{
+			Success: false,
+			Name:    "addNode",
+			Message: fmt.Sprintf("failed to parse node JSON: %v", err),
+			Data:    map[string]string{},
+		}, nil
+	}
+
+	if strings.TrimSpace(node.GetName()) == "" {
+		return domain.OperationResult{
+			Success: false,
+			Name:    "addNode",
+			Message: "node name cannot be empty",
+			Data:    map[string]string{},
+		}, nil
+	}
+
+	if err := storewrapper.StoreNode(&node); err != nil {
+		return domain.OperationResult{
+			Success: false,
+			Name:    "addNode",
+			Message: fmt.Sprintf("failed to store node %s: %v", node.GetName(), err),
+			Data:    map[string]string{"nodeId": node.GetName()},
+		}, nil
+	}
+
+	b.recordEvent("info", "addNode", "topology", fmt.Sprintf("Stored node %s", node.GetName()), node.GetName())
+
+	return domain.OperationResult{
+		Success: true,
+		Name:    "addNode",
+		Message: fmt.Sprintf("node %s stored", node.GetName()),
+		Data: map[string]string{
+			"nodeId":   node.GetName(),
+			"nodeType": node.GetType().String(),
+		},
+	}, nil
 }
 
 func (b *Backend) EditNode(_ context.Context, nodeID string) (domain.OperationResult, error) {

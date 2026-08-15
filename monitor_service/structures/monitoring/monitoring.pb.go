@@ -22,6 +22,52 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
+type DataType int32
+
+const (
+	DataType_RAW    DataType = 0
+	DataType_METRIC DataType = 1
+)
+
+// Enum value maps for DataType.
+var (
+	DataType_name = map[int32]string{
+		0: "RAW",
+		1: "METRIC",
+	}
+	DataType_value = map[string]int32{
+		"RAW":    0,
+		"METRIC": 1,
+	}
+)
+
+func (x DataType) Enum() *DataType {
+	p := new(DataType)
+	*p = x
+	return p
+}
+
+func (x DataType) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (DataType) Descriptor() protoreflect.EnumDescriptor {
+	return file_monitor_service_structures_monitoring_monitoring_proto_enumTypes[0].Descriptor()
+}
+
+func (DataType) Type() protoreflect.EnumType {
+	return &file_monitor_service_structures_monitoring_monitoring_proto_enumTypes[0]
+}
+
+func (x DataType) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use DataType.Descriptor instead.
+func (DataType) EnumDescriptor() ([]byte, []int) {
+	return file_monitor_service_structures_monitoring_monitoring_proto_rawDescGZIP(), []int{0}
+}
+
 type MetricType int32
 
 const (
@@ -99,11 +145,11 @@ func (x MetricType) String() string {
 }
 
 func (MetricType) Descriptor() protoreflect.EnumDescriptor {
-	return file_monitor_service_structures_monitoring_monitoring_proto_enumTypes[0].Descriptor()
+	return file_monitor_service_structures_monitoring_monitoring_proto_enumTypes[1].Descriptor()
 }
 
 func (MetricType) Type() protoreflect.EnumType {
-	return &file_monitor_service_structures_monitoring_monitoring_proto_enumTypes[0]
+	return &file_monitor_service_structures_monitoring_monitoring_proto_enumTypes[1]
 }
 
 func (x MetricType) Number() protoreflect.EnumNumber {
@@ -112,7 +158,7 @@ func (x MetricType) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use MetricType.Descriptor instead.
 func (MetricType) EnumDescriptor() ([]byte, []int) {
-	return file_monitor_service_structures_monitoring_monitoring_proto_rawDescGZIP(), []int{0}
+	return file_monitor_service_structures_monitoring_monitoring_proto_rawDescGZIP(), []int{1}
 }
 
 type Comparison int32
@@ -160,11 +206,11 @@ func (x Comparison) String() string {
 }
 
 func (Comparison) Descriptor() protoreflect.EnumDescriptor {
-	return file_monitor_service_structures_monitoring_monitoring_proto_enumTypes[1].Descriptor()
+	return file_monitor_service_structures_monitoring_monitoring_proto_enumTypes[2].Descriptor()
 }
 
 func (Comparison) Type() protoreflect.EnumType {
-	return &file_monitor_service_structures_monitoring_monitoring_proto_enumTypes[1]
+	return &file_monitor_service_structures_monitoring_monitoring_proto_enumTypes[2]
 }
 
 func (x Comparison) Number() protoreflect.EnumNumber {
@@ -173,52 +219,6 @@ func (x Comparison) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use Comparison.Descriptor instead.
 func (Comparison) EnumDescriptor() ([]byte, []int) {
-	return file_monitor_service_structures_monitoring_monitoring_proto_rawDescGZIP(), []int{1}
-}
-
-type DataType int32
-
-const (
-	DataType_RAW    DataType = 0
-	DataType_METRIC DataType = 1
-)
-
-// Enum value maps for DataType.
-var (
-	DataType_name = map[int32]string{
-		0: "RAW",
-		1: "METRIC",
-	}
-	DataType_value = map[string]int32{
-		"RAW":    0,
-		"METRIC": 1,
-	}
-)
-
-func (x DataType) Enum() *DataType {
-	p := new(DataType)
-	*p = x
-	return p
-}
-
-func (x DataType) String() string {
-	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
-}
-
-func (DataType) Descriptor() protoreflect.EnumDescriptor {
-	return file_monitor_service_structures_monitoring_monitoring_proto_enumTypes[2].Descriptor()
-}
-
-func (DataType) Type() protoreflect.EnumType {
-	return &file_monitor_service_structures_monitoring_monitoring_proto_enumTypes[2]
-}
-
-func (x DataType) Number() protoreflect.EnumNumber {
-	return protoreflect.EnumNumber(x)
-}
-
-// Deprecated: Use DataType.Descriptor instead.
-func (DataType) EnumDescriptor() ([]byte, []int) {
 	return file_monitor_service_structures_monitoring_monitoring_proto_rawDescGZIP(), []int{2}
 }
 
@@ -396,6 +396,67 @@ func (Severity) EnumDescriptor() ([]byte, []int) {
 	return file_monitor_service_structures_monitoring_monitoring_proto_rawDescGZIP(), []int{5}
 }
 
+// a capability is a counter or a metric
+type Capability struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Name          string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"` //the id of
+	Description   string                 `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
+	Kind          DataType               `protobuf:"varint,3,opt,name=kind,proto3,enum=monitoring.DataType" json:"kind,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Capability) Reset() {
+	*x = Capability{}
+	mi := &file_monitor_service_structures_monitoring_monitoring_proto_msgTypes[0]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Capability) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Capability) ProtoMessage() {}
+
+func (x *Capability) ProtoReflect() protoreflect.Message {
+	mi := &file_monitor_service_structures_monitoring_monitoring_proto_msgTypes[0]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Capability.ProtoReflect.Descriptor instead.
+func (*Capability) Descriptor() ([]byte, []int) {
+	return file_monitor_service_structures_monitoring_monitoring_proto_rawDescGZIP(), []int{0}
+}
+
+func (x *Capability) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *Capability) GetDescription() string {
+	if x != nil {
+		return x.Description
+	}
+	return ""
+}
+
+func (x *Capability) GetKind() DataType {
+	if x != nil {
+		return x.Kind
+	}
+	return DataType_RAW
+}
+
 // Runtime settings for the monitoring service.
 type MonitoringSettings struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
@@ -407,7 +468,7 @@ type MonitoringSettings struct {
 
 func (x *MonitoringSettings) Reset() {
 	*x = MonitoringSettings{}
-	mi := &file_monitor_service_structures_monitoring_monitoring_proto_msgTypes[0]
+	mi := &file_monitor_service_structures_monitoring_monitoring_proto_msgTypes[1]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -419,7 +480,7 @@ func (x *MonitoringSettings) String() string {
 func (*MonitoringSettings) ProtoMessage() {}
 
 func (x *MonitoringSettings) ProtoReflect() protoreflect.Message {
-	mi := &file_monitor_service_structures_monitoring_monitoring_proto_msgTypes[0]
+	mi := &file_monitor_service_structures_monitoring_monitoring_proto_msgTypes[1]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -432,7 +493,7 @@ func (x *MonitoringSettings) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MonitoringSettings.ProtoReflect.Descriptor instead.
 func (*MonitoringSettings) Descriptor() ([]byte, []int) {
-	return file_monitor_service_structures_monitoring_monitoring_proto_rawDescGZIP(), []int{0}
+	return file_monitor_service_structures_monitoring_monitoring_proto_rawDescGZIP(), []int{1}
 }
 
 func (x *MonitoringSettings) GetCounters() []*Counter {
@@ -452,8 +513,7 @@ func (x *MonitoringSettings) GetMetrics() []*Metric {
 // A raw value periodically read from a device.
 type Counter struct {
 	state          protoimpl.MessageState `protogen:"open.v1"`
-	Id             string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`                                                  // Unique identifier.
-	Name           string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`                                              // Human-readable name.
+	Name           string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`                                              // Human-readable name/ that is the identifier as well
 	Path           string                 `protobuf:"bytes,3,opt,name=path,proto3" json:"path,omitempty"`                                              // NETCONF XPath, gNMI path, SNMP OID, ...
 	PollIntervalMs uint32                 `protobuf:"varint,4,opt,name=poll_interval_ms,json=pollIntervalMs,proto3" json:"poll_interval_ms,omitempty"` // Sampling period.
 	Description    string                 `protobuf:"bytes,5,opt,name=description,proto3" json:"description,omitempty"`                                // Optional description.
@@ -463,7 +523,7 @@ type Counter struct {
 
 func (x *Counter) Reset() {
 	*x = Counter{}
-	mi := &file_monitor_service_structures_monitoring_monitoring_proto_msgTypes[1]
+	mi := &file_monitor_service_structures_monitoring_monitoring_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -475,7 +535,7 @@ func (x *Counter) String() string {
 func (*Counter) ProtoMessage() {}
 
 func (x *Counter) ProtoReflect() protoreflect.Message {
-	mi := &file_monitor_service_structures_monitoring_monitoring_proto_msgTypes[1]
+	mi := &file_monitor_service_structures_monitoring_monitoring_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -488,14 +548,7 @@ func (x *Counter) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Counter.ProtoReflect.Descriptor instead.
 func (*Counter) Descriptor() ([]byte, []int) {
-	return file_monitor_service_structures_monitoring_monitoring_proto_rawDescGZIP(), []int{1}
-}
-
-func (x *Counter) GetId() string {
-	if x != nil {
-		return x.Id
-	}
-	return ""
+	return file_monitor_service_structures_monitoring_monitoring_proto_rawDescGZIP(), []int{2}
 }
 
 func (x *Counter) GetName() string {
@@ -542,7 +595,7 @@ type Metric struct {
 
 func (x *Metric) Reset() {
 	*x = Metric{}
-	mi := &file_monitor_service_structures_monitoring_monitoring_proto_msgTypes[2]
+	mi := &file_monitor_service_structures_monitoring_monitoring_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -554,7 +607,7 @@ func (x *Metric) String() string {
 func (*Metric) ProtoMessage() {}
 
 func (x *Metric) ProtoReflect() protoreflect.Message {
-	mi := &file_monitor_service_structures_monitoring_monitoring_proto_msgTypes[2]
+	mi := &file_monitor_service_structures_monitoring_monitoring_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -567,7 +620,7 @@ func (x *Metric) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Metric.ProtoReflect.Descriptor instead.
 func (*Metric) Descriptor() ([]byte, []int) {
-	return file_monitor_service_structures_monitoring_monitoring_proto_rawDescGZIP(), []int{2}
+	return file_monitor_service_structures_monitoring_monitoring_proto_rawDescGZIP(), []int{3}
 }
 
 func (x *Metric) GetName() string {
@@ -631,7 +684,7 @@ type Threshold struct {
 
 func (x *Threshold) Reset() {
 	*x = Threshold{}
-	mi := &file_monitor_service_structures_monitoring_monitoring_proto_msgTypes[3]
+	mi := &file_monitor_service_structures_monitoring_monitoring_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -643,7 +696,7 @@ func (x *Threshold) String() string {
 func (*Threshold) ProtoMessage() {}
 
 func (x *Threshold) ProtoReflect() protoreflect.Message {
-	mi := &file_monitor_service_structures_monitoring_monitoring_proto_msgTypes[3]
+	mi := &file_monitor_service_structures_monitoring_monitoring_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -656,7 +709,7 @@ func (x *Threshold) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Threshold.ProtoReflect.Descriptor instead.
 func (*Threshold) Descriptor() ([]byte, []int) {
-	return file_monitor_service_structures_monitoring_monitoring_proto_rawDescGZIP(), []int{3}
+	return file_monitor_service_structures_monitoring_monitoring_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *Threshold) GetValue() float64 {
@@ -694,7 +747,7 @@ type DataSample struct {
 
 func (x *DataSample) Reset() {
 	*x = DataSample{}
-	mi := &file_monitor_service_structures_monitoring_monitoring_proto_msgTypes[4]
+	mi := &file_monitor_service_structures_monitoring_monitoring_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -706,7 +759,7 @@ func (x *DataSample) String() string {
 func (*DataSample) ProtoMessage() {}
 
 func (x *DataSample) ProtoReflect() protoreflect.Message {
-	mi := &file_monitor_service_structures_monitoring_monitoring_proto_msgTypes[4]
+	mi := &file_monitor_service_structures_monitoring_monitoring_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -719,7 +772,7 @@ func (x *DataSample) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DataSample.ProtoReflect.Descriptor instead.
 func (*DataSample) Descriptor() ([]byte, []int) {
-	return file_monitor_service_structures_monitoring_monitoring_proto_rawDescGZIP(), []int{4}
+	return file_monitor_service_structures_monitoring_monitoring_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *DataSample) GetId() string {
@@ -768,7 +821,7 @@ type ResourceKey struct {
 
 func (x *ResourceKey) Reset() {
 	*x = ResourceKey{}
-	mi := &file_monitor_service_structures_monitoring_monitoring_proto_msgTypes[5]
+	mi := &file_monitor_service_structures_monitoring_monitoring_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -780,7 +833,7 @@ func (x *ResourceKey) String() string {
 func (*ResourceKey) ProtoMessage() {}
 
 func (x *ResourceKey) ProtoReflect() protoreflect.Message {
-	mi := &file_monitor_service_structures_monitoring_monitoring_proto_msgTypes[5]
+	mi := &file_monitor_service_structures_monitoring_monitoring_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -793,7 +846,7 @@ func (x *ResourceKey) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ResourceKey.ProtoReflect.Descriptor instead.
 func (*ResourceKey) Descriptor() ([]byte, []int) {
-	return file_monitor_service_structures_monitoring_monitoring_proto_rawDescGZIP(), []int{5}
+	return file_monitor_service_structures_monitoring_monitoring_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *ResourceKey) GetNodeId() string {
@@ -822,7 +875,7 @@ type MonitoringEvent struct {
 
 func (x *MonitoringEvent) Reset() {
 	*x = MonitoringEvent{}
-	mi := &file_monitor_service_structures_monitoring_monitoring_proto_msgTypes[6]
+	mi := &file_monitor_service_structures_monitoring_monitoring_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -834,7 +887,7 @@ func (x *MonitoringEvent) String() string {
 func (*MonitoringEvent) ProtoMessage() {}
 
 func (x *MonitoringEvent) ProtoReflect() protoreflect.Message {
-	mi := &file_monitor_service_structures_monitoring_monitoring_proto_msgTypes[6]
+	mi := &file_monitor_service_structures_monitoring_monitoring_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -847,7 +900,7 @@ func (x *MonitoringEvent) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MonitoringEvent.ProtoReflect.Descriptor instead.
 func (*MonitoringEvent) Descriptor() ([]byte, []int) {
-	return file_monitor_service_structures_monitoring_monitoring_proto_rawDescGZIP(), []int{6}
+	return file_monitor_service_structures_monitoring_monitoring_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *MonitoringEvent) GetSource() *ResourceKey {
@@ -883,13 +936,17 @@ var File_monitor_service_structures_monitoring_monitoring_proto protoreflect.Fil
 const file_monitor_service_structures_monitoring_monitoring_proto_rawDesc = "" +
 	"\n" +
 	"6monitor_service/structures/monitoring/monitoring.proto\x12\n" +
-	"monitoring\x1a\x1fgoogle/protobuf/timestamp.proto\"s\n" +
+	"monitoring\x1a\x1fgoogle/protobuf/timestamp.proto\"l\n" +
+	"\n" +
+	"Capability\x12\x12\n" +
+	"\x04name\x18\x01 \x01(\tR\x04name\x12 \n" +
+	"\vdescription\x18\x02 \x01(\tR\vdescription\x12(\n" +
+	"\x04kind\x18\x03 \x01(\x0e2\x14.monitoring.DataTypeR\x04kind\"s\n" +
 	"\x12MonitoringSettings\x12/\n" +
 	"\bcounters\x18\x01 \x03(\v2\x13.monitoring.CounterR\bcounters\x12,\n" +
-	"\ametrics\x18\x02 \x03(\v2\x12.monitoring.MetricR\ametrics\"\x8d\x01\n" +
-	"\aCounter\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
-	"\x04name\x18\x02 \x01(\tR\x04name\x12\x12\n" +
+	"\ametrics\x18\x02 \x03(\v2\x12.monitoring.MetricR\ametrics\"}\n" +
+	"\aCounter\x12\x12\n" +
+	"\x04name\x18\x01 \x01(\tR\x04name\x12\x12\n" +
 	"\x04path\x18\x03 \x01(\tR\x04path\x12(\n" +
 	"\x10poll_interval_ms\x18\x04 \x01(\rR\x0epollIntervalMs\x12 \n" +
 	"\vdescription\x18\x05 \x01(\tR\vdescription\"\x95\x02\n" +
@@ -927,7 +984,11 @@ const file_monitor_service_structures_monitoring_monitoring_proto_rawDesc = "" +
 	"\x04type\x18\x02 \x01(\x0e2\x15.monitoring.EventTypeR\x04type\x120\n" +
 	"\bseverity\x18\x03 \x01(\x0e2\x14.monitoring.SeverityR\bseverity\x121\n" +
 	"\aactions\x18\x04 \x03(\x0e2\x17.monitoring.EventActionR\aactionsB\t\n" +
-	"\a_source*\xdb\x02\n" +
+	"\a_source*\x1f\n" +
+	"\bDataType\x12\a\n" +
+	"\x03RAW\x10\x00\x12\n" +
+	"\n" +
+	"\x06METRIC\x10\x01*\xdb\x02\n" +
 	"\n" +
 	"MetricType\x12\x1b\n" +
 	"\x17METRIC_TYPE_UNSPECIFIED\x10\x00\x12\x0f\n" +
@@ -959,11 +1020,7 @@ const file_monitor_service_structures_monitoring_monitoring_proto_rawDesc = "" +
 	"\tLESS_THAN\x10\x03\x12\x11\n" +
 	"\rLESS_OR_EQUAL\x10\x04\x12\t\n" +
 	"\x05EQUAL\x10\x05\x12\r\n" +
-	"\tNOT_EQUAL\x10\x06*\x1f\n" +
-	"\bDataType\x12\a\n" +
-	"\x03RAW\x10\x00\x12\n" +
-	"\n" +
-	"\x06METRIC\x10\x01*\x8c\x01\n" +
+	"\tNOT_EQUAL\x10\x06*\x8c\x01\n" +
 	"\vEventAction\x12\x16\n" +
 	"\x12ACTION_UNSPECIFIED\x10\x00\x12\n" +
 	"\n" +
@@ -986,7 +1043,7 @@ const file_monitor_service_structures_monitoring_monitoring_proto_rawDesc = "" +
 	"\x14SEVERITY_UNSPECIFIED\x10\x00\x12\b\n" +
 	"\x04INFO\x10\x01\x12\v\n" +
 	"\aWARNING\x10\x02\x12\f\n" +
-	"\bCRITICAL\x10\x03B)Z'common/structures/monitoring;monitoringb\x06proto3"
+	"\bCRITICAL\x10\x03BIZGOpenCNC_config_service/monitor_service/structures/monitoring;monitoringb\x06proto3"
 
 var (
 	file_monitor_service_structures_monitoring_monitoring_proto_rawDescOnce sync.Once
@@ -1001,42 +1058,44 @@ func file_monitor_service_structures_monitoring_monitoring_proto_rawDescGZIP() [
 }
 
 var file_monitor_service_structures_monitoring_monitoring_proto_enumTypes = make([]protoimpl.EnumInfo, 6)
-var file_monitor_service_structures_monitoring_monitoring_proto_msgTypes = make([]protoimpl.MessageInfo, 7)
+var file_monitor_service_structures_monitoring_monitoring_proto_msgTypes = make([]protoimpl.MessageInfo, 8)
 var file_monitor_service_structures_monitoring_monitoring_proto_goTypes = []any{
-	(MetricType)(0),               // 0: monitoring.MetricType
-	(Comparison)(0),               // 1: monitoring.Comparison
-	(DataType)(0),                 // 2: monitoring.DataType
+	(DataType)(0),                 // 0: monitoring.DataType
+	(MetricType)(0),               // 1: monitoring.MetricType
+	(Comparison)(0),               // 2: monitoring.Comparison
 	(EventAction)(0),              // 3: monitoring.EventAction
 	(EventType)(0),                // 4: monitoring.EventType
 	(Severity)(0),                 // 5: monitoring.Severity
-	(*MonitoringSettings)(nil),    // 6: monitoring.MonitoringSettings
-	(*Counter)(nil),               // 7: monitoring.Counter
-	(*Metric)(nil),                // 8: monitoring.Metric
-	(*Threshold)(nil),             // 9: monitoring.Threshold
-	(*DataSample)(nil),            // 10: monitoring.DataSample
-	(*ResourceKey)(nil),           // 11: monitoring.ResourceKey
-	(*MonitoringEvent)(nil),       // 12: monitoring.MonitoringEvent
-	(*timestamppb.Timestamp)(nil), // 13: google.protobuf.Timestamp
+	(*Capability)(nil),            // 6: monitoring.Capability
+	(*MonitoringSettings)(nil),    // 7: monitoring.MonitoringSettings
+	(*Counter)(nil),               // 8: monitoring.Counter
+	(*Metric)(nil),                // 9: monitoring.Metric
+	(*Threshold)(nil),             // 10: monitoring.Threshold
+	(*DataSample)(nil),            // 11: monitoring.DataSample
+	(*ResourceKey)(nil),           // 12: monitoring.ResourceKey
+	(*MonitoringEvent)(nil),       // 13: monitoring.MonitoringEvent
+	(*timestamppb.Timestamp)(nil), // 14: google.protobuf.Timestamp
 }
 var file_monitor_service_structures_monitoring_monitoring_proto_depIdxs = []int32{
-	7,  // 0: monitoring.MonitoringSettings.counters:type_name -> monitoring.Counter
-	8,  // 1: monitoring.MonitoringSettings.metrics:type_name -> monitoring.Metric
-	0,  // 2: monitoring.Metric.type:type_name -> monitoring.MetricType
-	9,  // 3: monitoring.Metric.thresholds:type_name -> monitoring.Threshold
-	1,  // 4: monitoring.Threshold.comparison:type_name -> monitoring.Comparison
-	12, // 5: monitoring.Threshold.event:type_name -> monitoring.MonitoringEvent
-	11, // 6: monitoring.DataSample.source:type_name -> monitoring.ResourceKey
-	13, // 7: monitoring.DataSample.timestamp:type_name -> google.protobuf.Timestamp
-	2,  // 8: monitoring.DataSample.kind:type_name -> monitoring.DataType
-	11, // 9: monitoring.MonitoringEvent.source:type_name -> monitoring.ResourceKey
-	4,  // 10: monitoring.MonitoringEvent.type:type_name -> monitoring.EventType
-	5,  // 11: monitoring.MonitoringEvent.severity:type_name -> monitoring.Severity
-	3,  // 12: monitoring.MonitoringEvent.actions:type_name -> monitoring.EventAction
-	13, // [13:13] is the sub-list for method output_type
-	13, // [13:13] is the sub-list for method input_type
-	13, // [13:13] is the sub-list for extension type_name
-	13, // [13:13] is the sub-list for extension extendee
-	0,  // [0:13] is the sub-list for field type_name
+	0,  // 0: monitoring.Capability.kind:type_name -> monitoring.DataType
+	8,  // 1: monitoring.MonitoringSettings.counters:type_name -> monitoring.Counter
+	9,  // 2: monitoring.MonitoringSettings.metrics:type_name -> monitoring.Metric
+	1,  // 3: monitoring.Metric.type:type_name -> monitoring.MetricType
+	10, // 4: monitoring.Metric.thresholds:type_name -> monitoring.Threshold
+	2,  // 5: monitoring.Threshold.comparison:type_name -> monitoring.Comparison
+	13, // 6: monitoring.Threshold.event:type_name -> monitoring.MonitoringEvent
+	12, // 7: monitoring.DataSample.source:type_name -> monitoring.ResourceKey
+	14, // 8: monitoring.DataSample.timestamp:type_name -> google.protobuf.Timestamp
+	0,  // 9: monitoring.DataSample.kind:type_name -> monitoring.DataType
+	12, // 10: monitoring.MonitoringEvent.source:type_name -> monitoring.ResourceKey
+	4,  // 11: monitoring.MonitoringEvent.type:type_name -> monitoring.EventType
+	5,  // 12: monitoring.MonitoringEvent.severity:type_name -> monitoring.Severity
+	3,  // 13: monitoring.MonitoringEvent.actions:type_name -> monitoring.EventAction
+	14, // [14:14] is the sub-list for method output_type
+	14, // [14:14] is the sub-list for method input_type
+	14, // [14:14] is the sub-list for extension type_name
+	14, // [14:14] is the sub-list for extension extendee
+	0,  // [0:14] is the sub-list for field type_name
 }
 
 func init() { file_monitor_service_structures_monitoring_monitoring_proto_init() }
@@ -1044,15 +1103,15 @@ func file_monitor_service_structures_monitoring_monitoring_proto_init() {
 	if File_monitor_service_structures_monitoring_monitoring_proto != nil {
 		return
 	}
-	file_monitor_service_structures_monitoring_monitoring_proto_msgTypes[5].OneofWrappers = []any{}
 	file_monitor_service_structures_monitoring_monitoring_proto_msgTypes[6].OneofWrappers = []any{}
+	file_monitor_service_structures_monitoring_monitoring_proto_msgTypes[7].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_monitor_service_structures_monitoring_monitoring_proto_rawDesc), len(file_monitor_service_structures_monitoring_monitoring_proto_rawDesc)),
 			NumEnums:      6,
-			NumMessages:   7,
+			NumMessages:   8,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

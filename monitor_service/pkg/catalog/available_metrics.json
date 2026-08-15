@@ -1,0 +1,40 @@
+{
+  "metrics": [
+    {
+      "name": "unicast-packet-rate",
+      "type": "PACKET_RATE",
+      "evaluationIntervalMs": 1000,
+      "inputIds": [
+        "in-unicast-pkts",
+        "out-unicast-pkts"
+      ],
+      "windowSize": 2,
+      "description": "Combined incoming and outgoing unicast packet rate.",
+      "thresholds": [
+        {
+          "value": 70000,
+          "comparison": "GREATER_OR_EQUAL",
+          "event": {
+            "type": "PERFORMANCE_DEGRADATION",
+            "severity": "WARNING",
+            "actions": [
+              "NOTIFY"
+            ]
+          }
+        },
+        {
+          "value": 90000,
+          "comparison": "GREATER_OR_EQUAL",
+          "event": {
+            "type": "CONGESTION",
+            "severity": "CRITICAL",
+            "actions": [
+              "ALERT",
+              "REQUEST_RECONFIGURATION"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

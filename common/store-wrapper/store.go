@@ -135,6 +135,31 @@ func GetTopology() (*topology.Topology, error) {
 	return topo, nil
 }
 
+func GetNode(name string) (*topology.Node, string, error) {
+	client, err := createEtcdClient()
+	if err != nil {
+		return nil, "", fmt.Errorf("failed to create etcd client: %v", err)
+	}
+	defer client.Close()
+
+	node, prefix, err := getNode(client, name)
+	if err != nil {
+		return nil, "", err
+	}
+
+	return node, prefix, nil
+}
+
+func StoreTopology(topo *topology.Topology) error {
+
+	//log.Infof("Storing topology...")
+
+	storeNodes(topo.GetNodes())
+	storeLinks(topo.GetLinks())
+
+	return nil
+}
+
 func GetModuleRegistry() (*moduleregistry.ModuleRegistry, error) {
 	// Build the URN for the request data
 	urn := "yang-modules."

@@ -754,11 +754,76 @@ select {
 
 
 /* =========================================================
-   LOGS
+   MONITORING
    ========================================================= */
 
-.logs-table-card {
-  min-height: 560px;
+.monitoring-list-card {
+  min-height: 250px;
+}
+
+.monitoring-list-card + .monitoring-list-card {
+  margin-top: 18px;
+}
+
+.monitoring-options-list {
+  padding: 8px 10px 12px;
+}
+
+.monitoring-option {
+  border-radius: 8px;
+  margin-bottom: 4px;
+}
+
+.monitoring-checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 18px;
+  color: #2f3947;
+  cursor: pointer;
+  padding: 8px 8px;
+  border-radius: 8px;
+}
+
+.monitoring-checkbox-label:hover {
+  background: #f1f4f8;
+}
+
+.monitoring-checkbox-label input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: #3b6aa1;
+}
+
+.monitoring-selected-groups {
+  display: grid;
+  gap: 14px;
+  padding: 10px 14px 14px;
+}
+
+.monitoring-selected-groups h4 {
+  margin: 0 0 8px;
+  font-size: 16px;
+  color: #3c4655;
+}
+
+.monitoring-selected-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.monitoring-selected-item {
+  background: #e7edf7;
+  color: #2d3a4a;
+  border: 1px solid #ced9ea;
+  border-radius: 999px;
+  padding: 6px 10px;
+  font-size: 14px;
+  line-height: 1;
 }
 
 
