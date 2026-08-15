@@ -54,6 +54,16 @@ func (s *Service) UploadModel(ctx context.Context, query string) (domain.Operati
 	return s.operations.UploadModel(ctx, query)
 }
 
+func (s *Service) EditModel(ctx context.Context, modelID, name, version, vendor, yang string) (domain.OperationResult, error) {
+	log.Printf("[GUI] app.EditModel called")
+	return s.operations.EditModel(ctx, modelID, name, version, vendor, yang)
+}
+
+func (s *Service) DeleteModel(ctx context.Context, modelID string) (domain.OperationResult, error) {
+	log.Printf("[GUI] app.DeleteModel called")
+	return s.operations.DeleteModel(ctx, modelID)
+}
+
 func (s *Service) AddNode(ctx context.Context, query string) (domain.OperationResult, error) {
 	log.Printf("[GUI] app.AddNode called")
 	return s.operations.AddNode(ctx, query)

@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"OpenCNC_config_service/common/structures/topology"
-	"OpenCNC_config_service/monitor_service/pkg/counters"
+	counters "OpenCNC_config_service/monitor_service/opencnc_counters_catalog"
 	"OpenCNC_config_service/monitor_service/pkg/managementSessions"
 	"OpenCNC_config_service/monitor_service/structures/monitoring"
 
@@ -18,16 +18,18 @@ import (
 )
 
 type NetconfCollector struct {
+	target  *topology.Node
 	session *netconf.Session
 	catalog *counters.Catalog
 }
 
 func NewNetconfCollector(
+	target *topology.Node,
 	session *netconf.Session,
 	catalog *counters.Catalog,
 ) *NetconfCollector {
-
 	return &NetconfCollector{
+		target:  target,
 		session: session,
 		catalog: catalog,
 	}
@@ -37,9 +39,7 @@ func (c *NetconfCollector) Protocol() string {
 	return "netconf"
 }
 
-func (c *NetconfCollector) SupportedCounters(
-	target topology.Node,
-) ([]*monitoring.Counter, error) {
+func (c *NetconfCollector) SupportedCounters() ([]*monitoring.Counter, error) {
 
 	// TODO:
 	// Later filter based on:
@@ -50,13 +50,9 @@ func (c *NetconfCollector) SupportedCounters(
 	return c.catalog.Counters, nil
 }
 
-func (c *NetconfCollector) Collect(
-	target *topology.Node,
-	requestedCounters []*monitoring.Counter,
+func (c *NetconfCollector) Collect(requestedCounters []*monitoring.Counter) ([]*monitoring.DataSample, error) {
 
-) ([]*monitoring.CounterSample, error) {
-
-	filter, err := buildFilter(target, requestedCounters)
+	filter, err := buildFilter(requestedCounters)
 	if err != nil {
 		return nil, fmt.Errorf("failed to build filter: %w", err)
 	}
@@ -85,17 +81,18 @@ func (c *NetconfCollector) Collect(
 
 	timestamp := timestamppb.New(time.Now())
 
-	var samples []*monitoring.CounterSample
+	var samples []*monitoring.DataSample
 
 	for id, value := range values {
 
 		samples = append(
 			samples,
-			&monitoring.CounterSample{
-				CounterId: id,
-				NodeId:    target.Name,
+			&monitoring.DataSample{
+				Id:        id,
+				Source:    &monitoring.ResourceKey{NodeId: c.target.Name},
 				Timestamp: timestamp,
 				Value:     value,
+				Kind:      monitoring.DataType_RAW,
 			},
 		)
 	}
@@ -104,7 +101,7 @@ func (c *NetconfCollector) Collect(
 }
 
 // Builds a NETCONF subtree filter.
-func buildFilter(target *topology.Node, requested []*monitoring.Counter) (string, error) {
+func buildFilter(requested []*monitoring.Counter) (string, error) {
 
 	// -----------------------------------------------------------------
 	// Interface statistics
@@ -144,7 +141,7 @@ func buildFilter(target *topology.Node, requested []*monitoring.Counter) (string
 
 	buf.WriteString(fmt.Sprintf(`<interfaces xmlns="%s">`, nsIf))
 	buf.WriteString(`<interface>`)
-	//buf.WriteString(fmt.Sprintf(`<name>%s</name>`, target.InterfaceName))
+	//buf.WriteString(fmt.Sprintf(`<name>%s</name>`, c.target.InterfaceName))
 
 	if len(interfaceStatistics) > 0 {
 
@@ -223,11 +220,7 @@ type interfaceReply struct {
 	} `xml:"data"`
 }
 
-func parseCounters(
-	reply string,
-	requested []*monitoring.Counter,
-
-) (map[string]float64, error) {
+func parseCounters(reply string, requested []*monitoring.Counter) (map[string]float64, error) {
 
 	var data interfaceReply
 

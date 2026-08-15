@@ -179,6 +179,11 @@ select {
   gap: 12px;
 }
 
+.topbar-actions > .ghost-button,
+.topbar-actions > .primary-button {
+  min-width: 96px;
+}
+
 .search-box {
   display: flex;
   align-items: center;
@@ -265,6 +270,155 @@ select {
   justify-content: space-between;
   gap: 12px;
   margin-bottom: 20px;
+}
+
+.topology-page {
+  display: grid;
+  gap: 14px;
+}
+
+.topology-section {
+  padding: 20px;
+}
+
+.topology-section-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.topology-section-head h3 {
+  margin: 0;
+  font-size: 24px;
+  line-height: 1.15;
+}
+
+.topology-section-head p {
+  margin: 6px 0 0;
+  color: var(--muted);
+}
+
+.topology-action-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 132px;
+  justify-content: center;
+  padding: 14px 18px;
+  border: 0;
+  border-radius: 14px;
+  background: #203858;
+  color: #fff;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 10px 22px rgba(20, 38, 66, 0.16);
+}
+
+.topology-action-button span {
+  font-size: 20px;
+  line-height: 1;
+}
+
+.topology-section-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.topology-card {
+  min-height: 280px;
+  padding: 18px;
+  border: 1px solid #d9e1ea;
+  background: #fff;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.65);
+}
+
+.topology-list-card .panel-header,
+.topology-details-card .panel-header {
+  margin-bottom: 14px;
+}
+
+.topology-search-box {
+  min-width: 0;
+  width: 100%;
+  margin-bottom: 16px;
+  background: #fbfcfe;
+}
+
+.topology-entry-list {
+  display: grid;
+  gap: 10px;
+}
+
+.topology-entry {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 14px 16px;
+  border: 1px solid #e6ebf0;
+  border-radius: 16px;
+  background: linear-gradient(180deg, #ffffff, #fbfcfe);
+}
+
+.topology-entry strong,
+.topology-entry p {
+  margin: 0;
+}
+
+.topology-entry p {
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.topology-empty-state,
+.topology-details-empty {
+  min-height: 196px;
+  display: grid;
+  place-items: center;
+  text-align: center;
+  color: var(--muted);
+}
+
+.topology-empty-state strong {
+  display: block;
+  margin-top: 14px;
+  color: var(--text);
+}
+
+.topology-empty-state p,
+.topology-details-empty p {
+  margin: 6px 0 0;
+}
+
+.topology-empty-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 16px;
+  border: 2px solid #9aa7b8;
+  position: relative;
+}
+
+.topology-empty-icon::before,
+.topology-empty-icon::after {
+  content: "";
+  position: absolute;
+  inset: 50% auto auto 50%;
+  transform: translate(-50%, -50%);
+  background: #9aa7b8;
+}
+
+.topology-empty-icon::before {
+  width: 22px;
+  height: 3px;
+}
+
+.topology-empty-icon::after {
+  width: 3px;
+  height: 22px;
 }
 
 .status-pill {
@@ -522,7 +676,8 @@ select {
   .app-shell,
   .dashboard-grid,
   .two-column-layout,
-  .three-column-layout {
+  .three-column-layout,
+  .topology-section-grid {
     grid-template-columns: 1fr;
   }
 
@@ -551,6 +706,18 @@ select {
   }
 
   .metric-cards {
+    grid-template-columns: 1fr;
+  }
+
+  .topology-section-head {
+    flex-direction: column;
+  }
+
+  .topology-action-button {
+    width: 100%;
+  }
+
+  .topology-section-grid {
     grid-template-columns: 1fr;
   }
 

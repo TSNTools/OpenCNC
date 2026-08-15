@@ -3,8 +3,7 @@ import type { ActivityItem, Metric, NavItem, TopologyLink, TopologyNode } from "
 export const navItems: NavItem[] = [
   { key: "dashboard", label: "Dashboard" },
   { key: "device-models", label: "Add Device Models" },
-  { key: "nodes", label: "Add / Remove Node" },
-  { key: "links", label: "Add / Remove Link" },
+  { key: "topology", label: "Topology" },
   { key: "streams", label: "Add / Remove Streams" },
   { key: "logs", label: "Internal Logs" },
   { key: "settings", label: "Settings" },

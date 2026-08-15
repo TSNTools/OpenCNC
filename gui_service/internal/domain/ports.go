@@ -15,6 +15,8 @@ type ReadPort interface {
 type OperationPort interface {
 	RefreshData(ctx context.Context) (OperationResult, error)
 	UploadModel(ctx context.Context, query string) (OperationResult, error)
+	EditModel(ctx context.Context, modelID, name, version, vendor, yang string) (OperationResult, error)
+	DeleteModel(ctx context.Context, modelID string) (OperationResult, error)
 	AddNode(ctx context.Context, query string) (OperationResult, error)
 	EditNode(ctx context.Context, nodeID string) (OperationResult, error)
 	DeleteNode(ctx context.Context, nodeID string) (OperationResult, error)

@@ -19,11 +19,14 @@ To read using etcdctl:
 */
 
 import (
+	"context"
+	"fmt"
+	"strings"
+
 	devicemodelregistry "OpenCNC_config_service/common/structures/devicemodelregistry"
 	moduleregistry "OpenCNC_config_service/common/structures/module-registry"
 	"OpenCNC_config_service/common/structures/topology"
 	"OpenCNC_config_service/common/structures/topology_config"
-	"fmt"
 
 	"git.cs.kau.se/hamzchah/opencnc_kafka-exporter/logger/pkg/logger"
 	"google.golang.org/protobuf/proto"
@@ -74,6 +77,47 @@ func GetDeviceModel(name string) (*devicemodelregistry.DeviceModel, error) {
 		return &devicemodelregistry.DeviceModel{}, err
 	}
 	return model, nil
+}
+
+func StoreDeviceModel(model *devicemodelregistry.DeviceModel) error {
+	if model == nil {
+		return fmt.Errorf("device model cannot be nil")
+	}
+	if model.Name == "" {
+		return fmt.Errorf("device model name cannot be empty")
+	}
+
+	urn := "device-models." + model.Name
+
+	rawResource, err := proto.Marshal(model)
+	if err != nil {
+		return fmt.Errorf("failed to marshal device model: %v", err)
+	}
+
+	if err := SendToStore(rawResource, urn); err != nil {
+		return fmt.Errorf("failed to store device model %s: %v", model.Name, err)
+	}
+
+	return nil
+}
+
+func DeleteDeviceModel(name string) error {
+	if strings.TrimSpace(name) == "" {
+		return fmt.Errorf("device model name cannot be empty")
+	}
+
+	client, err := createEtcdClient()
+	if err != nil {
+		return fmt.Errorf("failed to create etcd client: %v", err)
+	}
+	defer client.Close()
+
+	key := strings.ReplaceAll("device-models."+name, ".", "/")
+	_, err = client.Delete(context.Background(), key)
+	if err != nil {
+		return fmt.Errorf("failed to delete device model %s: %v", name, err)
+	}
+	return nil
 }
 
 func GetTopology() (*topology.Topology, error) {

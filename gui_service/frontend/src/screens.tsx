@@ -1,5 +1,83 @@
 import { Panel, PanelHeader, TopologyCanvas, MetricCard } from "./components";
-import { activities, metrics, topologyLinks, topologyNodes } from "./data";
+import { metrics, topologyLinks, topologyNodes } from "./data";
+
+function topologyStateTag(status: string) {
+  return status === "Warn" ? "warning" : "success";
+}
+
+function TopologySection({
+  title,
+  detail,
+  actionLabel,
+  searchPlaceholder,
+  emptyTitle,
+  emptyDetail,
+  entries,
+  listTitle,
+  detailsTitle,
+}: {
+  title: string;
+  detail: string;
+  actionLabel: string;
+  searchPlaceholder: string;
+  emptyTitle: string;
+  emptyDetail: string;
+  entries: Array<{ label: string; meta: string; state: string }>;
+  listTitle: string;
+  detailsTitle: string;
+}) {
+  return (
+    <Panel className="topology-section">
+      <div className="topology-section-head">
+        <div>
+          <h3>{title}</h3>
+          <p>{detail}</p>
+        </div>
+        <button className="topology-action-button" type="button">
+          <span aria-hidden="true">+</span>
+          {actionLabel}
+        </button>
+      </div>
+
+      <div className="topology-section-grid">
+        <Panel className="topology-card topology-list-card">
+          <PanelHeader title={listTitle} />
+          <label className="topology-search-box search-box">
+            <span>Search</span>
+            <input type="text" placeholder={searchPlaceholder} />
+          </label>
+
+          {entries.length > 0 ? (
+            <div className="topology-entry-list">
+              {entries.map((entry) => (
+                <article className="topology-entry" key={entry.label}>
+                  <div>
+                    <strong>{entry.label}</strong>
+                    <p>{entry.meta}</p>
+                  </div>
+                  <span className={`tag ${topologyStateTag(entry.state)}`}>{entry.state}</span>
+                </article>
+              ))}
+            </div>
+          ) : (
+            <div className="topology-empty-state">
+              <div className="topology-empty-icon" aria-hidden="true" />
+              <strong>{emptyTitle}</strong>
+              <p>{emptyDetail}</p>
+            </div>
+          )}
+        </Panel>
+
+        <Panel className="topology-card topology-details-card">
+          <PanelHeader title={detailsTitle} />
+          <div className="topology-details-empty">
+            <p>Select an item to view details</p>
+          </div>
+        </Panel>
+      </div>
+    </Panel>
+  );
+}
 
 export function DashboardScreen() {
   return (
@@ -86,60 +164,40 @@ export function DeviceModelsScreen() {
   );
 }
 
-export function NodesScreen() {
+export function TopologyScreen() {
   return (
-    <div className="two-column-layout">
-      <Panel>
-        <PanelHeader title="Current nodes" />
-        <div className="table-card">
-          <div className="table-row nodes-row table-head"><span>Node</span><span>Role</span><span>Status</span></div>
-          <div className="table-row nodes-row"><span>core-1</span><span>Switch</span><span className="tag success">Up</span></div>
-          <div className="table-row nodes-row"><span>edge-2</span><span>Switch</span><span className="tag success">Up</span></div>
-          <div className="table-row nodes-row"><span>cam-4</span><span>Endpoint</span><span className="tag pending">Idle</span></div>
-        </div>
-      </Panel>
-      <Panel>
-        <PanelHeader title="Add or remove node" />
-        <div className="form-grid">
-          <label><span>Name</span><input type="text" placeholder="node-5" /></label>
-          <label><span>Type</span><select><option>Switch</option><option>Endpoint</option></select></label>
-          <label><span>Ports</span><input type="number" placeholder="8" /></label>
-          <label><span>Management IP</span><input type="text" placeholder="192.168.1.10" /></label>
-        </div>
-        <div className="action-row">
-          <button className="danger-button" type="button">Remove</button>
-          <button className="primary-button" type="button">Add Node</button>
-        </div>
-      </Panel>
-    </div>
-  );
-}
+    <div className="topology-page">
+      <TopologySection
+        title="Nodes"
+        detail="Manage and view all network nodes."
+        actionLabel="Add Node"
+        searchPlaceholder="Search nodes..."
+        emptyTitle="No nodes available"
+        emptyDetail="Add a node to get started."
+        entries={topologyNodes.map((node) => ({
+          label: node.id,
+          meta: node.subtitle,
+          state: node.status === "warn" ? "Warn" : "Up",
+        }))}
+        listTitle="Available Nodes"
+        detailsTitle="Node Details"
+      />
 
-export function LinksScreen() {
-  return (
-    <div className="two-column-layout">
-      <Panel>
-        <PanelHeader title="Current links" />
-        <div className="table-card">
-          <div className="table-row links-row table-head"><span>From</span><span>To</span><span>State</span></div>
-          <div className="table-row links-row"><span>core-1</span><span>edge-2</span><span className="tag success">Up</span></div>
-          <div className="table-row links-row"><span>core-1</span><span>edge-3</span><span className="tag warning">Warn</span></div>
-          <div className="table-row links-row"><span>edge-2</span><span>cam-4</span><span className="tag success">Up</span></div>
-        </div>
-      </Panel>
-      <Panel>
-        <PanelHeader title="Create or remove link" />
-        <div className="form-grid">
-          <label><span>Source node</span><select><option>core-1</option><option>edge-2</option></select></label>
-          <label><span>Destination node</span><select><option>edge-3</option><option>cam-4</option></select></label>
-          <label><span>Bandwidth</span><input type="text" placeholder="1 Gbps" /></label>
-          <label><span>Constraint</span><input type="text" placeholder="critical uplink" /></label>
-        </div>
-        <div className="action-row">
-          <button className="danger-button" type="button">Remove Link</button>
-          <button className="primary-button" type="button">Create Link</button>
-        </div>
-      </Panel>
+      <TopologySection
+        title="Links"
+        detail="Manage and view all network links."
+        actionLabel="Add Link"
+        searchPlaceholder="Search links..."
+        emptyTitle="No links available"
+        emptyDetail="Add a link to get started."
+        entries={topologyLinks.map((link) => ({
+          label: `${link.from} → ${link.to}`,
+          meta: link.label,
+          state: link.label.toLowerCase().includes("warn") ? "Warn" : "Up",
+        }))}
+        listTitle="Available Links"
+        detailsTitle="Link Details"
+      />
     </div>
   );
 }

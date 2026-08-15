@@ -4,6 +4,8 @@ package monitoring;
 
 option go_package = "common/structures/monitoring;monitoring";
 
+import "google/protobuf/timestamp.proto";
+
 // Runtime settings for the monitoring service.
 message MonitoringSettings {
   repeated Counter counters = 1; // Counters or operational values to collect from devices.
@@ -24,11 +26,10 @@ message Metric {
   string name = 1;                   // Human-readable name.
   MetricType type = 2;
   uint32 evaluation_interval_ms = 3; // Evaluation interval (can differ from polling interval)
-  repeated string counter_ids = 4;   // Counters used to compute this metric.
+  repeated string input_ids = 4;   // Counters/metrics used to compute this metric.
   uint32 window_size = 5;            // Number of samples used in the calculation. 
   repeated Threshold thresholds = 6; // Alarm policy. e.g. 70% warning, 90% critical (those are 2 thresholds)
-  bool trigger_rollback  = 7;        // Automatically trigger a roll back if threshold violated
-  string description = 8;            // Optional description.
+  string description = 7;            // Optional description.
 }
 
 enum MetricType {
@@ -54,14 +55,15 @@ enum MetricType {
   CONFIGURATION_MISMATCH = 12;
   RESOURCE_EXHAUSTION = 13;
   DEVICE_UNREACHABLE = 14;
-  CONGESTION = 15;
+  CONGESTION_LEVEL = 15;
+  PACKET_RATE = 16;
 }
 
 // Thresholds for triggering alarms.
 message Threshold {
   double value = 1;
   Comparison comparison = 2; // how to read the threshold
-  Severity severity = 3;
+  MonitoringEvent event = 3; // every threshod signals an event
 }
 
 enum Comparison {
@@ -75,9 +77,62 @@ enum Comparison {
   NOT_EQUAL = 6;
 }
 
+////////////////////////////
+// Data Readings 
+////////////////////////////
+
+// Raw data collected by plugins or Output of the meter
+message DataSample {
+  string id = 1;
+  ResourceKey source = 2;
+  google.protobuf.Timestamp timestamp = 3;
+  double value = 4;
+  DataType kind = 5;
+}
+
+// Key to match DataSample and event source
+message ResourceKey {
+  string node_id = 1;
+  optional string port_id = 2;
+}
+
+enum DataType{
+  RAW = 0;
+  METRIC = 1;
+}
+
+////////////////////////////
+// Events 
+////////////////////////////
+
+message MonitoringEvent {
+    optional ResourceKey source = 1; // populated at runtime
+    EventType type = 2;
+    Severity severity = 3; //  description
+    repeated EventAction actions = 4; //every event triggers some actions
+}
+enum EventAction {
+    ACTION_UNSPECIFIED = 0;
+    NOTIFY = 1;
+    ALERT = 2;
+    CHANGE_MONITORING_LEVEL = 3;
+    REQUEST_RECONFIGURATION = 4;
+    REQUEST_ROLLBACK = 5;
+}
+
+enum EventType {
+    TYPE_UNSPECIFIED = 0;
+    DEVICE_LOST = 1;
+    LINK_DOWN = 2;
+    CONGESTION = 3;
+    BUFFER_OVERFLOW = 4;
+    SYNCHRONIZATION_ERROR = 5;
+    CONFIGURATION_FAILURE = 6;
+    PERFORMANCE_DEGRADATION = 7;
+}
+
 enum Severity {
   SEVERITY_UNSPECIFIED = 0;
-
   INFO     = 1;
   WARNING  = 2;
   CRITICAL = 3;

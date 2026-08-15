@@ -22,6 +22,7 @@ func NewRouter(cfg config.Config, service *app.Service) *Router {
 	mux.HandleFunc("/api/v1/dashboard/refresh", h.RefreshDashboard)
 	mux.HandleFunc("/api/v1/device-models", h.DeviceModels)
 	mux.HandleFunc("/api/v1/device-models/upload", h.UploadModel)
+	mux.HandleFunc("/api/v1/device-models/", h.ModelByID)
 	mux.HandleFunc("/api/v1/nodes", h.Nodes)
 	mux.HandleFunc("/api/v1/nodes/", h.NodeByID)
 	mux.HandleFunc("/api/v1/links", h.Links)

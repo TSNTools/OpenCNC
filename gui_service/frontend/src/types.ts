@@ -1,8 +1,7 @@
 export type ScreenKey =
   | "dashboard"
   | "device-models"
-  | "nodes"
-  | "links"
+  | "topology"
   | "streams"
   | "logs"
   | "settings";

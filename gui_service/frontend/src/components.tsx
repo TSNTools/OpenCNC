@@ -1,5 +1,75 @@
+import { useMemo } from "react";
+import {
+  Background,
+  Controls,
+  MarkerType,
+  ReactFlow,
+  type Edge as FlowEdge,
+  type Node as FlowNode,
+} from "@xyflow/react";
+import dagre from "dagre";
+import "@xyflow/react/dist/style.css";
 import type { PropsWithChildren, ReactNode } from "react";
 import type { NavItem, ScreenKey, TopologyLink, TopologyNode } from "./types";
+
+const nodeWidth = 170;
+const nodeHeight = 76;
+
+function buildLayoutedFlow(nodes: TopologyNode[], links: TopologyLink[]) {
+  const graph = new dagre.graphlib.Graph();
+  graph.setDefaultEdgeLabel(() => ({}));
+  graph.setGraph({ rankdir: "LR", nodesep: 90, ranksep: 100 });
+
+  nodes.forEach((node) => {
+    graph.setNode(node.id, { width: nodeWidth, height: nodeHeight });
+  });
+
+  links.forEach((link) => {
+    graph.setEdge(link.from, link.to);
+  });
+
+  dagre.layout(graph);
+
+  const flowNodes: FlowNode[] = nodes.map((node) => {
+    const position = graph.node(node.id);
+    return {
+      id: node.id,
+      type: "default",
+      data: {
+        label: (
+          <div style={{ display: "flex", flexDirection: "column", gap: 2, fontSize: 12 }}>
+            <strong>{node.id}</strong>
+            <span>{node.subtitle}</span>
+          </div>
+        ),
+      },
+      position: {
+        x: position.x - nodeWidth / 2,
+        y: position.y - nodeHeight / 2,
+      },
+      style: {
+        width: nodeWidth,
+        borderRadius: 12,
+        border: node.status === "warn" ? "1px solid #f9a826" : "1px solid #7aa2f7",
+        background: node.status === "warn" ? "#fff3d6" : "#edf4ff",
+        color: "#111827",
+      },
+    };
+  });
+
+  const flowEdges: FlowEdge[] = links.map((link) => ({
+    id: `${link.from}-${link.to}`,
+    source: link.from,
+    target: link.to,
+    label: link.label,
+    type: "smoothstep",
+    animated: false,
+    markerEnd: { type: MarkerType.ArrowClosed },
+    style: { stroke: "#7aa2f7", strokeWidth: 2 },
+  }));
+
+  return { nodes: flowNodes, edges: flowEdges };
+}
 
 export function Sidebar({
   items,
@@ -47,7 +117,7 @@ export function Sidebar({
   );
 }
 
-export function TopBar({ title }: { title: string }) {
+export function TopBar({ title, actions }: { title: string; actions?: ReactNode }) {
   return (
     <header className="topbar">
       <div>
@@ -59,12 +129,16 @@ export function TopBar({ title }: { title: string }) {
           <span>Search</span>
           <input type="text" placeholder="Find node, stream, model" />
         </label>
-        <button className="ghost-button" type="button">
-          Lab
-        </button>
-        <button className="primary-button" type="button">
-          Refresh
-        </button>
+        {actions ?? (
+          <>
+            <button className="ghost-button" type="button">
+              Lab
+            </button>
+            <button className="primary-button" type="button">
+              Refresh
+            </button>
+          </>
+        )}
       </div>
     </header>
   );
@@ -100,54 +174,23 @@ export function TopologyCanvas({ nodes, links }: { nodes: TopologyNode[]; links:
     );
   }
 
+  const layouted = useMemo(() => buildLayoutedFlow(nodes, links), [nodes, links]);
+
   return (
     <div className="topology-canvas">
-      <svg width="100%" height="100%" viewBox="0 0 760 460" preserveAspectRatio="none">
-        {links.map((link) => {
-          const source = nodes.find((node) => node.id === link.from);
-          const destination = nodes.find((node) => node.id === link.to);
-          if (!source || !destination) {
-            return null;
-          }
-
-          const x1 = source.x + 62;
-          const y1 = source.y + 32;
-          const x2 = destination.x + 62;
-          const y2 = destination.y + 32;
-          const labelX = (x1 + x2) / 2 - 26;
-          const labelY = (y1 + y2) / 2 - 16;
-
-          return (
-            <g key={`${link.from}-${link.to}`}>
-              <line
-                x1={x1}
-                y1={y1}
-                x2={x2}
-                y2={y2}
-                stroke="#7aa2f7"
-                strokeWidth="4"
-                strokeLinecap="round"
-              />
-              <foreignObject x={labelX} y={labelY} width="72" height="32">
-                <div xmlns="http://www.w3.org/1999/xhtml" className="topology-link-label">
-                  {link.label}
-                </div>
-              </foreignObject>
-            </g>
-          );
-        })}
-      </svg>
-
-      {nodes.map((node) => (
-        <div
-          key={node.id}
-          className={`topology-node ${node.status}`}
-          style={{ left: node.x, top: node.y }}
-        >
-          <strong>{node.id}</strong>
-          <span>{node.subtitle}</span>
-        </div>
-      ))}
+      <ReactFlow
+        nodes={layouted.nodes}
+        edges={layouted.edges}
+        fitView
+        nodesDraggable={false}
+        nodesConnectable={false}
+        elementsSelectable={false}
+        panOnDrag={false}
+        proOptions={{ hideAttribution: true }}
+      >
+        <Background color="#c7d2fe" gap={16} />
+        <Controls showInteractive={false} />
+      </ReactFlow>
     </div>
   );
 }

@@ -5,8 +5,8 @@ import (
 	"log"
 
 	"OpenCNC_config_service/common/structures/topology"
+	counters "OpenCNC_config_service/monitor_service/opencnc_counters_catalog"
 	"OpenCNC_config_service/monitor_service/pkg/collectors"
-	"OpenCNC_config_service/monitor_service/pkg/counters"
 	"OpenCNC_config_service/monitor_service/pkg/managementSessions"
 	"OpenCNC_config_service/monitor_service/structures/monitoring"
 )
@@ -64,7 +64,7 @@ func test_netconf_collector() {
 	// Load counter catalog
 	//
 	catalog, err := counters.LoadCatalog(
-		"../../pkg/counters/opencnc_counters.json",
+		"/home/opencnc/OpenCNC/monitor_service/pkg/counters/opencnc_counters.json",
 	)
 
 	if err != nil {
@@ -78,6 +78,7 @@ func test_netconf_collector() {
 	// Create collector
 	//
 	collector := collectors.NewNetconfCollector(
+		target,
 		session,
 		catalog,
 	)
@@ -96,7 +97,6 @@ func test_netconf_collector() {
 	// Collect
 	//
 	samples, err := collector.Collect(
-		target,
 		requestedCounters,
 	)
 
@@ -118,8 +118,8 @@ func test_netconf_collector() {
 
 		fmt.Printf(
 			"counter=%s node=%s value=%f timestamp=%s\n",
-			sample.CounterId,
-			sample.NodeId,
+			sample.Id,
+			sample.Source.NodeId,
 			sample.Value,
 			sample.Timestamp.AsTime(),
 		)

@@ -20,6 +20,10 @@ type simpleInput struct {
 	Bandwidth   string `json:"bandwidth"`
 	Severity    string `json:"severity"`
 	OrderBy     string `json:"orderBy"`
+	Name        string `json:"name"`
+	Version     string `json:"version"`
+	Vendor      string `json:"vendor"`
+	Yang        string `json:"yang"`
 }
 
 func NewHandler(service *app.Service) *Handler {
@@ -86,6 +90,34 @@ func (h *Handler) UploadModel(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	writeJSON(w, http.StatusOK, result)
+}
+
+func (h *Handler) ModelByID(w http.ResponseWriter, r *http.Request) {
+	modelID := strings.TrimPrefix(r.URL.Path, "/api/v1/device-models/")
+	if modelID == "" {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "missing model id"})
+		return
+	}
+
+	switch r.Method {
+	case http.MethodPatch:
+		input := decodeInput(r)
+		result, err := h.service.EditModel(r.Context(), modelID, input.Name, input.Version, input.Vendor, input.Yang)
+		if err != nil {
+			internalError(w, err)
+			return
+		}
+		writeJSON(w, http.StatusOK, result)
+	case http.MethodDelete:
+		result, err := h.service.DeleteModel(r.Context(), modelID)
+		if err != nil {
+			internalError(w, err)
+			return
+		}
+		writeJSON(w, http.StatusOK, result)
+	default:
+		methodNotAllowed(w)
+	}
 }
 
 func (h *Handler) Nodes(w http.ResponseWriter, r *http.Request) {
