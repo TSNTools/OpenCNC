@@ -180,13 +180,26 @@ func (e *Engine) HandleEvent(event *monitoring.MonitoringEvent) error {
 		return fmt.Errorf("event is nil")
 	}
 
+	for _, action := range event.Actions {
+		switch action {
+		case monitoring.EventAction_REQUEST_ROLLBACK:
+			if err := handleRequestRollback(event); err != nil {
+				return fmt.Errorf("handle rollback action: %w", err)
+			}
+		case monitoring.EventAction_REQUEST_RECONFIGURATION:
+			if err := handleRequestReconfiguration(event); err != nil {
+				return fmt.Errorf("handle reconfiguration action: %w", err)
+			}
+		}
+	}
+
 	// TODO:
 	//
 	// 1. Update engine monitoring state.
 	// 2. Publish/forward the event.
 	// 3. Execute or request the configured action.
 	//
-	// For the first version, simply accept the event.
+	// For the first version, simply accept the event once all configured actions have been dispatched.
 
 	return nil
 }
