@@ -8,6 +8,7 @@ const state = {
   selectedNodeID: "",
   selectedLinkID: "",
   selectedStreamID: "",
+  deviceModels: [],
   monitoringCounters: [],
   monitoringMetrics: [],
   monitoringTargets: [],
@@ -21,6 +22,7 @@ initializeNavigation();
 initializeActionButtons();
 initializeListSelection();
 initializeMonitoringUI();
+updateTopologyTopbarControls("dashboard");
 loadAllViews();
 
 function initializeNavigation() {
@@ -60,6 +62,7 @@ function initializeNavigation() {
 
       // Update title
       screenTitle.textContent = item.textContent.trim();
+      updateTopologyTopbarControls(screen);
 
       loadView(screen);
     });
@@ -113,10 +116,21 @@ function initializeNavigation() {
       // Update title
       screenTitle.textContent =
         `Topology / ${item.textContent.trim()}`;
+      updateTopologyTopbarControls(screen);
 
       loadView(screen);
     });
   });
+}
+
+function updateTopologyTopbarControls(screen) {
+  const importButton = document.getElementById("import-topology-btn");
+  if (!importButton) {
+    return;
+  }
+
+  const show = screen === "topology-nodes" || screen === "topology-links";
+  importButton.classList.toggle("hidden", !show);
 }
 
 function initializeActionButtons() {
@@ -231,28 +245,79 @@ function initializeActionButtons() {
     });
   }
 
-  const addNodeUploadButton = document.getElementById("add-node-upload-btn");
-  const addNodeUploadInput = document.getElementById("add-node-upload-input");
-
-  if (addNodeUploadButton && addNodeUploadInput) {
-    addNodeUploadButton.addEventListener("click", () => {
-      addNodeUploadInput.value = "";
-      addNodeUploadInput.click();
-    });
-
-    addNodeUploadInput.addEventListener("change", async () => {
-      const nodePayload = await readUploadedFile("add-node-upload-input");
-      if (!nodePayload) {
-        showToast("Select a JSON node description file.");
+  const addNodeButton = document.getElementById("add-node-btn");
+  if (addNodeButton) {
+    addNodeButton.addEventListener("click", async () => {
+      const payload = buildNodeCreatePayload();
+      if (!payload) {
         return;
       }
 
-      const response = await callAction("addNode", { query: nodePayload });
-      showToast(response.message || "addNode completed");
+      const response = await callAction("addNode", { query: JSON.stringify(payload) });
+      showToast(response.message || "Node created");
+
+      if (response.success) {
+        resetNodeCreateForm();
+        await loadAllViews();
+      }
+    });
+  }
+
+  const importNodeButton = document.getElementById("import-node-btn");
+  if (importNodeButton) {
+    importNodeButton.addEventListener("click", async () => {
+      const payloadText = await readUploadedFile("node-upload");
+      if (!payloadText) {
+        showToast("Select a node JSON file.");
+        return;
+      }
+
+      await importNodePayload(payloadText);
+    });
+  }
+
+  const addLinkButton = document.getElementById("add-link-btn");
+  if (addLinkButton) {
+    addLinkButton.addEventListener("click", async () => {
+      const source = getValue("link-source").trim();
+      const destination = getValue("link-destination").trim();
+      const bandwidth = getValue("link-bandwidth").trim();
+
+      if (!source || !destination) {
+        showToast("Select both source and destination.");
+        return;
+      }
+
+      if (source === destination) {
+        showToast("Source and destination must be different.");
+        return;
+      }
+
+      const response = await callAction("addLink", { source, destination, bandwidth });
+      showToast(response.message || "Link created");
 
       if (response.success) {
         await loadAllViews();
       }
+    });
+  }
+
+  const importButton = document.getElementById("import-topology-btn");
+  const importInput = document.getElementById("import-topology-input");
+  if (importButton && importInput) {
+    importButton.addEventListener("click", () => {
+      importInput.value = "";
+      importInput.click();
+    });
+
+    importInput.addEventListener("change", async () => {
+      const payloadText = await readUploadedFile("import-topology-input");
+      if (!payloadText) {
+        showToast("Select a topology JSON file.");
+        return;
+      }
+
+      await importTopologyPayload(payloadText);
     });
   }
 }
@@ -457,14 +522,6 @@ async function loadView(screen) {
       ]);
       break;
 
-    case "topology-overview":
-      await Promise.all([
-        loadNodes(),
-        loadLinks(),
-        loadRecentEvents(),
-      ]);
-      break;
-
     case "topology-nodes":
       await loadNodes();
       break;
@@ -574,6 +631,7 @@ function renderTopology(networkModel) {
 
 async function loadDeviceModels() {
   const models = await fetchJSON("/api/v1/device-models", []);
+  state.deviceModels = Array.isArray(models) ? models : [];
   const list = document.getElementById("device-model-list");
   renderList(list, models, (model) => {
     const li = document.createElement("li");
@@ -585,6 +643,7 @@ async function loadDeviceModels() {
     li.dataset.yang = model.yang || "";
     return li;
   }, "No models available");
+  populateNodeCreateDeviceModelOptions();
   clearModelDetails();
 }
 
@@ -602,6 +661,7 @@ async function loadNodes() {
     li.dataset.links = node.links || "";
     return li;
   }, "No nodes available");
+  populateLinkNodeOptions(nodes);
   clearNodeDetails();
 }
 
@@ -1182,6 +1242,363 @@ function clearNodeDetails() {
   hideNodeEditForm();
 }
 
+function populateNodeCreateDeviceModelOptions() {
+  const select = document.getElementById("node-create-device-model");
+  if (!select) {
+    return;
+  }
+
+  const current = select.value;
+  const models = Array.isArray(state.deviceModels) ? state.deviceModels : [];
+
+  select.innerHTML = '<option value="">None</option>';
+  models.forEach((model) => {
+    const label = model.name || model.id || "";
+    if (!label) {
+      return;
+    }
+
+    const option = document.createElement("option");
+    option.value = label;
+    option.textContent = label;
+    select.appendChild(option);
+  });
+
+  if (current) {
+    const hasCurrent = models.some((model) => (model.name || model.id || "") === current);
+    if (hasCurrent) {
+      select.value = current;
+    }
+  }
+}
+
+function populateLinkNodeOptions(nodes) {
+  const sourceSelect = document.getElementById("link-source");
+  const destinationSelect = document.getElementById("link-destination");
+  if (!sourceSelect || !destinationSelect) {
+    return;
+  }
+
+  const sourceCurrent = sourceSelect.value;
+  const destinationCurrent = destinationSelect.value;
+
+  const normalizedNodes = Array.isArray(nodes) ? nodes : [];
+  const nodeNames = normalizedNodes
+    .map((node) => (node && (node.name || node.id) ? String(node.name || node.id).trim() : ""))
+    .filter((name) => name !== "");
+
+  const uniqueNodeNames = Array.from(new Set(nodeNames));
+
+  sourceSelect.innerHTML = '<option value="">None</option>';
+  destinationSelect.innerHTML = '<option value="">None</option>';
+
+  uniqueNodeNames.forEach((name) => {
+    const sourceOption = document.createElement("option");
+    sourceOption.value = name;
+    sourceOption.textContent = name;
+    sourceSelect.appendChild(sourceOption);
+
+    const destinationOption = document.createElement("option");
+    destinationOption.value = name;
+    destinationOption.textContent = name;
+    destinationSelect.appendChild(destinationOption);
+  });
+
+  if (sourceCurrent && uniqueNodeNames.includes(sourceCurrent)) {
+    sourceSelect.value = sourceCurrent;
+  }
+  if (destinationCurrent && uniqueNodeNames.includes(destinationCurrent)) {
+    destinationSelect.value = destinationCurrent;
+  }
+}
+
+function buildNodeCreatePayload() {
+  const name = getValue("node-create-name").trim();
+  const type = getValue("node-create-type").trim();
+  const deviceModel = getValue("node-create-device-model").trim();
+  const ipAddress = getValue("node-create-ip").trim();
+  const protocol = getValue("node-create-protocol").trim();
+  const managementPortRaw = getValue("node-create-port").trim();
+  const userName = getValue("node-create-username").trim();
+
+  if (!name) {
+    showToast("Node name is required.");
+    return null;
+  }
+
+  if (!type) {
+    showToast("Node type is required.");
+    return null;
+  }
+
+  const allowedTypes = new Set(["END_STATION", "BRIDGE", "BRIDGED_END_STATION"]);
+  if (!allowedTypes.has(type)) {
+    showToast("Node type must be END_STATION, BRIDGE, or BRIDGED_END_STATION.");
+    return null;
+  }
+
+  const payload = {
+    name,
+    type,
+  };
+
+  if (deviceModel) {
+    payload.deviceInfo = {
+      deviceModel,
+    };
+  }
+
+  const hasManagementInfo = ipAddress || protocol || managementPortRaw || userName;
+  if (hasManagementInfo) {
+    payload.managementInfo = {};
+    if (ipAddress) {
+      payload.managementInfo.ipAddress = ipAddress;
+    }
+    if (protocol) {
+      payload.managementInfo.protocol = protocol;
+    }
+    if (userName) {
+      payload.managementInfo.userName = userName;
+    }
+    if (managementPortRaw) {
+      const managementPort = Number.parseInt(managementPortRaw, 10);
+      if (Number.isNaN(managementPort) || managementPort < 1 || managementPort > 65535) {
+        showToast("Management port must be between 1 and 65535.");
+        return null;
+      }
+      payload.managementInfo.managementPort = managementPort;
+    }
+  }
+
+  return payload;
+}
+
+function resetNodeCreateForm() {
+  setInputValue("node-create-name", "");
+  setInputValue("node-create-type", "");
+  setInputValue("node-create-device-model", "");
+  setInputValue("node-create-ip", "");
+  setInputValue("node-create-protocol", "");
+  setInputValue("node-create-port", "");
+  setInputValue("node-create-username", "");
+  setInputValue("node-create-password", "");
+}
+
+async function importNodePayload(payloadText) {
+  let parsed;
+  try {
+    parsed = JSON.parse(payloadText);
+  } catch (error) {
+    showToast(`Invalid JSON: ${error.message}`);
+    return;
+  }
+
+  const rawNode = extractRawNodeFromImport(parsed);
+  if (!rawNode) {
+    showToast("No valid node object found in imported file.");
+    return;
+  }
+
+  const nodePayload = normalizeImportedNode(rawNode);
+  if (!nodePayload) {
+    showToast("Imported node JSON is missing required fields.");
+    return;
+  }
+
+  const response = await callAction("addNode", { query: JSON.stringify(nodePayload) });
+  showToast(response.message || (response.success ? "Node imported." : "Failed to import node."));
+
+  if (response.success) {
+    setInputValue("node-upload", "");
+    await loadAllViews();
+  }
+}
+
+function extractRawNodeFromImport(parsed) {
+  if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+    if (parsed.node && typeof parsed.node === "object") {
+      return parsed.node;
+    }
+
+    if (Array.isArray(parsed.nodes) && parsed.nodes.length > 0) {
+      return parsed.nodes[0];
+    }
+
+    if (parsed.topology && typeof parsed.topology === "object") {
+      if (Array.isArray(parsed.topology.nodes) && parsed.topology.nodes.length > 0) {
+        return parsed.topology.nodes[0];
+      }
+    }
+
+    return parsed;
+  }
+
+  if (Array.isArray(parsed) && parsed.length > 0) {
+    return parsed[0];
+  }
+
+  return null;
+}
+
+async function importTopologyPayload(payloadText) {
+  let parsed;
+  try {
+    parsed = JSON.parse(payloadText);
+  } catch (error) {
+    showToast(`Invalid JSON: ${error.message}`);
+    return;
+  }
+
+  const nodes = Array.isArray(parsed.nodes)
+    ? parsed.nodes
+    : Array.isArray(parsed.topology && parsed.topology.nodes)
+      ? parsed.topology.nodes
+      : [];
+
+  const links = Array.isArray(parsed.links)
+    ? parsed.links
+    : Array.isArray(parsed.topology && parsed.topology.links)
+      ? parsed.topology.links
+      : [];
+
+  if (!nodes.length && !links.length) {
+    showToast("No nodes or links found in imported topology file.");
+    return;
+  }
+
+  let nodeSuccessCount = 0;
+  let linkSuccessCount = 0;
+  let errorCount = 0;
+
+  for (const rawNode of nodes) {
+    const nodePayload = normalizeImportedNode(rawNode);
+    if (!nodePayload) {
+      errorCount += 1;
+      continue;
+    }
+
+    const response = await callAction("addNode", { query: JSON.stringify(nodePayload) });
+    if (response.success) {
+      nodeSuccessCount += 1;
+    } else {
+      errorCount += 1;
+    }
+  }
+
+  for (const rawLink of links) {
+    const linkPayload = normalizeImportedLink(rawLink);
+    if (!linkPayload) {
+      errorCount += 1;
+      continue;
+    }
+
+    const response = await callAction("addLink", linkPayload);
+    if (response.success) {
+      linkSuccessCount += 1;
+    } else {
+      errorCount += 1;
+    }
+  }
+
+  await loadAllViews();
+  showToast(`Imported topology: ${nodeSuccessCount} nodes, ${linkSuccessCount} links, ${errorCount} skipped.`);
+}
+
+function normalizeImportedNode(rawNode) {
+  if (!rawNode || typeof rawNode !== "object") {
+    return null;
+  }
+
+  const name = firstString(rawNode.name, rawNode.id);
+  const type = firstString(rawNode.type, rawNode.nodeType, rawNode.role);
+  if (!name || !type) {
+    return null;
+  }
+
+  const normalizedType = String(type).toUpperCase().replaceAll("-", "_").replaceAll(" ", "_");
+  const allowedTypes = new Set(["END_STATION", "BRIDGE", "BRIDGED_END_STATION"]);
+  if (!allowedTypes.has(normalizedType)) {
+    return null;
+  }
+
+  const payload = {
+    name,
+    type: normalizedType,
+  };
+
+  const deviceInfo = rawNode.deviceInfo || rawNode.device_info || {};
+  const deviceModel = firstString(deviceInfo.deviceModel, deviceInfo.device_model, rawNode.deviceModel, rawNode.device_model);
+  if (deviceModel) {
+    payload.deviceInfo = { deviceModel };
+  }
+
+  const managementInfo = rawNode.managementInfo || rawNode.management_info || {};
+  const managementPayload = {};
+  const ipAddress = firstString(managementInfo.ipAddress, managementInfo.ip_address);
+  const protocol = firstString(managementInfo.protocol);
+  const userName = firstString(managementInfo.userName, managementInfo.user_name);
+  const managementPortRaw = managementInfo.managementPort ?? managementInfo.management_port;
+
+  if (ipAddress) {
+    managementPayload.ipAddress = ipAddress;
+  }
+  if (protocol) {
+    managementPayload.protocol = String(protocol).toUpperCase();
+  }
+  if (userName) {
+    managementPayload.userName = userName;
+  }
+
+  if (managementPortRaw !== undefined && managementPortRaw !== null && managementPortRaw !== "") {
+    const managementPort = Number.parseInt(String(managementPortRaw), 10);
+    if (!Number.isNaN(managementPort) && managementPort > 0 && managementPort <= 65535) {
+      managementPayload.managementPort = managementPort;
+    }
+  }
+
+  if (Object.keys(managementPayload).length > 0) {
+    payload.managementInfo = managementPayload;
+  }
+
+  return payload;
+}
+
+function normalizeImportedLink(rawLink) {
+  if (!rawLink || typeof rawLink !== "object") {
+    return null;
+  }
+
+  const source = firstString(rawLink.source, rawLink.sourceNode, rawLink.source_node);
+  const destination = firstString(rawLink.destination, rawLink.target, rawLink.targetNode, rawLink.target_node);
+  if (!source || !destination || source === destination) {
+    return null;
+  }
+
+  const rawBandwidth = rawLink.bandwidth;
+  let bandwidth = "";
+  if (typeof rawBandwidth === "number" && Number.isFinite(rawBandwidth)) {
+    bandwidth = `${rawBandwidth}`;
+  } else if (typeof rawBandwidth === "string") {
+    bandwidth = rawBandwidth;
+  }
+
+  return {
+    source,
+    destination,
+    bandwidth,
+  };
+}
+
+function firstString(...values) {
+  for (const value of values) {
+    if (typeof value === "string" && value.trim() !== "") {
+      return value.trim();
+    }
+  }
+
+  return "";
+}
+
 function toggleNodeEditForm() {
   const form = document.getElementById("node-edit-form");
   if (!form) {
@@ -1249,7 +1666,7 @@ function clearStreamDetails() {
 async function gatherPayload(action) {
   switch (action) {
     case "addNode":
-      return { query: getValue("node-search") };
+      return { query: "" };
     case "editNode":
       return {
         id: state.selectedNodeID,
@@ -1372,6 +1789,13 @@ function getValue(id) {
     return "";
   }
   return element.value || "";
+}
+
+function setInputValue(id, value) {
+  const element = document.getElementById(id);
+  if (element) {
+    element.value = value;
+  }
 }
 
 function setText(id, value) {

@@ -318,6 +318,12 @@ select {
   gap: 0;
 }
 
+.topology-workspace-grid {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  gap: 10px;
+}
+
 
 /* =========================================================
    CARDS
@@ -432,9 +438,50 @@ select {
   font-size: 16px;
 }
 
+.topology-create-card {
+  min-height: 640px;
+}
+
+.topology-create-card h3,
+#screen-topology-nodes .list-card h3,
+#screen-topology-links .list-card h3 {
+  border-bottom: 1px dotted #c8ced7;
+}
+
+.create-form-stack {
+  display: grid;
+  gap: 8px;
+  padding: 10px 12px;
+}
+
+.create-form-stack h4 {
+  margin: 4px 0 2px;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.create-form-stack label {
+  display: grid;
+  gap: 4px;
+  font-size: 16px;
+}
+
+.create-form-stack input,
+.create-form-stack select {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 8px 10px;
+  background: #fff;
+}
+
+.create-form-stack #add-node-btn,
+.create-form-stack #add-link-btn {
+  margin-top: 8px;
+}
+
 /* Match typography across Device Models and Topology screens */
 #screen-device-models .card h3,
-#screen-topology-overview .card h3,
 #screen-topology-nodes .card h3,
 #screen-topology-links .card h3 {
   font-size: 26px;
@@ -442,10 +489,8 @@ select {
 }
 
 #screen-device-models .control-row input,
-#screen-topology-overview .control-row input,
 #screen-topology-nodes .control-row input,
 #screen-topology-links .control-row input,
-#screen-topology-overview .control-row select,
 #screen-topology-nodes .control-row select,
 #screen-topology-links .control-row select {
   font-size: 16px;
@@ -460,14 +505,12 @@ select {
 }
 
 #screen-device-models .details-card dt,
-#screen-topology-overview .details-card dt,
 #screen-topology-nodes .details-card dt,
 #screen-topology-links .details-card dt {
   font-size: 16px;
 }
 
 #screen-device-models .details-card dd,
-#screen-topology-overview .details-card dd,
 #screen-topology-nodes .details-card dd,
 #screen-topology-links .details-card dd {
   font-size: 15px;
@@ -475,43 +518,39 @@ select {
   min-height: 20px;
 }
 
-#screen-topology-overview .network-card,
 #screen-topology-nodes .list-card,
 #screen-topology-links .list-card {
   margin-right: 0;
 }
 
-#screen-topology-overview .recent-events-card,
 #screen-topology-nodes .recent-events-card,
 #screen-topology-links .recent-events-card {
   margin-right: 0;
   margin-top: 18px;
 }
 
-#screen-topology-overview .details-card,
 #screen-topology-nodes .details-card,
 #screen-topology-links .details-card {
   margin-left: 22px;
 }
 
-#screen-topology-overview .details-card h3,
 #screen-topology-nodes .details-card h3,
 #screen-topology-links .details-card h3 {
   border-bottom: 1px dotted #c8ced7;
 }
 
-#screen-topology-overview .control-row,
 #screen-topology-nodes .control-row,
 #screen-topology-links .control-row {
   padding-bottom: 12px;
 }
 
-#screen-topology-overview .topology-canvas {
-  min-height: 462px;
+#screen-topology-nodes .topology-import-row {
+  padding-bottom: 16px;
+  align-items: center;
 }
 
-#screen-topology-overview .details-card {
-  min-height: 0;
+#screen-topology-nodes .topology-import-row input {
+  min-width: 320px;
 }
 
 
@@ -588,7 +627,7 @@ select {
    ========================================================= */
 
 .list-card {
-  min-height: 340px;
+  min-height: 640px;
 }
 
 .selectable-list {
@@ -662,6 +701,7 @@ select {
   padding: 18px 14px 8px;
   display: flex;
   gap: 10px;
+  flex-wrap: wrap;
 }
 
 .compact-actions {
@@ -671,6 +711,11 @@ select {
 
 .compact-actions .action-button {
   min-width: 110px;
+}
+
+#screen-topology-links .detail-actions,
+#screen-topology-nodes .detail-actions {
+  justify-content: flex-start;
 }
 
 
@@ -878,8 +923,14 @@ select {
 
 .monitoring-detail-actions {
   display: flex;
-  gap: 8px;
+  gap: 6px;
   padding-top: 12px;
+}
+
+.monitoring-detail-actions .action-button {
+  font-size: 15px;
+  padding: 7px 12px;
+  border-radius: 9px;
 }
 
 .monitoring-selected-card {
@@ -1031,6 +1082,29 @@ thead th {
   display: none !important;
 }
 
+@media (max-width: 1320px) {
+  .topology-workspace-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 900px) {
+  .operation-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .left-column {
+    border-right: 0;
+    padding: 0;
+  }
+
+  .details-card {
+    margin-left: 0;
+    min-height: 0;
+  }
+}
+
 
 /* =========================================================
    TOAST
@@ -1166,7 +1240,6 @@ thead th {
     flex-wrap: wrap;
   }
 
-  #screen-topology-overview .details-card,
   #screen-topology-nodes .details-card,
   #screen-topology-links .details-card {
     margin-left: 0;

@@ -12,7 +12,7 @@
     rel="stylesheet"
   >
 
-  <link rel="stylesheet" href="/styles.css?v=monitoring-v2">
+  <link rel="stylesheet" href="/styles.css?v=topology-v3">
 </head>
 
 <body>
@@ -84,14 +84,6 @@
 
             <button
               class="nav-subitem is-active"
-              data-screen="topology-overview"
-              type="button"
-            >
-              Overview
-            </button>
-
-            <button
-              class="nav-subitem"
               data-screen="topology-nodes"
               type="button"
             >
@@ -184,6 +176,21 @@
 
 
         <div class="topbar-actions">
+
+          <button
+            class="action-button action-button-topbar hidden"
+            id="import-topology-btn"
+            type="button"
+          >
+            <span>Import Topology</span>
+          </button>
+
+          <input
+            id="import-topology-input"
+            type="file"
+            accept=".json,application/json"
+            class="hidden"
+          >
 
           <button
             class="action-button action-button-topbar"
@@ -529,115 +536,6 @@
 
 
       <!-- =====================================================
-           TOPOLOGY / OVERVIEW
-           ===================================================== -->
-
-      <section
-        class="screen"
-        id="screen-topology-overview"
-      >
-
-        <div class="content-grid operation-grid">
-
-          <div class="left-column">
-
-            <section class="card network-card topology-overview-network">
-
-              <div class="section-heading">
-
-                <div>
-
-                  <p class="section-kicker">
-                    Topology
-                  </p>
-
-                  <h3>Overview</h3>
-
-                </div>
-
-              </div>
-
-
-              <div
-                id="topology-overview-canvas"
-                class="topology-canvas empty"
-              >
-
-                <p>
-                  Topology will appear here when backend data is available.
-                </p>
-
-              </div>
-
-            </section>
-
-
-            <section class="card recent-events-card">
-
-              <h3>Recent Events</h3>
-
-              <table>
-
-                <thead>
-
-                  <tr>
-                    <th>Time</th>
-                    <th>Type</th>
-                    <th>Severity</th>
-                    <th>Message</th>
-                  </tr>
-
-                </thead>
-
-
-                <tbody id="topology-recent-events-body">
-
-                  <tr>
-                    <td
-                      colspan="4"
-                      class="empty-cell"
-                    >
-                      No recent events
-                    </td>
-                  </tr>
-
-                </tbody>
-
-              </table>
-
-            </section>
-
-          </div>
-
-
-          <section class="card details-card topology-overview-details">
-
-            <h3>Topology Summary</h3>
-
-            <dl>
-
-              <dt>Nodes</dt>
-              <dd id="topology-node-count">-</dd>
-
-              <dt>Links</dt>
-              <dd id="topology-link-count">-</dd>
-
-              <dt>Bridges</dt>
-              <dd id="topology-bridge-count">-</dd>
-
-              <dt>End Stations</dt>
-              <dd id="topology-end-station-count">-</dd>
-
-            </dl>
-
-          </section>
-
-        </div>
-
-      </section>
-
-
-      <!-- =====================================================
            TOPOLOGY / NODES
            ===================================================== -->
 
@@ -650,77 +548,108 @@
 
           <div class="left-column">
 
-            <div class="control-row">
+            <div class="control-row topology-import-row">
 
-              <input
-                id="node-search"
-                type="text"
-                placeholder="Search nodes..."
-              >
+          <input
+            id="node-upload"
+            type="file"
+            accept=".json,application/json"
+          >
 
-              <button
-                class="action-button"
-                id="add-node-upload-btn"
-                type="button"
-              >
-                Add Node
-              </button>
+          <button
+            class="action-button"
+            id="import-node-btn"
+            type="button"
+          >
+            Import Node
+          </button>
 
-              <input
-                id="add-node-upload-input"
-                type="file"
-                accept=".json,application/json"
-                class="hidden"
-              >
+        </div>
+
+            <div class="topology-workspace-grid">
+
+              <section class="card form-card topology-create-card">
+
+                <h3>Create Node</h3>
+
+                <div class="create-form-stack">
+
+                  <label>
+                    <span>Name</span>
+                    <input id="node-create-name" type="text" placeholder="Name...">
+                  </label>
+
+                  <label>
+                    <span>Type</span>
+                    <select id="node-create-type">
+                      <option value="">None</option>
+                      <option value="END_STATION">END_STATION</option>
+                      <option value="BRIDGE">BRIDGE</option>
+                      <option value="BRIDGED_END_STATION">BRIDGED_END_STATION</option>
+                    </select>
+                  </label>
+
+                  <label>
+                    <span>Device Model</span>
+                    <select id="node-create-device-model">
+                      <option value="">None</option>
+                    </select>
+                  </label>
+
+                  <h4>Management Info</h4>
+
+                  <label>
+                    <span>IP Address</span>
+                    <input id="node-create-ip" type="text" placeholder="IP Address...">
+                  </label>
+
+                  <label>
+                    <span>Management Protocol</span>
+                    <select id="node-create-protocol">
+                      <option value="">None</option>
+                      <option value="NETCONF">NETCONF</option>
+                      <option value="SNMP">SNMP</option>
+                    </select>
+                  </label>
+
+                  <label>
+                    <span>Management Port</span>
+                    <input id="node-create-port" type="number" min="1" max="65535" placeholder="Port...">
+                  </label>
+
+                  <label>
+                    <span>Username</span>
+                    <input id="node-create-username" type="text" placeholder="Username...">
+                  </label>
+
+                  <label>
+                    <span>Password</span>
+                    <input id="node-create-password" type="password" placeholder="Password...">
+                  </label>
+
+                  <button class="action-button" id="add-node-btn" type="button">Add Node</button>
+
+                </div>
+
+              </section>
+
+
+              <section class="card list-card">
+
+                <h3>Available Nodes</h3>
+
+                <ul
+                  class="selectable-list"
+                  id="node-list"
+                >
+                  <li class="empty-item">
+                    No nodes available
+                  </li>
+                </ul>
+
+              </section>
 
             </div>
-
-
-            <section class="card list-card">
-
-              <h3>Available Nodes</h3>
-
-              <ul
-                class="selectable-list"
-                id="node-list"
-              >
-                <li class="empty-item">
-                  No nodes available
-                </li>
-              </ul>
-
-            </section>
-
-
-            <section class="card recent-events-card">
-
-              <h3>Recent Events</h3>
-
-              <table>
-
-                <thead>
-                  <tr>
-                    <th>Time</th>
-                    <th>Type</th>
-                    <th>Severity</th>
-                    <th>Message</th>
-                  </tr>
-                </thead>
-
-                <tbody id="node-recent-events-body">
-                  <tr>
-                    <td
-                      colspan="4"
-                      class="empty-cell"
-                    >
-                      No recent events
-                    </td>
-                  </tr>
-                </tbody>
-
-              </table>
-
-            </section>
 
           </div>
 
@@ -853,7 +782,7 @@
                 id="toggle-node-edit"
                 type="button"
               >
-                Edit Node
+                Edit node
               </button>
 
               <button
@@ -862,7 +791,7 @@
                 data-confirm="Delete the selected node?"
                 type="button"
               >
-                Delete Node
+                Delete node
               </button>
 
             </div>
@@ -887,70 +816,61 @@
 
           <div class="left-column">
 
-            <div class="control-row">
+            <div class="topology-workspace-grid">
 
-              <input
-                id="link-search"
-                type="text"
-                placeholder="Search links..."
-              >
+              <section class="card form-card topology-create-card">
 
-              <button
-                class="action-button"
-                data-action="addLink"
-                type="button"
-              >
-                Add Link
-              </button>
+                <h3>Create Link</h3>
+
+                <div class="create-form-stack">
+
+                  <label>
+                    <span>Source</span>
+                    <select id="link-source">
+                      <option value="">None</option>
+                    </select>
+                  </label>
+
+                  <label>
+                    <span>Destination</span>
+                    <select id="link-destination">
+                      <option value="">None</option>
+                    </select>
+                  </label>
+
+                  <label>
+                    <span>Bandwidth</span>
+                    <select id="link-bandwidth">
+                      <option value="">None</option>
+                      <option value="100Mbps">100Mbps</option>
+                      <option value="1Gbps">1Gbps</option>
+                      <option value="10Gbps">10Gbps</option>
+                    </select>
+                  </label>
+
+                  <button class="action-button" id="add-link-btn" type="button">Add Link</button>
+
+                </div>
+
+              </section>
+
+
+              <section class="card list-card">
+
+                <h3>Available Links</h3>
+
+                <ul
+                  class="selectable-list"
+                  id="link-list"
+                >
+                  <li class="empty-item">
+                    No links available
+                  </li>
+                </ul>
+
+              </section>
 
             </div>
-
-
-            <section class="card list-card">
-
-              <h3>Available Links</h3>
-
-              <ul
-                class="selectable-list"
-                id="link-list"
-              >
-                <li class="empty-item">
-                  No links available
-                </li>
-              </ul>
-
-            </section>
-
-
-            <section class="card recent-events-card">
-
-              <h3>Recent Events</h3>
-
-              <table>
-
-                <thead>
-                  <tr>
-                    <th>Time</th>
-                    <th>Type</th>
-                    <th>Severity</th>
-                    <th>Message</th>
-                  </tr>
-                </thead>
-
-                <tbody id="link-recent-events-body">
-                  <tr>
-                    <td
-                      colspan="4"
-                      class="empty-cell"
-                    >
-                      No recent events
-                    </td>
-                  </tr>
-                </tbody>
-
-              </table>
-
-            </section>
 
           </div>
 
@@ -980,20 +900,20 @@
             <div class="detail-actions">
 
               <button
-                class="action-button"
-                data-action="updateLink"
-                type="button"
-              >
-                Edit Link
-              </button>
-
-              <button
                 class="action-button danger"
                 data-action="deleteLink"
                 data-confirm="Delete the selected link?"
                 type="button"
               >
                 Delete Link
+              </button>
+
+              <button
+                class="action-button"
+                data-action="updateLink"
+                type="button"
+              >
+                Update Link
               </button>
 
             </div>
