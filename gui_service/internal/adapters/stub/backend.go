@@ -195,6 +195,148 @@ func (b *Backend) GetDeviceModels(_ context.Context) ([]domain.DeviceModel, erro
 	return models, nil
 }
 
+func (b *Backend) GetMonitoringCounters(_ context.Context) ([]domain.MonitoringItem, error) {
+	return []domain.MonitoringItem{
+		{ID: "rx_packets", Label: "RX Packets", Description: "Total packets received on monitored interfaces"},
+		{ID: "tx_packets", Label: "TX Packets", Description: "Total packets transmitted on monitored interfaces"},
+		{ID: "rx_drops", Label: "RX Drops", Description: "Packets dropped on ingress before forwarding"},
+		{ID: "tx_drops", Label: "TX Drops", Description: "Packets dropped on egress due to queue or policy"},
+		{ID: "stream_rejections", Label: "Stream Rejections", Description: "Streams rejected by admission or policy checks"},
+	}, nil
+}
+
+func (b *Backend) GetMonitoringMetrics(_ context.Context) ([]domain.MonitoringItem, error) {
+	return []domain.MonitoringItem{
+		{ID: "bandwidth_usage", Label: "Bandwidth Usage", Description: "Observed throughput compared to link capacity"},
+		{ID: "latency_mean", Label: "Mean Latency", Description: "Average end-to-end delivery latency"},
+		{ID: "packet_loss_rate", Label: "Packet Loss Rate", Description: "Percentage of packets not delivered"},
+	}, nil
+}
+
+func (b *Backend) GetMonitoringTargets(_ context.Context) ([]domain.MonitoringTarget, error) {
+	return []domain.MonitoringTarget{
+		{
+			ID:       "sw1_sw0p2",
+			Node:     "Switch 1",
+			Port:     "sw0p2",
+			Label:    "Switch 1 - port sw0p2",
+			Counters: []string{"rx_packets", "tx_packets", "rx_drops", "tx_drops"},
+			Metrics:  []string{"bandwidth_usage", "latency_mean", "packet_loss_rate"},
+		},
+		{
+			ID:       "sw1_sw0p4",
+			Node:     "Switch 1",
+			Port:     "sw0p4",
+			Label:    "Switch 1 - port sw0p4",
+			Counters: []string{"rx_packets", "tx_packets"},
+			Metrics:  []string{"bandwidth_usage", "latency_mean"},
+		},
+		{
+			ID:       "sw2_sw0p1",
+			Node:     "Switch 2",
+			Port:     "sw0p1",
+			Label:    "Switch 2 - port sw0p1",
+			Counters: []string{"rx_packets", "tx_packets", "stream_rejections"},
+			Metrics:  []string{"bandwidth_usage", "packet_loss_rate"},
+		},
+	}, nil
+}
+
+func (b *Backend) GetMonitoringData(_ context.Context, query domain.MonitoringDataQuery) ([]domain.MonitoringTargetData, error) {
+	targets, err := b.GetMonitoringTargets(context.Background())
+	if err != nil {
+		return nil, err
+	}
+
+	counters, err := b.GetMonitoringCounters(context.Background())
+	if err != nil {
+		return nil, err
+	}
+
+	metrics, err := b.GetMonitoringMetrics(context.Background())
+	if err != nil {
+		return nil, err
+	}
+
+	labelByID := map[string]string{}
+	for _, item := range counters {
+		labelByID[item.ID] = item.Label
+	}
+	for _, item := range metrics {
+		labelByID[item.ID] = item.Label
+	}
+
+	rawValues := map[string]map[string]string{
+		"sw1_sw0p2": {
+			"rx_packets":       "1500",
+			"tx_packets":       "18",
+			"rx_drops":         "2",
+			"tx_drops":         "1",
+			"bandwidth_usage":  "41%",
+			"latency_mean":     "0.8 ms",
+			"packet_loss_rate": "0.12%",
+		},
+		"sw1_sw0p4": {
+			"rx_packets":       "700",
+			"tx_packets":       "1498",
+			"bandwidth_usage":  "72%",
+			"latency_mean":     "1.3 ms",
+			"packet_loss_rate": "0.08%",
+		},
+		"sw2_sw0p1": {
+			"rx_packets":        "924",
+			"tx_packets":        "907",
+			"stream_rejections": "5",
+			"bandwidth_usage":   "58%",
+			"packet_loss_rate":  "0.20%",
+		},
+	}
+
+	metricIDs := query.MetricIDs
+	if len(metricIDs) == 0 {
+		metricIDs = []string{"rx_packets", "tx_packets"}
+	}
+
+	filtered := make([]domain.MonitoringTargetData, 0)
+	for _, target := range targets {
+		if query.TargetID != "" && target.ID != query.TargetID {
+			continue
+		}
+		if query.Node != "" && !strings.EqualFold(target.Node, query.Node) {
+			continue
+		}
+
+		values := make([]domain.MonitoringValue, 0)
+		for _, metricID := range metricIDs {
+			valueByMetric, found := rawValues[target.ID]
+			if !found {
+				continue
+			}
+
+			value, ok := valueByMetric[metricID]
+			if !ok {
+				continue
+			}
+
+			values = append(values, domain.MonitoringValue{
+				ID:    metricID,
+				Label: labelByID[metricID],
+				Value: value,
+			})
+		}
+
+		filtered = append(filtered, domain.MonitoringTargetData{
+			TargetID: target.ID,
+			Label:    target.Label,
+			Node:     target.Node,
+			Port:     target.Port,
+			Values:   values,
+		})
+	}
+
+	return filtered, nil
+}
+
 func (b *Backend) GetNodes(_ context.Context) ([]domain.Node, error) {
 	return []domain.Node{}, nil
 }
@@ -483,12 +625,161 @@ func (b *Backend) AddNode(_ context.Context, query string) (domain.OperationResu
 	}, nil
 }
 
-func (b *Backend) EditNode(_ context.Context, nodeID string) (domain.OperationResult, error) {
-	return b.result("editNode", map[string]string{"nodeId": nodeID}), nil
+func parseNodeRole(raw string) (topology.NodeRole, bool) {
+	normalized := strings.ToUpper(strings.TrimSpace(raw))
+	normalized = strings.ReplaceAll(normalized, "-", "_")
+	normalized = strings.ReplaceAll(normalized, " ", "_")
+
+	switch normalized {
+	case "", "UNKNOWN":
+		return topology.NodeRole_UNKNOWN, true
+	case "END_STATION", "ENDNODE", "END_NODE":
+		return topology.NodeRole_END_STATION, true
+	case "BRIDGE":
+		return topology.NodeRole_BRIDGE, true
+	case "BRIDGED_END_STATION", "BRIDGED_ENDNODE", "BRIDGED_END_NODE":
+		return topology.NodeRole_BRIDGED_END_STATION, true
+	default:
+		return topology.NodeRole_UNKNOWN, false
+	}
+}
+
+func (b *Backend) EditNode(_ context.Context, nodeID, name, nodeType, state, ports, links string) (domain.OperationResult, error) {
+	if strings.TrimSpace(nodeID) == "" {
+		b.recordEvent("warning", "editNode", "nodes", "Edit requested without selecting a node", "")
+		return domain.OperationResult{
+			Success: false,
+			Name:    "editNode",
+			Message: "no node selected",
+			Data:    map[string]string{},
+		}, nil
+	}
+
+	current, _, err := storewrapper.GetNode(nodeID)
+	if err != nil {
+		b.recordEvent("error", "editNode", "nodes",
+			fmt.Sprintf("Node %s not found", nodeID), nodeID)
+
+		return domain.OperationResult{
+			Success: false,
+			Name:    "editNode",
+			Message: fmt.Sprintf("node %s not found: %v", nodeID, err),
+			Data:    map[string]string{"nodeId": nodeID},
+		}, nil
+	}
+
+	previousName := current.GetName()
+	name = strings.TrimSpace(name)
+	nodeType = strings.TrimSpace(nodeType)
+
+	if name != "" {
+		current.Name = name
+	}
+
+	if nodeType != "" {
+		parsedRole, ok := parseNodeRole(nodeType)
+		if !ok {
+			b.recordEvent("warning", "editNode", "nodes", fmt.Sprintf("Invalid node type for %s: %s", nodeID, nodeType), nodeID)
+			return domain.OperationResult{
+				Success: false,
+				Name:    "editNode",
+				Message: fmt.Sprintf("invalid node type: %s", nodeType),
+				Data:    map[string]string{"nodeId": nodeID},
+			}, nil
+		}
+		current.Type = parsedRole
+	}
+
+	if previousName != current.GetName() {
+		if err := storewrapper.DeleteNode(nodeID); err != nil {
+			b.recordEvent("error", "editNode", "nodes", fmt.Sprintf("Failed renaming node %s", nodeID), nodeID)
+			return domain.OperationResult{
+				Success: false,
+				Name:    "editNode",
+				Message: fmt.Sprintf("failed to rename node %s: %v", nodeID, err),
+				Data:    map[string]string{"nodeId": nodeID},
+			}, nil
+		}
+
+		if err := storewrapper.StoreNode(current); err != nil {
+			b.recordEvent("error", "editNode", "nodes", fmt.Sprintf("Failed saving renamed node %s", current.GetName()), current.GetName())
+			return domain.OperationResult{
+				Success: false,
+				Name:    "editNode",
+				Message: fmt.Sprintf("failed to save renamed node %s: %v", current.GetName(), err),
+				Data:    map[string]string{"nodeId": current.GetName()},
+			}, nil
+		}
+
+		b.recordEvent("info", "editNode", "nodes", fmt.Sprintf("Renamed node %s to %s", previousName, current.GetName()), current.GetName())
+	} else {
+		if err := storewrapper.EditNode(current); err != nil {
+			b.recordEvent("error", "editNode", "nodes", fmt.Sprintf("Failed saving updated node %s", current.GetName()), current.GetName())
+			return domain.OperationResult{
+				Success: false,
+				Name:    "editNode",
+				Message: fmt.Sprintf("failed to save updated node %s: %v", current.GetName(), err),
+				Data:    map[string]string{"nodeId": current.GetName()},
+			}, nil
+		}
+
+		b.recordEvent("info", "editNode", "nodes", fmt.Sprintf("Updated node %s", current.GetName()), current.GetName())
+	}
+
+	return domain.OperationResult{
+		Success: true,
+		Name:    "editNode",
+		Message: fmt.Sprintf("node %s updated", current.GetName()),
+		Data: map[string]string{
+			"nodeId": current.GetName(),
+			"name":   current.GetName(),
+			"type":   current.GetType().String(),
+			"state":  state,
+			"ports":  ports,
+			"links":  links,
+		},
+	}, nil
 }
 
 func (b *Backend) DeleteNode(_ context.Context, nodeID string) (domain.OperationResult, error) {
-	return b.result("deleteNode", map[string]string{"nodeId": nodeID}), nil
+	if strings.TrimSpace(nodeID) == "" {
+		b.recordEvent("warning", "deleteNode", "nodes",
+			"Delete requested without selecting a node", "")
+
+		return domain.OperationResult{
+			Success: false,
+			Name:    "deleteNode",
+			Message: "no node selected",
+			Data:    map[string]string{},
+		}, nil
+	}
+
+	if err := storewrapper.DeleteNode(nodeID); err != nil {
+		b.recordEvent("error", "deleteNode", "nodes",
+			fmt.Sprintf("Failed deleting node %s", nodeID), nodeID)
+
+		return domain.OperationResult{
+			Success: false,
+			Name:    "deleteNode",
+			Message: fmt.Sprintf("failed to delete node %s: %v", nodeID, err),
+			Data:    map[string]string{"nodeId": nodeID},
+		}, nil
+	}
+
+	b.recordEvent(
+		"info",
+		"deleteNode",
+		"nodes",
+		fmt.Sprintf("Deleted node %s", nodeID),
+		nodeID,
+	)
+
+	return domain.OperationResult{
+		Success: true,
+		Name:    "deleteNode",
+		Message: fmt.Sprintf("node %s deleted", nodeID),
+		Data:    map[string]string{"nodeId": nodeID},
+	}, nil
 }
 
 func (b *Backend) AddLink(_ context.Context, source, destination, bandwidth string) (domain.OperationResult, error) {

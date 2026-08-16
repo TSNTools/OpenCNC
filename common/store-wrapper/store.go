@@ -150,6 +150,26 @@ func GetNode(name string) (*topology.Node, string, error) {
 	return node, prefix, nil
 }
 
+func DeleteNode(name string) error {
+	client, err := createEtcdClient()
+	if err != nil {
+		return fmt.Errorf("failed to create etcd client: %w", err)
+	}
+	defer client.Close()
+
+	_, prefix, err := getNode(client, name)
+	if err != nil {
+		return err
+	}
+
+	key := strings.ReplaceAll(prefix+"."+name, ".", "/")
+
+	if _, err := client.Delete(context.Background(), key); err != nil {
+		return fmt.Errorf("failed to delete node %s: %w", name, err)
+	}
+
+	return nil
+}
 func StoreTopology(topo *topology.Topology) error {
 
 	//log.Infof("Storing topology...")

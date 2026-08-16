@@ -21,6 +21,35 @@ type DeviceModel struct {
 	Yang    string `json:"yang"`
 }
 
+type MonitoringItem struct {
+	ID          string `json:"id"`
+	Label       string `json:"label"`
+	Description string `json:"description"`
+}
+
+type MonitoringTarget struct {
+	ID       string   `json:"id"`
+	Node     string   `json:"node"`
+	Port     string   `json:"port"`
+	Label    string   `json:"label"`
+	Counters []string `json:"counters"`
+	Metrics  []string `json:"metrics"`
+}
+
+type MonitoringValue struct {
+	ID    string `json:"id"`
+	Label string `json:"label"`
+	Value string `json:"value"`
+}
+
+type MonitoringTargetData struct {
+	TargetID string            `json:"targetId"`
+	Label    string            `json:"label"`
+	Node     string            `json:"node"`
+	Port     string            `json:"port"`
+	Values   []MonitoringValue `json:"values"`
+}
+
 type Node struct {
 	ID    string `json:"id"`
 	Name  string `json:"name"`
@@ -65,4 +94,10 @@ type OperationResult struct {
 type LogsQuery struct {
 	Severity string
 	OrderBy  string
+}
+
+type MonitoringDataQuery struct {
+	Node      string
+	TargetID  string
+	MetricIDs []string
 }

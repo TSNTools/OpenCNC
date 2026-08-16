@@ -24,6 +24,22 @@ func (s *Service) GetDeviceModels(ctx context.Context) ([]domain.DeviceModel, er
 	return s.reader.GetDeviceModels(ctx)
 }
 
+func (s *Service) GetMonitoringCounters(ctx context.Context) ([]domain.MonitoringItem, error) {
+	return s.reader.GetMonitoringCounters(ctx)
+}
+
+func (s *Service) GetMonitoringMetrics(ctx context.Context) ([]domain.MonitoringItem, error) {
+	return s.reader.GetMonitoringMetrics(ctx)
+}
+
+func (s *Service) GetMonitoringTargets(ctx context.Context) ([]domain.MonitoringTarget, error) {
+	return s.reader.GetMonitoringTargets(ctx)
+}
+
+func (s *Service) GetMonitoringData(ctx context.Context, query domain.MonitoringDataQuery) ([]domain.MonitoringTargetData, error) {
+	return s.reader.GetMonitoringData(ctx, query)
+}
+
 func (s *Service) GetNodes(ctx context.Context) ([]domain.Node, error) {
 	return s.reader.GetNodes(ctx)
 }
@@ -69,9 +85,9 @@ func (s *Service) AddNode(ctx context.Context, query string) (domain.OperationRe
 	return s.operations.AddNode(ctx, query)
 }
 
-func (s *Service) EditNode(ctx context.Context, nodeID string) (domain.OperationResult, error) {
+func (s *Service) EditNode(ctx context.Context, nodeID, name, nodeType, state, ports, links string) (domain.OperationResult, error) {
 	log.Printf("[GUI] app.EditNode called")
-	return s.operations.EditNode(ctx, nodeID)
+	return s.operations.EditNode(ctx, nodeID, name, nodeType, state, ports, links)
 }
 
 func (s *Service) DeleteNode(ctx context.Context, nodeID string) (domain.OperationResult, error) {

@@ -21,6 +21,10 @@ type simpleInput struct {
 	Severity    string `json:"severity"`
 	OrderBy     string `json:"orderBy"`
 	Name        string `json:"name"`
+	Type        string `json:"type"`
+	State       string `json:"state"`
+	Ports       string `json:"ports"`
+	Links       string `json:"links"`
 	Version     string `json:"version"`
 	Vendor      string `json:"vendor"`
 	Yang        string `json:"yang"`
@@ -75,6 +79,79 @@ func (h *Handler) DeviceModels(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	writeJSON(w, http.StatusOK, models)
+}
+
+func (h *Handler) MonitoringCounters(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		methodNotAllowed(w)
+		return
+	}
+
+	counters, err := h.service.GetMonitoringCounters(r.Context())
+	if err != nil {
+		internalError(w, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, counters)
+}
+
+func (h *Handler) MonitoringMetrics(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		methodNotAllowed(w)
+		return
+	}
+
+	metrics, err := h.service.GetMonitoringMetrics(r.Context())
+	if err != nil {
+		internalError(w, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, metrics)
+}
+
+func (h *Handler) MonitoringTargets(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		methodNotAllowed(w)
+		return
+	}
+
+	targets, err := h.service.GetMonitoringTargets(r.Context())
+	if err != nil {
+		internalError(w, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, targets)
+}
+
+func (h *Handler) MonitoringData(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		methodNotAllowed(w)
+		return
+	}
+
+	rawMetrics := strings.TrimSpace(r.URL.Query().Get("metrics"))
+	metricIDs := []string{}
+	if rawMetrics != "" {
+		for _, entry := range strings.Split(rawMetrics, ",") {
+			trimmed := strings.TrimSpace(entry)
+			if trimmed != "" {
+				metricIDs = append(metricIDs, trimmed)
+			}
+		}
+	}
+
+	query := domain.MonitoringDataQuery{
+		Node:      strings.TrimSpace(r.URL.Query().Get("node")),
+		TargetID:  strings.TrimSpace(r.URL.Query().Get("targetId")),
+		MetricIDs: metricIDs,
+	}
+
+	data, err := h.service.GetMonitoringData(r.Context(), query)
+	if err != nil {
+		internalError(w, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, data)
 }
 
 func (h *Handler) UploadModel(w http.ResponseWriter, r *http.Request) {
@@ -151,7 +228,8 @@ func (h *Handler) NodeByID(w http.ResponseWriter, r *http.Request) {
 
 	switch r.Method {
 	case http.MethodPatch:
-		result, err := h.service.EditNode(r.Context(), nodeID)
+		input := decodeInput(r)
+		result, err := h.service.EditNode(r.Context(), nodeID, input.Name, input.Type, input.State, input.Ports, input.Links)
 		if err != nil {
 			internalError(w, err)
 			return

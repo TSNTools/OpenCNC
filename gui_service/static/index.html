@@ -12,7 +12,7 @@
     rel="stylesheet"
   >
 
-  <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="/styles.css?v=monitoring-v2">
 </head>
 
 <body>
@@ -750,11 +750,107 @@
 
             </dl>
 
+            <form
+              id="node-edit-form"
+              class="inline-edit-form hidden"
+            >
+
+              <div class="field-grid">
+
+                <label>
+
+                  <span>Name</span>
+
+                  <input
+                    id="node-edit-name"
+                    type="text"
+                    placeholder="Node name"
+                  >
+
+                </label>
+
+
+                <label>
+
+                  <span>Type</span>
+
+                  <input
+                    id="node-edit-type"
+                    type="text"
+                    placeholder="BRIDGE / END_STATION"
+                  >
+
+                </label>
+
+
+                <label>
+
+                  <span>State</span>
+
+                  <input
+                    id="node-edit-state"
+                    type="text"
+                    placeholder="State"
+                  >
+
+                </label>
+
+
+                <label>
+
+                  <span>Ports</span>
+
+                  <input
+                    id="node-edit-ports"
+                    type="text"
+                    placeholder="Ports"
+                  >
+
+                </label>
+
+
+                <label class="full-width">
+
+                  <span>Links</span>
+
+                  <input
+                    id="node-edit-links"
+                    type="text"
+                    placeholder="Links"
+                  >
+
+                </label>
+
+              </div>
+
+
+              <div class="detail-actions compact-actions">
+
+                <button
+                  type="button"
+                  class="action-button"
+                  id="node-save-edit"
+                >
+                  Save
+                </button>
+
+                <button
+                  type="button"
+                  class="action-button ghost"
+                  id="node-cancel-edit"
+                >
+                  Cancel
+                </button>
+
+              </div>
+
+            </form>
+
             <div class="detail-actions">
 
               <button
                 class="action-button"
-                data-action="editNode"
+                id="toggle-node-edit"
                 type="button"
               >
                 Edit Node
@@ -1056,46 +1152,107 @@
         id="screen-monitoring"
       >
 
-        <div class="content-grid operation-grid">
+        <div class="monitoring-grid">
 
+          <div class="monitoring-left-panel">
 
-          <div class="left-column">
+            <section class="card monitoring-target-card">
 
-            <section
-              class="card list-card monitoring-list-card"
-            >
+              <div class="monitoring-target-row">
+                <span class="monitoring-target-label">Target</span>
 
-              <h3>
-                Available Counters
-              </h3>
+                <select id="monitoring-node-select">
+                  <option value="">Select Node</option>
+                </select>
 
-              <ul
-                class="selectable-list monitoring-options-list"
-                id="monitoring-counter-list"
-              >
-                <li class="empty-item">
-                  No counters available
-                </li>
-              </ul>
+                <select id="monitoring-port-select">
+                  <option value="">Select Port</option>
+                </select>
+              </div>
 
             </section>
 
 
-            <section
-              class="card list-card monitoring-list-card"
-            >
+            <div class="monitoring-workspace-card card">
 
-              <h3>
-                Available Metrics
-              </h3>
+              <section class="monitoring-available-column">
+
+                <input
+                  id="monitoring-search"
+                  type="text"
+                  placeholder="Search..."
+                >
+
+                <ul
+                  id="monitoring-available-list"
+                  class="monitoring-available-list"
+                >
+                  <li class="empty-item">Select a target</li>
+                </ul>
+
+              </section>
+
+
+              <section class="monitoring-detail-column">
+
+                <h3>Metric Details</h3>
+
+                <dl>
+                  <dt>Name</dt>
+                  <dd id="monitoring-detail-name">-</dd>
+
+                  <dt>Description</dt>
+                  <dd id="monitoring-detail-description">-</dd>
+
+                  <dt>Type</dt>
+                  <dd id="monitoring-detail-type">-</dd>
+
+                  <dt>Target</dt>
+                  <dd id="monitoring-detail-target">-</dd>
+                </dl>
+
+                <div class="monitoring-detail-actions">
+                  <button
+                    id="monitoring-add-selection"
+                    type="button"
+                    class="action-button"
+                  >
+                    Add to selection
+                  </button>
+
+                  <button
+                    id="monitoring-remove-selection"
+                    type="button"
+                    class="action-button ghost"
+                  >
+                    Remove from selection
+                  </button>
+                </div>
+
+              </section>
+
+            </div>
+
+
+            <section class="card monitoring-selected-card">
+
+              <div class="monitoring-selected-header">
+                <h3>Selected Metrics</h3>
+
+                <button
+                  id="monitoring-apply-selection"
+                  type="button"
+                  class="action-button"
+                >
+                  Apply
+                </button>
+              </div>
 
               <ul
-                class="selectable-list monitoring-options-list"
-                id="monitoring-metric-list"
+                id="monitoring-selected-list"
+                class="monitoring-selected-list"
               >
-                <li class="empty-item">
-                  No metrics available
-                </li>
+                <li class="empty-item">No metrics selected</li>
               </ul>
 
             </section>
@@ -1103,37 +1260,12 @@
           </div>
 
 
-          <section class="card details-card">
+          <section class="card monitoring-data-card">
 
-            <h3>
-              Selected Monitoring Items
-            </h3>
+            <h3>Monitoring Data</h3>
 
-
-            <div class="monitoring-selected-groups">
-
-              <div>
-                <h4>Counters to Display</h4>
-
-                <ul
-                  class="monitoring-selected-list"
-                  id="selected-counters-list"
-                >
-                  <li class="empty-item">No counters selected</li>
-                </ul>
-              </div>
-
-              <div>
-                <h4>Metrics to Display</h4>
-
-                <ul
-                  class="monitoring-selected-list"
-                  id="selected-metrics-list"
-                >
-                  <li class="empty-item">No metrics selected</li>
-                </ul>
-              </div>
-
+            <div id="monitoring-data-panel">
+              <p class="empty-text">Apply selected metrics to view data.</p>
             </div>
 
           </section>
@@ -1187,7 +1319,7 @@
   </div>
 
 
-  <script src="/app.js"></script>
+  <script src="/app.js?v=monitoring-v5"></script>
 
 </body>
 </html>

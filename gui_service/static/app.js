@@ -8,14 +8,19 @@ const state = {
   selectedNodeID: "",
   selectedLinkID: "",
   selectedStreamID: "",
-  selectedCounters: new Set(),
-  selectedMetrics: new Set(),
+  monitoringCounters: [],
+  monitoringMetrics: [],
+  monitoringTargets: [],
+  selectedMonitoringTargetID: "",
+  activeMonitoringItemID: "",
+  selectedMonitoringItemIDsByTarget: {},
+  appliedMonitoringItemIDsByTarget: {},
 };
 
 initializeNavigation();
 initializeActionButtons();
 initializeListSelection();
-initializeMonitoringSelection();
+initializeMonitoringUI();
 loadAllViews();
 
 function initializeNavigation() {
@@ -141,6 +146,9 @@ function initializeActionButtons() {
   const toggleModelEdit = document.getElementById("toggle-model-edit");
   const saveModelEdit = document.getElementById("model-save-edit");
   const cancelModelEdit = document.getElementById("model-cancel-edit");
+  const toggleNodeEdit = document.getElementById("toggle-node-edit");
+  const saveNodeEdit = document.getElementById("node-save-edit");
+  const cancelNodeEdit = document.getElementById("node-cancel-edit");
 
   if (toggleModelEdit) {
     toggleModelEdit.addEventListener("click", () => {
@@ -182,6 +190,47 @@ function initializeActionButtons() {
     });
   }
 
+  if (toggleNodeEdit) {
+    toggleNodeEdit.addEventListener("click", () => {
+      if (!state.selectedNodeID) {
+        showToast("Select a node first.");
+        return;
+      }
+      toggleNodeEditForm();
+    });
+  }
+
+  if (saveNodeEdit) {
+    saveNodeEdit.addEventListener("click", async () => {
+      if (!state.selectedNodeID) {
+        showToast("Select a node first.");
+        return;
+      }
+
+      const payload = {
+        id: state.selectedNodeID,
+        name: getValue("node-edit-name"),
+        type: getValue("node-edit-type"),
+        state: getValue("node-edit-state"),
+        ports: getValue("node-edit-ports"),
+        links: getValue("node-edit-links"),
+      };
+
+      const result = await callAction("editNode", payload);
+      showToast(result.message || "Node updated");
+      if (result.success) {
+        hideNodeEditForm();
+        await loadNodes();
+      }
+    });
+  }
+
+  if (cancelNodeEdit) {
+    cancelNodeEdit.addEventListener("click", () => {
+      hideNodeEditForm();
+    });
+  }
+
   const addNodeUploadButton = document.getElementById("add-node-upload-btn");
   const addNodeUploadInput = document.getElementById("add-node-upload-input");
 
@@ -208,41 +257,121 @@ function initializeActionButtons() {
   }
 }
 
-function initializeMonitoringSelection() {
-  bindMonitoringSelection("monitoring-counter-list", "counter");
-  bindMonitoringSelection("monitoring-metric-list", "metric");
-}
+function initializeMonitoringUI() {
+  const nodeSelect = document.getElementById("monitoring-node-select");
+  const portSelect = document.getElementById("monitoring-port-select");
+  const searchInput = document.getElementById("monitoring-search");
+  const availableList = document.getElementById("monitoring-available-list");
+  const selectedList = document.getElementById("monitoring-selected-list");
+  const addButton = document.getElementById("monitoring-add-selection");
+  const removeButton = document.getElementById("monitoring-remove-selection");
+  const applyButton = document.getElementById("monitoring-apply-selection");
 
-function bindMonitoringSelection(listID, type) {
-  const list = document.getElementById(listID);
-  if (!list) {
-    return;
+  if (nodeSelect) {
+    nodeSelect.addEventListener("change", () => {
+      state.activeMonitoringItemID = "";
+      populatePortSelector();
+      syncMonitoringTargetFromSelectors();
+      renderMonitoringAvailableList();
+      renderMonitoringSelectedList();
+      clearMonitoringDetail();
+    });
   }
 
-  list.addEventListener("change", (event) => {
-    const checkbox = event.target;
-    if (!(checkbox instanceof HTMLInputElement) || checkbox.type !== "checkbox") {
-      return;
-    }
+  if (portSelect) {
+    portSelect.addEventListener("change", () => {
+      state.activeMonitoringItemID = "";
+      syncMonitoringTargetFromSelectors();
+      renderMonitoringAvailableList();
+      renderMonitoringSelectedList();
+      clearMonitoringDetail();
+    });
+  }
 
-    const id = checkbox.dataset.id || "";
-    const label = checkbox.dataset.label || id;
-    if (!id) {
-      return;
-    }
+  if (searchInput) {
+    searchInput.addEventListener("input", () => {
+      renderMonitoringAvailableList();
+    });
+  }
 
-    const selectedSet = type === "counter"
-      ? state.selectedCounters
-      : state.selectedMetrics;
+  if (availableList) {
+    availableList.addEventListener("click", (event) => {
+      const item = event.target.closest("li[data-id]");
+      if (!item) {
+        return;
+      }
 
-    if (checkbox.checked) {
-      selectedSet.add(label);
-    } else {
-      selectedSet.delete(label);
-    }
+      state.activeMonitoringItemID = item.dataset.id || "";
+      renderMonitoringAvailableList();
+      renderMonitoringDetails(state.activeMonitoringItemID);
+    });
+  }
 
-    updateSelectedMonitoringLists();
-  });
+  if (selectedList) {
+    selectedList.addEventListener("click", (event) => {
+      const item = event.target.closest("li[data-id]");
+      if (!item) {
+        return;
+      }
+
+      state.activeMonitoringItemID = item.dataset.id || "";
+      renderMonitoringSelectedList();
+      renderMonitoringDetails(state.activeMonitoringItemID);
+    });
+  }
+
+  if (addButton) {
+    addButton.addEventListener("click", () => {
+      if (!state.activeMonitoringItemID) {
+        showToast("Select a metric first.");
+        return;
+      }
+
+      const targetID = getCurrentMonitoringTargetID();
+      if (!targetID) {
+        showToast("Select a target first.");
+        return;
+      }
+
+      const selectedSet = getSelectedMonitoringSet(targetID);
+      selectedSet.add(state.activeMonitoringItemID);
+      renderMonitoringSelectedList();
+    });
+  }
+
+  if (removeButton) {
+    removeButton.addEventListener("click", () => {
+      if (!state.activeMonitoringItemID) {
+        showToast("Select a metric first.");
+        return;
+      }
+
+      const targetID = getCurrentMonitoringTargetID();
+      if (!targetID) {
+        showToast("Select a target first.");
+        return;
+      }
+
+      const selectedSet = getSelectedMonitoringSet(targetID);
+      selectedSet.delete(state.activeMonitoringItemID);
+      renderMonitoringSelectedList();
+    });
+  }
+
+  if (applyButton) {
+    applyButton.addEventListener("click", async () => {
+      const targetID = getCurrentMonitoringTargetID();
+      if (!targetID) {
+        showToast("Select a target first.");
+        return;
+      }
+
+      const selectedSet = getSelectedMonitoringSet(targetID);
+      state.appliedMonitoringItemIDsByTarget[targetID] = new Set(selectedSet);
+      await loadMonitoringDataPanel();
+      showToast("Monitoring selection applied.");
+    });
+  }
 }
 
 function initializeListSelection() {
@@ -262,6 +391,7 @@ function initializeListSelection() {
     setText("node-state", item.dataset.state || "-");
     setText("node-ports", item.dataset.ports || "-");
     setText("node-links", item.dataset.links || "-");
+    setNodeEditFields();
   });
 
   bindSelectableList("link-list", (item) => {
@@ -508,46 +638,50 @@ async function loadStreams() {
 }
 
 async function loadMonitoring() {
-  const fallbackCounters = [
-    { id: "rx_packets", label: "RX Packets" },
-    { id: "tx_packets", label: "TX Packets" },
-    { id: "rx_drops", label: "RX Drops" },
-    { id: "tx_drops", label: "TX Drops" },
-    { id: "stream_rejections", label: "Stream Rejections" },
-  ];
+  const [counters, metrics, targets] = await Promise.all([
+    fetchMonitoringItems("/api/v1/monitoring/counters", "counter"),
+    fetchMonitoringItems("/api/v1/monitoring/metrics", "metric"),
+    fetchMonitoringTargets(),
+  ]);
 
-  const fallbackMetrics = [
-    { id: "bandwidth_usage", label: "Bandwidth Usage" },
-    { id: "latency_mean", label: "Mean Latency" },
-    { id: "latency_p99", label: "P99 Latency" },
-    { id: "jitter", label: "Jitter" },
-    { id: "packet_loss_rate", label: "Packet Loss Rate" },
-  ];
+  state.monitoringCounters = counters;
+  state.monitoringMetrics = metrics;
+  state.monitoringTargets = targets;
 
-  const counters = await fetchMonitoringItems(
-    "/api/v1/monitoring/counters",
-    fallbackCounters
-  );
-  const metrics = await fetchMonitoringItems(
-    "/api/v1/monitoring/metrics",
-    fallbackMetrics
-  );
+  populateNodeSelector();
+  populatePortSelector();
+  syncMonitoringTargetFromSelectors();
 
-  renderMonitoringOptions("monitoring-counter-list", counters, state.selectedCounters, "counter");
-  renderMonitoringOptions("monitoring-metric-list", metrics, state.selectedMetrics, "metric");
-  updateSelectedMonitoringLists();
+  pruneMonitoringSelections();
+
+  const availableIDs = new Set(getAvailableMonitoringItems().map((item) => item.id));
+
+  if (state.activeMonitoringItemID && !availableIDs.has(state.activeMonitoringItemID)) {
+    state.activeMonitoringItemID = "";
+  }
+
+  renderMonitoringAvailableList();
+  renderMonitoringSelectedList();
+
+  if (state.activeMonitoringItemID) {
+    renderMonitoringDetails(state.activeMonitoringItemID);
+  } else {
+    clearMonitoringDetail();
+  }
+
+  await loadMonitoringDataPanel();
 }
 
-async function fetchMonitoringItems(path, fallback) {
-  const items = await fetchJSON(path, fallback);
+async function fetchMonitoringItems(path, type) {
+  const items = await fetchJSON(path, []);
   if (!Array.isArray(items)) {
-    return fallback;
+    return [];
   }
 
   return items
     .map((entry) => {
       if (typeof entry === "string") {
-        return { id: entry, label: entry };
+        return { id: entry, label: entry, description: "", type };
       }
 
       if (!entry || typeof entry !== "object") {
@@ -562,93 +696,380 @@ async function fetchMonitoringItems(path, fallback) {
       return {
         id,
         label: entry.label || entry.displayName || entry.name || id,
+        description: entry.description || "",
+        type,
       };
     })
     .filter(Boolean);
 }
 
-function renderMonitoringOptions(listID, items, selectedSet, type) {
-  const list = document.getElementById(listID);
+async function fetchMonitoringTargets() {
+  const targets = await fetchJSON("/api/v1/monitoring/targets", []);
+  if (!Array.isArray(targets)) {
+    return [];
+  }
+
+  return targets
+    .map((entry) => {
+      if (!entry || typeof entry !== "object") {
+        return null;
+      }
+
+      const id = entry.id || "";
+      const node = entry.node || "";
+      const port = entry.port || "";
+      if (!id || !node || !port) {
+        return null;
+      }
+
+      return {
+        id,
+        node,
+        port,
+        label: entry.label || `${node} - port ${port}`,
+        counters: Array.isArray(entry.counters) ? entry.counters : [],
+        metrics: Array.isArray(entry.metrics) ? entry.metrics : [],
+      };
+    })
+    .filter(Boolean);
+}
+
+function populateNodeSelector() {
+  const nodeSelect = document.getElementById("monitoring-node-select");
+  if (!nodeSelect) {
+    return;
+  }
+
+  const currentNode = nodeSelect.value;
+  const nodes = Array.from(new Set(state.monitoringTargets.map((target) => target.node)));
+
+  nodeSelect.innerHTML = '<option value="">Select Node</option>';
+  nodes.forEach((node) => {
+    const option = document.createElement("option");
+    option.value = node;
+    option.textContent = node;
+    nodeSelect.appendChild(option);
+  });
+
+  if (currentNode && nodes.includes(currentNode)) {
+    nodeSelect.value = currentNode;
+    return;
+  }
+
+  if (nodes.length) {
+    nodeSelect.value = nodes[0];
+  }
+}
+
+function populatePortSelector() {
+  const nodeSelect = document.getElementById("monitoring-node-select");
+  const portSelect = document.getElementById("monitoring-port-select");
+  if (!nodeSelect || !portSelect) {
+    return;
+  }
+
+  const selectedNode = nodeSelect.value;
+  const currentPort = portSelect.value;
+  const ports = state.monitoringTargets
+    .filter((target) => target.node === selectedNode)
+    .map((target) => target.port);
+
+  portSelect.innerHTML = '<option value="">Select Port</option>';
+  ports.forEach((port) => {
+    const option = document.createElement("option");
+    option.value = port;
+    option.textContent = port;
+    portSelect.appendChild(option);
+  });
+
+  if (currentPort && ports.includes(currentPort)) {
+    portSelect.value = currentPort;
+    return;
+  }
+
+  if (ports.length) {
+    portSelect.value = ports[0];
+  }
+}
+
+function syncMonitoringTargetFromSelectors() {
+  const nodeSelect = document.getElementById("monitoring-node-select");
+  const portSelect = document.getElementById("monitoring-port-select");
+  if (!nodeSelect || !portSelect) {
+    state.selectedMonitoringTargetID = "";
+    return;
+  }
+
+  const selectedNode = nodeSelect.value;
+  const selectedPort = portSelect.value;
+  const target = state.monitoringTargets.find(
+    (entry) => entry.node === selectedNode && entry.port === selectedPort
+  );
+
+  state.selectedMonitoringTargetID = target ? target.id : "";
+}
+
+function getAvailableMonitoringItems() {
+  const target = state.monitoringTargets.find((entry) => entry.id === state.selectedMonitoringTargetID);
+  if (!target) {
+    return [];
+  }
+
+  const allItems = [...state.monitoringCounters, ...state.monitoringMetrics];
+  const allowedIDs = new Set([...target.counters, ...target.metrics]);
+  const searchInput = document.getElementById("monitoring-search");
+  const query = searchInput ? searchInput.value.trim().toLowerCase() : "";
+
+  return allItems
+    .filter((item) => allowedIDs.has(item.id))
+    .filter((item) => {
+      if (!query) {
+        return true;
+      }
+      return item.label.toLowerCase().includes(query) || item.id.toLowerCase().includes(query);
+    });
+}
+
+function renderMonitoringAvailableList() {
+  const list = document.getElementById("monitoring-available-list");
   if (!list) {
     return;
   }
 
+  const items = getAvailableMonitoringItems();
   list.innerHTML = "";
-  if (!items.length) {
+
+  if (!state.selectedMonitoringTargetID) {
     const li = document.createElement("li");
     li.className = "empty-item";
-    li.textContent = type === "counter"
-      ? "No counters available"
-      : "No metrics available";
+    li.textContent = "Select a target";
     list.appendChild(li);
     return;
   }
 
-  const availableLabels = new Set(items.map((item) => item.label));
-  selectedSet.forEach((label) => {
-    if (!availableLabels.has(label)) {
-      selectedSet.delete(label);
+  if (!items.length) {
+    const li = document.createElement("li");
+    li.className = "empty-item";
+    li.textContent = "No metrics available for target";
+    list.appendChild(li);
+    return;
+  }
+
+  items.forEach((item) => {
+    const li = document.createElement("li");
+    li.dataset.id = item.id;
+    li.textContent = item.label;
+    if (item.id === state.activeMonitoringItemID) {
+      li.classList.add("selected");
     }
-  });
-
-  items.forEach((item) => {
-    const li = document.createElement("li");
-    li.className = "monitoring-option";
-
-    const label = document.createElement("label");
-    label.className = "monitoring-checkbox-label";
-
-    const input = document.createElement("input");
-    input.type = "checkbox";
-    input.dataset.id = item.id;
-    input.dataset.label = item.label;
-    input.checked = selectedSet.has(item.label);
-
-    const text = document.createElement("span");
-    text.textContent = item.label;
-
-    label.appendChild(input);
-    label.appendChild(text);
-    li.appendChild(label);
     list.appendChild(li);
   });
 }
 
-function updateSelectedMonitoringLists() {
-  renderSelectedItems(
-    "selected-counters-list",
-    Array.from(state.selectedCounters),
-    "No counters selected"
-  );
-
-  renderSelectedItems(
-    "selected-metrics-list",
-    Array.from(state.selectedMetrics),
-    "No metrics selected"
-  );
-}
-
-function renderSelectedItems(listID, items, emptyText) {
-  const list = document.getElementById(listID);
+function renderMonitoringSelectedList() {
+  const list = document.getElementById("monitoring-selected-list");
   if (!list) {
     return;
   }
 
+  const targetID = getCurrentMonitoringTargetID();
+  const selectedSet = getSelectedMonitoringSet(targetID, false);
+  const selectedItems = Array.from(selectedSet)
+    .map((id) => getMonitoringItemByID(id))
+    .filter(Boolean);
+
   list.innerHTML = "";
-  if (!items.length) {
+  if (!selectedItems.length) {
     const li = document.createElement("li");
     li.className = "empty-item";
-    li.textContent = emptyText;
+    li.textContent = "No metrics selected";
     list.appendChild(li);
     return;
   }
 
-  items.forEach((item) => {
+  selectedItems.forEach((item) => {
     const li = document.createElement("li");
     li.className = "monitoring-selected-item";
-    li.textContent = item;
+    li.dataset.id = item.id;
+    li.textContent = item.label;
+    if (item.id === state.activeMonitoringItemID) {
+      li.classList.add("selected");
+    }
     list.appendChild(li);
   });
+}
+
+function getMonitoringItemByID(itemID) {
+  return [...state.monitoringCounters, ...state.monitoringMetrics]
+    .find((item) => item.id === itemID) || null;
+}
+
+function renderMonitoringDetails(itemID) {
+  const item = getMonitoringItemByID(itemID);
+  const target = state.monitoringTargets.find((entry) => entry.id === state.selectedMonitoringTargetID);
+
+  if (!item || !target) {
+    clearMonitoringDetail();
+    return;
+  }
+
+  setText("monitoring-detail-name", item.label);
+  setText("monitoring-detail-description", item.description || "-");
+  setText("monitoring-detail-type", item.type === "counter" ? "Counter" : "Metric");
+  setText("monitoring-detail-target", target.label);
+}
+
+function clearMonitoringDetail() {
+  setText("monitoring-detail-name", "-");
+  setText("monitoring-detail-description", "-");
+  setText("monitoring-detail-type", "-");
+  setText("monitoring-detail-target", "-");
+}
+
+async function loadMonitoringDataPanel() {
+  const panel = document.getElementById("monitoring-data-panel");
+  if (!panel) {
+    return;
+  }
+
+  const appliedEntries = Object.entries(state.appliedMonitoringItemIDsByTarget)
+    .filter(([targetID, idSet]) => targetID && idSet instanceof Set && idSet.size > 0);
+
+  if (!appliedEntries.length) {
+    panel.innerHTML = '<p class="empty-text">Apply selected metrics to view data.</p>';
+    return;
+  }
+
+  const responses = await Promise.all(appliedEntries.map(async ([targetID, idSet]) => {
+    const params = new URLSearchParams();
+    params.set("targetId", targetID);
+    params.set("metrics", Array.from(idSet).join(","));
+    const data = await fetchJSON(`/api/v1/monitoring/data?${params.toString()}`, []);
+    return Array.isArray(data) ? data : [];
+  }));
+
+  const data = responses.flat();
+  if (!data.length) {
+    panel.innerHTML = '<p class="empty-text">No monitoring data available.</p>';
+    return;
+  }
+
+  panel.innerHTML = "";
+  data.forEach((targetBlock) => {
+    const section = document.createElement("section");
+    section.className = "monitoring-data-target";
+
+    const heading = document.createElement("h4");
+    heading.textContent = targetBlock.label || targetBlock.targetLabel || "Target";
+    section.appendChild(heading);
+
+    const table = document.createElement("table");
+    table.className = "monitoring-data-table";
+
+    const tbody = document.createElement("tbody");
+    const values = Array.isArray(targetBlock.values) ? targetBlock.values : [];
+    values.forEach((valueEntry) => {
+      const row = document.createElement("tr");
+      const key = document.createElement("td");
+      key.textContent = valueEntry.label || valueEntry.id || "-";
+
+      const value = document.createElement("td");
+      value.className = "monitoring-data-value";
+      value.textContent = valueEntry.value || "-";
+
+      row.appendChild(key);
+      row.appendChild(value);
+      tbody.appendChild(row);
+    });
+
+    if (!values.length) {
+      const row = document.createElement("tr");
+      const cell = document.createElement("td");
+      cell.className = "empty-cell";
+      cell.colSpan = 2;
+      cell.textContent = "No values for selected metrics";
+      row.appendChild(cell);
+      tbody.appendChild(row);
+    }
+
+    table.appendChild(tbody);
+    section.appendChild(table);
+    panel.appendChild(section);
+  });
+}
+
+function getSelectedMonitoringSet(targetID, createIfMissing = true) {
+  if (!targetID) {
+    return new Set();
+  }
+
+  let selectedSet = state.selectedMonitoringItemIDsByTarget[targetID];
+  if (!selectedSet && createIfMissing) {
+    selectedSet = new Set();
+    state.selectedMonitoringItemIDsByTarget[targetID] = selectedSet;
+  }
+  return selectedSet || new Set();
+}
+
+function getAppliedMonitoringSet(targetID, createIfMissing = true) {
+  if (!targetID) {
+    return new Set();
+  }
+
+  let appliedSet = state.appliedMonitoringItemIDsByTarget[targetID];
+  if (!appliedSet && createIfMissing) {
+    appliedSet = new Set();
+    state.appliedMonitoringItemIDsByTarget[targetID] = appliedSet;
+  }
+  return appliedSet || new Set();
+}
+
+function getCurrentMonitoringTargetID() {
+  syncMonitoringTargetFromSelectors();
+  return state.selectedMonitoringTargetID;
+}
+
+function pruneMonitoringSelections() {
+  const validTargetIDs = new Set(state.monitoringTargets.map((target) => target.id));
+
+  Object.keys(state.selectedMonitoringItemIDsByTarget).forEach((targetID) => {
+    if (!validTargetIDs.has(targetID)) {
+      delete state.selectedMonitoringItemIDsByTarget[targetID];
+      return;
+    }
+
+    const allowedIDs = getAllowedMonitoringIDsForTarget(targetID);
+    const selectedSet = state.selectedMonitoringItemIDsByTarget[targetID];
+    selectedSet.forEach((itemID) => {
+      if (!allowedIDs.has(itemID)) {
+        selectedSet.delete(itemID);
+      }
+    });
+  });
+
+  Object.keys(state.appliedMonitoringItemIDsByTarget).forEach((targetID) => {
+    if (!validTargetIDs.has(targetID)) {
+      delete state.appliedMonitoringItemIDsByTarget[targetID];
+      return;
+    }
+
+    const allowedIDs = getAllowedMonitoringIDsForTarget(targetID);
+    const appliedSet = state.appliedMonitoringItemIDsByTarget[targetID];
+    appliedSet.forEach((itemID) => {
+      if (!allowedIDs.has(itemID)) {
+        appliedSet.delete(itemID);
+      }
+    });
+  });
+}
+
+function getAllowedMonitoringIDsForTarget(targetID) {
+  const target = state.monitoringTargets.find((entry) => entry.id === targetID);
+  if (!target) {
+    return new Set();
+  }
+
+  return new Set([...target.counters, ...target.metrics]);
 }
 
 async function loadRecentEvents() {
@@ -758,6 +1179,55 @@ function clearNodeDetails() {
   setText("node-state", "-");
   setText("node-ports", "-");
   setText("node-links", "-");
+  hideNodeEditForm();
+}
+
+function toggleNodeEditForm() {
+  const form = document.getElementById("node-edit-form");
+  if (!form) {
+    return;
+  }
+  form.classList.toggle("hidden");
+  if (!form.classList.contains("hidden")) {
+    setNodeEditFields();
+  }
+}
+
+function hideNodeEditForm() {
+  const form = document.getElementById("node-edit-form");
+  if (form) {
+    form.classList.add("hidden");
+  }
+}
+
+function setNodeEditFields() {
+  const name = document.getElementById("node-name");
+  const type = document.getElementById("node-type");
+  const stateValue = document.getElementById("node-state");
+  const ports = document.getElementById("node-ports");
+  const links = document.getElementById("node-links");
+
+  const editName = document.getElementById("node-edit-name");
+  const editType = document.getElementById("node-edit-type");
+  const editState = document.getElementById("node-edit-state");
+  const editPorts = document.getElementById("node-edit-ports");
+  const editLinks = document.getElementById("node-edit-links");
+
+  if (editName) {
+    editName.value = name && name.textContent && name.textContent !== "-" ? name.textContent.trim() : "";
+  }
+  if (editType) {
+    editType.value = type && type.textContent && type.textContent !== "-" ? type.textContent.trim() : "";
+  }
+  if (editState) {
+    editState.value = stateValue && stateValue.textContent && stateValue.textContent !== "-" ? stateValue.textContent.trim() : "";
+  }
+  if (editPorts) {
+    editPorts.value = ports && ports.textContent && ports.textContent !== "-" ? ports.textContent.trim() : "";
+  }
+  if (editLinks) {
+    editLinks.value = links && links.textContent && links.textContent !== "-" ? links.textContent.trim() : "";
+  }
 }
 
 function clearLinkDetails() {
@@ -781,6 +1251,14 @@ async function gatherPayload(action) {
     case "addNode":
       return { query: getValue("node-search") };
     case "editNode":
+      return {
+        id: state.selectedNodeID,
+        name: getValue("node-edit-name"),
+        type: getValue("node-edit-type"),
+        state: getValue("node-edit-state"),
+        ports: getValue("node-edit-ports"),
+        links: getValue("node-edit-links"),
+      };
     case "deleteNode":
       return { id: state.selectedNodeID };
     case "addLink":
