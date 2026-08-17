@@ -6,7 +6,9 @@ option go_package = "OpenCNC_config_service/monitor_service/structures/grpc_serv
 
 import "monitor_service/structures/monitoring/monitoring.proto";
 
-message CapabilitiesRequest {}
+message CapabilitiesRequest {
+  optional monitoring.ResourceKey resource = 1;
+}
 
 message CapabilitiesResponse {
   repeated monitoring.Capability capabilities = 1;

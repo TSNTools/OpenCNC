@@ -122,7 +122,6 @@ function initializeNavigation() {
     });
   });
 }
-
 function updateTopologyTopbarControls(screen) {
   const importButton = document.getElementById("import-topology-btn");
   if (!importButton) {
@@ -778,7 +777,7 @@ async function fetchMonitoringTargets() {
       const id = entry.id || "";
       const node = entry.node || "";
       const port = entry.port || "";
-      if (!id || !node || !port) {
+      if (!id || !node) {
         return null;
       }
 
@@ -1511,12 +1510,22 @@ function normalizeImportedNode(rawNode) {
 
   const name = firstString(rawNode.name, rawNode.id);
   const type = firstString(rawNode.type, rawNode.nodeType, rawNode.role);
+
   if (!name || !type) {
     return null;
   }
 
-  const normalizedType = String(type).toUpperCase().replaceAll("-", "_").replaceAll(" ", "_");
-  const allowedTypes = new Set(["END_STATION", "BRIDGE", "BRIDGED_END_STATION"]);
+  const normalizedType = String(type)
+    .toUpperCase()
+    .replaceAll("-", "_")
+    .replaceAll(" ", "_");
+
+  const allowedTypes = new Set([
+    "END_STATION",
+    "BRIDGE",
+    "BRIDGED_END_STATION",
+  ]);
+
   if (!allowedTypes.has(normalizedType)) {
     return null;
   }
@@ -1526,32 +1535,131 @@ function normalizeImportedNode(rawNode) {
     type: normalizedType,
   };
 
-  const deviceInfo = rawNode.deviceInfo || rawNode.device_info || {};
-  const deviceModel = firstString(deviceInfo.deviceModel, deviceInfo.device_model, rawNode.deviceModel, rawNode.device_model);
-  if (deviceModel) {
-    payload.deviceInfo = { deviceModel };
+  // Preserve ports from imported topology JSON.
+  if (Array.isArray(rawNode.ports)) {
+    payload.ports = rawNode.ports
+      .filter((port) => port && typeof port === "object")
+      .map((port) => {
+        const normalizedPort = {};
+
+        const id = firstString(port.id);
+        const portName = firstString(port.name);
+
+        if (id) {
+          normalizedPort.id = id;
+        }
+
+        if (portName) {
+          normalizedPort.name = portName;
+        }
+
+        // Map imported per-port speed to the protobuf capabilities object.
+        if (
+          port.port_speed !== undefined &&
+          port.port_speed !== null &&
+          port.port_speed !== ""
+        ) {
+          const portSpeed = Number(port.port_speed);
+
+          if (Number.isFinite(portSpeed)) {
+            normalizedPort.capabilities = {
+              ...(normalizedPort.capabilities || {}),
+              port_speed: portSpeed,
+            };
+          }
+        }
+
+        // Preserve number of queues.
+        if (
+          port.number_of_queues !== undefined &&
+          port.number_of_queues !== null &&
+          port.number_of_queues !== ""
+        ) {
+          const numberOfQueues = Number.parseInt(
+            String(port.number_of_queues),
+            10
+          );
+
+          if (!Number.isNaN(numberOfQueues)) {
+            normalizedPort.number_of_queues = numberOfQueues;
+          }
+        }
+
+        return normalizedPort;
+      });
   }
 
-  const managementInfo = rawNode.managementInfo || rawNode.management_info || {};
+  const deviceInfo =
+    rawNode.deviceInfo ||
+    rawNode.device_info ||
+    {};
+
+  const deviceModel = firstString(
+    deviceInfo.deviceModel,
+    deviceInfo.device_model,
+    rawNode.deviceModel,
+    rawNode.device_model
+  );
+
+  if (deviceModel) {
+    payload.deviceInfo = {
+      deviceModel,
+    };
+  }
+
+  const managementInfo =
+    rawNode.managementInfo ||
+    rawNode.management_info ||
+    {};
+
   const managementPayload = {};
-  const ipAddress = firstString(managementInfo.ipAddress, managementInfo.ip_address);
-  const protocol = firstString(managementInfo.protocol);
-  const userName = firstString(managementInfo.userName, managementInfo.user_name);
-  const managementPortRaw = managementInfo.managementPort ?? managementInfo.management_port;
+
+  const ipAddress = firstString(
+    managementInfo.ipAddress,
+    managementInfo.ip_address
+  );
+
+  const protocol = firstString(
+    managementInfo.protocol
+  );
+
+  const userName = firstString(
+    managementInfo.userName,
+    managementInfo.user_name
+  );
+
+  const managementPortRaw =
+    managementInfo.managementPort ??
+    managementInfo.management_port;
 
   if (ipAddress) {
     managementPayload.ipAddress = ipAddress;
   }
+
   if (protocol) {
-    managementPayload.protocol = String(protocol).toUpperCase();
+    managementPayload.protocol =
+      String(protocol).toUpperCase();
   }
+
   if (userName) {
     managementPayload.userName = userName;
   }
 
-  if (managementPortRaw !== undefined && managementPortRaw !== null && managementPortRaw !== "") {
-    const managementPort = Number.parseInt(String(managementPortRaw), 10);
-    if (!Number.isNaN(managementPort) && managementPort > 0 && managementPort <= 65535) {
+  if (
+    managementPortRaw !== undefined &&
+    managementPortRaw !== null &&
+    managementPortRaw !== ""
+  ) {
+    const managementPort = Number.parseInt(
+      String(managementPortRaw),
+      10
+    );
+
+    if (
+      !Number.isNaN(managementPort) &&
+      managementPort > 0 &&
+      managementPort <= 65535
+    ) {
       managementPayload.managementPort = managementPort;
     }
   }
@@ -1574,7 +1682,7 @@ function normalizeImportedLink(rawLink) {
     return null;
   }
 
-  const rawBandwidth = rawLink.bandwidth;
+  const rawBandwidth = rawLink.bandwidth ?? rawLink.bandwidth_mbps;
   let bandwidth = "";
   if (typeof rawBandwidth === "number" && Number.isFinite(rawBandwidth)) {
     bandwidth = `${rawBandwidth}`;
@@ -1725,6 +1833,7 @@ async function callAction(action, payload) {
     uploadModel: { method: "POST", path: "/api/v1/device-models/upload" },
     editModel: { method: "PATCH", path: `/api/v1/device-models/${payload.id || "selected"}` },
     deleteModel: { method: "DELETE", path: `/api/v1/device-models/${payload.id || "selected"}` },
+    uploadTopology: { method: "POST", path: "/api/v1/topology/upload" },
     addNode: { method: "POST", path: "/api/v1/nodes" },
     editNode: { method: "PATCH", path: `/api/v1/nodes/${payload.id || "selected"}` },
     deleteNode: { method: "DELETE", path: `/api/v1/nodes/${payload.id || "selected"}` },

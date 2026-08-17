@@ -333,12 +333,16 @@ func (x *Node) GetActiveConfigId() string {
 }
 
 type NodeProperties struct {
-	state             protoimpl.MessageState       `protogen:"open.v1"`
-	Bridge            *BridgeProperties            `protobuf:"bytes,1,opt,name=bridge,proto3,oneof" json:"bridge,omitempty"`
-	EndStation        *EndStationProperties        `protobuf:"bytes,2,opt,name=end_station,json=endStation,proto3,oneof" json:"end_station,omitempty"`
-	BridgedEndStation *BridgedEndStationProperties `protobuf:"bytes,3,opt,name=bridged_end_station,json=bridgedEndStation,proto3,oneof" json:"bridged_end_station,omitempty"`
-	unknownFields     protoimpl.UnknownFields
-	sizeCache         protoimpl.SizeCache
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// bridge properties
+	// Clause 8.6.1.4: Specifies internal processing delays for bridges
+	// Clause 5.3: Specifies processing delays for End stations that forward traffic (not just terminate)
+	ProcessingDelayNs *int32 `protobuf:"varint,1,opt,name=processing_delay_ns,proto3,oneof" json:"processing_delay_ns,omitempty"` // Nanoseconds
+	// end station properties
+	ApplicationType *string `protobuf:"bytes,2,opt,name=application_type,json=applicationType,proto3,oneof" json:"application_type,omitempty"` // Informational tag (e.g., "RobotArm")
+	Function        *string `protobuf:"bytes,3,opt,name=function,proto3,oneof" json:"function,omitempty"`                                      // Role in the network (e.g., sensor/controller/proxy/etc.)
+	unknownFields   protoimpl.UnknownFields
+	sizeCache       protoimpl.SizeCache
 }
 
 func (x *NodeProperties) Reset() {
@@ -371,167 +375,25 @@ func (*NodeProperties) Descriptor() ([]byte, []int) {
 	return file_common_structures_topology_topology_proto_rawDescGZIP(), []int{2}
 }
 
-func (x *NodeProperties) GetBridge() *BridgeProperties {
-	if x != nil {
-		return x.Bridge
-	}
-	return nil
-}
-
-func (x *NodeProperties) GetEndStation() *EndStationProperties {
-	if x != nil {
-		return x.EndStation
-	}
-	return nil
-}
-
-func (x *NodeProperties) GetBridgedEndStation() *BridgedEndStationProperties {
-	if x != nil {
-		return x.BridgedEndStation
-	}
-	return nil
-}
-
-// Clause 8.6.1.4: Specifies internal processing delays for bridges
-type BridgeProperties struct {
-	state             protoimpl.MessageState `protogen:"open.v1"`
-	ProcessingDelayNs int32                  `protobuf:"varint,1,opt,name=processing_delay_ns,json=procDelay,proto3" json:"processing_delay_ns,omitempty"` // Nanoseconds
-	unknownFields     protoimpl.UnknownFields
-	sizeCache         protoimpl.SizeCache
-}
-
-func (x *BridgeProperties) Reset() {
-	*x = BridgeProperties{}
-	mi := &file_common_structures_topology_topology_proto_msgTypes[3]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *BridgeProperties) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*BridgeProperties) ProtoMessage() {}
-
-func (x *BridgeProperties) ProtoReflect() protoreflect.Message {
-	mi := &file_common_structures_topology_topology_proto_msgTypes[3]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use BridgeProperties.ProtoReflect.Descriptor instead.
-func (*BridgeProperties) Descriptor() ([]byte, []int) {
-	return file_common_structures_topology_topology_proto_rawDescGZIP(), []int{3}
-}
-
-func (x *BridgeProperties) GetProcessingDelayNs() int32 {
-	if x != nil {
-		return x.ProcessingDelayNs
+func (x *NodeProperties) GetProcessingDelayNs() int32 {
+	if x != nil && x.ProcessingDelayNs != nil {
+		return *x.ProcessingDelayNs
 	}
 	return 0
 }
 
-type EndStationProperties struct {
-	state           protoimpl.MessageState `protogen:"open.v1"`
-	ApplicationType string                 `protobuf:"bytes,1,opt,name=application_type,json=applicationType,proto3" json:"application_type,omitempty"` // Informational tag (e.g., "RobotArm")
-	Function        string                 `protobuf:"bytes,2,opt,name=function,proto3" json:"function,omitempty"`                                      // Role in the network (e.g., sensor/controller/etc.)
-	unknownFields   protoimpl.UnknownFields
-	sizeCache       protoimpl.SizeCache
-}
-
-func (x *EndStationProperties) Reset() {
-	*x = EndStationProperties{}
-	mi := &file_common_structures_topology_topology_proto_msgTypes[4]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *EndStationProperties) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*EndStationProperties) ProtoMessage() {}
-
-func (x *EndStationProperties) ProtoReflect() protoreflect.Message {
-	mi := &file_common_structures_topology_topology_proto_msgTypes[4]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use EndStationProperties.ProtoReflect.Descriptor instead.
-func (*EndStationProperties) Descriptor() ([]byte, []int) {
-	return file_common_structures_topology_topology_proto_rawDescGZIP(), []int{4}
-}
-
-func (x *EndStationProperties) GetApplicationType() string {
-	if x != nil {
-		return x.ApplicationType
+func (x *NodeProperties) GetApplicationType() string {
+	if x != nil && x.ApplicationType != nil {
+		return *x.ApplicationType
 	}
 	return ""
 }
 
-func (x *EndStationProperties) GetFunction() string {
-	if x != nil {
-		return x.Function
+func (x *NodeProperties) GetFunction() string {
+	if x != nil && x.Function != nil {
+		return *x.Function
 	}
 	return ""
-}
-
-// Clause 5.3: End stations that forward traffic (not just terminate)
-type BridgedEndStationProperties struct {
-	state             protoimpl.MessageState `protogen:"open.v1"`
-	ProcessingDelayNs int32                  `protobuf:"varint,1,opt,name=processing_delay_ns,json=procDelay,proto3" json:"processing_delay_ns,omitempty"`
-	unknownFields     protoimpl.UnknownFields
-	sizeCache         protoimpl.SizeCache
-}
-
-func (x *BridgedEndStationProperties) Reset() {
-	*x = BridgedEndStationProperties{}
-	mi := &file_common_structures_topology_topology_proto_msgTypes[5]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *BridgedEndStationProperties) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*BridgedEndStationProperties) ProtoMessage() {}
-
-func (x *BridgedEndStationProperties) ProtoReflect() protoreflect.Message {
-	mi := &file_common_structures_topology_topology_proto_msgTypes[5]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use BridgedEndStationProperties.ProtoReflect.Descriptor instead.
-func (*BridgedEndStationProperties) Descriptor() ([]byte, []int) {
-	return file_common_structures_topology_topology_proto_rawDescGZIP(), []int{5}
-}
-
-func (x *BridgedEndStationProperties) GetProcessingDelayNs() int32 {
-	if x != nil {
-		return x.ProcessingDelayNs
-	}
-	return 0
 }
 
 type DeviceInfo struct {
@@ -544,7 +406,7 @@ type DeviceInfo struct {
 
 func (x *DeviceInfo) Reset() {
 	*x = DeviceInfo{}
-	mi := &file_common_structures_topology_topology_proto_msgTypes[6]
+	mi := &file_common_structures_topology_topology_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -556,7 +418,7 @@ func (x *DeviceInfo) String() string {
 func (*DeviceInfo) ProtoMessage() {}
 
 func (x *DeviceInfo) ProtoReflect() protoreflect.Message {
-	mi := &file_common_structures_topology_topology_proto_msgTypes[6]
+	mi := &file_common_structures_topology_topology_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -569,7 +431,7 @@ func (x *DeviceInfo) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeviceInfo.ProtoReflect.Descriptor instead.
 func (*DeviceInfo) Descriptor() ([]byte, []int) {
-	return file_common_structures_topology_topology_proto_rawDescGZIP(), []int{6}
+	return file_common_structures_topology_topology_proto_rawDescGZIP(), []int{3}
 }
 
 func (x *DeviceInfo) GetDeviceModel() string {
@@ -601,7 +463,7 @@ type ManagementInfo struct {
 
 func (x *ManagementInfo) Reset() {
 	*x = ManagementInfo{}
-	mi := &file_common_structures_topology_topology_proto_msgTypes[7]
+	mi := &file_common_structures_topology_topology_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -613,7 +475,7 @@ func (x *ManagementInfo) String() string {
 func (*ManagementInfo) ProtoMessage() {}
 
 func (x *ManagementInfo) ProtoReflect() protoreflect.Message {
-	mi := &file_common_structures_topology_topology_proto_msgTypes[7]
+	mi := &file_common_structures_topology_topology_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -626,7 +488,7 @@ func (x *ManagementInfo) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ManagementInfo.ProtoReflect.Descriptor instead.
 func (*ManagementInfo) Descriptor() ([]byte, []int) {
-	return file_common_structures_topology_topology_proto_rawDescGZIP(), []int{7}
+	return file_common_structures_topology_topology_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *ManagementInfo) GetKeyCertificates() []string {
@@ -680,7 +542,7 @@ type InventoryInfo struct {
 
 func (x *InventoryInfo) Reset() {
 	*x = InventoryInfo{}
-	mi := &file_common_structures_topology_topology_proto_msgTypes[8]
+	mi := &file_common_structures_topology_topology_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -692,7 +554,7 @@ func (x *InventoryInfo) String() string {
 func (*InventoryInfo) ProtoMessage() {}
 
 func (x *InventoryInfo) ProtoReflect() protoreflect.Message {
-	mi := &file_common_structures_topology_topology_proto_msgTypes[8]
+	mi := &file_common_structures_topology_topology_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -705,7 +567,7 @@ func (x *InventoryInfo) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use InventoryInfo.ProtoReflect.Descriptor instead.
 func (*InventoryInfo) Descriptor() ([]byte, []int) {
-	return file_common_structures_topology_topology_proto_rawDescGZIP(), []int{8}
+	return file_common_structures_topology_topology_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *InventoryInfo) GetSoftwareVersion() string {
@@ -725,7 +587,7 @@ type Port struct {
 	DeviceModel     string                 `protobuf:"bytes,4,opt,name=device_model,json=deviceModel,proto3" json:"device_model,omitempty"` // NIC model
 	MacAddress      string                 `protobuf:"bytes,5,opt,name=mac_address,json=macAddress,proto3" json:"mac_address,omitempty"`
 	IpAddress       string                 `protobuf:"bytes,6,opt,name=ip_address,json=ipAddress,proto3" json:"ip_address,omitempty"`
-	NumberOfQueues  int32                  `protobuf:"varint,7,opt,name=number_of_queues,json=numberOfQueues,proto3" json:"number_of_queues,omitempty"`
+	NumberOfQueues  int32                  `protobuf:"varint,7,opt,name=number_of_queues,proto3" json:"number_of_queues,omitempty"`
 	Manufacturer    string                 `protobuf:"bytes,8,opt,name=manufacturer,proto3" json:"manufacturer,omitempty"`
 	SoftwareVersion string                 `protobuf:"bytes,9,opt,name=software_version,json=softwareVersion,proto3" json:"software_version,omitempty"`
 	Capabilities    *InterfaceCapabilities `protobuf:"bytes,11,opt,name=capabilities,proto3" json:"capabilities,omitempty"`
@@ -735,7 +597,7 @@ type Port struct {
 
 func (x *Port) Reset() {
 	*x = Port{}
-	mi := &file_common_structures_topology_topology_proto_msgTypes[9]
+	mi := &file_common_structures_topology_topology_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -747,7 +609,7 @@ func (x *Port) String() string {
 func (*Port) ProtoMessage() {}
 
 func (x *Port) ProtoReflect() protoreflect.Message {
-	mi := &file_common_structures_topology_topology_proto_msgTypes[9]
+	mi := &file_common_structures_topology_topology_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -760,7 +622,7 @@ func (x *Port) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Port.ProtoReflect.Descriptor instead.
 func (*Port) Descriptor() ([]byte, []int) {
-	return file_common_structures_topology_topology_proto_rawDescGZIP(), []int{9}
+	return file_common_structures_topology_topology_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *Port) GetId() string {
@@ -837,7 +699,7 @@ func (x *Port) GetCapabilities() *InterfaceCapabilities {
 // Maps to IEEE 802.1Qcp YANG models and Clause 6.4 / Annex L (managed objects)
 type InterfaceCapabilities struct {
 	state                       protoimpl.MessageState `protogen:"open.v1"`
-	PortSpeed                   int32                  `protobuf:"varint,1,opt,name=port_speed,json=portSpeed,proto3" json:"port_speed,omitempty"`                                     // Current active speed (Mbps)
+	PortSpeed                   int32                  `protobuf:"varint,1,opt,name=port_speed,proto3" json:"port_speed,omitempty"`                                                    // Current active speed (Mbps)
 	AdvertisedSpeeds            []int32                `protobuf:"varint,2,rep,packed,name=advertised_speeds,json=advertisedSpeeds,proto3" json:"advertised_speeds,omitempty"`         // All supported speeds (e.g., [100, 1000, 10000])
 	SupportedVlanIds            []uint32               `protobuf:"varint,3,rep,packed,name=supported_vlan_ids,json=supportedVlanIds,proto3" json:"supported_vlan_ids,omitempty"`       // Per IEEE 802.1Q Clause 6.9
 	SupportedPcpValues          []uint32               `protobuf:"varint,4,rep,packed,name=supported_pcp_values,json=supportedPcpValues,proto3" json:"supported_pcp_values,omitempty"` // Clause 8.6.6: Priority Code Point (0–7)
@@ -858,7 +720,7 @@ type InterfaceCapabilities struct {
 
 func (x *InterfaceCapabilities) Reset() {
 	*x = InterfaceCapabilities{}
-	mi := &file_common_structures_topology_topology_proto_msgTypes[10]
+	mi := &file_common_structures_topology_topology_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -870,7 +732,7 @@ func (x *InterfaceCapabilities) String() string {
 func (*InterfaceCapabilities) ProtoMessage() {}
 
 func (x *InterfaceCapabilities) ProtoReflect() protoreflect.Message {
-	mi := &file_common_structures_topology_topology_proto_msgTypes[10]
+	mi := &file_common_structures_topology_topology_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -883,7 +745,7 @@ func (x *InterfaceCapabilities) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use InterfaceCapabilities.ProtoReflect.Descriptor instead.
 func (*InterfaceCapabilities) Descriptor() ([]byte, []int) {
-	return file_common_structures_topology_topology_proto_rawDescGZIP(), []int{10}
+	return file_common_structures_topology_topology_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *InterfaceCapabilities) GetPortSpeed() int32 {
@@ -996,19 +858,19 @@ func (x *InterfaceCapabilities) GetSupportsInterfaceTimeOffset() bool {
 type Link struct {
 	state              protoimpl.MessageState `protogen:"open.v1"`
 	Id                 string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	SourceNode         string                 `protobuf:"bytes,2,opt,name=source_node,json=source,proto3" json:"source_node,omitempty"`
-	TargetNode         string                 `protobuf:"bytes,3,opt,name=target_node,json=target,proto3" json:"target_node,omitempty"`
-	SourcePort         string                 `protobuf:"bytes,4,opt,name=source_port,json=sourcePort,proto3" json:"source_port,omitempty"`
-	TargetPort         string                 `protobuf:"bytes,5,opt,name=target_port,json=targetPort,proto3" json:"target_port,omitempty"`
-	PropagationDelayNs int64                  `protobuf:"varint,6,opt,name=propagation_delay_ns,json=propagationDelay,proto3" json:"propagation_delay_ns,omitempty"` // In nanoseconds
-	Bandwidth          int64                  `protobuf:"varint,7,opt,name=bandwidth,proto3" json:"bandwidth,omitempty"`                                             // In bits per second
+	SourceNode         string                 `protobuf:"bytes,2,opt,name=source_node,proto3" json:"source_node,omitempty"`
+	TargetNode         string                 `protobuf:"bytes,3,opt,name=target_node,json=destination_node,proto3" json:"target_node,omitempty"`
+	SourcePort         string                 `protobuf:"bytes,4,opt,name=source_port,proto3" json:"source_port,omitempty"`
+	TargetPort         string                 `protobuf:"bytes,5,opt,name=target_port,json=destination_port,proto3" json:"target_port,omitempty"`
+	PropagationDelayNs int64                  `protobuf:"varint,6,opt,name=propagation_delay_ns,proto3" json:"propagation_delay_ns,omitempty"` // In nanoseconds
+	BandwidthMbps      int64                  `protobuf:"varint,7,opt,name=bandwidth_mbps,proto3" json:"bandwidth_mbps,omitempty"`             // In bits per second
 	unknownFields      protoimpl.UnknownFields
 	sizeCache          protoimpl.SizeCache
 }
 
 func (x *Link) Reset() {
 	*x = Link{}
-	mi := &file_common_structures_topology_topology_proto_msgTypes[11]
+	mi := &file_common_structures_topology_topology_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1020,7 +882,7 @@ func (x *Link) String() string {
 func (*Link) ProtoMessage() {}
 
 func (x *Link) ProtoReflect() protoreflect.Message {
-	mi := &file_common_structures_topology_topology_proto_msgTypes[11]
+	mi := &file_common_structures_topology_topology_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1033,7 +895,7 @@ func (x *Link) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Link.ProtoReflect.Descriptor instead.
 func (*Link) Descriptor() ([]byte, []int) {
-	return file_common_structures_topology_topology_proto_rawDescGZIP(), []int{11}
+	return file_common_structures_topology_topology_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *Link) GetId() string {
@@ -1078,9 +940,9 @@ func (x *Link) GetPropagationDelayNs() int64 {
 	return 0
 }
 
-func (x *Link) GetBandwidth() int64 {
+func (x *Link) GetBandwidthMbps() int64 {
 	if x != nil {
-		return x.Bandwidth
+		return x.BandwidthMbps
 	}
 	return 0
 }
@@ -1108,22 +970,14 @@ const file_common_structures_topology_topology_proto_rawDesc = "" +
 	"properties\x18\a \x01(\v2\x18.topology.NodePropertiesR\n" +
 	"properties\x12-\n" +
 	"\x10active_config_id\x18\b \x01(\tH\x00R\x0eactiveConfigId\x88\x01\x01B\x13\n" +
-	"\x11_active_config_id\"\x9e\x02\n" +
-	"\x0eNodeProperties\x127\n" +
-	"\x06bridge\x18\x01 \x01(\v2\x1a.topology.BridgePropertiesH\x00R\x06bridge\x88\x01\x01\x12D\n" +
-	"\vend_station\x18\x02 \x01(\v2\x1e.topology.EndStationPropertiesH\x01R\n" +
-	"endStation\x88\x01\x01\x12Z\n" +
-	"\x13bridged_end_station\x18\x03 \x01(\v2%.topology.BridgedEndStationPropertiesH\x02R\x11bridgedEndStation\x88\x01\x01B\t\n" +
-	"\a_bridgeB\x0e\n" +
-	"\f_end_stationB\x16\n" +
-	"\x14_bridged_end_station\":\n" +
-	"\x10BridgeProperties\x12&\n" +
-	"\x13processing_delay_ns\x18\x01 \x01(\x05R\tprocDelay\"]\n" +
-	"\x14EndStationProperties\x12)\n" +
-	"\x10application_type\x18\x01 \x01(\tR\x0fapplicationType\x12\x1a\n" +
-	"\bfunction\x18\x02 \x01(\tR\bfunction\"E\n" +
-	"\x1bBridgedEndStationProperties\x12&\n" +
-	"\x13processing_delay_ns\x18\x01 \x01(\x05R\tprocDelay\"`\n" +
+	"\x11_active_config_id\"\xd2\x01\n" +
+	"\x0eNodeProperties\x125\n" +
+	"\x13processing_delay_ns\x18\x01 \x01(\x05H\x00R\x13processing_delay_ns\x88\x01\x01\x12.\n" +
+	"\x10application_type\x18\x02 \x01(\tH\x01R\x0fapplicationType\x88\x01\x01\x12\x1f\n" +
+	"\bfunction\x18\x03 \x01(\tH\x02R\bfunction\x88\x01\x01B\x16\n" +
+	"\x14_processing_delay_nsB\x13\n" +
+	"\x11_application_typeB\v\n" +
+	"\t_function\"`\n" +
 	"\n" +
 	"DeviceInfo\x12!\n" +
 	"\fdevice_model\x18\x01 \x01(\tR\vdeviceModel\x12/\n" +
@@ -1137,7 +991,7 @@ const file_common_structures_topology_topology_proto_rawDesc = "" +
 	"\x0fmanagement_vlan\x18\x05 \x01(\rR\x0emanagementVlan\x128\n" +
 	"\bprotocol\x18\x06 \x01(\x0e2\x1c.topology.ManagementProtocolR\bprotocol\":\n" +
 	"\rInventoryInfo\x12)\n" +
-	"\x10software_version\x18\x01 \x01(\tR\x0fsoftwareVersion\"\xed\x02\n" +
+	"\x10software_version\x18\x01 \x01(\tR\x0fsoftwareVersion\"\xef\x02\n" +
 	"\x04Port\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12 \n" +
@@ -1146,14 +1000,15 @@ const file_common_structures_topology_topology_proto_rawDesc = "" +
 	"\vmac_address\x18\x05 \x01(\tR\n" +
 	"macAddress\x12\x1d\n" +
 	"\n" +
-	"ip_address\x18\x06 \x01(\tR\tipAddress\x12(\n" +
-	"\x10number_of_queues\x18\a \x01(\x05R\x0enumberOfQueues\x12\"\n" +
+	"ip_address\x18\x06 \x01(\tR\tipAddress\x12*\n" +
+	"\x10number_of_queues\x18\a \x01(\x05R\x10number_of_queues\x12\"\n" +
 	"\fmanufacturer\x18\b \x01(\tR\fmanufacturer\x12)\n" +
 	"\x10software_version\x18\t \x01(\tR\x0fsoftwareVersion\x12C\n" +
-	"\fcapabilities\x18\v \x01(\v2\x1f.topology.InterfaceCapabilitiesR\fcapabilities\"\xdc\x05\n" +
-	"\x15InterfaceCapabilities\x12\x1d\n" +
+	"\fcapabilities\x18\v \x01(\v2\x1f.topology.InterfaceCapabilitiesR\fcapabilities\"\xdd\x05\n" +
+	"\x15InterfaceCapabilities\x12\x1e\n" +
 	"\n" +
-	"port_speed\x18\x01 \x01(\x05R\tportSpeed\x12+\n" +
+	"port_speed\x18\x01 \x01(\x05R\n" +
+	"port_speed\x12+\n" +
 	"\x11advertised_speeds\x18\x02 \x03(\x05R\x10advertisedSpeeds\x12,\n" +
 	"\x12supported_vlan_ids\x18\x03 \x03(\rR\x10supportedVlanIds\x120\n" +
 	"\x14supported_pcp_values\x18\x04 \x03(\rR\x12supportedPcpValues\x12(\n" +
@@ -1168,17 +1023,15 @@ const file_common_structures_topology_topology_proto_rawDesc = "" +
 	"\fsupports_tas\x18\f \x01(\bR\vsupportsTas\x12!\n" +
 	"\fsupports_cqf\x18\r \x01(\bR\vsupportsCqf\x12!\n" +
 	"\fsupports_cbs\x18\x0e \x01(\bR\vsupportsCbs\x12C\n" +
-	"\x1esupports_interface_time_offset\x18\x0f \x01(\bR\x1bsupportsInterfaceTimeOffset\"\xe0\x01\n" +
+	"\x1esupports_interface_time_offset\x18\x0f \x01(\bR\x1bsupportsInterfaceTimeOffset\"\x84\x02\n" +
 	"\x04Link\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\tR\x02id\x12\x1b\n" +
-	"\vsource_node\x18\x02 \x01(\tR\x06source\x12\x1b\n" +
-	"\vtarget_node\x18\x03 \x01(\tR\x06target\x12\x1f\n" +
-	"\vsource_port\x18\x04 \x01(\tR\n" +
-	"sourcePort\x12\x1f\n" +
-	"\vtarget_port\x18\x05 \x01(\tR\n" +
-	"targetPort\x12.\n" +
-	"\x14propagation_delay_ns\x18\x06 \x01(\x03R\x10propagationDelay\x12\x1c\n" +
-	"\tbandwidth\x18\a \x01(\x03R\tbandwidth*M\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\x12 \n" +
+	"\vsource_node\x18\x02 \x01(\tR\vsource_node\x12%\n" +
+	"\vtarget_node\x18\x03 \x01(\tR\x10destination_node\x12 \n" +
+	"\vsource_port\x18\x04 \x01(\tR\vsource_port\x12%\n" +
+	"\vtarget_port\x18\x05 \x01(\tR\x10destination_port\x122\n" +
+	"\x14propagation_delay_ns\x18\x06 \x01(\x03R\x14propagation_delay_ns\x12&\n" +
+	"\x0ebandwidth_mbps\x18\a \x01(\x03R\x0ebandwidth_mbps*M\n" +
 	"\bNodeRole\x12\v\n" +
 	"\aUNKNOWN\x10\x00\x12\x0f\n" +
 	"\vEND_STATION\x10\x01\x12\n" +
@@ -1207,44 +1060,38 @@ func file_common_structures_topology_topology_proto_rawDescGZIP() []byte {
 }
 
 var file_common_structures_topology_topology_proto_enumTypes = make([]protoimpl.EnumInfo, 3)
-var file_common_structures_topology_topology_proto_msgTypes = make([]protoimpl.MessageInfo, 12)
+var file_common_structures_topology_topology_proto_msgTypes = make([]protoimpl.MessageInfo, 9)
 var file_common_structures_topology_topology_proto_goTypes = []any{
-	(NodeRole)(0),                       // 0: topology.NodeRole
-	(ManagementProtocol)(0),             // 1: topology.ManagementProtocol
-	(DuplexMode)(0),                     // 2: topology.DuplexMode
-	(*Topology)(nil),                    // 3: topology.Topology
-	(*Node)(nil),                        // 4: topology.Node
-	(*NodeProperties)(nil),              // 5: topology.NodeProperties
-	(*BridgeProperties)(nil),            // 6: topology.BridgeProperties
-	(*EndStationProperties)(nil),        // 7: topology.EndStationProperties
-	(*BridgedEndStationProperties)(nil), // 8: topology.BridgedEndStationProperties
-	(*DeviceInfo)(nil),                  // 9: topology.DeviceInfo
-	(*ManagementInfo)(nil),              // 10: topology.ManagementInfo
-	(*InventoryInfo)(nil),               // 11: topology.InventoryInfo
-	(*Port)(nil),                        // 12: topology.Port
-	(*InterfaceCapabilities)(nil),       // 13: topology.InterfaceCapabilities
-	(*Link)(nil),                        // 14: topology.Link
+	(NodeRole)(0),                 // 0: topology.NodeRole
+	(ManagementProtocol)(0),       // 1: topology.ManagementProtocol
+	(DuplexMode)(0),               // 2: topology.DuplexMode
+	(*Topology)(nil),              // 3: topology.Topology
+	(*Node)(nil),                  // 4: topology.Node
+	(*NodeProperties)(nil),        // 5: topology.NodeProperties
+	(*DeviceInfo)(nil),            // 6: topology.DeviceInfo
+	(*ManagementInfo)(nil),        // 7: topology.ManagementInfo
+	(*InventoryInfo)(nil),         // 8: topology.InventoryInfo
+	(*Port)(nil),                  // 9: topology.Port
+	(*InterfaceCapabilities)(nil), // 10: topology.InterfaceCapabilities
+	(*Link)(nil),                  // 11: topology.Link
 }
 var file_common_structures_topology_topology_proto_depIdxs = []int32{
 	4,  // 0: topology.Topology.nodes:type_name -> topology.Node
-	14, // 1: topology.Topology.links:type_name -> topology.Link
+	11, // 1: topology.Topology.links:type_name -> topology.Link
 	0,  // 2: topology.Node.type:type_name -> topology.NodeRole
-	12, // 3: topology.Node.ports:type_name -> topology.Port
-	9,  // 4: topology.Node.device_info:type_name -> topology.DeviceInfo
-	10, // 5: topology.Node.management_info:type_name -> topology.ManagementInfo
-	11, // 6: topology.Node.inventory_info:type_name -> topology.InventoryInfo
+	9,  // 3: topology.Node.ports:type_name -> topology.Port
+	6,  // 4: topology.Node.device_info:type_name -> topology.DeviceInfo
+	7,  // 5: topology.Node.management_info:type_name -> topology.ManagementInfo
+	8,  // 6: topology.Node.inventory_info:type_name -> topology.InventoryInfo
 	5,  // 7: topology.Node.properties:type_name -> topology.NodeProperties
-	6,  // 8: topology.NodeProperties.bridge:type_name -> topology.BridgeProperties
-	7,  // 9: topology.NodeProperties.end_station:type_name -> topology.EndStationProperties
-	8,  // 10: topology.NodeProperties.bridged_end_station:type_name -> topology.BridgedEndStationProperties
-	1,  // 11: topology.ManagementInfo.protocol:type_name -> topology.ManagementProtocol
-	13, // 12: topology.Port.capabilities:type_name -> topology.InterfaceCapabilities
-	2,  // 13: topology.InterfaceCapabilities.mode:type_name -> topology.DuplexMode
-	14, // [14:14] is the sub-list for method output_type
-	14, // [14:14] is the sub-list for method input_type
-	14, // [14:14] is the sub-list for extension type_name
-	14, // [14:14] is the sub-list for extension extendee
-	0,  // [0:14] is the sub-list for field type_name
+	1,  // 8: topology.ManagementInfo.protocol:type_name -> topology.ManagementProtocol
+	10, // 9: topology.Port.capabilities:type_name -> topology.InterfaceCapabilities
+	2,  // 10: topology.InterfaceCapabilities.mode:type_name -> topology.DuplexMode
+	11, // [11:11] is the sub-list for method output_type
+	11, // [11:11] is the sub-list for method input_type
+	11, // [11:11] is the sub-list for extension type_name
+	11, // [11:11] is the sub-list for extension extendee
+	0,  // [0:11] is the sub-list for field type_name
 }
 
 func init() { file_common_structures_topology_topology_proto_init() }
@@ -1261,7 +1108,7 @@ func file_common_structures_topology_topology_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_common_structures_topology_topology_proto_rawDesc), len(file_common_structures_topology_topology_proto_rawDesc)),
 			NumEnums:      3,
-			NumMessages:   12,
+			NumMessages:   9,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

@@ -14,6 +14,7 @@ import (
 	devicemodelregistry "OpenCNC_config_service/common/structures/devicemodelregistry"
 	"OpenCNC_config_service/common/structures/topology"
 	"OpenCNC_config_service/gui_service/internal/domain"
+	"OpenCNC_config_service/monitor_service/structures/monitoring"
 
 	"google.golang.org/protobuf/encoding/protojson"
 )
@@ -75,7 +76,9 @@ func (u *uploadYang) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-type Backend struct{}
+type Backend struct {
+	state *MonitoringState
+}
 
 var activityLog = struct {
 	mu      sync.RWMutex
@@ -84,8 +87,10 @@ var activityLog = struct {
 
 const maxActivityLogEntries = 100
 
-func NewBackend() *Backend {
-	return &Backend{}
+func NewBackend(state *MonitoringState) *Backend {
+	return &Backend{
+		state: state,
+	}
 }
 
 func (b *Backend) GetDashboard(_ context.Context) (domain.DashboardData, error) {
@@ -103,36 +108,36 @@ func (b *Backend) GetDashboard(_ context.Context) (domain.DashboardData, error) 
 		NetworkModel: domain.NetworkModel{
 			Nodes: []domain.Node{
 				{
-					ID:    "node-001",
-					Name:  "CNC Controller",
-					Type:  "controller",
-					State: "online",
-					Ports: "4",
-					Links: "3",
+					ID:      "node-001",
+					Name:    "CNC Controller",
+					Type:    "controller",
+					State:   "online",
+					PortIds: []string{"4"},
+					Links:   "3",
 				},
 				{
-					ID:    "node-002",
-					Name:  "Machine 01",
-					Type:  "cnc-machine",
-					State: "online",
-					Ports: "2",
-					Links: "2",
+					ID:      "node-002",
+					Name:    "Machine 01",
+					Type:    "cnc-machine",
+					State:   "online",
+					PortIds: []string{"2"},
+					Links:   "2",
 				},
 				{
-					ID:    "node-003",
-					Name:  "Operator Station",
-					Type:  "workstation",
-					State: "online",
-					Ports: "1",
-					Links: "1",
+					ID:      "node-003",
+					Name:    "Operator Station",
+					Type:    "workstation",
+					State:   "online",
+					PortIds: []string{"1"},
+					Links:   "1",
 				},
 				{
-					ID:    "node-004",
-					Name:  "PLC Controller",
-					Type:  "plc",
-					State: "online",
-					Ports: "8",
-					Links: "1",
+					ID:      "node-004",
+					Name:    "PLC Controller",
+					Type:    "plc",
+					State:   "online",
+					PortIds: []string{"8"},
+					Links:   "1",
 				},
 			},
 
@@ -196,53 +201,161 @@ func (b *Backend) GetDeviceModels(_ context.Context) ([]domain.DeviceModel, erro
 }
 
 func (b *Backend) GetMonitoringCounters(_ context.Context) ([]domain.MonitoringItem, error) {
-	return []domain.MonitoringItem{
-		{ID: "rx_packets", Label: "RX Packets", Description: "Total packets received on monitored interfaces"},
-		{ID: "tx_packets", Label: "TX Packets", Description: "Total packets transmitted on monitored interfaces"},
-		{ID: "rx_drops", Label: "RX Drops", Description: "Packets dropped on ingress before forwarding"},
-		{ID: "tx_drops", Label: "TX Drops", Description: "Packets dropped on egress due to queue or policy"},
-		{ID: "stream_rejections", Label: "Stream Rejections", Description: "Streams rejected by admission or policy checks"},
-	}, nil
+	resp, err := requestGetCapabilities(nil)
+	if err != nil {
+		fmt.Println(err)
+	}
+	counters := make([]domain.MonitoringItem, 0)
+	for _, capability := range resp.GetCapabilities() {
+		if capability.GetKind() == monitoring.DataType_RAW {
+			counters = append(counters, domain.MonitoringItem{ID: capability.GetName(), Label: capability.GetName(), Description: capability.GetDescription()})
+		}
+	}
+	return counters, nil
 }
 
 func (b *Backend) GetMonitoringMetrics(_ context.Context) ([]domain.MonitoringItem, error) {
-	return []domain.MonitoringItem{
-		{ID: "bandwidth_usage", Label: "Bandwidth Usage", Description: "Observed throughput compared to link capacity"},
-		{ID: "latency_mean", Label: "Mean Latency", Description: "Average end-to-end delivery latency"},
-		{ID: "packet_loss_rate", Label: "Packet Loss Rate", Description: "Percentage of packets not delivered"},
-	}, nil
+	resp, err := requestGetCapabilities(nil)
+	if err != nil {
+		fmt.Println(err)
+	}
+	metrics := make([]domain.MonitoringItem, 0)
+	for _, capability := range resp.GetCapabilities() {
+		if capability.GetKind() == monitoring.DataType_METRIC {
+			metrics = append(metrics, domain.MonitoringItem{ID: capability.GetName(), Label: capability.GetName(), Description: capability.GetDescription()})
+		}
+	}
+	return metrics, nil
 }
 
-func (b *Backend) GetMonitoringTargets(_ context.Context) ([]domain.MonitoringTarget, error) {
-	return []domain.MonitoringTarget{
-		{
-			ID:       "sw1_sw0p2",
-			Node:     "Switch 1",
-			Port:     "sw0p2",
-			Label:    "Switch 1 - port sw0p2",
-			Counters: []string{"rx_packets", "tx_packets", "rx_drops", "tx_drops"},
-			Metrics:  []string{"bandwidth_usage", "latency_mean", "packet_loss_rate"},
-		},
-		{
-			ID:       "sw1_sw0p4",
-			Node:     "Switch 1",
-			Port:     "sw0p4",
-			Label:    "Switch 1 - port sw0p4",
-			Counters: []string{"rx_packets", "tx_packets"},
-			Metrics:  []string{"bandwidth_usage", "latency_mean"},
-		},
-		{
-			ID:       "sw2_sw0p1",
-			Node:     "Switch 2",
-			Port:     "sw0p1",
-			Label:    "Switch 2 - port sw0p1",
-			Counters: []string{"rx_packets", "tx_packets", "stream_rejections"},
-			Metrics:  []string{"bandwidth_usage", "packet_loss_rate"},
-		},
-	}, nil
+func (b *Backend) GetMonitoringTargets(r context.Context) ([]domain.MonitoringTarget, error) {
+	nodes, err := b.GetNodes(r)
+	if err != nil {
+		return nil, err
+	}
+	targets := make([]domain.MonitoringTarget, 0)
+	for _, node := range nodes {
+		// Node counters and metrics.
+		target := domain.MonitoringTarget{
+			ID:       node.ID,
+			Node:     node.Name,
+			Port:     "",
+			Label:    node.Name,
+			Counters: []string{},
+			Metrics:  []string{},
+		}
+		resource := monitoring.ResourceKey{
+			NodeId: node.ID,
+			PortId: nil,
+		}
+		resp, err := requestGetCapabilities(&resource)
+		if err != nil {
+			fmt.Println(err)
+		}
+		for _, capability := range resp.GetCapabilities() {
+			if capability.GetKind() == monitoring.DataType_RAW {
+				target.Counters = append(target.Counters, capability.GetName())
+			}
+			if capability.GetKind() == monitoring.DataType_METRIC {
+				target.Metrics = append(target.Metrics, capability.GetName())
+			}
+		}
+		targets = append(targets, target)
+
+		// Ports counters and metrics.
+		for _, port := range node.PortIds {
+
+			target := domain.MonitoringTarget{
+				ID:       fmt.Sprintf("%s_%s", node.ID, port),
+				Node:     node.Name,
+				Port:     port,
+				Label:    fmt.Sprintf("%s - %s", node.Name, port),
+				Counters: []string{},
+				Metrics:  []string{},
+			}
+			// get specific capabilities for this resource
+
+			resource := monitoring.ResourceKey{
+				NodeId: node.ID,
+				PortId: &port,
+			}
+			resp, err := requestGetCapabilities(&resource)
+			if err != nil {
+				fmt.Println(err)
+			}
+			for _, capability := range resp.GetCapabilities() {
+				if capability.GetKind() == monitoring.DataType_RAW {
+					target.Counters = append(target.Counters, capability.GetName())
+				}
+				if capability.GetKind() == monitoring.DataType_METRIC {
+					target.Metrics = append(target.Metrics, capability.GetName())
+				}
+			}
+			targets = append(targets, target)
+		}
+	}
+	return targets, nil
+}
+
+func formatMetricValue(data MetricData) string {
+	return fmt.Sprintf("%v", data.Value)
 }
 
 func (b *Backend) GetMonitoringData(_ context.Context, query domain.MonitoringDataQuery) ([]domain.MonitoringTargetData, error) {
+	//fmt.Printf("[GUI] GetMonitoringData called with query: %+v\n", query)
+	//Ask monitor-service to StartMonitoring().
+	parts := strings.Split(query.TargetID, "_")
+	resource := &monitoring.ResourceKey{
+		NodeId: parts[0],
+		PortId: &parts[1],
+	}
+	_, err := requestStartMonitoring(query.TargetID, resource, query.MetricIDs)
+	if err != nil {
+		return nil, err
+	}
+	// Update the shared state to let the kafka consumer collect the requested metrics.
+	b.state.SetWantedMetrics(query.MetricIDs)
+
+	// Read the latest values currently available.
+	rtData := map[string]map[string]string{
+		query.TargetID: {},
+	}
+	for _, metricID := range query.MetricIDs {
+		data, ok := b.state.GetMetric(metricID)
+		if !ok {
+			continue
+		}
+
+		rtData[query.TargetID][metricID] = formatMetricValue(data)
+	}
+
+	// TODO replace it with Kafka consumer to get real-time data from monitor service
+	rawValues := map[string]map[string]string{
+		"D_Port1": {
+			"rx_packets":          "1500",
+			"tx_packets":          "18",
+			"rx_drops":            "2",
+			"tx_drops":            "1",
+			"unicast-packet-rate": "41%",
+			"latency_mean":        "0.8 ms",
+			"packet_loss_rate":    "0.12%",
+		},
+		"sw1_sw0p4": {
+			"rx_packets":       "700",
+			"tx_packets":       "1498",
+			"bandwidth_usage":  "72%",
+			"latency_mean":     "1.3 ms",
+			"packet_loss_rate": "0.08%",
+		},
+		"sw2_sw0p1": {
+			"rx_packets":        "924",
+			"tx_packets":        "907",
+			"stream_rejections": "5",
+			"bandwidth_usage":   "58%",
+			"packet_loss_rate":  "0.20%",
+		},
+	}
+
 	targets, err := b.GetMonitoringTargets(context.Background())
 	if err != nil {
 		return nil, err
@@ -264,32 +377,6 @@ func (b *Backend) GetMonitoringData(_ context.Context, query domain.MonitoringDa
 	}
 	for _, item := range metrics {
 		labelByID[item.ID] = item.Label
-	}
-
-	rawValues := map[string]map[string]string{
-		"sw1_sw0p2": {
-			"rx_packets":       "1500",
-			"tx_packets":       "18",
-			"rx_drops":         "2",
-			"tx_drops":         "1",
-			"bandwidth_usage":  "41%",
-			"latency_mean":     "0.8 ms",
-			"packet_loss_rate": "0.12%",
-		},
-		"sw1_sw0p4": {
-			"rx_packets":       "700",
-			"tx_packets":       "1498",
-			"bandwidth_usage":  "72%",
-			"latency_mean":     "1.3 ms",
-			"packet_loss_rate": "0.08%",
-		},
-		"sw2_sw0p1": {
-			"rx_packets":        "924",
-			"tx_packets":        "907",
-			"stream_rejections": "5",
-			"bandwidth_usage":   "58%",
-			"packet_loss_rate":  "0.20%",
-		},
 	}
 
 	metricIDs := query.MetricIDs
@@ -338,7 +425,25 @@ func (b *Backend) GetMonitoringData(_ context.Context, query domain.MonitoringDa
 }
 
 func (b *Backend) GetNodes(_ context.Context) ([]domain.Node, error) {
-	return []domain.Node{}, nil
+	nodes, err := storewrapper.GetNodes()
+	if err != nil {
+		return nil, err
+	}
+	domainNodes := make([]domain.Node, len(nodes))
+
+	for i, n := range nodes {
+
+		domainNodes[i] = domain.Node{
+			ID:      n.Name,
+			Name:    n.Name,
+			Type:    n.Type.String(),
+			PortIds: []string{},
+		}
+		for _, port := range n.GetPorts() {
+			domainNodes[i].PortIds = append(domainNodes[i].PortIds, port.GetId())
+		}
+	}
+	return domainNodes, nil
 }
 
 func (b *Backend) GetLinks(_ context.Context) ([]domain.Link, error) {
@@ -571,6 +676,66 @@ func (b *Backend) DeleteModel(_ context.Context, modelID string) (domain.Operati
 		Name:    "deleteModel",
 		Message: fmt.Sprintf("model %s deleted", modelID),
 		Data:    map[string]string{"modelId": modelID},
+	}, nil
+}
+
+func (b *Backend) UploadTopology(_ context.Context, query string) (domain.OperationResult, error) {
+	if strings.TrimSpace(query) == "" {
+		return domain.OperationResult{
+			Success: false,
+			Name:    "uploadTopology",
+			Message: "no JSON payload found; choose a topology file first",
+			Data:    map[string]string{},
+		}, nil
+	}
+
+	topologyObj := &topology.Topology{}
+
+	if err := json.Unmarshal([]byte(query), topologyObj); err != nil {
+		return domain.OperationResult{
+			Success: false,
+			Name:    "uploadTopology",
+			Message: fmt.Sprintf("failed to parse JSON: %v", err),
+			Data:    map[string]string{},
+		}, nil
+	}
+
+	if err := storewrapper.DeleteTopology(); err != nil {
+		fmt.Printf("Failed to delete topology: %v\n", err)
+	}
+
+	if err := storewrapper.StoreTopology(topologyObj); err != nil {
+		b.recordEvent(
+			"error",
+			"uploadTopology",
+			"topology",
+			fmt.Sprintf("Failed storing topology: %v", err),
+			"",
+		)
+
+		return domain.OperationResult{
+			Success: false,
+			Name:    "uploadTopology",
+			Message: fmt.Sprintf("failed to store topology: %v", err),
+			Data:    map[string]string{},
+		}, nil
+	}
+
+	b.recordEvent(
+		"info",
+		"uploadTopology",
+		"topology",
+		"Topology imported successfully",
+		"",
+	)
+
+	return domain.OperationResult{
+		Success: true,
+		Name:    "uploadTopology",
+		Message: "topology imported successfully",
+		Data: map[string]string{
+			"status": "stored",
+		},
 	}, nil
 }
 

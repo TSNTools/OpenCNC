@@ -231,10 +231,10 @@ func nodeStorePrefix(node *topology.Node) (string, error) {
 	}
 
 	if props := node.GetProperties(); props != nil {
-		if props.GetBridge() != nil {
+		if props != nil {
 			return "bridges", nil
 		}
-		if props.GetEndStation() != nil || props.GetBridgedEndStation() != nil {
+		if props != nil {
 			return "endnodes", nil
 		}
 	}

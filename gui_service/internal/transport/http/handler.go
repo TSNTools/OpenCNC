@@ -2,6 +2,7 @@ package http
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strings"
 
@@ -139,7 +140,7 @@ func (h *Handler) MonitoringData(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 	}
-
+	fmt.Println("Query:", r.URL.Query())
 	query := domain.MonitoringDataQuery{
 		Node:      strings.TrimSpace(r.URL.Query().Get("node")),
 		TargetID:  strings.TrimSpace(r.URL.Query().Get("targetId")),
@@ -197,6 +198,22 @@ func (h *Handler) ModelByID(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func (h *Handler) UploadTopology(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		methodNotAllowed(w)
+		return
+	}
+
+	input := decodeInput(r)
+
+	result, err := h.service.UploadTopology(r.Context(), input.Query)
+	if err != nil {
+		internalError(w, err)
+		return
+	}
+
+	writeJSON(w, http.StatusOK, result)
+}
 func (h *Handler) Nodes(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:

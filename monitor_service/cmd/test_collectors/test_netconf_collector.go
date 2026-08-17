@@ -9,6 +9,8 @@ import (
 	"OpenCNC_config_service/monitor_service/pkg/collectors"
 	"OpenCNC_config_service/monitor_service/pkg/managementSessions"
 	"OpenCNC_config_service/monitor_service/structures/monitoring"
+
+	"github.com/openconfig/ygot/ygot"
 )
 
 var target = &topology.Node{
@@ -34,9 +36,7 @@ var target = &topology.Node{
 		Protocol:       topology.ManagementProtocol_NETCONF,
 	},
 	Properties: &topology.NodeProperties{
-		Bridge: &topology.BridgeProperties{
-			ProcessingDelayNs: 800,
-		},
+		ProcessingDelayNs: ygot.Int32(800),
 	},
 	DeviceInfo: &topology.DeviceInfo{
 		DeviceModel: "TTTech-EVB",

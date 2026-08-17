@@ -30,7 +30,7 @@ message Node {
   string name = 2;
   string type = 3;
   string state = 4;
-  string ports = 5;
+  repeated string portids = 5; //list of port ids
   string links = 6;
 }
 

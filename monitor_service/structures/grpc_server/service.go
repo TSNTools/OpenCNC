@@ -22,16 +22,35 @@ func NewMonitorServer(engine *engine.Engine) *MonitorServer {
 func (s *MonitorServer) GetCapabilities(ctx context.Context, req *CapabilitiesRequest) (*CapabilitiesResponse, error) {
 
 	response := &CapabilitiesResponse{}
-	// Add catalog items to the response
-	for _, item := range s.engine.Catalog.Items {
-		response.Capabilities = append(
-			response.Capabilities,
-			&monitoring.Capability{
-				Name:        item.Name,
-				Description: item.Description,
-				Kind:        item.Kind,
-			},
-		)
+
+	if req.Resource == nil {
+		// No target specified → all targets
+		// Add catalog items to the response
+		for _, item := range s.engine.Catalog.Items {
+			response.Capabilities = append(
+				response.Capabilities,
+				&monitoring.Capability{
+					Name:        item.Name,
+					Description: item.Description,
+					Kind:        item.Kind,
+				},
+			)
+		}
+	} else {
+		// Specific target
+		capabilities := s.engine.Catalog.GetItemsByResources(req.Resource)
+		for i := range capabilities {
+			item := &capabilities[i]
+			response.Capabilities = append(
+				response.Capabilities,
+				&monitoring.Capability{
+					Name:        item.Name,
+					Description: item.Description,
+					Kind:        item.Kind,
+				},
+			)
+		}
+
 	}
 
 	return response, nil

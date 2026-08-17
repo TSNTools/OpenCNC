@@ -14,17 +14,17 @@ func (topo *Topology) Print() {
 		fmt.Printf("	Name: %s\n", node.Name)
 
 		// Print bridge properties if present
-		if node.Properties != nil && node.Properties.Bridge != nil {
-			fmt.Printf("	Processing delay (ns): %d\n", node.Properties.Bridge.ProcessingDelayNs)
+		if node.Properties != nil && node.Properties != nil {
+			fmt.Printf("	Processing delay (ns): %d\n", node.Properties.ProcessingDelayNs)
 		}
 		// Print end station properties if present
-		if node.Properties != nil && node.Properties.EndStation != nil {
-			fmt.Printf("	Application type: %s\n", node.Properties.EndStation.ApplicationType)
-			fmt.Printf("	Function: %s\n", node.Properties.EndStation.Function)
+		if node.Properties != nil && node.Properties != nil {
+			fmt.Printf("	Application type: %s\n", node.Properties.ApplicationType)
+			fmt.Printf("	Function: %s\n", node.Properties.Function)
 		}
 		// Print bridged end station properties if present
-		if node.Properties != nil && node.Properties.BridgedEndStation != nil {
-			fmt.Printf("	Processing delay (ns): %d\n", node.Properties.BridgedEndStation.ProcessingDelayNs)
+		if node.Properties != nil && node.Properties != nil {
+			fmt.Printf("	Processing delay (ns): %d\n", node.Properties.ProcessingDelayNs)
 		}
 
 		fmt.Println("	Ports:")
@@ -46,7 +46,7 @@ func (topo *Topology) Print() {
 		fmt.Printf("	Source port: %s\n", link.SourcePort)
 		fmt.Printf("	Target port: %s\n", link.TargetPort)
 		fmt.Printf("	Propagation delay (ns): %d\n", link.PropagationDelayNs)
-		fmt.Printf("	Bandwidth (bps): %d\n", link.Bandwidth)
+		fmt.Printf("	Bandwidth (bps): %d\n", link.BandwidthMbps*1000000)
 		fmt.Println()
 	}
 }

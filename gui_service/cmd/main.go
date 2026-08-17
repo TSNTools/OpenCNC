@@ -1,7 +1,11 @@
 package main
 
 import (
+	"context"
 	"log"
+	"os"
+	"os/signal"
+	"syscall"
 
 	"OpenCNC_config_service/gui_service/internal/adapters/stub"
 	"OpenCNC_config_service/gui_service/internal/app"
@@ -15,11 +19,36 @@ func main() {
 		log.Fatal(err)
 	}
 
-	backend := stub.NewBackend()
+	ctx, stop := signal.NotifyContext(
+		context.Background(),
+		os.Interrupt,
+		syscall.SIGTERM,
+	)
+	defer stop()
+
+	rtMonitoringState := stub.NewMonitoringState()
+
+	backend := stub.NewBackend(rtMonitoringState)
+
 	service := app.NewService(backend, backend)
+
 	router := httptransport.NewRouter(cfg, service)
 
-	log.Printf("GUI service listening on :%s and serving %s", cfg.Port, cfg.StaticDir)
+	metricsConsumer := stub.NewMetricsConsumer(rtMonitoringState)
+	defer metricsConsumer.Close()
+
+	go func() {
+		if err := metricsConsumer.Run(ctx); err != nil {
+			log.Printf("metrics consumer stopped: %v", err)
+		}
+	}()
+
+	log.Printf(
+		"GUI service listening on :%s and serving %s",
+		cfg.Port,
+		cfg.StaticDir,
+	)
+
 	if err := router.ListenAndServe(); err != nil {
 		log.Fatal(err)
 	}

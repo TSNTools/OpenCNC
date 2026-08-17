@@ -51,12 +51,12 @@ type MonitoringTargetData struct {
 }
 
 type Node struct {
-	ID    string `json:"id"`
-	Name  string `json:"name"`
-	Type  string `json:"type"`
-	State string `json:"state"`
-	Ports string `json:"ports"`
-	Links string `json:"links"`
+	ID      string   `json:"id"`
+	Name    string   `json:"name"`
+	Type    string   `json:"type"`
+	State   string   `json:"state"`
+	PortIds []string `json:"ports"`
+	Links   string   `json:"links"`
 }
 
 type Link struct {

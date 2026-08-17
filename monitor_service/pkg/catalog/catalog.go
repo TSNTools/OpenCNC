@@ -8,8 +8,8 @@ import (
 )
 
 const (
-	defaultCountersPath = "/home/opencnc/OpenCNC/monitor_service/pkg/collectors/available_counters.json"
-	defaultMetricsPath  = "/home/opencnc/OpenCNC/monitor_service/pkg/meters/available_metrics.json"
+	defaultCountersPath = "/home/opencnc/OpenCNC/monitor_service/pkg/catalog/available_counters.json"
+	defaultMetricsPath  = "/home/opencnc/OpenCNC/monitor_service/pkg/catalog/available_metrics.json"
 )
 
 type Catalog struct {
@@ -31,11 +31,11 @@ func LoadCatalog() (*Catalog, error) {
 
 	catalog := &Catalog{}
 
-	if err := json.Unmarshal(countersData, &catalog.Counters); err != nil {
+	if err := json.Unmarshal(countersData, &catalog); err != nil {
 		return nil, err
 	}
 
-	if err := json.Unmarshal(metricsData, &catalog.Metrics); err != nil {
+	if err := json.Unmarshal(metricsData, &catalog); err != nil {
 		return nil, err
 	}
 
@@ -102,4 +102,12 @@ func (c *Catalog) GetMetricByID(name string) *monitoring.Metric {
 		}
 	}
 	return nil
+}
+
+func (c *Catalog) GetItemsByResources(resource *monitoring.ResourceKey) []monitoring.Capability {
+	if c == nil || resource == nil {
+		return nil
+	}
+
+	return c.Items
 }

@@ -22,6 +22,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"time"
 
 	devicemodelregistry "OpenCNC_config_service/common/structures/devicemodelregistry"
 	moduleregistry "OpenCNC_config_service/common/structures/module-registry"
@@ -29,6 +30,7 @@ import (
 	"OpenCNC_config_service/common/structures/topology_config"
 
 	"git.cs.kau.se/hamzchah/opencnc_kafka-exporter/logger/pkg/logger"
+	clientv3 "go.etcd.io/etcd/client/v3"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -150,6 +152,15 @@ func GetNode(name string) (*topology.Node, string, error) {
 	return node, prefix, nil
 }
 
+func GetNodes() ([]*topology.Node, error) {
+	endnodes := getNodes("endnodes")
+	bridges := getNodes("bridges")
+
+	nodes := append(endnodes, bridges...)
+
+	return nodes, nil
+}
+
 func DeleteNode(name string) error {
 	client, err := createEtcdClient()
 	if err != nil {
@@ -176,6 +187,57 @@ func StoreTopology(topo *topology.Topology) error {
 
 	storeNodes(topo.GetNodes())
 	storeLinks(topo.GetLinks())
+
+	return nil
+}
+
+func DeleteTopology() error {
+	client, err := createEtcdClient()
+	if err != nil {
+		return fmt.Errorf("failed to create etcd client: %w", err)
+	}
+	defer client.Close()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	prefixes := []string{
+		"bridges/",
+		"endnodes/",
+		"links/",
+	}
+
+	var totalDeleted int64
+
+	for _, prefix := range prefixes {
+		// First get all keys under the prefix.
+		resp, err := client.Get(
+			ctx,
+			prefix,
+			clientv3.WithPrefix(),
+		)
+		if err != nil {
+			return fmt.Errorf("failed to get keys under %q: %w", prefix, err)
+		}
+
+		log.Infof("Found %d keys under %s", len(resp.Kvs), prefix)
+
+		// Delete each key explicitly.
+		for _, kv := range resp.Kvs {
+			key := string(kv.Key)
+
+			log.Infof("Deleting topology key: %s", key)
+
+			deleteResp, err := client.Delete(ctx, key)
+			if err != nil {
+				return fmt.Errorf("failed to delete key %q: %w", key, err)
+			}
+
+			totalDeleted += deleteResp.Deleted
+		}
+	}
+
+	log.Infof("DeleteTopology: deleted %d keys", totalDeleted)
 
 	return nil
 }

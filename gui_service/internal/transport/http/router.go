@@ -23,6 +23,7 @@ func NewRouter(cfg config.Config, service *app.Service) *Router {
 	mux.HandleFunc("/api/v1/device-models", h.DeviceModels)
 	mux.HandleFunc("/api/v1/device-models/upload", h.UploadModel)
 	mux.HandleFunc("/api/v1/device-models/", h.ModelByID)
+	mux.HandleFunc("/api/topology/upload", h.UploadTopology)
 	mux.HandleFunc("/api/v1/monitoring/counters", h.MonitoringCounters)
 	mux.HandleFunc("/api/v1/monitoring/metrics", h.MonitoringMetrics)
 	mux.HandleFunc("/api/v1/monitoring/targets", h.MonitoringTargets)

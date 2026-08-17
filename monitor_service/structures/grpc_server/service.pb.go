@@ -23,7 +23,8 @@ const (
 )
 
 type CapabilitiesRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
+	state         protoimpl.MessageState  `protogen:"open.v1"`
+	Resource      *monitoring.ResourceKey `protobuf:"bytes,1,opt,name=resource,proto3,oneof" json:"resource,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -56,6 +57,13 @@ func (x *CapabilitiesRequest) ProtoReflect() protoreflect.Message {
 // Deprecated: Use CapabilitiesRequest.ProtoReflect.Descriptor instead.
 func (*CapabilitiesRequest) Descriptor() ([]byte, []int) {
 	return file_monitor_service_structures_grpc_server_service_proto_rawDescGZIP(), []int{0}
+}
+
+func (x *CapabilitiesRequest) GetResource() *monitoring.ResourceKey {
+	if x != nil {
+		return x.Resource
+	}
+	return nil
 }
 
 type CapabilitiesResponse struct {
@@ -262,8 +270,10 @@ var File_monitor_service_structures_grpc_server_service_proto protoreflect.FileD
 
 const file_monitor_service_structures_grpc_server_service_proto_rawDesc = "" +
 	"\n" +
-	"4monitor_service/structures/grpc_server/service.proto\x12\aservice\x1a6monitor_service/structures/monitoring/monitoring.proto\"\x15\n" +
-	"\x13CapabilitiesRequest\"R\n" +
+	"4monitor_service/structures/grpc_server/service.proto\x12\aservice\x1a6monitor_service/structures/monitoring/monitoring.proto\"\\\n" +
+	"\x13CapabilitiesRequest\x128\n" +
+	"\bresource\x18\x01 \x01(\v2\x17.monitoring.ResourceKeyH\x00R\bresource\x88\x01\x01B\v\n" +
+	"\t_resource\"R\n" +
 	"\x14CapabilitiesResponse\x12:\n" +
 	"\fcapabilities\x18\x01 \x03(\v2\x16.monitoring.CapabilityR\fcapabilities\"s\n" +
 	"\x16StartMonitoringRequest\x12\x0e\n" +
@@ -299,23 +309,24 @@ var file_monitor_service_structures_grpc_server_service_proto_goTypes = []any{
 	(*StartMonitoringRequest)(nil), // 2: service.StartMonitoringRequest
 	(*MonitoringResponse)(nil),     // 3: service.MonitoringResponse
 	(*StopMonitoringRequest)(nil),  // 4: service.StopMonitoringRequest
-	(*monitoring.Capability)(nil),  // 5: monitoring.Capability
-	(*monitoring.ResourceKey)(nil), // 6: monitoring.ResourceKey
+	(*monitoring.ResourceKey)(nil), // 5: monitoring.ResourceKey
+	(*monitoring.Capability)(nil),  // 6: monitoring.Capability
 }
 var file_monitor_service_structures_grpc_server_service_proto_depIdxs = []int32{
-	5, // 0: service.CapabilitiesResponse.capabilities:type_name -> monitoring.Capability
-	6, // 1: service.StartMonitoringRequest.resource:type_name -> monitoring.ResourceKey
-	0, // 2: service.MonitorService.GetCapabilities:input_type -> service.CapabilitiesRequest
-	2, // 3: service.MonitorService.StartMonitoring:input_type -> service.StartMonitoringRequest
-	4, // 4: service.MonitorService.StopMonitoring:input_type -> service.StopMonitoringRequest
-	1, // 5: service.MonitorService.GetCapabilities:output_type -> service.CapabilitiesResponse
-	3, // 6: service.MonitorService.StartMonitoring:output_type -> service.MonitoringResponse
-	3, // 7: service.MonitorService.StopMonitoring:output_type -> service.MonitoringResponse
-	5, // [5:8] is the sub-list for method output_type
-	2, // [2:5] is the sub-list for method input_type
-	2, // [2:2] is the sub-list for extension type_name
-	2, // [2:2] is the sub-list for extension extendee
-	0, // [0:2] is the sub-list for field type_name
+	5, // 0: service.CapabilitiesRequest.resource:type_name -> monitoring.ResourceKey
+	6, // 1: service.CapabilitiesResponse.capabilities:type_name -> monitoring.Capability
+	5, // 2: service.StartMonitoringRequest.resource:type_name -> monitoring.ResourceKey
+	0, // 3: service.MonitorService.GetCapabilities:input_type -> service.CapabilitiesRequest
+	2, // 4: service.MonitorService.StartMonitoring:input_type -> service.StartMonitoringRequest
+	4, // 5: service.MonitorService.StopMonitoring:input_type -> service.StopMonitoringRequest
+	1, // 6: service.MonitorService.GetCapabilities:output_type -> service.CapabilitiesResponse
+	3, // 7: service.MonitorService.StartMonitoring:output_type -> service.MonitoringResponse
+	3, // 8: service.MonitorService.StopMonitoring:output_type -> service.MonitoringResponse
+	6, // [6:9] is the sub-list for method output_type
+	3, // [3:6] is the sub-list for method input_type
+	3, // [3:3] is the sub-list for extension type_name
+	3, // [3:3] is the sub-list for extension extendee
+	0, // [0:3] is the sub-list for field type_name
 }
 
 func init() { file_monitor_service_structures_grpc_server_service_proto_init() }
@@ -323,6 +334,7 @@ func file_monitor_service_structures_grpc_server_service_proto_init() {
 	if File_monitor_service_structures_grpc_server_service_proto != nil {
 		return
 	}
+	file_monitor_service_structures_grpc_server_service_proto_msgTypes[0].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{

@@ -63,9 +63,7 @@ var bridge = &topology.Node{
 		Protocol:       topology.ManagementProtocol_NETCONF,
 	},
 	Properties: &topology.NodeProperties{
-		Bridge: &topology.BridgeProperties{
-			ProcessingDelayNs: 800,
-		},
+		ProcessingDelayNs: ygot.Int32(800),
 	},
 	DeviceInfo: &topology.DeviceInfo{
 		DeviceModel: "TTTech-EVB",

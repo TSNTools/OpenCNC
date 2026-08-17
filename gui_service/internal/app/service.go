@@ -80,6 +80,11 @@ func (s *Service) DeleteModel(ctx context.Context, modelID string) (domain.Opera
 	return s.operations.DeleteModel(ctx, modelID)
 }
 
+func (s *Service) UploadTopology(ctx context.Context, query string) (domain.OperationResult, error) {
+	log.Printf("[GUI] app.UploadTopology called")
+	return s.operations.UploadTopology(ctx, query)
+}
+
 func (s *Service) AddNode(ctx context.Context, query string) (domain.OperationResult, error) {
 	log.Printf("[GUI] app.AddNode called")
 	return s.operations.AddNode(ctx, query)

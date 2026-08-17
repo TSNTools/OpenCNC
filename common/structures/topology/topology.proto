@@ -43,25 +43,17 @@ enum NodeRole {
 }
 
 message NodeProperties {
-    optional BridgeProperties bridge = 1;
-    optional EndStationProperties end_station = 2;
-    optional BridgedEndStationProperties bridged_end_station = 3;
+    // bridge properties
+    // Clause 8.6.1.4: Specifies internal processing delays for bridges
+    // Clause 5.3: Specifies processing delays for End stations that forward traffic (not just terminate)
+    optional int32 processing_delay_ns = 1 [json_name = "processing_delay_ns"]; // Nanoseconds
+    
+    //end station properties
+    optional string application_type = 2;   // Informational tag (e.g., "RobotArm")
+    optional string function = 3;           // Role in the network (e.g., sensor/controller/proxy/etc.)
 }
 
-// Clause 8.6.1.4: Specifies internal processing delays for bridges
-message BridgeProperties {
-    int32 processing_delay_ns = 1 [json_name = "procDelay"]; // Nanoseconds
-}
 
-message EndStationProperties {
-    string application_type = 1;   // Informational tag (e.g., "RobotArm")
-    string function = 2;           // Role in the network (e.g., sensor/controller/etc.)
-}
-
-// Clause 5.3: End stations that forward traffic (not just terminate)
-message BridgedEndStationProperties {
-    int32 processing_delay_ns = 1 [json_name = "procDelay"];
-}
 
 message DeviceInfo {
     string device_model = 1;                 // Model name or code
@@ -102,7 +94,7 @@ message Port {
     string mac_address = 5;
     string ip_address = 6;
 
-    int32 number_of_queues = 7 [json_name = "numberOfQueues"];
+    int32 number_of_queues = 7 [json_name = "number_of_queues"];
     string manufacturer = 8;
     string software_version = 9;
 
@@ -114,7 +106,7 @@ message Port {
  * Maps to IEEE 802.1Qcp YANG models and Clause 6.4 / Annex L (managed objects)
  */
 message InterfaceCapabilities {
-    int32 port_speed = 1;                     // Current active speed (Mbps)
+    int32 port_speed = 1 [json_name = "port_speed"];                     // Current active speed (Mbps)
     repeated int32 advertised_speeds = 2;     // All supported speeds (e.g., [100, 1000, 10000])
     
     repeated uint32 supported_vlan_ids = 3;   // Per IEEE 802.1Q Clause 6.9
@@ -145,11 +137,11 @@ enum DuplexMode {
  */
 message Link {
     string id = 1 [json_name = "id"];
-    string source_node = 2 [json_name = "source"];
-    string target_node = 3 [json_name = "target"];
-    string source_port = 4;
-    string target_port = 5;
+    string source_node = 2 [json_name = "source_node"];
+    string target_node = 3 [json_name = "destination_node"];
+    string source_port = 4 [json_name = "source_port"];
+    string target_port = 5 [json_name = "destination_port"];
 
-    int64 propagation_delay_ns = 6 [json_name = "propagationDelay"]; // In nanoseconds
-    int64 bandwidth = 7 [json_name = "bandwidth"];                   // In bits per second
+    int64 propagation_delay_ns = 6 [json_name = "propagation_delay_ns"]; // In nanoseconds
+    int64 bandwidth_mbps = 7 [json_name = "bandwidth_mbps"];                   // In bits per second
 }
