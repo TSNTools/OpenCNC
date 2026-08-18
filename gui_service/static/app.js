@@ -162,7 +162,10 @@ function initializeActionButtons() {
   const toggleNodeEdit = document.getElementById("toggle-node-edit");
   const saveNodeEdit = document.getElementById("node-save-edit");
   const cancelNodeEdit = document.getElementById("node-cancel-edit");
-
+  const toggleLinkEditButton = document.getElementById("toggle-link-edit");
+  const saveLinkEditButton = document.getElementById("link-save-edit");
+  const cancelLinkEditButton = document.getElementById("link-cancel-edit");
+  
   if (toggleModelEdit) {
     toggleModelEdit.addEventListener("click", () => {
       if (!state.selectedModelID) {
@@ -241,6 +244,66 @@ function initializeActionButtons() {
   if (cancelNodeEdit) {
     cancelNodeEdit.addEventListener("click", () => {
       hideNodeEditForm();
+    });
+  }
+
+
+  if (toggleLinkEditButton) {
+    toggleLinkEditButton.addEventListener("click", () => {
+      if (!state.selectedLinkID) {
+        showToast("Select a link first.");
+        return;
+      }
+
+      toggleLinkEditForm();
+    });
+  }
+
+  if (cancelLinkEditButton) {
+    cancelLinkEditButton.addEventListener("click", () => {
+      hideLinkEditForm();
+    });
+  }
+
+  if (saveLinkEditButton) {
+    saveLinkEditButton.addEventListener("click", async () => {
+      if (!state.selectedLinkID) {
+        showToast("Select a link first.");
+        return;
+      }
+
+      const source = getValue("link-edit-source").trim();
+      const destination = getValue("link-edit-destination").trim();
+      const bandwidth = getValue("link-edit-bandwidth").trim();
+
+      if (!source || !destination) {
+        showToast("Select both source and destination.");
+        return;
+      }
+
+      if (source === destination) {
+        showToast("Source and destination must be different.");
+        return;
+      }
+
+      if (!bandwidth) {
+        showToast("Select a bandwidth.");
+        return;
+      }
+
+      const response = await callAction("updateLink", {
+        id: state.selectedLinkID,
+        source,
+        destination,
+        bandwidth,
+      });
+
+      showToast(response.message || "Link updated");
+
+      if (response.success) {
+        hideLinkEditForm();
+        await loadAllViews();
+      }
     });
   }
 
@@ -1272,43 +1335,76 @@ function populateNodeCreateDeviceModelOptions() {
 }
 
 function populateLinkNodeOptions(nodes) {
-  const sourceSelect = document.getElementById("link-source");
-  const destinationSelect = document.getElementById("link-destination");
-  if (!sourceSelect || !destinationSelect) {
+  const sourceSelects = [
+    document.getElementById("link-source"),
+    document.getElementById("link-edit-source"),
+  ].filter(Boolean);
+
+  const destinationSelects = [
+    document.getElementById("link-destination"),
+    document.getElementById("link-edit-destination"),
+  ].filter(Boolean);
+
+  if (sourceSelects.length === 0 || destinationSelects.length === 0) {
     return;
   }
 
-  const sourceCurrent = sourceSelect.value;
-  const destinationCurrent = destinationSelect.value;
+  const currentValues = {
+    source: sourceSelects.map((select) => select.value),
+    destination: destinationSelects.map((select) => select.value),
+  };
 
   const normalizedNodes = Array.isArray(nodes) ? nodes : [];
+
   const nodeNames = normalizedNodes
-    .map((node) => (node && (node.name || node.id) ? String(node.name || node.id).trim() : ""))
+    .map((node) => {
+      if (!node) {
+        return "";
+      }
+
+      return String(node.name || node.id || "").trim();
+    })
     .filter((name) => name !== "");
 
   const uniqueNodeNames = Array.from(new Set(nodeNames));
 
-  sourceSelect.innerHTML = '<option value="">None</option>';
-  destinationSelect.innerHTML = '<option value="">None</option>';
+  sourceSelects.forEach((select) => {
+    select.innerHTML = '<option value="">None</option>';
 
-  uniqueNodeNames.forEach((name) => {
-    const sourceOption = document.createElement("option");
-    sourceOption.value = name;
-    sourceOption.textContent = name;
-    sourceSelect.appendChild(sourceOption);
-
-    const destinationOption = document.createElement("option");
-    destinationOption.value = name;
-    destinationOption.textContent = name;
-    destinationSelect.appendChild(destinationOption);
+    uniqueNodeNames.forEach((name) => {
+      const option = document.createElement("option");
+      option.value = name;
+      option.textContent = name;
+      select.appendChild(option);
+    });
   });
 
-  if (sourceCurrent && uniqueNodeNames.includes(sourceCurrent)) {
-    sourceSelect.value = sourceCurrent;
-  }
-  if (destinationCurrent && uniqueNodeNames.includes(destinationCurrent)) {
-    destinationSelect.value = destinationCurrent;
-  }
+  destinationSelects.forEach((select) => {
+    select.innerHTML = '<option value="">None</option>';
+
+    uniqueNodeNames.forEach((name) => {
+      const option = document.createElement("option");
+      option.value = name;
+      option.textContent = name;
+      select.appendChild(option);
+    });
+  });
+
+  sourceSelects.forEach((select, index) => {
+    const previousValue = currentValues.source[index];
+
+    if (previousValue && uniqueNodeNames.includes(previousValue)) {
+      select.value = previousValue;
+    }
+  });
+
+  destinationSelects.forEach((select, index) => {
+    const previousValue = currentValues.destination[index];
+
+    if (previousValue && uniqueNodeNames.includes(previousValue)) {
+      select.value = previousValue;
+    }
+  });
 }
 
 function buildNodeCreatePayload() {
@@ -1723,6 +1819,63 @@ function setNodeEditFields() {
   }
 }
 
+function toggleLinkEditForm() {
+  const form = document.getElementById("link-edit-form");
+
+  if (!form) {
+    return;
+  }
+
+  form.classList.toggle("hidden");
+
+  if (!form.classList.contains("hidden")) {
+    setLinkEditFields();
+  }
+}
+
+function hideLinkEditForm() {
+  const form = document.getElementById("link-edit-form");
+
+  if (form) {
+    form.classList.add("hidden");
+  }
+}
+
+function setLinkEditFields() {
+  const source = document.getElementById("link-detail-source");
+  const destination = document.getElementById("link-detail-destination");
+  const bandwidth = document.getElementById("link-detail-bandwidth");
+
+  const editSource = document.getElementById("link-edit-source");
+  const editDestination = document.getElementById("link-edit-destination");
+  const editBandwidth = document.getElementById("link-edit-bandwidth");
+
+  if (editSource) {
+    editSource.value =
+      source && source.textContent && source.textContent !== "-"
+        ? source.textContent.trim()
+        : "";
+  }
+
+  if (editDestination) {
+    editDestination.value =
+      destination &&
+      destination.textContent &&
+      destination.textContent !== "-"
+        ? destination.textContent.trim()
+        : "";
+  }
+
+  if (editBandwidth) {
+    editBandwidth.value =
+      bandwidth &&
+      bandwidth.textContent &&
+      bandwidth.textContent !== "-"
+        ? bandwidth.textContent.trim()
+        : "";
+  }
+}
+
 function clearLinkDetails() {
   state.selectedLinkID = "";
   setText("link-detail-source", "-");
@@ -1762,12 +1915,11 @@ async function gatherPayload(action) {
       };
     case "updateLink":
       return {
-    id: state.selectedLinkID,
-    source: getValue("link-source"),
-    destination: getValue("link-destination"),
-    bandwidth: getValue("link-bandwidth"),
-  };
-  
+        id: state.selectedLinkID,
+        source: getValue("link-edit-source"),
+        destination: getValue("link-edit-destination"),
+        bandwidth: getValue("link-edit-bandwidth"),
+      };
     case "deleteLink":
       return {
     id: state.selectedLinkID

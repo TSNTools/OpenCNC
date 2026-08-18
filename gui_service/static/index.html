@@ -801,130 +801,223 @@
         </div>
 
       </section>
+<!-- =====================================================
+     TOPOLOGY / LINKS
+     ===================================================== -->
 
+<section
+  class="screen"
+  id="screen-topology-links"
+>
 
-      <!-- =====================================================
-           TOPOLOGY / LINKS
-           ===================================================== -->
+  <div class="content-grid operation-grid">
 
-      <section
-        class="screen"
-        id="screen-topology-links"
-      >
+    <div class="left-column">
 
-        <div class="content-grid operation-grid">
+      <div class="topology-workspace-grid">
 
-          <div class="left-column">
+        <!-- =========================
+             CREATE LINK
+             ========================= -->
 
-            <div class="topology-workspace-grid">
+        <section class="card form-card topology-create-card">
 
-              <section class="card form-card topology-create-card">
+          <h3>Create Link</h3>
 
-                <h3>Create Link</h3>
+          <div class="create-form-stack">
 
-                <div class="create-form-stack">
+            <label>
+              <span>Source</span>
+              <select id="link-source">
+                <option value="">None</option>
+              </select>
+            </label>
 
-                  <label>
-                    <span>Source</span>
-                    <select id="link-source">
-                      <option value="">None</option>
-                    </select>
-                  </label>
+            <label>
+              <span>Destination</span>
+              <select id="link-destination">
+                <option value="">None</option>
+              </select>
+            </label>
 
-                  <label>
-                    <span>Destination</span>
-                    <select id="link-destination">
-                      <option value="">None</option>
-                    </select>
-                  </label>
+            <label>
+              <span>Bandwidth</span>
+              <select id="link-bandwidth">
+                <option value="">None</option>
+                <option value="100">100Mbps</option>
+                <option value="1000">1Gbps</option>
+                <option value="10000">10Gbps</option>
+              </select>
+            </label>
 
-                  <label>
-                    <span>Bandwidth</span>
-                    <select id="link-bandwidth">
-                      <option value="">None</option>
-                      <option value="100">100Mbps</option>
-                      <option value="1000">1Gbps</option>
-                      <option value="10000">10Gbps</option>
-                    </select>
-                  </label>
-
-                  <button class="action-button" id="add-link-btn" type="button">Add Link</button>
-
-                </div>
-
-              </section>
-
-
-              <section class="card list-card">
-
-                <h3>Available Links</h3>
-
-                <ul
-                  class="selectable-list"
-                  id="link-list"
-                >
-                  <li class="empty-item">
-                    No links available
-                  </li>
-                </ul>
-
-              </section>
-
-            </div>
+            <button
+              class="action-button"
+              id="add-link-btn"
+              type="button"
+            >
+              Add Link
+            </button>
 
           </div>
 
+        </section>
 
-          <section class="card details-card">
 
-            <h3>Link Details</h3>
+        <!-- =========================
+             AVAILABLE LINKS
+             ========================= -->
 
-            <p class="topology-placeholder">Select a link to view details</p>
+        <section class="card list-card">
 
-            <dl>
+          <h3>Available Links</h3>
 
-              <dt>Source</dt>
-              <dd id="link-detail-source">-</dd>
+          <ul
+            class="selectable-list"
+            id="link-list"
+          >
+            <li class="empty-item">
+              No links available
+            </li>
+          </ul>
 
-              <dt>Destination</dt>
-              <dd id="link-detail-destination">-</dd>
+        </section>
 
-              <dt>State</dt>
-              <dd id="link-detail-state">-</dd>
+      </div>
 
-              <dt>Bandwidth</dt>
-              <dd id="link-detail-bandwidth">-</dd>
+    </div>
 
-            </dl>
 
-            <div class="detail-actions">
+    <!-- =========================
+         LINK DETAILS
+         ========================= -->
 
-              <button
-                class="action-button danger"
-                data-action="deleteLink"
-                data-confirm="Delete the selected link?"
-                type="button"
-              >
-                Delete Link
-              </button>
+    <section class="card details-card">
 
-              <button
-                class="action-button"
-                data-action="updateLink"
-                type="button"
-              >
-                Update Link
-              </button>
+      <h3>Link Details</h3>
 
-            </div>
+      <p class="topology-placeholder">
+        Select a link to view details
+      </p>
 
-          </section>
+      <dl>
+
+        <dt>Source</dt>
+        <dd id="link-detail-source">-</dd>
+
+        <dt>Destination</dt>
+        <dd id="link-detail-destination">-</dd>
+
+        <dt>State</dt>
+        <dd id="link-detail-state">-</dd>
+
+        <dt>Bandwidth</dt>
+        <dd id="link-detail-bandwidth">-</dd>
+
+      </dl>
+
+
+      <!-- =========================
+           LINK ACTIONS
+           ========================= -->
+
+      <div class="detail-actions">
+
+        <button
+          class="action-button danger"
+          data-action="deleteLink"
+          data-confirm="Delete the selected link?"
+          type="button"
+        >
+          Delete Link
+        </button>
+
+        <button
+          class="action-button"
+          id="toggle-link-edit"
+          type="button"
+        >
+          Update Link
+        </button>
+
+      </div>
+
+
+      <!-- =========================
+           EDIT LINK FORM
+           ========================= -->
+
+      <form
+        id="link-edit-form"
+        class="inline-edit-form hidden"
+      >
+
+        <div class="field-grid">
+
+          <label>
+
+            <span>Source</span>
+
+            <select id="link-edit-source">
+              <option value="">None</option>
+            </select>
+
+          </label>
+
+
+          <label>
+
+            <span>Destination</span>
+
+            <select id="link-edit-destination">
+              <option value="">None</option>
+            </select>
+
+          </label>
+
+
+          <label>
+
+            <span>Bandwidth</span>
+
+            <select id="link-edit-bandwidth">
+              <option value="">None</option>
+              <option value="100">100Mbps</option>
+              <option value="1000">1Gbps</option>
+              <option value="10000">10Gbps</option>
+            </select>
+
+          </label>
 
         </div>
 
-      </section>
 
+        <div class="detail-actions compact-actions">
 
+          <button
+            type="button"
+            class="action-button"
+            id="link-save-edit"
+          >
+            Save
+          </button>
+
+          <button
+            type="button"
+            class="action-button ghost"
+            id="link-cancel-edit"
+          >
+            Cancel
+          </button>
+
+        </div>
+
+      </form>
+
+    </section>
+
+  </div>
+
+</section>
       <!-- =====================================================
            STREAMS
            ===================================================== -->
