@@ -152,6 +152,21 @@ func GetNode(name string) (*topology.Node, string, error) {
 	return node, prefix, nil
 }
 
+func GetLink(name string) (*topology.Link, string, error) {
+	client, err := createEtcdClient()
+	if err != nil {
+		return nil, "", fmt.Errorf("failed to create etcd client: %v", err)
+	}
+	defer client.Close()
+
+	link, prefix, err := getLink(client, name)
+	if err != nil {
+		return nil, "", err
+	}
+
+	return link, prefix, nil
+}
+
 func GetNodes() ([]*topology.Node, error) {
 	endnodes := getNodes("endnodes")
 	bridges := getNodes("bridges")
@@ -159,6 +174,12 @@ func GetNodes() ([]*topology.Node, error) {
 	nodes := append(endnodes, bridges...)
 
 	return nodes, nil
+}
+
+func GetLinks() ([]*topology.Link, error) {
+	links := getLinks("links")
+
+	return links, nil
 }
 
 func DeleteNode(name string) error {
@@ -181,12 +202,40 @@ func DeleteNode(name string) error {
 
 	return nil
 }
+
+func DeleteLink(name string) error {
+	client, err := createEtcdClient()
+	if err != nil {
+		return fmt.Errorf("failed to create etcd client: %w", err)
+	}
+	defer client.Close()
+
+	_, prefix, err := getLink(client, name)
+	if err != nil {
+		return err
+	}
+
+	key := strings.ReplaceAll(prefix+"."+name, ".", "/")
+
+	if _, err := client.Delete(context.Background(), key); err != nil {
+		return fmt.Errorf("failed to delete link %s: %w", name, err)
+	}
+
+	return nil
+}
+
 func StoreTopology(topo *topology.Topology) error {
+	if topo == nil {
+		return fmt.Errorf("topology cannot be nil")
+	}
 
-	//log.Infof("Storing topology...")
+	if err := storeNodes(topo.GetNodes()); err != nil {
+		return fmt.Errorf("failed to store nodes: %w", err)
+	}
 
-	storeNodes(topo.GetNodes())
-	storeLinks(topo.GetLinks())
+	if err := storeLinks(topo.GetLinks()); err != nil {
+		return fmt.Errorf("failed to store links: %w", err)
+	}
 
 	return nil
 }

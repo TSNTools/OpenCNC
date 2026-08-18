@@ -105,9 +105,9 @@ func (s *Service) AddLink(ctx context.Context, source, destination, bandwidth st
 	return s.operations.AddLink(ctx, source, destination, bandwidth)
 }
 
-func (s *Service) UpdateLink(ctx context.Context, linkID string) (domain.OperationResult, error) {
+func (s *Service) UpdateLink(ctx context.Context, linkID, source, destination, bandwidth string) (domain.OperationResult, error) {
 	log.Printf("[GUI] app.UpdateLink called")
-	return s.operations.UpdateLink(ctx, linkID)
+	return s.operations.UpdateLink(ctx, linkID, source, destination, bandwidth)
 }
 
 func (s *Service) DeleteLink(ctx context.Context, linkID string) (domain.OperationResult, error) {

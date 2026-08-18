@@ -1,6 +1,7 @@
 package http
 
 import (
+	"context"
 	"log"
 	"net/http"
 	"strings"
@@ -23,7 +24,7 @@ func NewRouter(cfg config.Config, service *app.Service) *Router {
 	mux.HandleFunc("/api/v1/device-models", h.DeviceModels)
 	mux.HandleFunc("/api/v1/device-models/upload", h.UploadModel)
 	mux.HandleFunc("/api/v1/device-models/", h.ModelByID)
-	mux.HandleFunc("/api/topology/upload", h.UploadTopology)
+	mux.HandleFunc("/api/v1/topology/upload", h.UploadTopology)
 	mux.HandleFunc("/api/v1/monitoring/counters", h.MonitoringCounters)
 	mux.HandleFunc("/api/v1/monitoring/metrics", h.MonitoringMetrics)
 	mux.HandleFunc("/api/v1/monitoring/targets", h.MonitoringTargets)
@@ -58,6 +59,10 @@ func NewRouter(cfg config.Config, service *app.Service) *Router {
 
 func (r *Router) ListenAndServe() error {
 	return r.server.ListenAndServe()
+}
+
+func (r *Router) Shutdown(ctx context.Context) error {
+	return r.server.Shutdown(ctx)
 }
 
 func loggingMiddleware(next http.Handler) http.Handler {

@@ -138,9 +138,9 @@ enum DuplexMode {
 message Link {
     string id = 1 [json_name = "id"];
     string source_node = 2 [json_name = "source_node"];
-    string target_node = 3 [json_name = "destination_node"];
+    string destination_node = 3 [json_name = "destination_node"];
     string source_port = 4 [json_name = "source_port"];
-    string target_port = 5 [json_name = "destination_port"];
+    string destination_port = 5 [json_name = "destination_port"];
 
     int64 propagation_delay_ns = 6 [json_name = "propagation_delay_ns"]; // In nanoseconds
     int64 bandwidth_mbps = 7 [json_name = "bandwidth_mbps"];                   // In bits per second

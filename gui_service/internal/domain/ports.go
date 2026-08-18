@@ -26,7 +26,7 @@ type OperationPort interface {
 	EditNode(ctx context.Context, nodeID, name, nodeType, state, ports, links string) (OperationResult, error)
 	DeleteNode(ctx context.Context, nodeID string) (OperationResult, error)
 	AddLink(ctx context.Context, source, destination, bandwidth string) (OperationResult, error)
-	UpdateLink(ctx context.Context, linkID string) (OperationResult, error)
+	UpdateLink(ctx context.Context, linkID, source, destination, bandwidth string) (OperationResult, error)
 	DeleteLink(ctx context.Context, linkID string) (OperationResult, error)
 	AddStream(ctx context.Context, query string) (OperationResult, error)
 	RemoveStream(ctx context.Context, streamID string) (OperationResult, error)

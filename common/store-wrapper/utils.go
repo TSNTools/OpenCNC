@@ -413,29 +413,45 @@ func storeNodes(nodes []*topology.Node) error {
 }
 
 func storeLinks(links []*topology.Link) error {
-	// Connect to ETCD
 	client, err := createEtcdClient()
 	if err != nil {
-		//log.Fatal(err)
+		return err
 	}
 	defer client.Close()
 
 	for _, link := range links {
-		// Serialize link object
+		if link == nil {
+			continue
+		}
+
+		// Generate an ID if the imported link doesn't have one.
+		if strings.TrimSpace(link.GetId()) == "" {
+			link.Id = fmt.Sprintf(
+				"%s-%s",
+				link.GetSourceNode(),
+				link.GetDestinationNode(),
+			)
+		}
+
 		obj, err := proto.Marshal(link)
 		if err != nil {
-			//log.Errorf("Failed to marshal node object: %v", err)
-			return err
+			return fmt.Errorf(
+				"failed to marshal link %s: %w",
+				link.GetId(),
+				err,
+			)
 		}
 
-		// Create a URN where the serialized link object will be stored
-		urn := "links." + link.Id
+		urn := "links." + link.GetId()
 
-		// Send serialized link object to it's specific path in the store
-		err = sendToStoreRepeated(client, obj, urn)
-		if err != nil {
-			return err
+		if err := sendToStoreRepeated(client, obj, urn); err != nil {
+			return fmt.Errorf(
+				"failed to store link %s: %w",
+				link.GetId(),
+				err,
+			)
 		}
 	}
+
 	return nil
 }

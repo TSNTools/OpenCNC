@@ -859,9 +859,9 @@ type Link struct {
 	state              protoimpl.MessageState `protogen:"open.v1"`
 	Id                 string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
 	SourceNode         string                 `protobuf:"bytes,2,opt,name=source_node,proto3" json:"source_node,omitempty"`
-	TargetNode         string                 `protobuf:"bytes,3,opt,name=target_node,json=destination_node,proto3" json:"target_node,omitempty"`
+	DestinationNode    string                 `protobuf:"bytes,3,opt,name=destination_node,proto3" json:"destination_node,omitempty"`
 	SourcePort         string                 `protobuf:"bytes,4,opt,name=source_port,proto3" json:"source_port,omitempty"`
-	TargetPort         string                 `protobuf:"bytes,5,opt,name=target_port,json=destination_port,proto3" json:"target_port,omitempty"`
+	DestinationPort    string                 `protobuf:"bytes,5,opt,name=destination_port,proto3" json:"destination_port,omitempty"`
 	PropagationDelayNs int64                  `protobuf:"varint,6,opt,name=propagation_delay_ns,proto3" json:"propagation_delay_ns,omitempty"` // In nanoseconds
 	BandwidthMbps      int64                  `protobuf:"varint,7,opt,name=bandwidth_mbps,proto3" json:"bandwidth_mbps,omitempty"`             // In bits per second
 	unknownFields      protoimpl.UnknownFields
@@ -912,9 +912,9 @@ func (x *Link) GetSourceNode() string {
 	return ""
 }
 
-func (x *Link) GetTargetNode() string {
+func (x *Link) GetDestinationNode() string {
 	if x != nil {
-		return x.TargetNode
+		return x.DestinationNode
 	}
 	return ""
 }
@@ -926,9 +926,9 @@ func (x *Link) GetSourcePort() string {
 	return ""
 }
 
-func (x *Link) GetTargetPort() string {
+func (x *Link) GetDestinationPort() string {
 	if x != nil {
-		return x.TargetPort
+		return x.DestinationPort
 	}
 	return ""
 }
@@ -1023,13 +1023,13 @@ const file_common_structures_topology_topology_proto_rawDesc = "" +
 	"\fsupports_tas\x18\f \x01(\bR\vsupportsTas\x12!\n" +
 	"\fsupports_cqf\x18\r \x01(\bR\vsupportsCqf\x12!\n" +
 	"\fsupports_cbs\x18\x0e \x01(\bR\vsupportsCbs\x12C\n" +
-	"\x1esupports_interface_time_offset\x18\x0f \x01(\bR\x1bsupportsInterfaceTimeOffset\"\x84\x02\n" +
+	"\x1esupports_interface_time_offset\x18\x0f \x01(\bR\x1bsupportsInterfaceTimeOffset\"\x8e\x02\n" +
 	"\x04Link\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12 \n" +
-	"\vsource_node\x18\x02 \x01(\tR\vsource_node\x12%\n" +
-	"\vtarget_node\x18\x03 \x01(\tR\x10destination_node\x12 \n" +
-	"\vsource_port\x18\x04 \x01(\tR\vsource_port\x12%\n" +
-	"\vtarget_port\x18\x05 \x01(\tR\x10destination_port\x122\n" +
+	"\vsource_node\x18\x02 \x01(\tR\vsource_node\x12*\n" +
+	"\x10destination_node\x18\x03 \x01(\tR\x10destination_node\x12 \n" +
+	"\vsource_port\x18\x04 \x01(\tR\vsource_port\x12*\n" +
+	"\x10destination_port\x18\x05 \x01(\tR\x10destination_port\x122\n" +
 	"\x14propagation_delay_ns\x18\x06 \x01(\x03R\x14propagation_delay_ns\x12&\n" +
 	"\x0ebandwidth_mbps\x18\a \x01(\x03R\x0ebandwidth_mbps*M\n" +
 	"\bNodeRole\x12\v\n" +

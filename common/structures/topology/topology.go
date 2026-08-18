@@ -42,9 +42,9 @@ func (topo *Topology) Print() {
 	for _, link := range topo.Links {
 		fmt.Printf("	ID: %s\n", link.Id)
 		fmt.Printf("	Source node: %s\n", link.SourceNode)
-		fmt.Printf("	Target node: %s\n", link.TargetNode)
+		fmt.Printf("	Target node: %s\n", link.DestinationNode)
 		fmt.Printf("	Source port: %s\n", link.SourcePort)
-		fmt.Printf("	Target port: %s\n", link.TargetPort)
+		fmt.Printf("	Target port: %s\n", link.DestinationPort)
 		fmt.Printf("	Propagation delay (ns): %d\n", link.PropagationDelayNs)
 		fmt.Printf("	Bandwidth (bps): %d\n", link.BandwidthMbps*1000000)
 		fmt.Println()

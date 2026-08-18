@@ -214,6 +214,7 @@ func (h *Handler) UploadTopology(w http.ResponseWriter, r *http.Request) {
 
 	writeJSON(w, http.StatusOK, result)
 }
+
 func (h *Handler) Nodes(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
@@ -295,19 +296,31 @@ func (h *Handler) LinkByID(w http.ResponseWriter, r *http.Request) {
 
 	switch r.Method {
 	case http.MethodPatch:
-		result, err := h.service.UpdateLink(r.Context(), linkID)
+		input := decodeInput(r)
+
+		result, err := h.service.UpdateLink(
+			r.Context(),
+			linkID,
+			input.Source,
+			input.Destination,
+			input.Bandwidth,
+		)
 		if err != nil {
 			internalError(w, err)
 			return
 		}
+
 		writeJSON(w, http.StatusOK, result)
+
 	case http.MethodDelete:
 		result, err := h.service.DeleteLink(r.Context(), linkID)
 		if err != nil {
 			internalError(w, err)
 			return
 		}
+
 		writeJSON(w, http.StatusOK, result)
+
 	default:
 		methodNotAllowed(w)
 	}

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"sort"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -93,78 +94,89 @@ func NewBackend(state *MonitoringState) *Backend {
 	}
 }
 
-func (b *Backend) GetDashboard(_ context.Context) (domain.DashboardData, error) {
+func (b *Backend) GetDashboard(r context.Context) (domain.DashboardData, error) {
+	nodes, err := b.GetNodes(r)
+	if err != nil {
+		return domain.DashboardData{}, err
+	}
+	links, err := b.GetLinks(r)
+	if err != nil {
+		return domain.DashboardData{}, err
+	}
+
 	return domain.DashboardData{
 		PacketsForwarded: "12,458",
 		PacketDrops:      "37",
 		ActiveStreams:    "8",
 		TopTalkers: []string{
-			"Node-A",
-			"Node-B",
-			"CNC-Controller",
-			"Sensor-01",
-			"Gateway-01",
+			"",
 		},
 		NetworkModel: domain.NetworkModel{
-			Nodes: []domain.Node{
-				{
-					ID:      "node-001",
-					Name:    "CNC Controller",
-					Type:    "controller",
-					State:   "online",
-					PortIds: []string{"4"},
-					Links:   "3",
-				},
-				{
-					ID:      "node-002",
-					Name:    "Machine 01",
-					Type:    "cnc-machine",
-					State:   "online",
-					PortIds: []string{"2"},
-					Links:   "2",
-				},
-				{
-					ID:      "node-003",
-					Name:    "Operator Station",
-					Type:    "workstation",
-					State:   "online",
-					PortIds: []string{"1"},
-					Links:   "1",
-				},
-				{
-					ID:      "node-004",
-					Name:    "PLC Controller",
-					Type:    "plc",
-					State:   "online",
-					PortIds: []string{"8"},
-					Links:   "1",
-				},
-			},
-
-			Links: []domain.Link{
-				{
-					ID:          "link-001",
-					Source:      "node-001",
-					Destination: "node-002",
-					State:       "active",
-					Bandwidth:   "100 Mbps",
-				},
-				{
-					ID:          "link-002",
-					Source:      "node-001",
-					Destination: "node-003",
-					State:       "active",
-					Bandwidth:   "1 Gbps",
-				},
-				{
-					ID:          "link-003",
-					Source:      "node-001",
-					Destination: "node-004",
-					State:       "active",
-					Bandwidth:   "1 Gbps",
-				},
-			},
+			Nodes: nodes,
+			Links: links,
 		},
+		/*
+			NetworkModel: domain.NetworkModel{
+					Nodes: []domain.Node{
+						{
+							ID:      "node-001",
+							Name:    "CNC Controller",
+							Type:    "controller",
+							State:   "online",
+							PortIds: []string{"4"},
+							Links:   "3",
+						},
+						{
+							ID:      "node-002",
+							Name:    "Machine 01",
+							Type:    "cnc-machine",
+							State:   "online",
+							PortIds: []string{"2"},
+							Links:   "2",
+						},
+						{
+							ID:      "node-003",
+							Name:    "Operator Station",
+							Type:    "workstation",
+							State:   "online",
+							PortIds: []string{"1"},
+							Links:   "1",
+						},
+						{
+							ID:      "node-004",
+							Name:    "PLC Controller",
+							Type:    "plc",
+							State:   "online",
+							PortIds: []string{"8"},
+							Links:   "1",
+						},
+					},
+
+					Links: []domain.Link{
+						{
+							ID:          "link-001",
+							Source:      "node-001",
+							Destination: "node-002",
+							State:       "active",
+							Bandwidth:   "100 Mbps",
+						},
+						{
+							ID:          "link-002",
+							Source:      "node-001",
+							Destination: "node-003",
+							State:       "active",
+							Bandwidth:   "1 Gbps",
+						},
+						{
+							ID:          "link-003",
+							Source:      "node-001",
+							Destination: "node-004",
+							State:       "active",
+							Bandwidth:   "1 Gbps",
+						},
+					},
+			},
+		*/
 	}, nil
 }
 
@@ -447,7 +459,20 @@ func (b *Backend) GetNodes(_ context.Context) ([]domain.Node, error) {
 }
 
 func (b *Backend) GetLinks(_ context.Context) ([]domain.Link, error) {
-	return []domain.Link{}, nil
+	links, err := storewrapper.GetLinks()
+	if err != nil {
+		return nil, err
+	}
+	domainLinks := make([]domain.Link, len(links))
+	for i, link := range links {
+		domainLinks[i] = domain.Link{
+			ID:          link.Id,
+			Source:      link.SourceNode,
+			Destination: link.DestinationNode,
+			Bandwidth:   strconv.FormatInt(link.BandwidthMbps*1000000, 10),
+		}
+	}
+	return domainLinks, nil
 }
 
 func (b *Backend) GetStreams(_ context.Context) ([]domain.Stream, error) {
@@ -691,7 +716,11 @@ func (b *Backend) UploadTopology(_ context.Context, query string) (domain.Operat
 
 	topologyObj := &topology.Topology{}
 
-	if err := json.Unmarshal([]byte(query), topologyObj); err != nil {
+	unmarshaler := protojson.UnmarshalOptions{
+		DiscardUnknown: true,
+	}
+
+	if err := unmarshaler.Unmarshal([]byte(query), topologyObj); err != nil {
 		return domain.OperationResult{
 			Success: false,
 			Name:    "uploadTopology",
@@ -948,15 +977,283 @@ func (b *Backend) DeleteNode(_ context.Context, nodeID string) (domain.Operation
 }
 
 func (b *Backend) AddLink(_ context.Context, source, destination, bandwidth string) (domain.OperationResult, error) {
-	return b.result("addLink", map[string]string{"source": source, "destination": destination, "bandwidth": bandwidth, "linkId": "link-stub-001"}), nil
+	source = strings.TrimSpace(source)
+	destination = strings.TrimSpace(destination)
+	bandwidth = strings.TrimSpace(bandwidth)
+
+	if source == "" {
+		b.recordEvent(
+			"warning",
+			"addLink",
+			"links",
+			"Add link requested without a source node",
+			"",
+		)
+
+		return domain.OperationResult{
+			Success: false,
+			Name:    "addLink",
+			Message: "source node cannot be empty",
+			Data:    map[string]string{},
+		}, nil
+	}
+
+	if destination == "" {
+		b.recordEvent(
+			"warning",
+			"addLink",
+			"links",
+			"Add link requested without a destination node",
+			"",
+		)
+
+		return domain.OperationResult{
+			Success: false,
+			Name:    "addLink",
+			Message: "destination node cannot be empty",
+			Data:    map[string]string{},
+		}, nil
+	}
+
+	if source == destination {
+		return domain.OperationResult{
+			Success: false,
+			Name:    "addLink",
+			Message: "source and destination cannot be the same node",
+			Data: map[string]string{
+				"source":      source,
+				"destination": destination,
+			},
+		}, nil
+	}
+
+	bandwidthMbps, err := strconv.ParseInt(bandwidth, 10, 64)
+	if err != nil || bandwidthMbps < 0 {
+		return domain.OperationResult{
+			Success: false,
+			Name:    "addLink",
+			Message: fmt.Sprintf("invalid bandwidth: %s", bandwidth),
+			Data: map[string]string{
+				"source":      source,
+				"destination": destination,
+				"bandwidth":   bandwidth,
+			},
+		}, nil
+	}
+
+	linkID := fmt.Sprintf("%s-%s", source, destination)
+
+	link := &topology.Link{
+		Id:                 linkID,
+		SourceNode:         source,
+		DestinationNode:    destination,
+		BandwidthMbps:      bandwidthMbps,
+		PropagationDelayNs: 0,
+	}
+
+	if err := storewrapper.StoreLink(link); err != nil {
+		b.recordEvent(
+			"error",
+			"addLink",
+			"links",
+			fmt.Sprintf("Failed storing link %s: %v", linkID, err),
+			linkID,
+		)
+
+		return domain.OperationResult{
+			Success: false,
+			Name:    "addLink",
+			Message: fmt.Sprintf("failed to store link %s: %v", linkID, err),
+			Data: map[string]string{
+				"linkId": linkID,
+			},
+		}, nil
+	}
+
+	b.recordEvent(
+		"info",
+		"addLink",
+		"links",
+		fmt.Sprintf("Stored link %s → %s", source, destination),
+		linkID,
+	)
+
+	return domain.OperationResult{
+		Success: true,
+		Name:    "addLink",
+		Message: fmt.Sprintf("link %s → %s stored", source, destination),
+		Data: map[string]string{
+			"linkId":      linkID,
+			"source":      source,
+			"destination": destination,
+			"bandwidth":   strconv.FormatInt(bandwidthMbps, 10),
+		},
+	}, nil
 }
 
-func (b *Backend) UpdateLink(_ context.Context, linkID string) (domain.OperationResult, error) {
-	return b.result("updateLink", map[string]string{"linkId": linkID}), nil
+func (b *Backend) UpdateLink(_ context.Context, linkID, source, destination, bandwidth string) (domain.OperationResult, error) {
+
+	linkID = strings.TrimSpace(linkID)
+	source = strings.TrimSpace(source)
+	destination = strings.TrimSpace(destination)
+	bandwidth = strings.TrimSpace(bandwidth)
+
+	if linkID == "" {
+		b.recordEvent(
+			"warning",
+			"updateLink",
+			"links",
+			"Update requested without selecting a link",
+			"",
+		)
+
+		return domain.OperationResult{
+			Success: false,
+			Name:    "updateLink",
+			Message: "no link selected",
+			Data:    map[string]string{},
+		}, nil
+	}
+
+	current, _, err := storewrapper.GetLink(linkID)
+	if err != nil {
+		b.recordEvent(
+			"error",
+			"updateLink",
+			"links",
+			fmt.Sprintf("Link %s not found", linkID),
+			linkID,
+		)
+
+		return domain.OperationResult{
+			Success: false,
+			Name:    "updateLink",
+			Message: fmt.Sprintf("link %s not found: %v", linkID, err),
+			Data: map[string]string{
+				"linkId": linkID,
+			},
+		}, nil
+	}
+
+	if source != "" {
+		current.SourceNode = source
+	}
+
+	if destination != "" {
+		current.DestinationNode = destination
+	}
+
+	if bandwidth != "" {
+		bandwidthMbps, err := strconv.ParseInt(bandwidth, 10, 64)
+		if err != nil || bandwidthMbps < 0 {
+			return domain.OperationResult{
+				Success: false,
+				Name:    "updateLink",
+				Message: fmt.Sprintf("invalid bandwidth: %s", bandwidth),
+				Data: map[string]string{
+					"linkId": linkID,
+				},
+			}, nil
+		}
+
+		current.BandwidthMbps = bandwidthMbps
+	}
+
+	if err := storewrapper.EditLink(current); err != nil {
+		b.recordEvent(
+			"error",
+			"updateLink",
+			"links",
+			fmt.Sprintf("Failed saving updated link %s: %v", linkID, err),
+			linkID,
+		)
+
+		return domain.OperationResult{
+			Success: false,
+			Name:    "updateLink",
+			Message: fmt.Sprintf("failed to save updated link %s: %v", linkID, err),
+			Data: map[string]string{
+				"linkId": linkID,
+			},
+		}, nil
+	}
+
+	b.recordEvent(
+		"info",
+		"updateLink",
+		"links",
+		fmt.Sprintf("Updated link %s", linkID),
+		linkID,
+	)
+
+	return domain.OperationResult{
+		Success: true,
+		Name:    "updateLink",
+		Message: fmt.Sprintf("link %s updated", linkID),
+		Data: map[string]string{
+			"linkId":      current.GetId(),
+			"source":      current.GetSourceNode(),
+			"destination": current.GetDestinationNode(),
+			"bandwidth":   strconv.FormatInt(current.GetBandwidthMbps(), 10),
+		},
+	}, nil
 }
 
 func (b *Backend) DeleteLink(_ context.Context, linkID string) (domain.OperationResult, error) {
-	return b.result("deleteLink", map[string]string{"linkId": linkID}), nil
+	linkID = strings.TrimSpace(linkID)
+
+	if linkID == "" {
+		b.recordEvent(
+			"warning",
+			"deleteLink",
+			"links",
+			"Delete requested without selecting a link",
+			"",
+		)
+
+		return domain.OperationResult{
+			Success: false,
+			Name:    "deleteLink",
+			Message: "no link selected",
+			Data:    map[string]string{},
+		}, nil
+	}
+
+	if err := storewrapper.DeleteLink(linkID); err != nil {
+		b.recordEvent(
+			"error",
+			"deleteLink",
+			"links",
+			fmt.Sprintf("Failed deleting link %s", linkID),
+			linkID,
+		)
+
+		return domain.OperationResult{
+			Success: false,
+			Name:    "deleteLink",
+			Message: fmt.Sprintf("failed to delete link %s: %v", linkID, err),
+			Data: map[string]string{
+				"linkId": linkID,
+			},
+		}, nil
+	}
+
+	b.recordEvent(
+		"info",
+		"deleteLink",
+		"links",
+		fmt.Sprintf("Deleted link %s", linkID),
+		linkID,
+	)
+
+	return domain.OperationResult{
+		Success: true,
+		Name:    "deleteLink",
+		Message: fmt.Sprintf("link %s deleted", linkID),
+		Data: map[string]string{
+			"linkId": linkID,
+		},
+	}, nil
 }
 
 func (b *Backend) AddStream(_ context.Context, query string) (domain.OperationResult, error) {

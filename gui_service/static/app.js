@@ -1440,67 +1440,35 @@ function extractRawNodeFromImport(parsed) {
 }
 
 async function importTopologyPayload(payloadText) {
-  let parsed;
+  console.log("Importing topology payload:", payloadText);
+  if (!payloadText || !payloadText.trim()) {
+    showToast("Select a topology JSON file.");
+    return;
+  }
+
+  // Validate that the selected file contains valid JSON.
   try {
-    parsed = JSON.parse(payloadText);
+    JSON.parse(payloadText);
   } catch (error) {
     showToast(`Invalid JSON: ${error.message}`);
     return;
   }
 
-  const nodes = Array.isArray(parsed.nodes)
-    ? parsed.nodes
-    : Array.isArray(parsed.topology && parsed.topology.nodes)
-      ? parsed.topology.nodes
-      : [];
+  const response = await callAction("uploadTopology", {
+    query: payloadText,
+  });
 
-  const links = Array.isArray(parsed.links)
-    ? parsed.links
-    : Array.isArray(parsed.topology && parsed.topology.links)
-      ? parsed.topology.links
-      : [];
+  showToast(
+    response.message ||
+      (response.success
+        ? "Topology imported successfully."
+        : "Failed to import topology.")
+  );
 
-  if (!nodes.length && !links.length) {
-    showToast("No nodes or links found in imported topology file.");
-    return;
+  if (response.success) {
+    setInputValue("import-topology-input", "");
+    await loadAllViews();
   }
-
-  let nodeSuccessCount = 0;
-  let linkSuccessCount = 0;
-  let errorCount = 0;
-
-  for (const rawNode of nodes) {
-    const nodePayload = normalizeImportedNode(rawNode);
-    if (!nodePayload) {
-      errorCount += 1;
-      continue;
-    }
-
-    const response = await callAction("addNode", { query: JSON.stringify(nodePayload) });
-    if (response.success) {
-      nodeSuccessCount += 1;
-    } else {
-      errorCount += 1;
-    }
-  }
-
-  for (const rawLink of links) {
-    const linkPayload = normalizeImportedLink(rawLink);
-    if (!linkPayload) {
-      errorCount += 1;
-      continue;
-    }
-
-    const response = await callAction("addLink", linkPayload);
-    if (response.success) {
-      linkSuccessCount += 1;
-    } else {
-      errorCount += 1;
-    }
-  }
-
-  await loadAllViews();
-  showToast(`Imported topology: ${nodeSuccessCount} nodes, ${linkSuccessCount} links, ${errorCount} skipped.`);
 }
 
 function normalizeImportedNode(rawNode) {
@@ -1793,8 +1761,17 @@ async function gatherPayload(action) {
         bandwidth: getValue("link-bandwidth"),
       };
     case "updateLink":
+      return {
+    id: state.selectedLinkID,
+    source: getValue("link-source"),
+    destination: getValue("link-destination"),
+    bandwidth: getValue("link-bandwidth"),
+  };
+  
     case "deleteLink":
-      return { id: state.selectedLinkID };
+      return {
+    id: state.selectedLinkID
+  };
     case "addStream":
       return { query: getValue("stream-search") };
     case "removeStream":
