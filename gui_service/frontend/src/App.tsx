@@ -6,9 +6,9 @@ import {
   DeviceModelsScreen,
   LogsScreen,
   SettingsScreen,
-  StreamsScreen,
   TopologyScreen,
 } from "./screens";
+import { StreamsScreen } from "./streamsScreen";
 import type { ScreenKey } from "./types";
 
 const screenTitles: Record<ScreenKey, string> = {
@@ -22,14 +22,15 @@ const screenTitles: Record<ScreenKey, string> = {
 
 export default function App() {
   const [activeScreen, setActiveScreen] = useState<ScreenKey>("dashboard");
+  const [streamsRefreshToken, setStreamsRefreshToken] = useState(0);
   const topBarActions =
-    activeScreen === "topology" ? (
+    activeScreen === "streams" ? (
       <>
-        <button className="ghost-button" type="button">
+        <button className="ghost-button" type="button" onClick={() => setStreamsRefreshToken((token) => token + 1)}>
           Refresh
         </button>
         <button className="ghost-button" type="button">
-          Admin
+          Admin ▼
         </button>
       </>
     ) : undefined;
@@ -39,11 +40,11 @@ export default function App() {
       <Sidebar items={navItems} active={activeScreen} onSelect={setActiveScreen} />
 
       <main className="workspace">
-        <TopBar title={screenTitles[activeScreen]} actions={topBarActions} />
+        <TopBar title={screenTitles[activeScreen]} actions={topBarActions} hideSearch={activeScreen === "streams"} />
         {activeScreen === "dashboard" ? <DashboardScreen /> : null}
         {activeScreen === "device-models" ? <DeviceModelsScreen /> : null}
         {activeScreen === "topology" ? <TopologyScreen /> : null}
-        {activeScreen === "streams" ? <StreamsScreen /> : null}
+        {activeScreen === "streams" ? <StreamsScreen refreshToken={streamsRefreshToken} /> : null}
         {activeScreen === "logs" ? <LogsScreen /> : null}
         {activeScreen === "settings" ? <SettingsScreen /> : null}
       </main>

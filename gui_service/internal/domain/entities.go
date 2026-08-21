@@ -51,12 +51,15 @@ type MonitoringTargetData struct {
 }
 
 type Node struct {
-	ID      string   `json:"id"`
-	Name    string   `json:"name"`
-	Type    string   `json:"type"`
-	State   string   `json:"state"`
-	PortIds []string `json:"ports"`
-	Links   string   `json:"links"`
+	ID                 string   `json:"id"`
+	Name               string   `json:"name"`
+	Type               string   `json:"type"`
+	DeviceModel        string   `json:"deviceModel"`
+	PortIds            []string `json:"ports"`
+	Links              string   `json:"links"`
+	ManagementIp       string   `json:"managementIp"`
+	ManagementProtocol string   `json:"managementProtocol"`
+	ManagementPort     uint32   `json:"managementPort"`
 }
 
 type Link struct {
@@ -68,11 +71,26 @@ type Link struct {
 }
 
 type Stream struct {
-	ID              string `json:"id"`
-	Name            string `json:"name"`
-	Source          string `json:"source"`
-	Listeners       string `json:"listeners"`
-	Characteristics string `json:"characteristics"`
+	ID                   string   `json:"id"`
+	Name                 string   `json:"name"`
+	Source               string   `json:"source"`
+	Listeners            string   `json:"listeners"`
+	Characteristics      string   `json:"characteristics"`
+	TalkerNodeID         string   `json:"talkerNodeId"`
+	ListenerNodeIDs      []string `json:"listenerNodeIds"`
+	TrafficType          string   `json:"trafficType"`
+	Rank                 string   `json:"rank"`
+	DestinationMAC       string   `json:"destinationMac"`
+	SourceMAC            string   `json:"sourceMac"`
+	VLANID               int      `json:"vlanId"`
+	IntervalNs           int      `json:"intervalNs"`
+	MaxFrameSize         int      `json:"maxFrameSize"`
+	MaxFramesPerInterval int      `json:"maxFramesPerInterval"`
+	MaxLatencyNs         int      `json:"maxLatencyNs"`
+	MaxJitterNs          int      `json:"maxJitterNs"`
+	MinTransmitOffsetNs  int      `json:"minTransmitOffsetNs"`
+	MaxTransmitOffsetNs  int      `json:"maxTransmitOffsetNs"`
+	NumSeamlessTrees     int      `json:"numSeamlessTrees"`
 }
 
 type EventLog struct {

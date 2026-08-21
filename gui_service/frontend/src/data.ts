@@ -4,7 +4,7 @@ export const navItems: NavItem[] = [
   { key: "dashboard", label: "Dashboard" },
   { key: "device-models", label: "Add Device Models" },
   { key: "topology", label: "Topology" },
-  { key: "streams", label: "Add / Remove Streams" },
+  { key: "streams", label: "Streams" },
   { key: "logs", label: "Internal Logs" },
   { key: "settings", label: "Settings" },
 ];

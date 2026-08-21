@@ -21,14 +21,42 @@ type simpleInput struct {
 	Bandwidth   string `json:"bandwidth"`
 	Severity    string `json:"severity"`
 	OrderBy     string `json:"orderBy"`
-	Name        string `json:"name"`
-	Type        string `json:"type"`
-	State       string `json:"state"`
-	Ports       string `json:"ports"`
-	Links       string `json:"links"`
-	Version     string `json:"version"`
-	Vendor      string `json:"vendor"`
-	Yang        string `json:"yang"`
+
+	// Node fields
+	Name               string `json:"name"`
+	Type               string `json:"type"`
+	DeviceModel        string `json:"deviceModel"`
+	ManagementIP       string `json:"managementIp"`
+	ManagementProtocol string `json:"managementProtocol"`
+	ManagementPort     uint32 `json:"managementPort"`
+	Username           string `json:"username"`
+	Password           string `json:"password"`
+	Ports              string `json:"ports"`
+	Links              string `json:"links"`
+
+	// Device model fields
+	Version string `json:"version"`
+	Vendor  string `json:"vendor"`
+	Yang    string `json:"yang"`
+
+	// Stream fields
+	StreamID             string   `json:"streamId"`
+	TalkerNodeID         string   `json:"talkerNodeId"`
+	ListenerNodeIDs      []string `json:"listenerNodeIds"`
+	TrafficType          string   `json:"trafficType"`
+	Rank                 string   `json:"rank"`
+	DestinationMAC       string   `json:"destinationMac"`
+	SourceMAC            string   `json:"sourceMac"`
+	VLANID               int      `json:"vlanId"`
+	IntervalNs           int      `json:"intervalNs"`
+	MaxFrameSize         int      `json:"maxFrameSize"`
+	MaxFramesPerInterval int      `json:"maxFramesPerInterval"`
+	MaxLatencyNs         int      `json:"maxLatencyNs"`
+	MaxJitterNs          int      `json:"maxJitterNs"`
+	MinTransmitOffsetNs  int      `json:"minTransmitOffsetNs"`
+	MaxTransmitOffsetNs  int      `json:"maxTransmitOffsetNs"`
+	NumSeamlessTrees     int      `json:"numSeamlessTrees"`
+	Characteristics      string   `json:"characteristics"`
 }
 
 func NewHandler(service *app.Service) *Handler {
@@ -247,7 +275,19 @@ func (h *Handler) NodeByID(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodPatch:
 		input := decodeInput(r)
-		result, err := h.service.EditNode(r.Context(), nodeID, input.Name, input.Type, input.State, input.Ports, input.Links)
+		node := domain.Node{
+			ID:                 nodeID,
+			Name:               input.Name,
+			Type:               input.Type,
+			DeviceModel:        input.DeviceModel,
+			ManagementIp:       input.ManagementIP,
+			ManagementProtocol: input.ManagementProtocol,
+			ManagementPort:     input.ManagementPort,
+			PortIds:            strings.Split(input.Ports, ","),
+			Links:              input.Links,
+		}
+
+		result, err := h.service.EditNode(r.Context(), node)
 		if err != nil {
 			internalError(w, err)
 			return
@@ -337,7 +377,7 @@ func (h *Handler) Streams(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusOK, streams)
 	case http.MethodPost:
 		input := decodeInput(r)
-		result, err := h.service.AddStream(r.Context(), input.Query)
+		result, err := h.service.AddStream(r.Context(), streamFromInput(input))
 		if err != nil {
 			internalError(w, err)
 			return
@@ -355,17 +395,25 @@ func (h *Handler) StreamByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if r.Method != http.MethodDelete {
+	switch r.Method {
+	case http.MethodPatch:
+		input := decodeInput(r)
+		result, err := h.service.UpdateStream(r.Context(), streamID, streamFromInput(input))
+		if err != nil {
+			internalError(w, err)
+			return
+		}
+		writeJSON(w, http.StatusOK, result)
+	case http.MethodDelete:
+		result, err := h.service.RemoveStream(r.Context(), streamID)
+		if err != nil {
+			internalError(w, err)
+			return
+		}
+		writeJSON(w, http.StatusOK, result)
+	default:
 		methodNotAllowed(w)
-		return
 	}
-
-	result, err := h.service.RemoveStream(r.Context(), streamID)
-	if err != nil {
-		internalError(w, err)
-		return
-	}
-	writeJSON(w, http.StatusOK, result)
 }
 
 func (h *Handler) Logs(w http.ResponseWriter, r *http.Request) {
@@ -432,10 +480,71 @@ func (h *Handler) RecentEvents(w http.ResponseWriter, r *http.Request) {
 func decodeInput(r *http.Request) simpleInput {
 	input := simpleInput{}
 	if r.Body == nil {
+		fmt.Println("decodeInput: request body is nil")
 		return input
 	}
-	_ = json.NewDecoder(r.Body).Decode(&input)
+	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+		fmt.Println("decode error:", err)
+	}
 	return input
+}
+
+func streamFromInput(input simpleInput) domain.Stream {
+	stream := domain.Stream{
+		ID:                   strings.TrimSpace(input.StreamID),
+		Name:                 strings.TrimSpace(input.Name),
+		TalkerNodeID:         strings.TrimSpace(input.TalkerNodeID),
+		ListenerNodeIDs:      append([]string(nil), input.ListenerNodeIDs...),
+		TrafficType:          strings.TrimSpace(input.TrafficType),
+		Rank:                 strings.TrimSpace(input.Rank),
+		DestinationMAC:       strings.TrimSpace(input.DestinationMAC),
+		SourceMAC:            strings.TrimSpace(input.SourceMAC),
+		VLANID:               input.VLANID,
+		IntervalNs:           input.IntervalNs,
+		MaxFrameSize:         input.MaxFrameSize,
+		MaxFramesPerInterval: input.MaxFramesPerInterval,
+		MaxLatencyNs:         input.MaxLatencyNs,
+		MaxJitterNs:          input.MaxJitterNs,
+		MinTransmitOffsetNs:  input.MinTransmitOffsetNs,
+		MaxTransmitOffsetNs:  input.MaxTransmitOffsetNs,
+		NumSeamlessTrees:     input.NumSeamlessTrees,
+		Characteristics:      strings.TrimSpace(input.Characteristics),
+	}
+
+	if stream.Name == "" {
+		stream.Name = stream.ID
+	}
+	if stream.Source == "" {
+		stream.Source = stream.TalkerNodeID
+	}
+	if len(stream.ListenerNodeIDs) > 0 {
+		stream.Listeners = strings.Join(stream.ListenerNodeIDs, ", ")
+	}
+	if stream.Characteristics == "" {
+		stream.Characteristics = streamSummary(stream)
+	}
+
+	return stream
+}
+
+func streamSummary(stream domain.Stream) string {
+	parts := make([]string, 0, 4)
+	if stream.TrafficType != "" {
+		parts = append(parts, strings.ReplaceAll(strings.TrimPrefix(stream.TrafficType, "TRAFFIC_TYPE_"), "_", " "))
+	}
+	if stream.IntervalNs > 0 {
+		parts = append(parts, fmt.Sprintf("Interval %d ns", stream.IntervalNs))
+	}
+	if stream.MaxLatencyNs > 0 {
+		parts = append(parts, fmt.Sprintf("Deadline %d ns", stream.MaxLatencyNs))
+	}
+	if stream.VLANID > 0 {
+		parts = append(parts, fmt.Sprintf("VLAN %d", stream.VLANID))
+	}
+	if len(parts) == 0 {
+		return "periodic\nDeadline..."
+	}
+	return strings.Join(parts, "\n")
 }
 
 func writeJSON(w http.ResponseWriter, status int, v interface{}) {

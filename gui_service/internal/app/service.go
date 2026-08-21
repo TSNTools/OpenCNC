@@ -90,9 +90,9 @@ func (s *Service) AddNode(ctx context.Context, query string) (domain.OperationRe
 	return s.operations.AddNode(ctx, query)
 }
 
-func (s *Service) EditNode(ctx context.Context, nodeID, name, nodeType, state, ports, links string) (domain.OperationResult, error) {
+func (s *Service) EditNode(ctx context.Context, node domain.Node) (domain.OperationResult, error) {
 	log.Printf("[GUI] app.EditNode called")
-	return s.operations.EditNode(ctx, nodeID, name, nodeType, state, ports, links)
+	return s.operations.EditNode(ctx, node)
 }
 
 func (s *Service) DeleteNode(ctx context.Context, nodeID string) (domain.OperationResult, error) {
@@ -115,9 +115,14 @@ func (s *Service) DeleteLink(ctx context.Context, linkID string) (domain.Operati
 	return s.operations.DeleteLink(ctx, linkID)
 }
 
-func (s *Service) AddStream(ctx context.Context, query string) (domain.OperationResult, error) {
+func (s *Service) AddStream(ctx context.Context, stream domain.Stream) (domain.OperationResult, error) {
 	log.Printf("[GUI] app.AddStream called")
-	return s.operations.AddStream(ctx, query)
+	return s.operations.AddStream(ctx, stream)
+}
+
+func (s *Service) UpdateStream(ctx context.Context, streamID string, stream domain.Stream) (domain.OperationResult, error) {
+	log.Printf("[GUI] app.UpdateStream called")
+	return s.operations.UpdateStream(ctx, streamID, stream)
 }
 
 func (s *Service) RemoveStream(ctx context.Context, streamID string) (domain.OperationResult, error) {

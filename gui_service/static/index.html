@@ -12,7 +12,7 @@
     rel="stylesheet"
   >
 
-  <link rel="stylesheet" href="/styles.css?v=topology-v3">
+  <link rel="stylesheet" href="/styles.css?v=layout-v4">
 </head>
 
 <body>
@@ -329,7 +329,6 @@
 
         <div class="content-grid operation-grid">
 
-
           <div class="left-column">
 
             <div class="control-row">
@@ -353,7 +352,7 @@
 
             <section class="card list-card">
 
-              <h3>Model Library</h3>
+              <h3>Available Device Models</h3>
 
               <ul
                 class="selectable-list"
@@ -431,7 +430,6 @@
               <div class="field-grid">
 
                 <label>
-
                   <span>Name</span>
 
                   <input
@@ -439,12 +437,10 @@
                     type="text"
                     placeholder="Model name"
                   >
-
                 </label>
 
 
                 <label>
-
                   <span>Version</span>
 
                   <input
@@ -452,12 +448,10 @@
                     type="text"
                     placeholder="Version"
                   >
-
                 </label>
 
 
                 <label>
-
                   <span>Vendor</span>
 
                   <input
@@ -465,12 +459,10 @@
                     type="text"
                     placeholder="Vendor"
                   >
-
                 </label>
 
 
                 <label class="full-width">
-
                   <span>YANG Files</span>
 
                   <input
@@ -478,7 +470,6 @@
                     type="text"
                     placeholder="YANG list"
                   >
-
                 </label>
 
               </div>
@@ -510,20 +501,20 @@
             <div class="detail-actions">
 
               <button
+                class="action-button"
+                id="toggle-model-edit"
+                type="button"
+              >
+                Edit Model
+              </button>
+
+              <button
                 class="action-button danger"
                 data-action="deleteModel"
                 data-confirm="Delete the selected model?"
                 type="button"
               >
                 Delete Model
-              </button>
-
-              <button
-                class="action-button"
-                id="toggle-model-edit"
-                type="button"
-              >
-                Edit Model
               </button>
 
             </div>
@@ -550,21 +541,22 @@
 
             <div class="control-row topology-import-row">
 
-          <input
-            id="node-upload"
-            type="file"
-            accept=".json,application/json"
-          >
+              <input
+                id="node-upload"
+                type="file"
+                accept=".json,application/json"
+              >
 
-          <button
-            class="action-button"
-            id="import-node-btn"
-            type="button"
-          >
-            Import Node
-          </button>
+              <button
+                class="action-button"
+                id="import-node-btn"
+                type="button"
+              >
+                Import Node
+              </button>
 
-        </div>
+            </div>
+
 
             <div class="topology-workspace-grid">
 
@@ -576,7 +568,11 @@
 
                   <label>
                     <span>Name</span>
-                    <input id="node-create-name" type="text" placeholder="Name...">
+                    <input
+                      id="node-create-name"
+                      type="text"
+                      placeholder="Name..."
+                    >
                   </label>
 
                   <label>
@@ -600,7 +596,11 @@
 
                   <label>
                     <span>IP Address</span>
-                    <input id="node-create-ip" type="text" placeholder="IP Address...">
+                    <input
+                      id="node-create-ip"
+                      type="text"
+                      placeholder="IP Address..."
+                    >
                   </label>
 
                   <label>
@@ -614,20 +614,40 @@
 
                   <label>
                     <span>Management Port</span>
-                    <input id="node-create-port" type="number" min="1" max="65535" placeholder="Port...">
+                    <input
+                      id="node-create-port"
+                      type="number"
+                      min="1"
+                      max="65535"
+                      placeholder="Port..."
+                    >
                   </label>
 
                   <label>
                     <span>Username</span>
-                    <input id="node-create-username" type="text" placeholder="Username...">
+                    <input
+                      id="node-create-username"
+                      type="text"
+                      placeholder="Username..."
+                    >
                   </label>
 
                   <label>
                     <span>Password</span>
-                    <input id="node-create-password" type="password" placeholder="Password...">
+                    <input
+                      id="node-create-password"
+                      type="password"
+                      placeholder="Password..."
+                    >
                   </label>
 
-                  <button class="action-button" id="add-node-btn" type="button">Add Node</button>
+                  <button
+                    class="action-button"
+                    id="add-node-btn"
+                    type="button"
+                  >
+                    Add Node
+                  </button>
 
                 </div>
 
@@ -658,7 +678,9 @@
 
             <h3>Node Details</h3>
 
-            <p class="topology-placeholder">Select a node to view details</p>
+            <p class="topology-placeholder">
+              Select a node to view details
+            </p>
 
             <dl>
 
@@ -668,8 +690,17 @@
               <dt>Type</dt>
               <dd id="node-type">-</dd>
 
-              <dt>State</dt>
-              <dd id="node-state">-</dd>
+              <dt>Device Model</dt>
+              <dd id="node-device-model">-</dd>
+
+              <dt>Management IP</dt>
+              <dd id="node-management-ip">-</dd>
+
+              <dt>Management Protocol</dt>
+              <dd id="node-management-protocol">-</dd>
+
+              <dt>Management Port</dt>
+              <dd id="node-management-port">-</dd>
 
               <dt>Ports</dt>
               <dd id="node-ports">-</dd>
@@ -679,6 +710,7 @@
 
             </dl>
 
+
             <form
               id="node-edit-form"
               class="inline-edit-form hidden"
@@ -687,7 +719,6 @@
               <div class="field-grid">
 
                 <label>
-
                   <span>Name</span>
 
                   <input
@@ -695,12 +726,10 @@
                     type="text"
                     placeholder="Node name"
                   >
-
                 </label>
 
 
                 <label>
-
                   <span>Type</span>
 
                   <input
@@ -708,25 +737,48 @@
                     type="text"
                     placeholder="BRIDGE / END_STATION"
                   >
-
                 </label>
 
 
                 <label>
+                    <span>Device Model</span>
+                    <select id="node-edit-device-model">
+                      <option value="">None</option>
+                    </select>
+                </label>
 
-                  <span>State</span>
+                <label>
+                  <span>Management IP</span>
 
                   <input
-                    id="node-edit-state"
+                    id="node-edit-management-ip"
                     type="text"
-                    placeholder="State"
+                    placeholder="Management IP"
                   >
+                </label>
 
+                <label>
+                  <span>Management Protocol</span>
+
+                  <select id="node-edit-management-protocol">
+                    <option value="">None</option>
+                    <option value="NETCONF">NETCONF</option>
+                    <option value="SNMP">SNMP</option>
+                  </select>
+                </label>
+
+                <label>
+                  <span>Management Port</span>
+
+                  <input
+                    id="node-edit-management-port"
+                    type="text"
+                    placeholder="Management Port"
+                  >
                 </label>
 
 
                 <label>
-
                   <span>Ports</span>
 
                   <input
@@ -734,12 +786,10 @@
                     type="text"
                     placeholder="Ports"
                   >
-
                 </label>
 
 
                 <label class="full-width">
-
                   <span>Links</span>
 
                   <input
@@ -747,7 +797,6 @@
                     type="text"
                     placeholder="Links"
                   >
-
                 </label>
 
               </div>
@@ -775,6 +824,7 @@
 
             </form>
 
+
             <div class="detail-actions">
 
               <button
@@ -801,61 +851,459 @@
         </div>
 
       </section>
+
+
+      <!-- =====================================================
+           TOPOLOGY / LINKS
+           ===================================================== -->
+
+      <section
+        class="screen"
+        id="screen-topology-links"
+      >
+
+        <div class="content-grid operation-grid">
+
+          <div class="left-column">
+
+            <div class="topology-workspace-grid">
+
+              <section class="card form-card topology-create-card">
+
+                <h3>Create Link</h3>
+
+                <div class="create-form-stack">
+
+                  <label>
+                    <span>Source</span>
+                    <select id="link-source">
+                      <option value="">None</option>
+                    </select>
+                  </label>
+
+                  <label>
+                    <span>Destination</span>
+                    <select id="link-destination">
+                      <option value="">None</option>
+                    </select>
+                  </label>
+
+                  <label>
+                    <span>Bandwidth</span>
+                    <select id="link-bandwidth">
+                      <option value="">None</option>
+                      <option value="100">100Mbps</option>
+                      <option value="1000">1Gbps</option>
+                      <option value="10000">10Gbps</option>
+                    </select>
+                  </label>
+
+                  <button
+                    class="action-button"
+                    id="add-link-btn"
+                    type="button"
+                  >
+                    Add Link
+                  </button>
+
+                </div>
+
+              </section>
+
+
+              <section class="card list-card">
+
+                <h3>Available Links</h3>
+
+                <ul
+                  class="selectable-list"
+                  id="link-list"
+                >
+                  <li class="empty-item">
+                    No links available
+                  </li>
+                </ul>
+
+              </section>
+
+            </div>
+
+          </div>
+
+
+          <section class="card details-card">
+
+            <h3>Link Details</h3>
+
+            <p class="topology-placeholder">
+              Select a link to view details
+            </p>
+
+            <dl>
+
+              <dt>Source</dt>
+              <dd id="link-detail-source">-</dd>
+
+              <dt>Destination</dt>
+              <dd id="link-detail-destination">-</dd>
+
+              <dt>State</dt>
+              <dd id="link-detail-state">-</dd>
+
+              <dt>Bandwidth</dt>
+              <dd id="link-detail-bandwidth">-</dd>
+
+            </dl>
+
+
+            <div class="detail-actions">
+
+              <button
+                class="action-button"
+                id="toggle-link-edit"
+                type="button"
+              >
+                Edit Link
+              </button>
+
+              <button
+                class="action-button danger"
+                data-action="deleteLink"
+                data-confirm="Delete the selected link?"
+                type="button"
+              >
+                Delete Link
+              </button>
+
+            </div>
+
+
+            <form
+              id="link-edit-form"
+              class="inline-edit-form hidden"
+            >
+
+              <div class="field-grid">
+
+                <label>
+                  <span>Source</span>
+
+                  <select id="link-edit-source">
+                    <option value="">None</option>
+                  </select>
+                </label>
+
+
+                <label>
+                  <span>Destination</span>
+
+                  <select id="link-edit-destination">
+                    <option value="">None</option>
+                  </select>
+                </label>
+
+
+                <label>
+                  <span>Bandwidth</span>
+
+                  <select id="link-edit-bandwidth">
+                    <option value="">None</option>
+                    <option value="100">100Mbps</option>
+                    <option value="1000">1Gbps</option>
+                    <option value="10000">10Gbps</option>
+                  </select>
+                </label>
+
+              </div>
+
+
+              <div class="detail-actions compact-actions">
+
+                <button
+                  type="button"
+                  class="action-button"
+                  id="link-save-edit"
+                >
+                  Save
+                </button>
+
+                <button
+                  type="button"
+                  class="action-button ghost"
+                  id="link-cancel-edit"
+                >
+                  Cancel
+                </button>
+
+              </div>
+
+            </form>
+
+          </section>
+
+        </div>
+
+      </section>
+
 <!-- =====================================================
-     TOPOLOGY / LINKS
+     STREAMS
      ===================================================== -->
 
 <section
   class="screen"
-  id="screen-topology-links"
+  id="screen-streams"
 >
 
   <div class="content-grid operation-grid">
 
     <div class="left-column">
 
-      <div class="topology-workspace-grid">
+      <!-- Import Stream -->
 
-        <!-- =========================
-             CREATE LINK
-             ========================= -->
+      <div class="control-row stream-import-row">
 
-        <section class="card form-card topology-create-card">
+        <input
+          id="stream-import-input"
+          type="file"
+          accept=".json,application/json"
+        >
 
-          <h3>Create Link</h3>
+        <button
+          id="stream-import-btn"
+          class="action-button"
+          type="button"
+        >
+          Import Stream
+        </button>
+
+      </div>
+
+
+      <!-- Stream creation + available streams -->
+
+      <div class="streams-workspace-grid">
+
+        <!-- =================================================
+             CREATE STREAM
+             ================================================= -->
+
+        <section class="card form-card stream-create-card">
+
+          <h3>Create Stream</h3>
 
           <div class="create-form-stack">
 
+            <!-- Name -->
+
             <label>
-              <span>Source</span>
-              <select id="link-source">
-                <option value="">None</option>
+              <span>Name</span>
+
+              <input
+                id="stream-name-input"
+                type="text"
+                placeholder="Name..."
+              >
+            </label>
+
+
+            <!-- Data Frame -->
+
+            <h4>Data Frame</h4>
+
+            <label>
+              <span>Talker</span>
+
+              <select id="stream-talker-select"></select>
+            </label>
+
+            <label>
+              <span>Listeners</span>
+                <div
+                  class="multi-select"
+                  id="stream-listeners-select"
+                >
+
+                  <button
+                    type="button"
+                    class="multi-select-toggle"
+                  >
+                    <span>Select listeners</span>
+                    <span class="multi-select-arrow">▼</span>
+                  </button>
+
+                  <div class="multi-select-options"></div>
+
+                </div>
+            </label>
+
+
+            <label>
+              <span>VLAN ID</span>
+
+              <input
+                id="stream-vlan-id"
+                type="number"
+                min="0"
+              >
+            </label>
+
+
+            <!-- Traffic Class -->
+
+            <h4>Traffic Class</h4>
+
+            <label>
+              <span>Traffic Type</span>
+
+              <select id="stream-traffic-type">
+                <option value="TRAFFIC_TYPE_ISOCHRONOUS">
+                  Isochronous
+                </option>
+
+                <option value="TRAFFIC_TYPE_SYNCHRONOUS">
+                  Synchronous
+                </option>
+
+                <option value="TRAFFIC_TYPE_ASYNCHRONOUS">
+                  Asynchronous
+                </option>
+
+                <option value="TRAFFIC_TYPE_MANAGEMENT">
+                  Management
+                </option>
+
+                <option value="TRAFFIC_TYPE_ALARM">
+                  Alarm
+                </option>
+
+                <option value="TRAFFIC_TYPE_BEST_EFFORT_HIGH">
+                  Best effort high
+                </option>
+
+                <option value="TRAFFIC_TYPE_BEST_EFFORT_LOW">
+                  Best effort low
+                </option>
               </select>
             </label>
 
             <label>
-              <span>Destination</span>
-              <select id="link-destination">
-                <option value="">None</option>
+              <span>Stream Rank</span>
+
+              <select id="stream-rank">
+                <option value="RANK_UNSPECIFIED">
+                  Unspecified
+                </option>
+
+                <option value="RANK_A">
+                  Rank A
+                </option>
+
+                <option value="RANK_B">
+                  Rank B
+                </option>
               </select>
             </label>
 
+
+            <!-- Traffic Specification -->
+
+            <h4>Traffic Specification</h4>
+
             <label>
-              <span>Bandwidth</span>
-              <select id="link-bandwidth">
-                <option value="">None</option>
-                <option value="100">100Mbps</option>
-                <option value="1000">1Gbps</option>
-                <option value="10000">10Gbps</option>
-              </select>
+              <span>Interval (ns)</span>
+
+              <input
+                id="stream-interval-ns"
+                type="number"
+                min="0"
+              >
             </label>
+
+            <label>
+              <span>Max Frame Size</span>
+
+              <input
+                id="stream-max-frame-size"
+                type="number"
+                min="0"
+              >
+            </label>
+
+            <label>
+              <span>Max Frames per interval</span>
+
+              <input
+                id="stream-max-frames-per-interval"
+                type="number"
+                min="0"
+              >
+            </label>
+
+
+            <!-- User-to-Network Requirements -->
+
+            <h4>User-to-Network Requirements</h4>
+
+            <label>
+              <span>Max Latency (ns)</span>
+
+              <input
+                id="stream-max-latency-ns"
+                type="number"
+                min="0"
+              >
+            </label>
+
+            <label>
+              <span>Max Jitter (ns)</span>
+
+              <input
+                id="stream-max-jitter-ns"
+                type="number"
+                min="0"
+              >
+            </label>
+
+            <label>
+              <span>Minimum Transmit Offset (ns)</span>
+
+              <input
+                id="stream-min-transmit-offset-ns"
+                type="number"
+                min="0"
+              >
+            </label>
+
+            <label>
+              <span>Maximum Transmit Offset (ns)</span>
+
+              <input
+                id="stream-max-transmit-offset-ns"
+                type="number"
+                min="0"
+              >
+            </label>
+
+            <label>
+              <span>Number of Seamless Trees</span>
+
+              <input
+                id="stream-num-seamless-trees"
+                type="number"
+                min="0"
+              >
+            </label>
+
+
+            <!-- Add Stream -->
 
             <button
+              id="stream-add-btn"
               class="action-button"
-              id="add-link-btn"
+              data-action="addStream"
               type="button"
             >
-              Add Link
+              Add Stream
             </button>
 
           </div>
@@ -863,21 +1311,23 @@
         </section>
 
 
-        <!-- =========================
-             AVAILABLE LINKS
-             ========================= -->
+        <!-- =================================================
+             AVAILABLE STREAMS
+             ================================================= -->
 
         <section class="card list-card">
 
-          <h3>Available Links</h3>
+          <h3>Available Streams</h3>
 
           <ul
             class="selectable-list"
-            id="link-list"
+            id="stream-list"
           >
+
             <li class="empty-item">
-              No links available
+              No streams available
             </li>
+
           </ul>
 
         </section>
@@ -887,274 +1337,63 @@
     </div>
 
 
-    <!-- =========================
-         LINK DETAILS
-         ========================= -->
+    <!-- =================================================
+         STREAM DETAILS
+         ================================================= -->
 
     <section class="card details-card">
 
-      <h3>Link Details</h3>
+      <h3>Stream Details</h3>
 
       <p class="topology-placeholder">
-        Select a link to view details
+        Select a stream to view details
       </p>
 
       <dl>
 
+        <dt>Name</dt>
+        <dd id="stream-name">-</dd>
+
         <dt>Source</dt>
-        <dd id="link-detail-source">-</dd>
+        <dd id="stream-source">-</dd>
 
-        <dt>Destination</dt>
-        <dd id="link-detail-destination">-</dd>
+        <dt>Listeners</dt>
+        <dd id="stream-listeners">-</dd>
 
-        <dt>State</dt>
-        <dd id="link-detail-state">-</dd>
-
-        <dt>Bandwidth</dt>
-        <dd id="link-detail-bandwidth">-</dd>
+        <dt>Characteristics</dt>
+        <dd id="stream-characteristics">-</dd>
 
       </dl>
 
 
-      <!-- =========================
-           LINK ACTIONS
-           ========================= -->
-
       <div class="detail-actions">
 
         <button
-          class="action-button danger"
-          data-action="deleteLink"
-          data-confirm="Delete the selected link?"
+          id="stream-update-btn"
+          class="action-button"
+          data-action="updateStream"
           type="button"
         >
-          Delete Link
+          Edit Stream
         </button>
 
         <button
-          class="action-button"
-          id="toggle-link-edit"
+          id="stream-delete-btn"
+          class="action-button danger"
+          data-action="removeStream"
+          data-confirm="Remove the selected stream?"
           type="button"
         >
-          Update Link
+          Delete Stream
         </button>
 
       </div>
-
-
-      <!-- =========================
-           EDIT LINK FORM
-           ========================= -->
-
-      <form
-        id="link-edit-form"
-        class="inline-edit-form hidden"
-      >
-
-        <div class="field-grid">
-
-          <label>
-
-            <span>Source</span>
-
-            <select id="link-edit-source">
-              <option value="">None</option>
-            </select>
-
-          </label>
-
-
-          <label>
-
-            <span>Destination</span>
-
-            <select id="link-edit-destination">
-              <option value="">None</option>
-            </select>
-
-          </label>
-
-
-          <label>
-
-            <span>Bandwidth</span>
-
-            <select id="link-edit-bandwidth">
-              <option value="">None</option>
-              <option value="100">100Mbps</option>
-              <option value="1000">1Gbps</option>
-              <option value="10000">10Gbps</option>
-            </select>
-
-          </label>
-
-        </div>
-
-
-        <div class="detail-actions compact-actions">
-
-          <button
-            type="button"
-            class="action-button"
-            id="link-save-edit"
-          >
-            Save
-          </button>
-
-          <button
-            type="button"
-            class="action-button ghost"
-            id="link-cancel-edit"
-          >
-            Cancel
-          </button>
-
-        </div>
-
-      </form>
 
     </section>
 
   </div>
 
 </section>
-      <!-- =====================================================
-           STREAMS
-           ===================================================== -->
-
-      <section
-        class="screen"
-        id="screen-streams"
-      >
-
-        <div class="content-grid operation-grid">
-
-
-          <div class="left-column">
-
-            <div class="control-row">
-
-              <input
-                id="stream-search"
-                type="text"
-                placeholder="Search..."
-              >
-
-              <button
-                class="action-button"
-                data-action="addStream"
-                type="button"
-              >
-                Add Stream
-              </button>
-
-            </div>
-
-
-            <section class="card list-card">
-
-              <h3>
-                Available Streams
-              </h3>
-
-              <ul
-                class="selectable-list"
-                id="stream-list"
-              >
-
-                <li class="empty-item">
-                  No streams available
-                </li>
-
-              </ul>
-
-            </section>
-
-
-            <section class="card recent-events-card">
-
-              <h3>
-                Recent Events
-              </h3>
-
-              <table>
-
-                <thead>
-
-                  <tr>
-                    <th>Time</th>
-                    <th>Type</th>
-                    <th>Severity</th>
-                    <th>Message</th>
-                  </tr>
-
-                </thead>
-
-
-                <tbody>
-
-                  <tr>
-
-                    <td
-                      colspan="4"
-                      class="empty-cell"
-                    >
-                      No recent events
-                    </td>
-
-                  </tr>
-
-                </tbody>
-
-              </table>
-
-            </section>
-
-          </div>
-
-
-          <section class="card details-card">
-
-            <h3>
-              Stream Details
-            </h3>
-
-            <dl>
-
-              <dt>Name</dt>
-              <dd id="stream-name">-</dd>
-
-              <dt>Source</dt>
-              <dd id="stream-source">-</dd>
-
-              <dt>Listeners</dt>
-              <dd id="stream-listeners">-</dd>
-
-              <dt>Characteristics</dt>
-              <dd id="stream-characteristics">-</dd>
-
-            </dl>
-
-
-            <div class="detail-actions">
-
-              <button
-                class="action-button danger"
-                data-action="removeStream"
-                data-confirm="Remove the selected stream?"
-                type="button"
-              >
-                Remove Stream
-              </button>
-
-            </div>
-
-          </section>
-
-        </div>
-
-      </section>
-
 
       <!-- =====================================================
            MONITORING
@@ -1172,7 +1411,10 @@
             <section class="card monitoring-target-card">
 
               <div class="monitoring-target-row">
-                <span class="monitoring-target-label">Target</span>
+
+                <span class="monitoring-target-label">
+                  Target
+                </span>
 
                 <select id="monitoring-node-select">
                   <option value="">Select Node</option>
@@ -1181,6 +1423,7 @@
                 <select id="monitoring-port-select">
                   <option value="">Select Port</option>
                 </select>
+
               </div>
 
             </section>
@@ -1200,7 +1443,9 @@
                   id="monitoring-available-list"
                   class="monitoring-available-list"
                 >
-                  <li class="empty-item">Select a target</li>
+                  <li class="empty-item">
+                    Select a target
+                  </li>
                 </ul>
 
               </section>
@@ -1211,6 +1456,7 @@
                 <h3>Metric Details</h3>
 
                 <dl>
+
                   <dt>Name</dt>
                   <dd id="monitoring-detail-name">-</dd>
 
@@ -1222,9 +1468,11 @@
 
                   <dt>Target</dt>
                   <dd id="monitoring-detail-target">-</dd>
+
                 </dl>
 
                 <div class="monitoring-detail-actions">
+
                   <button
                     id="monitoring-add-selection"
                     type="button"
@@ -1240,6 +1488,7 @@
                   >
                     Remove from selection
                   </button>
+
                 </div>
 
               </section>
@@ -1250,7 +1499,10 @@
             <section class="card monitoring-selected-card">
 
               <div class="monitoring-selected-header">
-                <h3>Selected Metrics</h3>
+
+                <h3>
+                  Selected Metrics
+                </h3>
 
                 <button
                   id="monitoring-apply-selection"
@@ -1259,13 +1511,16 @@
                 >
                   Apply
                 </button>
+
               </div>
 
               <ul
                 id="monitoring-selected-list"
                 class="monitoring-selected-list"
               >
-                <li class="empty-item">No metrics selected</li>
+                <li class="empty-item">
+                  No metrics selected
+                </li>
               </ul>
 
             </section>
@@ -1275,10 +1530,14 @@
 
           <section class="card monitoring-data-card">
 
-            <h3>Monitoring Data</h3>
+            <h3>
+              Monitoring Data
+            </h3>
 
             <div id="monitoring-data-panel">
-              <p class="empty-text">Apply selected metrics to view data.</p>
+              <p class="empty-text">
+                Apply selected metrics to view data.
+              </p>
             </div>
 
           </section>
@@ -1297,19 +1556,26 @@
         id="screen-settings"
       >
 
-        <div class="content-grid operation-grid">
+        <div class="content-grid settings-grid">
 
-          <section class="card settings-card">
+          <div class="settings-left-panel">
 
-            <h3>
-              Settings
-            </h3>
+            <section class="card settings-card">
 
-            <p class="empty-text">
-              Settings will be added in a later iteration.
-            </p>
+              <h3>
+                Settings
+              </h3>
 
-          </section>
+              <p class="empty-text">
+                Settings will be added in a later iteration.
+              </p>
+
+            </section>
+
+          </div>
+
+
+          <div class="settings-right-panel"></div>
 
         </div>
 

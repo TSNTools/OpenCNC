@@ -8,6 +8,8 @@ const state = {
   selectedNodeID: "",
   selectedLinkID: "",
   selectedStreamID: "",
+  nodes: [],
+  streams: [],
   deviceModels: [],
   monitoringCounters: [],
   monitoringMetrics: [],
@@ -21,6 +23,7 @@ const state = {
 initializeNavigation();
 initializeActionButtons();
 initializeListSelection();
+initializeStreamMultiSelect();
 initializeMonitoringUI();
 updateTopologyTopbarControls("dashboard");
 loadAllViews();
@@ -122,6 +125,7 @@ function initializeNavigation() {
     });
   });
 }
+
 function updateTopologyTopbarControls(screen) {
   const importButton = document.getElementById("import-topology-btn");
   if (!importButton) {
@@ -223,13 +227,31 @@ function initializeActionButtons() {
         return;
       }
 
+      const managementPortRaw = getValue("node-edit-management-port").trim();
+      let managementPort;
+      if (managementPortRaw) {
+        managementPort = Number.parseInt(managementPortRaw, 10);
+
+        if (
+          Number.isNaN(managementPort) ||
+          managementPort < 1 ||
+          managementPort > 65535
+        ) {
+          showToast("Management port must be between 1 and 65535.");
+          return;
+        }
+      }
+
       const payload = {
         id: state.selectedNodeID,
         name: getValue("node-edit-name"),
         type: getValue("node-edit-type"),
-        state: getValue("node-edit-state"),
         ports: getValue("node-edit-ports"),
         links: getValue("node-edit-links"),
+        deviceModel: getValue("node-edit-device-model"),
+        managementIp: getValue("node-edit-management-ip"),
+        managementProtocol: getValue("node-edit-management-protocol"),
+        managementPort: managementPort,
       };
 
       const result = await callAction("editNode", payload);
@@ -382,6 +404,32 @@ function initializeActionButtons() {
       await importTopologyPayload(payloadText);
     });
   }
+
+  const importStreamButton = document.getElementById("stream-import-btn");
+  if (importStreamButton) {
+    importStreamButton.addEventListener("click", async () => {
+      const payloadText = await readUploadedFile("stream-import-input");
+      if (!payloadText) {
+        showToast("Select a stream JSON file.");
+        return;
+      }
+
+      let payload;
+      try {
+        payload = JSON.parse(payloadText);
+      } catch (error) {
+        showToast(`Invalid stream JSON: ${error.message}`);
+        return;
+      }
+
+      const response = await callAction("addStream", payload);
+      showToast(response.message || "Stream imported");
+
+      if (response.success) {
+        await loadAllViews();
+      }
+    });
+  }
 }
 
 function initializeMonitoringUI() {
@@ -515,9 +563,12 @@ function initializeListSelection() {
     state.selectedNodeID = item.dataset.id || "";
     setText("node-name", item.dataset.name || "-");
     setText("node-type", item.dataset.type || "-");
-    setText("node-state", item.dataset.state || "-");
     setText("node-ports", item.dataset.ports || "-");
     setText("node-links", item.dataset.links || "-");
+    setText("node-device-model", item.dataset.deviceModel || "-");
+    setText("node-management-ip", item.dataset.managementIp || "-");
+    setText("node-management-protocol", item.dataset.managementProtocol || "-");
+    setText("node-management-port", item.dataset.managementPort || "-");
     setNodeEditFields();
   });
 
@@ -530,11 +581,32 @@ function initializeListSelection() {
   });
 
   bindSelectableList("stream-list", (item) => {
-    state.selectedStreamID = item.dataset.id || "";
-    setText("stream-name", item.dataset.name || "-");
-    setText("stream-source", item.dataset.source || "-");
-    setText("stream-listeners", item.dataset.listeners || "-");
-    setText("stream-characteristics", item.dataset.characteristics || "-");
+    selectStreamItem(item);
+  });
+}
+
+function initializeStreamMultiSelect() {
+  const multiSelect = document.getElementById("stream-listeners-select");
+
+  if (!multiSelect) {
+    return;
+  }
+
+  const toggle = multiSelect.querySelector(".multi-select-toggle");
+
+  if (!toggle) {
+    return;
+  }
+
+  toggle.addEventListener("click", (event) => {
+    event.stopPropagation();
+    multiSelect.classList.toggle("open");
+  });
+
+  document.addEventListener("click", (event) => {
+    if (!multiSelect.contains(event.target)) {
+      multiSelect.classList.remove("open");
+    }
   });
 }
 
@@ -705,12 +777,13 @@ async function loadDeviceModels() {
     li.dataset.yang = model.yang || "";
     return li;
   }, "No models available");
-  populateNodeCreateDeviceModelOptions();
+  populateNodeCreateEditDeviceModelOptions();
   clearModelDetails();
 }
 
 async function loadNodes() {
   const nodes = await fetchJSON("/api/v1/nodes", []);
+  state.nodes = Array.isArray(nodes) ? nodes : [];
   const list = document.getElementById("node-list");
   renderList(list, nodes, (node) => {
     const li = document.createElement("li");
@@ -721,9 +794,14 @@ async function loadNodes() {
     li.dataset.state = node.state || "";
     li.dataset.ports = node.ports || "";
     li.dataset.links = node.links || "";
+    li.dataset.deviceModel = String(node.deviceModel || "");
+    li.dataset.managementIp = String(node.managementIp || "");
+    li.dataset.managementProtocol = String(node.managementProtocol || "");
+    li.dataset.managementPort = String(node.managementPort ?? "");
     return li;
   }, "No nodes available");
   populateLinkNodeOptions(nodes);
+  populateStreamNodeOptions(nodes);
   clearNodeDetails();
 }
 
@@ -744,18 +822,82 @@ async function loadLinks() {
 }
 
 async function loadStreams() {
+
   const streams = await fetchJSON("/api/v1/streams", []);
+
+  state.streams = Array.isArray(streams) ? streams : [];
+
   const list = document.getElementById("stream-list");
-  renderList(list, streams, (stream) => {
-    const li = document.createElement("li");
-    li.textContent = stream.name || stream.id;
-    li.dataset.id = stream.id || "";
-    li.dataset.name = stream.name || "";
-    li.dataset.source = stream.source || "";
-    li.dataset.listeners = stream.listeners || "";
-    li.dataset.characteristics = stream.characteristics || "";
-    return li;
-  }, "No streams available");
+
+  renderList(
+    list,
+    streams,
+    (stream) => {
+
+      const li = document.createElement("li");
+
+      li.textContent = stream.name || stream.id;
+
+      li.dataset.id = stream.id || "";
+      li.dataset.name = stream.name || "";
+      li.dataset.source = stream.source || "";
+      li.dataset.listeners = stream.listeners || "";
+      li.dataset.characteristics = stream.characteristics || "";
+      li.dataset.talkerNodeId = stream.talkerNodeId || "";
+
+      li.dataset.listenerNodeIds =
+        Array.isArray(stream.listenerNodeIds)
+          ? stream.listenerNodeIds.join("|")
+          : "";
+
+      li.dataset.trafficType = stream.trafficType || "";
+      li.dataset.rank = stream.rank || "";
+      li.dataset.destinationMac = stream.destinationMac || "";
+      li.dataset.sourceMac = stream.sourceMac || "";
+
+      li.dataset.vlanId =
+        stream.vlanId ?? "";
+
+      li.dataset.intervalNs =
+        stream.intervalNs ?? "";
+
+      li.dataset.maxFrameSize =
+        stream.maxFrameSize ?? "";
+
+      li.dataset.maxFramesPerInterval =
+        stream.maxFramesPerInterval ?? "";
+
+      li.dataset.maxLatencyNs =
+        stream.maxLatencyNs ?? "";
+
+      li.dataset.maxJitterNs =
+        stream.maxJitterNs ?? "";
+
+      li.dataset.minTransmitOffsetNs =
+        stream.minTransmitOffsetNs ?? "";
+
+      li.dataset.maxTransmitOffsetNs =
+        stream.maxTransmitOffsetNs ?? "";
+
+      li.dataset.numSeamlessTrees =
+        stream.numSeamlessTrees ?? "";
+
+      return li;
+    },
+    "No streams available"
+  );
+
+
+  /*
+   * Do not automatically select a stream.
+   *
+   * The Create Stream form must remain empty until
+   * the user explicitly creates a new stream or uses
+   * an Edit action.
+   */
+
+  state.selectedStreamID = "";
+
   clearStreamDetails();
 }
 
@@ -1298,40 +1440,57 @@ function clearNodeDetails() {
   state.selectedNodeID = "";
   setText("node-name", "-");
   setText("node-type", "-");
-  setText("node-state", "-");
   setText("node-ports", "-");
   setText("node-links", "-");
+  setText("node-device-model", "-");
+  setText("node-management-ip", "-");
+  setText("node-management-protocol", "-");
+  setText("node-management-port", "-");
   hideNodeEditForm();
 }
 
-function populateNodeCreateDeviceModelOptions() {
-  const select = document.getElementById("node-create-device-model");
-  if (!select) {
-    return;
-  }
+function populateNodeCreateEditDeviceModelOptions() {
+  const selects = [
+    document.getElementById("node-create-device-model"),
+    document.getElementById("node-edit-device-model"),
+  ];
 
-  const current = select.value;
-  const models = Array.isArray(state.deviceModels) ? state.deviceModels : [];
+  const models = Array.isArray(state.deviceModels)
+    ? state.deviceModels
+    : [];
 
-  select.innerHTML = '<option value="">None</option>';
-  models.forEach((model) => {
-    const label = model.name || model.id || "";
-    if (!label) {
+  selects.forEach((select) => {
+    if (!select) {
       return;
     }
 
-    const option = document.createElement("option");
-    option.value = label;
-    option.textContent = label;
-    select.appendChild(option);
-  });
+    const current = select.value;
 
-  if (current) {
-    const hasCurrent = models.some((model) => (model.name || model.id || "") === current);
-    if (hasCurrent) {
-      select.value = current;
+    select.innerHTML = '<option value="">None</option>';
+
+    models.forEach((model) => {
+      const label = model.name || model.id || "";
+
+      if (!label) {
+        return;
+      }
+
+      const option = document.createElement("option");
+      option.value = label;
+      option.textContent = label;
+      select.appendChild(option);
+    });
+
+    if (current) {
+      const hasCurrent = models.some(
+        (model) => (model.name || model.id || "") === current
+      );
+
+      if (hasCurrent) {
+        select.value = current;
+      }
     }
-  }
+  });
 }
 
 function populateLinkNodeOptions(nodes) {
@@ -1792,15 +1951,21 @@ function hideNodeEditForm() {
 function setNodeEditFields() {
   const name = document.getElementById("node-name");
   const type = document.getElementById("node-type");
-  const stateValue = document.getElementById("node-state");
   const ports = document.getElementById("node-ports");
   const links = document.getElementById("node-links");
+  const deviceModel = document.getElementById("node-device-model");
+  const managementIp = document.getElementById("node-management-ip");
+  const managementProtocol = document.getElementById("node-management-protocol");
+  const managementPort = document.getElementById("node-management-port");
 
   const editName = document.getElementById("node-edit-name");
   const editType = document.getElementById("node-edit-type");
-  const editState = document.getElementById("node-edit-state");
   const editPorts = document.getElementById("node-edit-ports");
   const editLinks = document.getElementById("node-edit-links");
+  const editDeviceModel = document.getElementById("node-edit-device-model");
+  const editManagementIp = document.getElementById("node-edit-management-ip");
+  const editManagementProtocol = document.getElementById("node-edit-management-protocol");
+  const editManagementPort = document.getElementById("node-edit-management-port");
 
   if (editName) {
     editName.value = name && name.textContent && name.textContent !== "-" ? name.textContent.trim() : "";
@@ -1808,14 +1973,34 @@ function setNodeEditFields() {
   if (editType) {
     editType.value = type && type.textContent && type.textContent !== "-" ? type.textContent.trim() : "";
   }
-  if (editState) {
-    editState.value = stateValue && stateValue.textContent && stateValue.textContent !== "-" ? stateValue.textContent.trim() : "";
-  }
   if (editPorts) {
     editPorts.value = ports && ports.textContent && ports.textContent !== "-" ? ports.textContent.trim() : "";
   }
   if (editLinks) {
     editLinks.value = links && links.textContent && links.textContent !== "-" ? links.textContent.trim() : "";
+  }
+  if (editDeviceModel) {
+    const currentDeviceModel =
+      deviceModel &&
+      deviceModel.textContent &&
+      deviceModel.textContent !== "-"
+        ? deviceModel.textContent.trim()
+        : "";
+
+    // Make sure the dropdown has all device model options
+    populateNodeCreateEditDeviceModelOptions();
+
+    // Select the node's current device model
+    editDeviceModel.value = currentDeviceModel;
+}
+  if (editManagementIp) {
+    editManagementIp.value = managementIp && managementIp.textContent && managementIp.textContent !== "-" ? managementIp.textContent.trim() : "";
+  }
+  if (editManagementProtocol) {
+    editManagementProtocol.value = managementProtocol && managementProtocol.textContent && managementProtocol.textContent !== "-" ? managementProtocol.textContent.trim() : "";
+  }
+  if (editManagementPort) {
+    editManagementPort.value = managementPort && managementPort.textContent && managementPort.textContent !== "-" ? managementPort.textContent.trim() : "";
   }
 }
 
@@ -1890,6 +2075,460 @@ function clearStreamDetails() {
   setText("stream-source", "-");
   setText("stream-listeners", "-");
   setText("stream-characteristics", "-");
+  resetStreamForm();
+}
+
+function getSelectedStreamListeners() {
+
+  const listenerMultiSelect =
+    document.getElementById("stream-listeners-select");
+
+  if (!listenerMultiSelect) {
+    return [];
+  }
+
+  return Array.from(
+    listenerMultiSelect.querySelectorAll(
+      '.multi-select-option input[type="checkbox"]:checked'
+    )
+  )
+    .map((checkbox) => checkbox.value.trim())
+    .filter((value) => value !== "");
+}
+
+function buildStreamPayload(includeSelectedID = false) {
+  const talkerSelect = document.getElementById("stream-talker-select");
+
+  return {
+    id: includeSelectedID ? state.selectedStreamID : "",
+    name: getValue("stream-name-input").trim(),
+    talkerNodeId: talkerSelect ? talkerSelect.value.trim() : "",
+    listenerNodeIds: getSelectedStreamListeners(),
+    trafficType: getValue("stream-traffic-type"),
+    rank: getValue("stream-rank"),
+    destinationMac: "",
+    sourceMac: "",
+    vlanId: Number(getValue("stream-vlan-id") || 0),
+    intervalNs: Number(getValue("stream-interval-ns") || 0),
+    maxFrameSize: Number(getValue("stream-max-frame-size") || 0),
+    maxFramesPerInterval: Number(getValue("stream-max-frames-per-interval") || 0),
+    maxLatencyNs: Number(getValue("stream-max-latency-ns") || 0),
+    maxJitterNs: Number(getValue("stream-max-jitter-ns") || 0),
+    minTransmitOffsetNs: Number(getValue("stream-min-transmit-offset-ns") || 0),
+    maxTransmitOffsetNs: Number(getValue("stream-max-transmit-offset-ns") || 0),
+    numSeamlessTrees: Number(getValue("stream-num-seamless-trees") || 0),
+  };
+}
+
+function selectStreamItem(item) {
+
+  if (!item) {
+    clearStreamDetails();
+    return;
+  }
+
+  const stream = {
+
+    id: item.dataset.id || "",
+
+    name: item.dataset.name || "",
+
+    source: item.dataset.source || "",
+
+    listeners: item.dataset.listeners || "",
+
+    characteristics: item.dataset.characteristics || "",
+
+    talkerNodeId: item.dataset.talkerNodeId || "",
+
+    listenerNodeIds:
+      (item.dataset.listenerNodeIds || "")
+        .split("|")
+        .filter(Boolean),
+
+    trafficType: item.dataset.trafficType || "",
+
+    rank: item.dataset.rank || "",
+
+    destinationMac: item.dataset.destinationMac || "",
+
+    sourceMac: item.dataset.sourceMac || "",
+
+    vlanId: item.dataset.vlanId || "",
+
+    intervalNs: item.dataset.intervalNs || "",
+
+    maxFrameSize: item.dataset.maxFrameSize || "",
+
+    maxFramesPerInterval:
+      item.dataset.maxFramesPerInterval || "",
+
+    maxLatencyNs:
+      item.dataset.maxLatencyNs || "",
+
+    maxJitterNs:
+      item.dataset.maxJitterNs || "",
+
+    minTransmitOffsetNs:
+      item.dataset.minTransmitOffsetNs || "",
+
+    maxTransmitOffsetNs:
+      item.dataset.maxTransmitOffsetNs || "",
+
+    numSeamlessTrees:
+      item.dataset.numSeamlessTrees || "",
+
+  };
+
+  // Selecting a stream ONLY updates the Details card.
+  // It must never populate the Create Stream form.
+  setStreamDetailsFromStream(stream);
+}
+
+function markSelectedStream(streamID) {
+  const list = document.getElementById("stream-list");
+  if (!list) {
+    return;
+  }
+
+  Array.from(list.querySelectorAll("li[data-id]")).forEach((item) => {
+    item.classList.toggle("selected", item.dataset.id === streamID);
+  });
+}
+
+function populateStreamNodeOptions(nodes) {
+  const talkerSelect = document.getElementById("stream-talker-select");
+  const listenerMultiSelect = document.getElementById("stream-listeners-select");
+
+  if (!talkerSelect || !listenerMultiSelect) {
+    return;
+  }
+
+  const currentTalker = talkerSelect.value;
+
+  const currentListeners = Array.from(
+    listenerMultiSelect.querySelectorAll(
+      '.multi-select-option input[type="checkbox"]:checked'
+    )
+  ).map((checkbox) => checkbox.value);
+
+  const nodeNames = Array.isArray(nodes)
+    ? Array.from(
+        new Set(
+          nodes
+            .map((node) =>
+              String(node && (node.name || node.id || "")).trim()
+            )
+            .filter((name) => name !== "")
+        )
+      )
+    : [];
+
+  /* -----------------------------------------------------
+     Talker
+     ----------------------------------------------------- */
+
+  talkerSelect.innerHTML = "";
+
+  const talkerPlaceholder = document.createElement("option");
+  talkerPlaceholder.value = "";
+  talkerPlaceholder.textContent = "Select Talker";
+  talkerPlaceholder.disabled = true;
+  talkerPlaceholder.selected = true;
+
+  talkerSelect.appendChild(talkerPlaceholder);
+
+  nodeNames.forEach((name) => {
+    const option = document.createElement("option");
+
+    option.value = name;
+    option.textContent = name;
+
+    talkerSelect.appendChild(option);
+  });
+
+  if (currentTalker && nodeNames.includes(currentTalker)) {
+    talkerSelect.value = currentTalker;
+  }
+
+
+  /* -----------------------------------------------------
+     Listeners
+     ----------------------------------------------------- */
+
+  const optionsContainer =
+    listenerMultiSelect.querySelector(".multi-select-options");
+
+  const toggleText =
+    listenerMultiSelect.querySelector(".multi-select-toggle span");
+
+  if (!optionsContainer) {
+    return;
+  }
+
+  optionsContainer.innerHTML = "";
+
+  nodeNames.forEach((name) => {
+    const label = document.createElement("label");
+
+    label.className = "multi-select-option";
+
+    const checkbox = document.createElement("input");
+
+    checkbox.type = "checkbox";
+    checkbox.value = name;
+
+    if (currentListeners.includes(name)) {
+      checkbox.checked = true;
+    }
+
+    const text = document.createElement("span");
+
+    text.textContent = name;
+
+    label.appendChild(checkbox);
+    label.appendChild(text);
+
+    optionsContainer.appendChild(label);
+
+    checkbox.addEventListener("change", () => {
+      updateStreamListenerLabel(listenerMultiSelect);
+    });
+  });
+
+  updateStreamListenerLabel(listenerMultiSelect);
+}
+
+function updateStreamListenerLabel(multiSelect) {
+  const toggleText =
+    multiSelect.querySelector(".multi-select-toggle span");
+
+  const selected = Array.from(
+    multiSelect.querySelectorAll(
+      '.multi-select-option input[type="checkbox"]:checked'
+    )
+  );
+
+  if (!toggleText) {
+    return;
+  }
+
+  if (selected.length === 0) {
+    toggleText.textContent = "Select Listeners";
+  } else if (selected.length === 1) {
+    toggleText.textContent = selected[0].value;
+  } else {
+    toggleText.textContent = `${selected.length} listeners selected`;
+  }
+}
+
+function resetStreamForm() {
+  // Text / numeric inputs
+  setInputValue("stream-name-input", "");
+  setInputValue("stream-vlan-id", "");
+  setInputValue("stream-interval-ns", "");
+  setInputValue("stream-max-frame-size", "");
+  setInputValue("stream-max-frames-per-interval", "");
+  setInputValue("stream-max-latency-ns", "");
+  setInputValue("stream-max-jitter-ns", "");
+  setInputValue("stream-min-transmit-offset-ns", "");
+  setInputValue("stream-max-transmit-offset-ns", "");
+  setInputValue("stream-num-seamless-trees", "");
+
+  // Selects
+  const trafficType = document.getElementById("stream-traffic-type");
+  if (trafficType) {
+    trafficType.selectedIndex = -1;
+  }
+
+  const rank = document.getElementById("stream-rank");
+  if (rank) {
+    rank.selectedIndex = -1;
+  }
+
+  const talkerSelect =
+    document.getElementById("stream-talker-select");
+
+  if (talkerSelect) {
+    talkerSelect.value = "";
+  }
+
+  // Listener checkboxes
+  const listenerMultiSelect =
+    document.getElementById("stream-listeners-select");
+
+  if (listenerMultiSelect) {
+    const checkboxes =
+      listenerMultiSelect.querySelectorAll(
+        '.multi-select-option input[type="checkbox"]'
+      );
+
+    checkboxes.forEach((checkbox) => {
+      checkbox.checked = false;
+    });
+
+    updateStreamListenerLabel(listenerMultiSelect);
+
+    listenerMultiSelect.classList.remove("open");
+  }
+
+  // Details panel
+  setText("stream-name", "-");
+  setText("stream-source", "-");
+  setText("stream-listeners", "-");
+  setText("stream-characteristics", "-");
+}
+
+function selectStreamItem(item) {
+
+  if (!item) {
+    clearStreamDetails();
+    return;
+  }
+
+  const stream = {
+    id: item.dataset.id || "",
+    name: item.dataset.name || "",
+    source: item.dataset.source || "",
+    listeners: item.dataset.listeners || "",
+    characteristics: item.dataset.characteristics || "",
+
+    talkerNodeId:
+      item.dataset.talkerNodeId || "",
+
+    listenerNodeIds:
+      (item.dataset.listenerNodeIds || "")
+        .split("|")
+        .filter(Boolean),
+
+    trafficType:
+      item.dataset.trafficType || "",
+
+    rank:
+      item.dataset.rank || "",
+
+    destinationMac:
+      item.dataset.destinationMac || "",
+
+    sourceMac:
+      item.dataset.sourceMac || "",
+
+    vlanId:
+      item.dataset.vlanId || "",
+
+    intervalNs:
+      item.dataset.intervalNs || "",
+
+    maxFrameSize:
+      item.dataset.maxFrameSize || "",
+
+    maxFramesPerInterval:
+      item.dataset.maxFramesPerInterval || "",
+
+    maxLatencyNs:
+      item.dataset.maxLatencyNs || "",
+
+    maxJitterNs:
+      item.dataset.maxJitterNs || "",
+
+    minTransmitOffsetNs:
+      item.dataset.minTransmitOffsetNs || "",
+
+    maxTransmitOffsetNs:
+      item.dataset.maxTransmitOffsetNs || "",
+
+    numSeamlessTrees:
+      item.dataset.numSeamlessTrees || "",
+  };
+
+  // Remember which stream is selected.
+  state.selectedStreamID = stream.id;
+
+  // Update ONLY the Details card.
+  setText("stream-name", stream.name || "-");
+  setText(
+    "stream-source",
+    stream.source || stream.talkerNodeId || "-"
+  );
+  setText(
+    "stream-listeners",
+    stream.listeners ||
+      (stream.listenerNodeIds.length
+        ? stream.listenerNodeIds.join(", ")
+        : "-")
+  );
+  setText(
+    "stream-characteristics",
+    stream.characteristics || "-"
+  );
+
+  // Highlight the selected stream.
+  markSelectedStream(stream.id);
+}
+
+function setStreamDetailsFromStream(stream) {
+  if (!stream) {
+    clearStreamDetails();
+    return;
+  }
+
+  state.selectedStreamID = stream.id || "";
+  setText("stream-name", stream.name || "-");
+  setText("stream-source", stream.source || stream.talkerNodeId || "-");
+  setText("stream-listeners", stream.listeners || "-");
+  setText("stream-characteristics", stream.characteristics || "-");
+  markSelectedStream(stream.id || "");
+}
+
+function selectStreamItem(item) {
+  if (!item) {
+    clearStreamDetails();
+    return;
+  }
+
+  const stream = {
+    id: item.dataset.id || "",
+    name: item.dataset.name || "",
+    source: item.dataset.source || "",
+    listeners: item.dataset.listeners || "",
+    characteristics: item.dataset.characteristics || "",
+
+    talkerNodeId: item.dataset.talkerNodeId || "",
+
+    listenerNodeIds: (item.dataset.listenerNodeIds || "")
+      .split("|")
+      .filter(Boolean),
+
+    trafficType: item.dataset.trafficType || "",
+    rank: item.dataset.rank || "",
+    destinationMac: item.dataset.destinationMac || "",
+    sourceMac: item.dataset.sourceMac || "",
+
+    vlanId: item.dataset.vlanId || "",
+    intervalNs: item.dataset.intervalNs || "",
+    maxFrameSize: item.dataset.maxFrameSize || "",
+    maxFramesPerInterval: item.dataset.maxFramesPerInterval || "",
+    maxLatencyNs: item.dataset.maxLatencyNs || "",
+    maxJitterNs: item.dataset.maxJitterNs || "",
+    minTransmitOffsetNs: item.dataset.minTransmitOffsetNs || "",
+    maxTransmitOffsetNs: item.dataset.maxTransmitOffsetNs || "",
+    numSeamlessTrees: item.dataset.numSeamlessTrees || "",
+  };
+
+  // Selecting an existing stream ONLY updates the details card.
+  // It must NOT populate the Create Stream form.
+  setStreamDetailsFromStream(stream);
+}
+
+function markSelectedStream(streamID) {
+  const list = document.getElementById("stream-list");
+  if (!list) {
+    return;
+  }
+
+  Array.from(list.querySelectorAll("li[data-id]")).forEach((item) => {
+    item.classList.toggle("selected", item.dataset.id === streamID);
+  });
 }
 
 async function gatherPayload(action) {
@@ -1925,7 +2564,9 @@ async function gatherPayload(action) {
     id: state.selectedLinkID
   };
     case "addStream":
-      return { query: getValue("stream-search") };
+      return buildStreamPayload(false);
+    case "updateStream":
+      return buildStreamPayload(true);
     case "removeStream":
       return { id: state.selectedStreamID };
     case "uploadModel":
@@ -1970,6 +2611,7 @@ async function callAction(action, payload) {
     updateLink: { method: "PATCH", path: `/api/v1/links/${payload.id || "selected"}` },
     deleteLink: { method: "DELETE", path: `/api/v1/links/${payload.id || "selected"}` },
     addStream: { method: "POST", path: "/api/v1/streams" },
+    updateStream: { method: "PATCH", path: `/api/v1/streams/${payload.id || "selected"}` },
     removeStream: { method: "DELETE", path: `/api/v1/streams/${payload.id || "selected"}` },
   };
 
@@ -1982,6 +2624,7 @@ async function callAction(action, payload) {
     ((action === "editModel" || action === "deleteModel") && !state.selectedModelID) ||
     ((action === "editNode" || action === "deleteNode") && !state.selectedNodeID) ||
     ((action === "updateLink" || action === "deleteLink") && !state.selectedLinkID) ||
+    (action === "updateStream" && !state.selectedStreamID) ||
     (action === "removeStream" && !state.selectedStreamID);
 
   if (missingSelection) {
@@ -2051,3 +2694,4 @@ function escapeHtml(value) {
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#39;");
 }
+

@@ -117,7 +117,7 @@ export function Sidebar({
   );
 }
 
-export function TopBar({ title, actions }: { title: string; actions?: ReactNode }) {
+export function TopBar({ title, actions, hideSearch = false }: { title: string; actions?: ReactNode; hideSearch?: boolean }) {
   return (
     <header className="topbar">
       <div>
@@ -125,10 +125,12 @@ export function TopBar({ title, actions }: { title: string; actions?: ReactNode 
         <h2>{title}</h2>
       </div>
       <div className="topbar-actions">
-        <label className="search-box">
-          <span>Search</span>
-          <input type="text" placeholder="Find node, stream, model" />
-        </label>
+        {hideSearch ? null : (
+          <label className="search-box">
+            <span>Search</span>
+            <input type="text" placeholder="Find node, stream, model" />
+          </label>
+        )}
         {actions ?? (
           <>
             <button className="ghost-button" type="button">

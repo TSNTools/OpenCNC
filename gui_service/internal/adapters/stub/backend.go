@@ -78,7 +78,10 @@ func (u *uploadYang) UnmarshalJSON(data []byte) error {
 }
 
 type Backend struct {
-	state *MonitoringState
+	state     *MonitoringState
+	mu        sync.RWMutex
+	streams   []domain.Stream
+	streamSeq int
 }
 
 var activityLog = struct {
@@ -90,8 +93,86 @@ const maxActivityLogEntries = 100
 
 func NewBackend(state *MonitoringState) *Backend {
 	return &Backend{
-		state: state,
+		state:     state,
+		streams:   defaultStreams(),
+		streamSeq: 5,
 	}
+}
+
+func defaultStreams() []domain.Stream {
+	return []domain.Stream{
+		newStream("str-1", "Str 1", "Nd1", []string{"Nd2", "Nd3"}, "TRAFFIC_TYPE_ISOCHRONOUS", "RANK_A", 10, 1000000, 1500, 1, 5000, 1000, 0, 200, 2),
+		newStream("str-2", "Str 2", "Nd2", []string{"Nd3"}, "TRAFFIC_TYPE_SYNCHRONOUS", "RANK_A", 12, 500000, 1522, 1, 3500, 500, 0, 120, 1),
+		newStream("str-3", "Str 3", "Nd3", []string{"Nd1"}, "TRAFFIC_TYPE_MANAGEMENT", "RANK_B", 14, 2000000, 1500, 1, 8000, 3000, 50, 250, 1),
+		newStream("str-4", "Str 4", "Nd4", []string{"Nd1", "Nd2"}, "TRAFFIC_TYPE_BEST_EFFORT_HIGH", "RANK_B", 16, 1000000, 1518, 1, 10000, 1500, 0, 500, 1),
+	}
+}
+
+func newStream(id, name, source string, listeners []string, trafficType, rank string, vlanID, intervalNs, maxFrameSize, maxFramesPerInterval, maxLatencyNs, maxJitterNs, minTransmitOffsetNs, maxTransmitOffsetNs, numSeamlessTrees int) domain.Stream {
+	stream := domain.Stream{
+		ID:                   id,
+		Name:                 name,
+		TalkerNodeID:         source,
+		ListenerNodeIDs:      append([]string(nil), listeners...),
+		TrafficType:          trafficType,
+		Rank:                 rank,
+		VLANID:               vlanID,
+		IntervalNs:           intervalNs,
+		MaxFrameSize:         maxFrameSize,
+		MaxFramesPerInterval: maxFramesPerInterval,
+		MaxLatencyNs:         maxLatencyNs,
+		MaxJitterNs:          maxJitterNs,
+		MinTransmitOffsetNs:  minTransmitOffsetNs,
+		MaxTransmitOffsetNs:  maxTransmitOffsetNs,
+		NumSeamlessTrees:     numSeamlessTrees,
+	}
+	stream.Source = source
+	stream.Listeners = strings.Join(stream.ListenerNodeIDs, ", ")
+	stream.Characteristics = streamCharacteristics(stream)
+	return stream
+}
+
+func streamTrafficTypeLabel(value string) string {
+	cleaned := strings.ReplaceAll(strings.TrimPrefix(value, "TRAFFIC_TYPE_"), "_", " ")
+	words := strings.Fields(strings.ToLower(cleaned))
+	for index, word := range words {
+		if len(word) == 0 {
+			continue
+		}
+		words[index] = strings.ToUpper(word[:1]) + word[1:]
+	}
+	return strings.Join(words, " ")
+}
+
+func streamCharacteristics(stream domain.Stream) string {
+	parts := []string{}
+	if stream.TrafficType != "" {
+		parts = append(parts, streamTrafficTypeLabel(stream.TrafficType))
+	}
+	if stream.IntervalNs > 0 {
+		parts = append(parts, fmt.Sprintf("Interval %d ns", stream.IntervalNs))
+	}
+	if stream.MaxLatencyNs > 0 {
+		parts = append(parts, fmt.Sprintf("Deadline %d ns", stream.MaxLatencyNs))
+	}
+	if stream.VLANID > 0 {
+		parts = append(parts, fmt.Sprintf("VLAN %d", stream.VLANID))
+	}
+	if len(parts) == 0 {
+		return "periodic\nDeadline..."
+	}
+	return strings.Join(parts, "\n")
+}
+
+func (b *Backend) TrafficSummary(_ context.Context) (domain.DashboardData, error) {
+	return domain.DashboardData{
+		PacketsForwarded: "12,458",
+		PacketDrops:      "37",
+		ActiveStreams:    "8",
+		TopTalkers: []string{
+			"",
+		},
+	}, nil
 }
 
 func (b *Backend) GetDashboard(r context.Context) (domain.DashboardData, error) {
@@ -104,80 +185,78 @@ func (b *Backend) GetDashboard(r context.Context) (domain.DashboardData, error) 
 		return domain.DashboardData{}, err
 	}
 
-	return domain.DashboardData{
-		PacketsForwarded: "12,458",
-		PacketDrops:      "37",
-		ActiveStreams:    "8",
-		TopTalkers: []string{
-			"",
-		},
+	dashboardData, err := b.TrafficSummary(r)
+	if err != nil {
+		return domain.DashboardData{}, err
+	}
+	dashboardData.NetworkModel = domain.NetworkModel{
+		Nodes: nodes,
+		Links: links,
+	}
+	/*
 		NetworkModel: domain.NetworkModel{
-			Nodes: nodes,
-			Links: links,
-		},
-		/*
-			NetworkModel: domain.NetworkModel{
-					Nodes: []domain.Node{
-						{
-							ID:      "node-001",
-							Name:    "CNC Controller",
-							Type:    "controller",
-							State:   "online",
-							PortIds: []string{"4"},
-							Links:   "3",
-						},
-						{
-							ID:      "node-002",
-							Name:    "Machine 01",
-							Type:    "cnc-machine",
-							State:   "online",
-							PortIds: []string{"2"},
-							Links:   "2",
-						},
-						{
-							ID:      "node-003",
-							Name:    "Operator Station",
-							Type:    "workstation",
-							State:   "online",
-							PortIds: []string{"1"},
-							Links:   "1",
-						},
-						{
-							ID:      "node-004",
-							Name:    "PLC Controller",
-							Type:    "plc",
-							State:   "online",
-							PortIds: []string{"8"},
-							Links:   "1",
-						},
+				Nodes: []domain.Node{
+					{
+						ID:      "node-001",
+						Name:    "CNC Controller",
+						Type:    "controller",
+						State:   "online",
+						PortIds: []string{"4"},
+						Links:   "3",
 					},
+					{
+						ID:      "node-002",
+						Name:    "Machine 01",
+						Type:    "cnc-machine",
+						State:   "online",
+						PortIds: []string{"2"},
+						Links:   "2",
+					},
+					{
+						ID:      "node-003",
+						Name:    "Operator Station",
+						Type:    "workstation",
+						State:   "online",
+						PortIds: []string{"1"},
+						Links:   "1",
+					},
+					{
+						ID:      "node-004",
+						Name:    "PLC Controller",
+						Type:    "plc",
+						State:   "online",
+						PortIds: []string{"8"},
+						Links:   "1",
+					},
+				},
 
-					Links: []domain.Link{
-						{
-							ID:          "link-001",
-							Source:      "node-001",
-							Destination: "node-002",
-							State:       "active",
-							Bandwidth:   "100 Mbps",
-						},
-						{
-							ID:          "link-002",
-							Source:      "node-001",
-							Destination: "node-003",
-							State:       "active",
-							Bandwidth:   "1 Gbps",
-						},
-						{
-							ID:          "link-003",
-							Source:      "node-001",
-							Destination: "node-004",
-							State:       "active",
-							Bandwidth:   "1 Gbps",
-						},
+				Links: []domain.Link{
+					{
+						ID:          "link-001",
+						Source:      "node-001",
+						Destination: "node-002",
+						State:       "active",
+						Bandwidth:   "100 Mbps",
 					},
-			},
-		*/
-	}, nil
+					{
+						ID:          "link-002",
+						Source:      "node-001",
+						Destination: "node-003",
+						State:       "active",
+						Bandwidth:   "1 Gbps",
+					},
+					{
+						ID:          "link-003",
+						Source:      "node-001",
+						Destination: "node-004",
+						State:       "active",
+						Bandwidth:   "1 Gbps",
+					},
+				},
+		},
+	*/
+
+	return dashboardData, nil
 }
 
 func (b *Backend) GetDeviceModels(_ context.Context) ([]domain.DeviceModel, error) {
@@ -454,6 +533,16 @@ func (b *Backend) GetNodes(_ context.Context) ([]domain.Node, error) {
 		for _, port := range n.GetPorts() {
 			domainNodes[i].PortIds = append(domainNodes[i].PortIds, port.GetId())
 		}
+
+		if n.DeviceInfo != nil {
+			domainNodes[i].DeviceModel = n.DeviceInfo.DeviceModel
+		}
+
+		if n.ManagementInfo != nil {
+			domainNodes[i].ManagementIp = n.ManagementInfo.IpAddress
+			domainNodes[i].ManagementProtocol = n.ManagementInfo.Protocol.String()
+			domainNodes[i].ManagementPort = n.ManagementInfo.ManagementPort
+		}
 	}
 	return domainNodes, nil
 }
@@ -476,7 +565,12 @@ func (b *Backend) GetLinks(_ context.Context) ([]domain.Link, error) {
 }
 
 func (b *Backend) GetStreams(_ context.Context) ([]domain.Stream, error) {
-	return []domain.Stream{}, nil
+	b.mu.RLock()
+	defer b.mu.RUnlock()
+
+	streams := make([]domain.Stream, len(b.streams))
+	copy(streams, b.streams)
+	return streams, nil
 }
 
 func (b *Backend) GetLogs(_ context.Context, query domain.LogsQuery) ([]domain.EventLog, error) {
@@ -838,8 +932,26 @@ func parseNodeRole(raw string) (topology.NodeRole, bool) {
 	}
 }
 
-func (b *Backend) EditNode(_ context.Context, nodeID, name, nodeType, state, ports, links string) (domain.OperationResult, error) {
-	if strings.TrimSpace(nodeID) == "" {
+func parseManagementProtocol(raw string) (topology.ManagementProtocol, bool) {
+	normalized := strings.ToUpper(strings.TrimSpace(raw))
+	normalized = strings.ReplaceAll(normalized, "-", "_")
+	normalized = strings.ReplaceAll(normalized, " ", "_")
+
+	switch normalized {
+	case "", "UNRECOGNIZED":
+		return topology.ManagementProtocol_UNRECOGNIZED, true
+	case "NETCONF":
+		return topology.ManagementProtocol_NETCONF, true
+	case "SNMP":
+		return topology.ManagementProtocol_SNMP, true
+	default:
+		return topology.ManagementProtocol_UNRECOGNIZED, false
+	}
+}
+
+func (b *Backend) EditNode(_ context.Context, node domain.Node) (domain.OperationResult, error) {
+
+	if strings.TrimSpace(node.ID) == "" {
 		b.recordEvent("warning", "editNode", "nodes", "Edit requested without selecting a node", "")
 		return domain.OperationResult{
 			Success: false,
@@ -849,49 +961,100 @@ func (b *Backend) EditNode(_ context.Context, nodeID, name, nodeType, state, por
 		}, nil
 	}
 
-	current, _, err := storewrapper.GetNode(nodeID)
+	current, _, err := storewrapper.GetNode(node.ID)
 	if err != nil {
 		b.recordEvent("error", "editNode", "nodes",
-			fmt.Sprintf("Node %s not found", nodeID), nodeID)
+			fmt.Sprintf("Node %s not found", node.ID), node.ID)
 
 		return domain.OperationResult{
 			Success: false,
 			Name:    "editNode",
-			Message: fmt.Sprintf("node %s not found: %v", nodeID, err),
-			Data:    map[string]string{"nodeId": nodeID},
+			Message: fmt.Sprintf("node %s not found: %v", node.ID, err),
+			Data:    map[string]string{"nodeId": node.ID},
 		}, nil
 	}
 
 	previousName := current.GetName()
-	name = strings.TrimSpace(name)
-	nodeType = strings.TrimSpace(nodeType)
+	node.ID = strings.TrimSpace(node.ID)
+	node.Type = strings.TrimSpace(node.Type)
 
-	if name != "" {
-		current.Name = name
+	if node.ID != "" {
+		current.Name = node.ID
 	}
 
-	if nodeType != "" {
-		parsedRole, ok := parseNodeRole(nodeType)
+	if node.Type != "" {
+		parsedRole, ok := parseNodeRole(node.Type)
 		if !ok {
-			b.recordEvent("warning", "editNode", "nodes", fmt.Sprintf("Invalid node type for %s: %s", nodeID, nodeType), nodeID)
+			b.recordEvent("warning", "editNode", "nodes", fmt.Sprintf("Invalid node type for %s: %s", node.ID, node.Type), node.ID)
 			return domain.OperationResult{
 				Success: false,
 				Name:    "editNode",
-				Message: fmt.Sprintf("invalid node type: %s", nodeType),
-				Data:    map[string]string{"nodeId": nodeID},
+				Message: fmt.Sprintf("invalid node type: %s", node.Type),
+				Data:    map[string]string{"nodeId": node.ID},
 			}, nil
 		}
 		current.Type = parsedRole
 	}
 
-	if previousName != current.GetName() {
-		if err := storewrapper.DeleteNode(nodeID); err != nil {
-			b.recordEvent("error", "editNode", "nodes", fmt.Sprintf("Failed renaming node %s", nodeID), nodeID)
+	if current.DeviceInfo == nil {
+		current.DeviceInfo = &topology.DeviceInfo{}
+	}
+
+	// Device model
+	if node.DeviceModel != "" {
+		current.DeviceInfo.DeviceModel = node.DeviceModel
+	}
+
+	if current.ManagementInfo == nil {
+		current.ManagementInfo = &topology.ManagementInfo{}
+	}
+
+	// Management information
+	if node.ManagementIp != "" {
+		current.ManagementInfo.IpAddress = node.ManagementIp
+	}
+
+	if node.ManagementPort != 0 {
+		current.ManagementInfo.ManagementPort = node.ManagementPort
+	}
+
+	if node.ManagementProtocol != "" {
+		parsedProtocol, ok := parseManagementProtocol(node.ManagementProtocol)
+		if !ok {
+			b.recordEvent(
+				"warning",
+				"editNode",
+				"nodes",
+				fmt.Sprintf(
+					"Invalid management protocol for %s: %s",
+					node.ID,
+					node.ManagementProtocol,
+				),
+				node.ID,
+			)
+
 			return domain.OperationResult{
 				Success: false,
 				Name:    "editNode",
-				Message: fmt.Sprintf("failed to rename node %s: %v", nodeID, err),
-				Data:    map[string]string{"nodeId": nodeID},
+				Message: fmt.Sprintf(
+					"invalid management protocol: %s",
+					node.ManagementProtocol,
+				),
+				Data: map[string]string{"nodeId": node.ID},
+			}, nil
+		}
+
+		current.ManagementInfo.Protocol = parsedProtocol
+	}
+
+	if previousName != current.GetName() {
+		if err := storewrapper.DeleteNode(node.ID); err != nil {
+			b.recordEvent("error", "editNode", "nodes", fmt.Sprintf("Failed renaming node %s", node.ID), node.ID)
+			return domain.OperationResult{
+				Success: false,
+				Name:    "editNode",
+				Message: fmt.Sprintf("failed to rename node %s: %v", node.ID, err),
+				Data:    map[string]string{"nodeId": node.ID},
 			}, nil
 		}
 
@@ -928,9 +1091,8 @@ func (b *Backend) EditNode(_ context.Context, nodeID, name, nodeType, state, por
 			"nodeId": current.GetName(),
 			"name":   current.GetName(),
 			"type":   current.GetType().String(),
-			"state":  state,
-			"ports":  ports,
-			"links":  links,
+			"ports":  strings.Join(node.PortIds, ","),
+			"links":  node.Links,
 		},
 	}, nil
 }
@@ -1256,12 +1418,93 @@ func (b *Backend) DeleteLink(_ context.Context, linkID string) (domain.Operation
 	}, nil
 }
 
-func (b *Backend) AddStream(_ context.Context, query string) (domain.OperationResult, error) {
-	return b.result("addStream", map[string]string{"query": query, "streamId": "stream-stub-001"}), nil
+func (b *Backend) AddStream(_ context.Context, stream domain.Stream) (domain.OperationResult, error) {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+
+	stream = b.prepareStream(stream)
+	if stream.ID == "" {
+		stream.ID = fmt.Sprintf("stream-%03d", b.streamSeq)
+		b.streamSeq++
+	}
+
+	b.streams = append(b.streams, stream)
+	b.recordEvent("info", "addStream", "streams", fmt.Sprintf("Created stream %s", stream.Name), stream.ID)
+	return domain.OperationResult{
+		Success: true,
+		Name:    "addStream",
+		Message: fmt.Sprintf("stream %s created", stream.ID),
+		Data: map[string]string{
+			"streamId": stream.ID,
+			"name":     stream.Name,
+		},
+	}, nil
+}
+
+func (b *Backend) UpdateStream(_ context.Context, streamID string, stream domain.Stream) (domain.OperationResult, error) {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+
+	for index := range b.streams {
+		if b.streams[index].ID != streamID {
+			continue
+		}
+
+		stream = b.prepareStream(stream)
+		stream.ID = streamID
+		b.streams[index] = stream
+		b.recordEvent("info", "updateStream", "streams", fmt.Sprintf("Updated stream %s", stream.Name), streamID)
+		return domain.OperationResult{
+			Success: true,
+			Name:    "updateStream",
+			Message: fmt.Sprintf("stream %s updated", streamID),
+			Data: map[string]string{
+				"streamId": streamID,
+				"name":     stream.Name,
+			},
+		}, nil
+	}
+
+	return domain.OperationResult{
+		Success: false,
+		Name:    "updateStream",
+		Message: fmt.Sprintf("stream %s not found", streamID),
+		Data: map[string]string{
+			"streamId": streamID,
+		},
+	}, nil
 }
 
 func (b *Backend) RemoveStream(_ context.Context, streamID string) (domain.OperationResult, error) {
-	return b.result("removeStream", map[string]string{"streamId": streamID}), nil
+	b.mu.Lock()
+	defer b.mu.Unlock()
+
+	for index := range b.streams {
+		if b.streams[index].ID != streamID {
+			continue
+		}
+
+		removed := b.streams[index]
+		b.streams = append(b.streams[:index], b.streams[index+1:]...)
+		b.recordEvent("info", "removeStream", "streams", fmt.Sprintf("Removed stream %s", removed.Name), streamID)
+		return domain.OperationResult{
+			Success: true,
+			Name:    "removeStream",
+			Message: fmt.Sprintf("stream %s removed", streamID),
+			Data: map[string]string{
+				"streamId": streamID,
+			},
+		}, nil
+	}
+
+	return domain.OperationResult{
+		Success: false,
+		Name:    "removeStream",
+		Message: fmt.Sprintf("stream %s not found", streamID),
+		Data: map[string]string{
+			"streamId": streamID,
+		},
+	}, nil
 }
 
 func (b *Backend) FilterLogs(_ context.Context, severity string) (domain.OperationResult, error) {
@@ -1280,6 +1523,30 @@ func (b *Backend) result(name string, data map[string]string) domain.OperationRe
 		Message: fmt.Sprintf("%s executed (stub)", name),
 		Data:    data,
 	}
+}
+
+func (b *Backend) prepareStream(stream domain.Stream) domain.Stream {
+	stream.Name = strings.TrimSpace(stream.Name)
+	stream.TalkerNodeID = strings.TrimSpace(stream.TalkerNodeID)
+	stream.Source = stream.TalkerNodeID
+
+	cleanListeners := make([]string, 0, len(stream.ListenerNodeIDs))
+	for _, listener := range stream.ListenerNodeIDs {
+		trimmed := strings.TrimSpace(listener)
+		if trimmed != "" {
+			cleanListeners = append(cleanListeners, trimmed)
+		}
+	}
+	stream.ListenerNodeIDs = cleanListeners
+	stream.Listeners = strings.Join(cleanListeners, ", ")
+	stream.Characteristics = strings.TrimSpace(stream.Characteristics)
+	if stream.Characteristics == "" {
+		stream.Characteristics = streamCharacteristics(stream)
+	}
+	if stream.Name == "" {
+		stream.Name = stream.ID
+	}
+	return stream
 }
 
 func (b *Backend) recordEvent(severity, eventType, topic, message, correlationID string) {

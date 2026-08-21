@@ -4,6 +4,7 @@
   --sidebar-subitem-bg: rgba(255, 255, 255, 0.05);
   --page-bg: #f8f8f8;
   --line: #bcc3cf;
+  --divider: #bcc3cf;
   --text: #1d1e22;
   --danger: #9e2832;
 }
@@ -24,6 +25,7 @@ input,
 select {
   font: inherit;
 }
+
 
 /* =========================================================
    APP LAYOUT
@@ -303,15 +305,20 @@ select {
   gap: 0;
 }
 
-.dashboard-grid {
-  grid-template-columns: 1fr 340px;
-  grid-template-areas:
-    "network traffic"
-    "events traffic";
-}
+
+/*
+   IMPORTANT LAYOUT RULE
+
+   All two-sided screens use the same basic structure:
+
+   LEFT SIDE | RIGHT SIDE
+
+   The divider belongs to the left side. This makes it easy
+   to turn the divider into a draggable resize handle later.
+*/
 
 .operation-grid {
-  grid-template-columns: 1fr 420px;
+  grid-template-columns: minmax(0, 1fr) 420px;
 }
 
 .topology-grid {
@@ -376,6 +383,42 @@ select {
    DASHBOARD
    ========================================================= */
 
+.dashboard-grid {
+  grid-template-columns: minmax(0, 1fr) 340px;
+  grid-template-areas:
+    "network traffic"
+    "events traffic";
+
+  /*
+     The divider is placed between the complete left side
+     and the Traffic Summary side.
+  */
+  position: relative;
+}
+
+.dashboard-grid::after {
+  content: "";
+  position: absolute;
+
+  /*
+     The divider starts at the top of the dashboard content
+     and continues to the bottom.
+  */
+  top: 0;
+  bottom: 0;
+
+  /*
+     340px is the right-side column width.
+     The divider sits immediately before that column.
+  */
+  right: 340px;
+
+  width: 1px;
+  background: var(--divider);
+
+  pointer-events: none;
+}
+
 .network-card {
   grid-area: network;
   margin-right: 22px;
@@ -386,6 +429,7 @@ select {
   grid-area: traffic;
   min-height: 628px;
   padding-bottom: 12px;
+  margin-left: 22px;
 }
 
 .recent-events-card {
@@ -480,10 +524,13 @@ select {
   margin-top: 8px;
 }
 
+
 /* Match typography across Device Models and Topology screens */
+
 #screen-device-models .card h3,
 #screen-topology-nodes .card h3,
-#screen-topology-links .card h3 {
+#screen-topology-links .card h3,
+#screen-streams .card h3 {
   font-size: 26px;
   line-height: 1.2;
 }
@@ -498,7 +545,8 @@ select {
 
 #screen-device-models .selectable-list li,
 #screen-topology-nodes .selectable-list li,
-#screen-topology-links .selectable-list li {
+#screen-topology-links .selectable-list li,
+#screen-streams .selectable-list li {
   padding: 8px 10px;
   font-size: 18px;
   line-height: 1.35;
@@ -506,13 +554,15 @@ select {
 
 #screen-device-models .details-card dt,
 #screen-topology-nodes .details-card dt,
-#screen-topology-links .details-card dt {
+#screen-topology-links .details-card dt,
+#screen-streams .details-card dt {
   font-size: 16px;
 }
 
 #screen-device-models .details-card dd,
 #screen-topology-nodes .details-card dd,
-#screen-topology-links .details-card dd {
+#screen-topology-links .details-card dd,
+#screen-streams .details-card dd {
   font-size: 15px;
   line-height: 1.4;
   min-height: 20px;
@@ -663,7 +713,7 @@ select {
    ========================================================= */
 
 .left-column {
-  border-right: 1px solid var(--line);
+  border-right: 1px solid var(--divider);
   padding: 0 22px 0 0;
 }
 
@@ -718,6 +768,113 @@ select {
   justify-content: flex-start;
 }
 
+
+/* =====================================================
+   STREAMS LAYOUT
+   ===================================================== */
+
+.streams-workspace-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(220px, 1fr);
+  gap: 12px;
+  min-width: 0;
+}
+
+.stream-create-card {
+  min-width: 0;
+}
+
+.create-form-stack input,
+.create-form-stack select {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 8px 10px;
+  background: #fff;
+  font-size: 16px;
+}
+
+/* =====================================================
+   STREAM LISTENER MULTI-SELECT
+   ===================================================== */
+
+.multi-select {
+  position: relative;
+  width: 100%;
+}
+
+.multi-select-toggle {
+  width: 100%;
+  min-height: 40px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 8px 10px;
+
+  border: 1px solid var(--line);
+  border-radius: 8px;
+
+  background: #fff;
+
+  font-size: 16px;
+  text-align: left;
+
+  cursor: pointer;
+}
+
+.multi-select-arrow {
+  font-size: 12px;
+}
+
+.multi-select-options {
+  display: none;
+
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(100% + 4px);
+
+  z-index: 100;
+
+  max-height: 220px;
+  overflow-y: auto;
+
+  padding: 6px;
+
+  border: 1px solid var(--line);
+  border-radius: 8px;
+
+  background: #fff;
+
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+.multi-select.open .multi-select-options {
+  display: block;
+}
+
+.multi-select-option {
+  display: flex;
+  align-items: center;
+
+  gap: 8px;
+
+  padding: 7px 6px;
+
+  font-size: 16px;
+
+  cursor: pointer;
+}
+
+.multi-select-option:hover {
+  background: #f1f4f8;
+}
+
+.multi-select-option input {
+  width: auto;
+}
 
 /* =========================================================
    DEVICE MODEL EDIT FORM
@@ -802,17 +959,23 @@ select {
    MONITORING
    ========================================================= */
 
-
 .monitoring-grid {
   display: grid;
   grid-template-columns: minmax(0, 1.55fr) minmax(320px, 1fr);
-  gap: 18px;
+  gap: 0;
   align-items: start;
 }
 
 .monitoring-left-panel {
   display: grid;
   gap: 12px;
+
+  /*
+     Same divider treatment as the other two-column screens.
+  */
+  border-right: 1px solid var(--divider);
+  padding-right: 22px;
+
   min-width: 0;
 }
 
@@ -979,7 +1142,12 @@ select {
 .monitoring-data-card {
   min-height: 640px;
   padding-bottom: 10px;
-  margin-left: 0;
+
+  /*
+     Match the 22px spacing used after the divider
+     everywhere else.
+  */
+  margin-left: 22px;
 }
 
 .monitoring-data-card h3 {
@@ -1030,6 +1198,42 @@ select {
 
 
 /* =========================================================
+   SETTINGS
+   ========================================================= */
+
+.settings-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(320px, 1fr);
+  gap: 0;
+  align-items: stretch;
+  min-height: 500px;
+}
+
+.settings-left-panel {
+  border-right: 1px solid var(--divider);
+  padding-right: 22px;
+  min-width: 0;
+}
+
+.settings-right-panel {
+  min-width: 0;
+  min-height: 500px;
+  margin-left: 22px;
+}
+
+.settings-card {
+  min-height: 500px;
+  display: grid;
+  place-items: center;
+}
+
+.empty-text {
+  font-size: 18px;
+  color: #6e7682;
+}
+
+
+/* =========================================================
    TABLES
    ========================================================= */
 
@@ -1059,50 +1263,11 @@ thead th {
 
 
 /* =========================================================
-   SETTINGS
-   ========================================================= */
-
-.settings-card {
-  min-height: 500px;
-  display: grid;
-  place-items: center;
-}
-
-.empty-text {
-  font-size: 18px;
-  color: #6e7682;
-}
-
-
-/* =========================================================
    GENERAL UTILITIES
    ========================================================= */
 
 .hidden {
   display: none !important;
-}
-
-@media (max-width: 1320px) {
-  .topology-workspace-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-@media (max-width: 900px) {
-  .operation-grid {
-    grid-template-columns: 1fr;
-    gap: 12px;
-  }
-
-  .left-column {
-    border-right: 0;
-    padding: 0;
-  }
-
-  .details-card {
-    margin-left: 0;
-    min-height: 0;
-  }
 }
 
 
@@ -1137,6 +1302,15 @@ thead th {
    RESPONSIVE
    ========================================================= */
 
+@media (max-width: 1320px) {
+
+  .topology-workspace-grid {
+    grid-template-columns: 1fr;
+  }
+
+}
+
+
 @media (max-width: 1250px) {
 
   .app-shell {
@@ -1144,8 +1318,18 @@ thead th {
   }
 
   .operation-grid,
-  .dashboard-grid {
+  .dashboard-grid,
+  .settings-grid {
     grid-template-columns: 1fr;
+  }
+
+  /*
+     When the layout becomes one column there is no longer
+     a left/right split, so remove the vertical dividers.
+  */
+
+  .dashboard-grid::after {
+    display: none;
   }
 
   .left-column {
@@ -1160,30 +1344,70 @@ thead th {
     margin-right: 0;
   }
 
+  .streams-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .stream-toolbar,
+  .stream-form-split,
+  .stream-form-double,
+  .stream-form-triple {
+    grid-template-columns: 1fr;
+  }
+
   .traffic-card {
     min-height: auto;
+    margin-left: 0;
   }
 
   .detail-actions {
     flex-wrap: wrap;
   }
 
+  .stream-toolbar,
+  .stream-form-actions,
+  .stream-detail-actions {
+    flex-direction: column;
+  }
+
+  .stream-form-card .action-button-primary,
+  .stream-toolbar .action-button-primary,
+  .stream-file-picker {
+    width: 100%;
+  }
+
+  .stream-file-picker input {
+    width: 100%;
+  }
+
+
+  /* Monitoring becomes a single column */
+
   .monitoring-grid {
     grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .monitoring-left-panel {
+    border-right: 0;
+    padding-right: 0;
   }
 
   .monitoring-data-card {
     min-height: 0;
+    margin-left: 0;
   }
 
-  .monitoring-workspace-card {
-    grid-template-columns: 1fr;
-    min-height: 0;
-  }
 
-  .monitoring-available-column {
+  /* Settings becomes a single column */
+
+  .settings-left-panel {
     border-right: 0;
-    border-bottom: 1px solid #d8dee8;
+    padding-right: 0;
+  }
+
+  .settings-right-panel {
+    display: none;
   }
 
 }
