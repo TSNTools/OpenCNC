@@ -181,7 +181,7 @@ func (p *PcpMappingNetconfPlugin) Push(mapped any, target managementSessions.Dev
 		p.logger.Printf("[PcpMapping] XML generated for interface %s:\n%s", target.InterfaceName, xml)
 	}
 
-	session, err := managementSessions.CreateSession(target.Info.IpAddress, target.Info.UserName, target.Secret)
+	session, err := managementSessions.CreateSessionWithPassword(target.Info.IpAddress, target.Credentials.GetUsernamePassword())
 	if err != nil {
 		return fmt.Errorf("NETCONF session failed: %w", err)
 	}

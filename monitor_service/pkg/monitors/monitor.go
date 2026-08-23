@@ -1,9 +1,10 @@
 package monitor
 
 import (
-	"OpenCNC_config_service/monitor_service/pkg/collectors"
-	"OpenCNC_config_service/monitor_service/pkg/meters"
+	"OpenCNC_config_service/monitor_service/pkg/catalog"
 	"OpenCNC_config_service/monitor_service/structures/monitoring"
+
+	"github.com/openshift-telco/go-netconf-client/netconf"
 )
 
 type Monitor interface {
@@ -17,10 +18,10 @@ type Monitor interface {
 	Stop()
 
 	// AddCollector registers a collector used by this monitor.
-	AddCollector(collector collectors.Collector) error
+	AddCollector(counter *monitoring.Counter, resource *monitoring.ResourceKey, session *netconf.Session, catalog *catalog.Catalog) error
 
 	// AddMeter registers a meter for this monitor's resource.
-	AddMeter(meter meters.Meter) error
+	AddMeter(metric *monitoring.Metric, resource *monitoring.ResourceKey) error
 
 	// Run performs one monitoring cycle:
 	//

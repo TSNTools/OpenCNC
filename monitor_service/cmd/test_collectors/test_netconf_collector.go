@@ -1,9 +1,12 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 
+	"OpenCNC_config_service/common/observability"
+	"OpenCNC_config_service/common/structures/credentials"
 	"OpenCNC_config_service/common/structures/topology"
 	"OpenCNC_config_service/monitor_service/pkg/catalog"
 	"OpenCNC_config_service/monitor_service/pkg/collectors"
@@ -31,7 +34,6 @@ var target = &topology.Node{
 	},
 	ManagementInfo: &topology.ManagementInfo{
 		IpAddress:      "192.168.0.1",
-		UserName:       "root",
 		ManagementPort: 830,
 		Protocol:       topology.ManagementProtocol_NETCONF,
 	},
@@ -43,12 +45,22 @@ var target = &topology.Node{
 	},
 }
 
+var creds = &credentials.ManagementCredentials{
+	Authentication: &credentials.ManagementCredentials_UsernamePassword{
+		UsernamePassword: &credentials.UsernamePassword{
+			Username: "root",
+			Password: "root",
+		},
+	},
+}
+
+var obsClient observability.Client
+
 func test_netconf_collector() {
 
-	session, err := managementSessions.CreateSession(
+	session, err := managementSessions.CreateSessionWithPassword(
 		target.ManagementInfo.IpAddress,
-		target.ManagementInfo.UserName,
-		"",
+		creds.GetUsernamePassword(),
 	)
 
 	if err != nil {
@@ -78,12 +90,25 @@ func test_netconf_collector() {
 	resource := &monitoring.ResourceKey{
 		NodeId: target.Name,
 	}
+	obsClient, err := observability.NewFromEnv("config-service")
+	if err != nil {
+		log.Fatalf("Observability init failed: %v", err)
+	}
+	if obsClient != nil {
+		defer func() {
+			_ = obsClient.Close()
+		}()
+	}
 
 	collector := collectors.NewNetconfCollector(
 		resource,
 		session,
 		catalog,
+		obsClient,
+		1000, // PollIntervalMs, set to 1000 ms as an example
 	)
+
+	ctx := context.Background()
 
 	//
 	// Select counters to test
@@ -100,6 +125,7 @@ func test_netconf_collector() {
 	//
 	samples, err := collector.Collect(
 		requestedCounters,
+		ctx,
 	)
 
 	if err != nil {

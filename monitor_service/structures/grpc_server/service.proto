@@ -18,7 +18,12 @@ message CapabilitiesResponse {
 message StartMonitoringRequest {
   string id = 1;
   monitoring.ResourceKey resource = 2;
-  repeated string items = 3;
+  repeated MonitoringSetting settings = 3;
+}
+
+message MonitoringSetting {
+  string capability_id = 1;
+  uint32 poll_interval_ms = 2;
 }
 
 message MonitoringResponse {

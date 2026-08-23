@@ -3,11 +3,12 @@ package main
 import (
 	"log"
 
-	managementSessions "OpenCNC_config_service/config_service/pkg/managementSessions"
-	netconf "OpenCNC_config_service/config_service/pkg/plugins/netconf"
+	"OpenCNC_config_service/common/structures/credentials"
 	topology "OpenCNC_config_service/common/structures/topology"
 	topology_config "OpenCNC_config_service/common/structures/topology_config"
 	vlan "OpenCNC_config_service/common/structures/vlan"
+	managementSessions "OpenCNC_config_service/config_service/pkg/managementSessions"
+	netconf "OpenCNC_config_service/config_service/pkg/plugins/netconf"
 
 	"google.golang.org/protobuf/proto"
 )
@@ -18,11 +19,17 @@ func TestVlanPlugin_tttech() {
 	target := managementSessions.DeviceTarget{
 		InterfaceName: "sw0p3",
 		Logger:        logger,
-		Secret:        "",
+		Credentials: &credentials.ManagementCredentials{
+			Authentication: &credentials.ManagementCredentials_UsernamePassword{
+				UsernamePassword: &credentials.UsernamePassword{
+					Username: "root",
+					Password: "root",
+				},
+			},
+		},
 		Info: &topology.ManagementInfo{
-			IpAddress:      "192.168.0.1",
-			UserName:       "root",
-			ManagementPort: 830,
+			IpAddress:      "192.168.0.1", // IP address
+			ManagementPort: 830,           // default NETCONF port
 			Protocol:       topology.ManagementProtocol_NETCONF,
 		},
 	}

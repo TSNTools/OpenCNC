@@ -1,0 +1,87 @@
+syntax = "proto3";
+
+package stream;
+
+option go_package = "/stream";
+
+//
+// Protobuf model aligned with IEEE 802.1Qcc UNI YANG
+// - traffic-specification         -> TrafficSpecification
+// - user-to-network-requirements -> UserToNetworkRequirements
+// - data-frame-specification      -> DataFrameSpecification
+// - stream-rank                   -> StreamRank
+// - talker-group/listener-group   -> modeled through Stream & SRP
+//
+
+// Specifies destination and optional source MAC addresses and Ethertype for the stream.
+message DataFrameSpecification {
+  string destination_mac = 1;        // Destination MAC address (required)
+  string source_mac = 2;             // Source MAC address (optional)
+  uint32 ethertype = 5;              // Optional Ethertype (e.g., 0x0800 = IPv4)
+}
+
+// Specifies traffic parameters such as max frame size, interval, and number of frames.
+message TrafficSpecification {
+  uint64 max_frame_size = 1;         // Max size per frame in bytes
+  uint64 max_interval_frames = 2;    // Max frames per interval
+  uint64 interval_ns = 3;            // Transmission interval in nanoseconds
+}
+
+// User-to-network requirements including latency, jitter, redundancy, bandwidth, loss tolerance.
+message UserToNetworkRequirements {
+  uint64 max_latency_ns = 1;             // Max acceptable end-to-end latency (ns)
+  uint64 max_jitter_ns = 2;              // Max allowed jitter (ns)
+  uint32 num_seamless_trees = 3;         // Redundancy requirement count (e.g., for FRER)
+  // Optional offset range relative to cycle start for time-aware scheduling
+  optional TransmitOffsetRange transmit_offset_range = 4;
+  uint64 max_bandwidth_bps = 5;          // Max expected bandwidth in bits per second
+  double max_loss_rate = 6;               // Acceptable packet loss probability (0.0–1.0)
+}
+
+// Specifies optional transmit offset range relative to cycle start.
+// Note: This is used to support time-aware scheduling offset; not part of all standards.
+message TransmitOffsetRange {
+  uint64 min_ns = 1;                     // Minimum offset after sync (nanoseconds)
+  uint64 max_ns = 2;                     // Maximum offset after sync (nanoseconds)
+}
+
+// Stream rank values aligned with IEEE 802.1Qcc.
+enum StreamRankValue {
+  RANK_UNSPECIFIED = 0;
+  RANK_A = 1;
+  RANK_B = 2;
+}
+
+// Stream rank including rank value and priority.
+message StreamRank {
+  StreamRankValue rank = 1;
+  uint32 priority = 2;
+}
+
+// Unique identifier for a stream: MAC address + unique stream ID.
+// MAC address should be formatted as standard 6-byte hex string (e.g., "01:23:45:67:89:ab").
+message StreamID {
+  string mac_address = 1;       // Talker MAC address
+  uint32 unique_id = 2;         // Typically 16-bit stream ID (matches AVTP)
+}
+
+// Describes a unicast or multicast stream with talker and listeners, traffic specs, and requirements.
+message Stream {
+  StreamID stream_id = 1;                   // Unique stream identifier
+  StreamRank stream_rank = 2;               // Stream rank and priority
+
+  // Talker endpoint node ID: must correspond to a node defined in topology
+  string talker_node_id = 3;                // Talker node ID (e.g., "switch1")
+
+  // Listener endpoint node IDs: each corresponds to a node defined in topology
+  repeated string listener_node_ids = 4;    // Listener node IDs
+
+  DataFrameSpecification frame_spec = 5;   // Frame format specification
+  TrafficSpecification traffic_spec = 6;   // Traffic parameters
+  UserToNetworkRequirements user_to_network_requirements = 7;  // QoS and redundancy requirements
+
+  string description = 8;                  // Human-readable description or notes
+
+  // Reference to the TrafficClass ID (tsn.TrafficClass.id) this stream belongs to.
+  string traffic_class_id = 9;
+}

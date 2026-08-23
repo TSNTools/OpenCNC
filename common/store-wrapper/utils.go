@@ -33,7 +33,7 @@ func SendToStore(obj []byte, urn string) error {
 	// Connect to ETCD
 	client, err := createEtcdClient()
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 	defer client.Close()
 

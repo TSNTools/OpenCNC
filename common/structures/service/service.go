@@ -3,7 +3,6 @@ package service
 import (
 	"context"
 	"fmt"
-	"os"
 
 	"OpenCNC_config_service/common/observability"
 	storewrapper "OpenCNC_config_service/common/store-wrapper"
@@ -88,12 +87,15 @@ func (s *ConfigServiceServerImpl) deployConfiguration(ctx context.Context, cfg *
 		return err
 	}
 
-	secret := os.Getenv("NETCONF_PASSWORD")
+	secrets, err := storewrapper.GetCredentialsList()
+	if err != nil {
+		return err
+	}
 
 	return s.engine.ApplyConfiguration(
 		topo,
 		cfg,
-		secret,
+		secrets,
 	)
 }
 

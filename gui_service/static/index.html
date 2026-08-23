@@ -705,9 +705,6 @@
               <dt>Ports</dt>
               <dd id="node-ports">-</dd>
 
-              <dt>Links</dt>
-              <dd id="node-links">-</dd>
-
             </dl>
 
 
@@ -790,12 +787,22 @@
 
 
                 <label class="full-width">
-                  <span>Links</span>
+                  <span>Username</span>
 
                   <input
-                    id="node-edit-links"
+                    id="node-edit-username"
                     type="text"
-                    placeholder="Links"
+                    placeholder="Username"
+                  >
+                </label>
+
+                <label class="full-width">
+                  <span>Password</span>
+
+                  <input
+                    id="node-edit-password"
+                    type="password"
+                    placeholder="Password"
                   >
                 </label>
 
@@ -1468,6 +1475,16 @@
 
                   <dt>Target</dt>
                   <dd id="monitoring-detail-target">-</dd>
+
+                <label>
+                  <span><dt>Poll Interval (ms)</dt></span>
+                  <input
+                    id="monitoring-poll-interval"
+                    type="number"
+                    min="1"
+                    placeholder="1000"
+                  >
+                </label>
 
                 </dl>
 

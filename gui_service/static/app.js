@@ -18,7 +18,10 @@ const state = {
   activeMonitoringItemID: "",
   selectedMonitoringItemIDsByTarget: {},
   appliedMonitoringItemIDsByTarget: {},
+  monitoringPollIntervalsByTarget: {},
 };
+
+const DEFAULT_MONITORING_POLL_INTERVAL_MS = 1000;
 
 initializeNavigation();
 initializeActionButtons();
@@ -151,6 +154,11 @@ function initializeActionButtons() {
       }
 
       const payload = await gatherPayload(action);
+
+      if (payload === null) {
+        return;
+      }
+
       const response = await callAction(action, payload);
       showToast(response.message || `${action} completed`);
 
@@ -247,7 +255,8 @@ function initializeActionButtons() {
         name: getValue("node-edit-name"),
         type: getValue("node-edit-type"),
         ports: getValue("node-edit-ports"),
-        links: getValue("node-edit-links"),
+        username: getValue("node-edit-username"),
+        password: getValue("node-edit-password"),
         deviceModel: getValue("node-edit-device-model"),
         managementIp: getValue("node-edit-management-ip"),
         managementProtocol: getValue("node-edit-management-protocol"),
@@ -406,23 +415,29 @@ function initializeActionButtons() {
   }
 
   const importStreamButton = document.getElementById("stream-import-btn");
+
   if (importStreamButton) {
     importStreamButton.addEventListener("click", async () => {
       const payloadText = await readUploadedFile("stream-import-input");
+
       if (!payloadText) {
         showToast("Select a stream JSON file.");
         return;
       }
 
-      let payload;
+      let importedPayload;
+
       try {
-        payload = JSON.parse(payloadText);
+        importedPayload = JSON.parse(payloadText);
       } catch (error) {
         showToast(`Invalid stream JSON: ${error.message}`);
         return;
       }
 
+      const payload = convertImportedStream(importedPayload);
+
       const response = await callAction("addStream", payload);
+
       showToast(response.message || "Stream imported");
 
       if (response.success) {
@@ -441,6 +456,7 @@ function initializeMonitoringUI() {
   const addButton = document.getElementById("monitoring-add-selection");
   const removeButton = document.getElementById("monitoring-remove-selection");
   const applyButton = document.getElementById("monitoring-apply-selection");
+  const pollIntervalInput = document.getElementById("monitoring-poll-interval");
 
   if (nodeSelect) {
     nodeSelect.addEventListener("change", () => {
@@ -492,6 +508,20 @@ function initializeMonitoringUI() {
       state.activeMonitoringItemID = item.dataset.id || "";
       renderMonitoringSelectedList();
       renderMonitoringDetails(state.activeMonitoringItemID);
+    });
+  }
+
+  if (pollIntervalInput) {
+    pollIntervalInput.value = String(DEFAULT_MONITORING_POLL_INTERVAL_MS);
+    pollIntervalInput.addEventListener("input", () => {
+      const targetID = getCurrentMonitoringTargetID();
+      const itemID = state.activeMonitoringItemID;
+      if (!targetID || !itemID) {
+        return;
+      }
+
+      setMonitoringPollInterval(targetID, itemID, pollIntervalInput.value);
+      renderMonitoringSelectedList();
     });
   }
 
@@ -564,7 +594,6 @@ function initializeListSelection() {
     setText("node-name", item.dataset.name || "-");
     setText("node-type", item.dataset.type || "-");
     setText("node-ports", item.dataset.ports || "-");
-    setText("node-links", item.dataset.links || "-");
     setText("node-device-model", item.dataset.deviceModel || "-");
     setText("node-management-ip", item.dataset.managementIp || "-");
     setText("node-management-protocol", item.dataset.managementProtocol || "-");
@@ -901,6 +930,46 @@ async function loadStreams() {
   clearStreamDetails();
 }
 
+function convertImportedStream(payload) {
+  const listeners = [];
+
+  if (Array.isArray(payload.lstnsrPssblPlcmnt)) {
+    for (const group of payload.lstnsrPssblPlcmnt) {
+      if (Array.isArray(group)) {
+        for (const listener of group) {
+          if (typeof listener === "string" && listener.trim()) {
+            listeners.push(listener.trim());
+          }
+        }
+      }
+    }
+  }
+
+  const talkers = Array.isArray(payload.tlkrPssblPlcmnt)
+    ? payload.tlkrPssblPlcmnt
+    : [];
+
+  return {
+    name: payload.name || "",
+    talkerNodeId: talkers.length > 0 ? talkers[0] : "",
+    listenerNodeIds: listeners,
+
+    trafficType: payload.type || "",
+
+    intervalNs: payload.interval || 0,
+    maxFramesPerInterval: payload.maxFramesPerInterval || 0,
+    maxFrameSize: payload.maxFrameSize || 0,
+    maxLatencyNs: payload.maxLatency || 0,
+    maxJitterNs: payload.jitter || 0,
+
+    minTransmitOffsetNs:
+      payload["earliest-transmit-offset"] || 0,
+
+    maxTransmitOffsetNs:
+      payload["latest-transmit-offset"] || 0,
+  };
+}
+
 async function loadMonitoring() {
   const [counters, metrics, targets] = await Promise.all([
     fetchMonitoringItems("/api/v1/monitoring/counters", "counter"),
@@ -1155,7 +1224,7 @@ function renderMonitoringSelectedList() {
     const li = document.createElement("li");
     li.className = "monitoring-selected-item";
     li.dataset.id = item.id;
-    li.textContent = item.label;
+    li.textContent = `${item.label} (${getMonitoringPollInterval(targetID, item.id)} ms)`;
     if (item.id === state.activeMonitoringItemID) {
       li.classList.add("selected");
     }
@@ -1181,6 +1250,7 @@ function renderMonitoringDetails(itemID) {
   setText("monitoring-detail-description", item.description || "-");
   setText("monitoring-detail-type", item.type === "counter" ? "Counter" : "Metric");
   setText("monitoring-detail-target", target.label);
+  setMonitoringPollIntervalInput(getMonitoringPollInterval(target.id, item.id));
 }
 
 function clearMonitoringDetail() {
@@ -1188,6 +1258,7 @@ function clearMonitoringDetail() {
   setText("monitoring-detail-description", "-");
   setText("monitoring-detail-type", "-");
   setText("monitoring-detail-target", "-");
+  setMonitoringPollIntervalInput(DEFAULT_MONITORING_POLL_INTERVAL_MS);
 }
 
 async function loadMonitoringDataPanel() {
@@ -1208,6 +1279,7 @@ async function loadMonitoringDataPanel() {
     const params = new URLSearchParams();
     params.set("targetId", targetID);
     params.set("metrics", Array.from(idSet).join(","));
+    params.set("pollIntervals", JSON.stringify(buildMonitoringPollIntervals(targetID, idSet)));
     const data = await fetchJSON(`/api/v1/monitoring/data?${params.toString()}`, []);
     return Array.isArray(data) ? data : [];
   }));
@@ -1275,6 +1347,76 @@ function getSelectedMonitoringSet(targetID, createIfMissing = true) {
   return selectedSet || new Set();
 }
 
+function getMonitoringPollIntervalsForTarget(targetID, createIfMissing = true) {
+  if (!targetID) {
+    return {};
+  }
+
+  let intervals = state.monitoringPollIntervalsByTarget[targetID];
+  if (!intervals && createIfMissing) {
+    intervals = {};
+    state.monitoringPollIntervalsByTarget[targetID] = intervals;
+  }
+
+  return intervals || {};
+}
+
+function normalizeMonitoringPollInterval(value) {
+  const parsed = Number.parseInt(String(value), 10);
+  if (!Number.isFinite(parsed) || parsed < 1) {
+    return DEFAULT_MONITORING_POLL_INTERVAL_MS;
+  }
+  return parsed;
+}
+
+function getMonitoringPollInterval(targetID, itemID, createIfMissing = true) {
+  const intervals = getMonitoringPollIntervalsForTarget(targetID, createIfMissing);
+  if (!intervals || !itemID) {
+    return DEFAULT_MONITORING_POLL_INTERVAL_MS;
+  }
+
+  const interval = intervals[itemID];
+  if (!interval || interval < 1) {
+    if (createIfMissing) {
+      intervals[itemID] = DEFAULT_MONITORING_POLL_INTERVAL_MS;
+    }
+    return DEFAULT_MONITORING_POLL_INTERVAL_MS;
+  }
+
+  return interval;
+}
+
+function setMonitoringPollInterval(targetID, itemID, value) {
+  if (!targetID || !itemID) {
+    return;
+  }
+
+  const intervals = getMonitoringPollIntervalsForTarget(targetID);
+  intervals[itemID] = normalizeMonitoringPollInterval(value);
+}
+
+function setMonitoringPollIntervalInput(value) {
+  const input = document.getElementById("monitoring-poll-interval");
+  if (!input) {
+    return;
+  }
+
+  input.value = String(normalizeMonitoringPollInterval(value));
+}
+
+function buildMonitoringPollIntervals(targetID, idSet) {
+  const intervals = {};
+  const targetIntervals = getMonitoringPollIntervalsForTarget(targetID, false);
+
+  Array.from(idSet).forEach((metricID) => {
+    intervals[metricID] = normalizeMonitoringPollInterval(
+      targetIntervals[metricID] || DEFAULT_MONITORING_POLL_INTERVAL_MS
+    );
+  });
+
+  return intervals;
+}
+
 function getAppliedMonitoringSet(targetID, createIfMissing = true) {
   if (!targetID) {
     return new Set();
@@ -1322,6 +1464,22 @@ function pruneMonitoringSelections() {
     appliedSet.forEach((itemID) => {
       if (!allowedIDs.has(itemID)) {
         appliedSet.delete(itemID);
+      }
+    });
+  });
+
+  Object.keys(state.monitoringPollIntervalsByTarget).forEach((targetID) => {
+    if (!validTargetIDs.has(targetID)) {
+      delete state.monitoringPollIntervalsByTarget[targetID];
+      return;
+    }
+
+    const allowedIDs = getAllowedMonitoringIDsForTarget(targetID);
+    const targetIntervals = state.monitoringPollIntervalsByTarget[targetID];
+
+    Object.keys(targetIntervals).forEach((itemID) => {
+      if (!allowedIDs.has(itemID)) {
+        delete targetIntervals[itemID];
       }
     });
   });
@@ -1441,7 +1599,6 @@ function clearNodeDetails() {
   setText("node-name", "-");
   setText("node-type", "-");
   setText("node-ports", "-");
-  setText("node-links", "-");
   setText("node-device-model", "-");
   setText("node-management-ip", "-");
   setText("node-management-protocol", "-");
@@ -1952,7 +2109,6 @@ function setNodeEditFields() {
   const name = document.getElementById("node-name");
   const type = document.getElementById("node-type");
   const ports = document.getElementById("node-ports");
-  const links = document.getElementById("node-links");
   const deviceModel = document.getElementById("node-device-model");
   const managementIp = document.getElementById("node-management-ip");
   const managementProtocol = document.getElementById("node-management-protocol");
@@ -1961,7 +2117,8 @@ function setNodeEditFields() {
   const editName = document.getElementById("node-edit-name");
   const editType = document.getElementById("node-edit-type");
   const editPorts = document.getElementById("node-edit-ports");
-  const editLinks = document.getElementById("node-edit-links");
+  const editUsername = document.getElementById("node-edit-username");
+  const editPassword = document.getElementById("node-edit-password");
   const editDeviceModel = document.getElementById("node-edit-device-model");
   const editManagementIp = document.getElementById("node-edit-management-ip");
   const editManagementProtocol = document.getElementById("node-edit-management-protocol");
@@ -1976,8 +2133,11 @@ function setNodeEditFields() {
   if (editPorts) {
     editPorts.value = ports && ports.textContent && ports.textContent !== "-" ? ports.textContent.trim() : "";
   }
-  if (editLinks) {
-    editLinks.value = links && links.textContent && links.textContent !== "-" ? links.textContent.trim() : "";
+  if (editUsername) {
+  editUsername.value = "";
+}
+  if (editPassword) {
+    editPassword.value = "";
   }
   if (editDeviceModel) {
     const currentDeviceModel =
@@ -2542,7 +2702,8 @@ async function gatherPayload(action) {
         type: getValue("node-edit-type"),
         state: getValue("node-edit-state"),
         ports: getValue("node-edit-ports"),
-        links: getValue("node-edit-links"),
+        links: getValue("node-edit-username"),
+        password: getValue("node-edit-password"),
       };
     case "deleteNode":
       return { id: state.selectedNodeID };
@@ -2566,7 +2727,8 @@ async function gatherPayload(action) {
     case "addStream":
       return buildStreamPayload(false);
     case "updateStream":
-      return buildStreamPayload(true);
+        showToast("Edit Stream — To be implemented.");
+      return null;
     case "removeStream":
       return { id: state.selectedStreamID };
     case "uploadModel":

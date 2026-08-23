@@ -1,0 +1,98 @@
+syntax = "proto3";
+
+package stream;
+
+import "psfp.proto";
+import "frer.proto";
+import "stream.proto";
+
+/*
+ * StreamConfiguration - TSN CNC-Configured Stream Details
+ * 
+ * Field-to-Standard Mapping:
+ * -----------------------------------------------------------------------------
+ * | Field Name               | TSN Standard / Clause                           |
+ * |--------------------------|-------------------------------------------------|
+ * | stream_id                | IEEE 802.1Qcc - stream identification           |
+ * | time_sync_reference      | IEEE 802.1AS - gPTP time domain alignment       |
+ * | vlan_id, pcp             | IEEE 802.1Q - VLAN tagging, priority mapping    |
+ * | bandwidth_reservation    | IEEE 802.1Qcc - Stream Reservation (SRP)        |
+ * | time_aware_offset_ns     | IEEE 802.1Qbv - Gate Control scheduling         |
+ * | path (StreamHop)         | IEEE 802.1Qca - Explicit path control           |
+ * |                          | RFC 8795 - TE Topology YANG model               |
+ * | redundancy_group_id      | IEEE 802.1CB - FRER redundancy group            |
+ * | filter_instance          | IEEE 802.1Qci - Stream filtering                |
+ * | meter_instance           | IEEE 802.1Qci - Flow metering / policing        |
+ * | queue_assignments        | IEEE 802.1Q - Egress port queue mapping         |
+ * | enabled                  | General config state management                 |
+ * | description              | Human-readable annotation                       |
+ * -----------------------------------------------------------------------------
+ */
+
+// Represents a static egress queue assignment at a port
+message QueueAssignment {
+  string egress_port_id = 1;   // Fully-qualified port ID (e.g., "sw1:eth2")
+  uint32 queue_id = 2;         // Queue number to which stream is mapped
+}
+
+// Time Synchronization Reference (IEEE 802.1AS)
+message TimeSyncReference {
+  uint32 domain_number = 1;         // gPTP domain number
+  string clock_identity = 2;        // IEEE 1588 Clock Identity
+}
+
+// Stream Reservation Status (runtime / monitoring only)
+enum ReservationStatus {
+  RESERVATION_UNSPECIFIED = 0;
+  PENDING = 1;
+  CONFIRMED = 2;
+  FAILED = 3;
+  RELEASED = 4;
+}
+
+message StreamReservationStatus {
+  stream.StreamID stream_id = 1;
+  ReservationStatus status = 2;
+  string cnc_decision_reason = 3;    // Optional human-readable reason
+  uint64 last_updated_ns = 4;        // Timestamp in nanoseconds
+}
+
+// Represents one hop in the explicit stream path (802.1Qca / RFC 8795)
+message StreamHop {
+  uint32 hop_number = 1;         // Sequential hop index
+  string bridge_id = 2;          // Maps to topology.Node.id
+  string ingress_port_id = 3;    // Input port of this bridge
+  string egress_port_id = 4;     // Output port of this bridge
+}
+
+// Stream-level bandwidth shaping parameters (802.1Qcc)
+message BandwidthReservation {
+  stream.StreamID stream_id = 1;
+  uint64 reserved_bandwidth_bps = 2;  // Bits per second
+  uint64 max_burst_bytes = 3;         // Optional burst size
+  uint64 shaping_interval_ns = 4;     // Optional shaping cycle
+}
+
+// Main per-stream configuration delivered by CNC
+message StreamConfiguration {
+  stream.StreamID stream_id = 1;
+
+  TimeSyncReference time_sync_reference = 2;    // Time sync domain
+  uint32 vlan_id = 3;                           // Stream's VLAN ID
+  uint32 pcp = 4;                               // Stream PCP (Priority Code Point)
+
+  BandwidthReservation bandwidth_reservation = 5;
+
+  uint64 time_aware_offset_ns = 6;              // Absolute offset from base time (Qbv slot), if scheduled
+
+  repeated StreamHop path = 7;                  // Explicit path across bridges
+  repeated FrerStreamConfig frer_config = 8;    // Redundant stream configuration (802.1CB)
+
+  psfp.StreamFilterInstance filter_instance = 9; // Per-hop ingress filtering (Qci)
+  psfp.FlowMeterInstance meter_instance = 10;    // Per-hop ingress policing (Qci)
+
+  repeated QueueAssignment queue_assignments = 11; // Per-hop egress queue placement
+
+  bool enabled = 12;                             // Config active/inactive flag
+  string description = 13;                       // Human-friendly annotation
+}

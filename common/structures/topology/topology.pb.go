@@ -124,6 +124,55 @@ func (ManagementProtocol) EnumDescriptor() ([]byte, []int) {
 	return file_common_structures_topology_topology_proto_rawDescGZIP(), []int{1}
 }
 
+type ManagementTransport int32
+
+const (
+	ManagementTransport_MANAGEMENT_TRANSPORT_UNSPECIFIED ManagementTransport = 0
+	ManagementTransport_SSH                              ManagementTransport = 1
+	ManagementTransport_TLS                              ManagementTransport = 2
+)
+
+// Enum value maps for ManagementTransport.
+var (
+	ManagementTransport_name = map[int32]string{
+		0: "MANAGEMENT_TRANSPORT_UNSPECIFIED",
+		1: "SSH",
+		2: "TLS",
+	}
+	ManagementTransport_value = map[string]int32{
+		"MANAGEMENT_TRANSPORT_UNSPECIFIED": 0,
+		"SSH":                              1,
+		"TLS":                              2,
+	}
+)
+
+func (x ManagementTransport) Enum() *ManagementTransport {
+	p := new(ManagementTransport)
+	*p = x
+	return p
+}
+
+func (x ManagementTransport) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (ManagementTransport) Descriptor() protoreflect.EnumDescriptor {
+	return file_common_structures_topology_topology_proto_enumTypes[2].Descriptor()
+}
+
+func (ManagementTransport) Type() protoreflect.EnumType {
+	return &file_common_structures_topology_topology_proto_enumTypes[2]
+}
+
+func (x ManagementTransport) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use ManagementTransport.Descriptor instead.
+func (ManagementTransport) EnumDescriptor() ([]byte, []int) {
+	return file_common_structures_topology_topology_proto_rawDescGZIP(), []int{2}
+}
+
 type DuplexMode int32
 
 const (
@@ -154,11 +203,11 @@ func (x DuplexMode) String() string {
 }
 
 func (DuplexMode) Descriptor() protoreflect.EnumDescriptor {
-	return file_common_structures_topology_topology_proto_enumTypes[2].Descriptor()
+	return file_common_structures_topology_topology_proto_enumTypes[3].Descriptor()
 }
 
 func (DuplexMode) Type() protoreflect.EnumType {
-	return &file_common_structures_topology_topology_proto_enumTypes[2]
+	return &file_common_structures_topology_topology_proto_enumTypes[3]
 }
 
 func (x DuplexMode) Number() protoreflect.EnumNumber {
@@ -167,7 +216,7 @@ func (x DuplexMode) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use DuplexMode.Descriptor instead.
 func (DuplexMode) EnumDescriptor() ([]byte, []int) {
-	return file_common_structures_topology_topology_proto_rawDescGZIP(), []int{2}
+	return file_common_structures_topology_topology_proto_rawDescGZIP(), []int{3}
 }
 
 type Topology struct {
@@ -450,15 +499,14 @@ func (x *DeviceInfo) GetSupportedProtocols() []string {
 
 // Reflects how the CNC should connect to the node's management plane
 type ManagementInfo struct {
-	state           protoimpl.MessageState `protogen:"open.v1"`
-	KeyCertificates []string               `protobuf:"bytes,1,rep,name=key_certificates,json=keyCertificates,proto3" json:"key_certificates,omitempty"`
-	IpAddress       string                 `protobuf:"bytes,2,opt,name=ip_address,json=ipAddress,proto3" json:"ip_address,omitempty"`
-	ManagementPort  uint32                 `protobuf:"varint,3,opt,name=management_port,json=managementPort,proto3" json:"management_port,omitempty"` // TCP port (e.g., 830 for NETCONF)
-	UserName        string                 `protobuf:"bytes,4,opt,name=user_name,json=userName,proto3" json:"user_name,omitempty"`
-	ManagementVlan  uint32                 `protobuf:"varint,5,opt,name=management_vlan,json=managementVlan,proto3" json:"management_vlan,omitempty"` // VLAN used for management (IEEE 802.1Qcp context)
-	Protocol        ManagementProtocol     `protobuf:"varint,6,opt,name=protocol,proto3,enum=topology.ManagementProtocol" json:"protocol,omitempty"`  // NETCONF / SNMP / etc.
-	unknownFields   protoimpl.UnknownFields
-	sizeCache       protoimpl.SizeCache
+	state          protoimpl.MessageState `protogen:"open.v1"`
+	IpAddress      string                 `protobuf:"bytes,1,opt,name=ip_address,json=ipAddress,proto3" json:"ip_address,omitempty"`
+	ManagementPort uint32                 `protobuf:"varint,2,opt,name=management_port,json=managementPort,proto3" json:"management_port,omitempty"` // TCP port (e.g., 830 for NETCONF)
+	ManagementVlan uint32                 `protobuf:"varint,3,opt,name=management_vlan,json=managementVlan,proto3" json:"management_vlan,omitempty"` // VLAN used for management (IEEE 802.1Qcp context)
+	Protocol       ManagementProtocol     `protobuf:"varint,4,opt,name=protocol,proto3,enum=topology.ManagementProtocol" json:"protocol,omitempty"`  // NETCONF / SNMP / etc.
+	Transport      ManagementTransport    `protobuf:"varint,5,opt,name=transport,proto3,enum=topology.ManagementTransport" json:"transport,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
 }
 
 func (x *ManagementInfo) Reset() {
@@ -491,13 +539,6 @@ func (*ManagementInfo) Descriptor() ([]byte, []int) {
 	return file_common_structures_topology_topology_proto_rawDescGZIP(), []int{4}
 }
 
-func (x *ManagementInfo) GetKeyCertificates() []string {
-	if x != nil {
-		return x.KeyCertificates
-	}
-	return nil
-}
-
 func (x *ManagementInfo) GetIpAddress() string {
 	if x != nil {
 		return x.IpAddress
@@ -512,13 +553,6 @@ func (x *ManagementInfo) GetManagementPort() uint32 {
 	return 0
 }
 
-func (x *ManagementInfo) GetUserName() string {
-	if x != nil {
-		return x.UserName
-	}
-	return ""
-}
-
 func (x *ManagementInfo) GetManagementVlan() uint32 {
 	if x != nil {
 		return x.ManagementVlan
@@ -531,6 +565,13 @@ func (x *ManagementInfo) GetProtocol() ManagementProtocol {
 		return x.Protocol
 	}
 	return ManagementProtocol_UNRECOGNIZED
+}
+
+func (x *ManagementInfo) GetTransport() ManagementTransport {
+	if x != nil {
+		return x.Transport
+	}
+	return ManagementTransport_MANAGEMENT_TRANSPORT_UNSPECIFIED
 }
 
 type InventoryInfo struct {
@@ -981,15 +1022,14 @@ const file_common_structures_topology_topology_proto_rawDesc = "" +
 	"\n" +
 	"DeviceInfo\x12!\n" +
 	"\fdevice_model\x18\x01 \x01(\tR\vdeviceModel\x12/\n" +
-	"\x13supported_protocols\x18\x02 \x03(\tR\x12supportedProtocols\"\x83\x02\n" +
-	"\x0eManagementInfo\x12)\n" +
-	"\x10key_certificates\x18\x01 \x03(\tR\x0fkeyCertificates\x12\x1d\n" +
+	"\x13supported_protocols\x18\x02 \x03(\tR\x12supportedProtocols\"\xf8\x01\n" +
+	"\x0eManagementInfo\x12\x1d\n" +
 	"\n" +
-	"ip_address\x18\x02 \x01(\tR\tipAddress\x12'\n" +
-	"\x0fmanagement_port\x18\x03 \x01(\rR\x0emanagementPort\x12\x1b\n" +
-	"\tuser_name\x18\x04 \x01(\tR\buserName\x12'\n" +
-	"\x0fmanagement_vlan\x18\x05 \x01(\rR\x0emanagementVlan\x128\n" +
-	"\bprotocol\x18\x06 \x01(\x0e2\x1c.topology.ManagementProtocolR\bprotocol\":\n" +
+	"ip_address\x18\x01 \x01(\tR\tipAddress\x12'\n" +
+	"\x0fmanagement_port\x18\x02 \x01(\rR\x0emanagementPort\x12'\n" +
+	"\x0fmanagement_vlan\x18\x03 \x01(\rR\x0emanagementVlan\x128\n" +
+	"\bprotocol\x18\x04 \x01(\x0e2\x1c.topology.ManagementProtocolR\bprotocol\x12;\n" +
+	"\ttransport\x18\x05 \x01(\x0e2\x1d.topology.ManagementTransportR\ttransport\":\n" +
 	"\rInventoryInfo\x12)\n" +
 	"\x10software_version\x18\x01 \x01(\tR\x0fsoftwareVersion\"\xef\x02\n" +
 	"\x04Port\x12\x0e\n" +
@@ -1041,7 +1081,11 @@ const file_common_structures_topology_topology_proto_rawDesc = "" +
 	"\x12ManagementProtocol\x12\x10\n" +
 	"\fUNRECOGNIZED\x10\x00\x12\v\n" +
 	"\aNETCONF\x10\x01\x12\b\n" +
-	"\x04SNMP\x10\x02*\x1c\n" +
+	"\x04SNMP\x10\x02*M\n" +
+	"\x13ManagementTransport\x12$\n" +
+	" MANAGEMENT_TRANSPORT_UNSPECIFIED\x10\x00\x12\a\n" +
+	"\x03SSH\x10\x01\x12\a\n" +
+	"\x03TLS\x10\x02*\x1c\n" +
 	"\n" +
 	"DuplexMode\x12\x06\n" +
 	"\x02HD\x10\x00\x12\x06\n" +
@@ -1059,39 +1103,41 @@ func file_common_structures_topology_topology_proto_rawDescGZIP() []byte {
 	return file_common_structures_topology_topology_proto_rawDescData
 }
 
-var file_common_structures_topology_topology_proto_enumTypes = make([]protoimpl.EnumInfo, 3)
+var file_common_structures_topology_topology_proto_enumTypes = make([]protoimpl.EnumInfo, 4)
 var file_common_structures_topology_topology_proto_msgTypes = make([]protoimpl.MessageInfo, 9)
 var file_common_structures_topology_topology_proto_goTypes = []any{
 	(NodeRole)(0),                 // 0: topology.NodeRole
 	(ManagementProtocol)(0),       // 1: topology.ManagementProtocol
-	(DuplexMode)(0),               // 2: topology.DuplexMode
-	(*Topology)(nil),              // 3: topology.Topology
-	(*Node)(nil),                  // 4: topology.Node
-	(*NodeProperties)(nil),        // 5: topology.NodeProperties
-	(*DeviceInfo)(nil),            // 6: topology.DeviceInfo
-	(*ManagementInfo)(nil),        // 7: topology.ManagementInfo
-	(*InventoryInfo)(nil),         // 8: topology.InventoryInfo
-	(*Port)(nil),                  // 9: topology.Port
-	(*InterfaceCapabilities)(nil), // 10: topology.InterfaceCapabilities
-	(*Link)(nil),                  // 11: topology.Link
+	(ManagementTransport)(0),      // 2: topology.ManagementTransport
+	(DuplexMode)(0),               // 3: topology.DuplexMode
+	(*Topology)(nil),              // 4: topology.Topology
+	(*Node)(nil),                  // 5: topology.Node
+	(*NodeProperties)(nil),        // 6: topology.NodeProperties
+	(*DeviceInfo)(nil),            // 7: topology.DeviceInfo
+	(*ManagementInfo)(nil),        // 8: topology.ManagementInfo
+	(*InventoryInfo)(nil),         // 9: topology.InventoryInfo
+	(*Port)(nil),                  // 10: topology.Port
+	(*InterfaceCapabilities)(nil), // 11: topology.InterfaceCapabilities
+	(*Link)(nil),                  // 12: topology.Link
 }
 var file_common_structures_topology_topology_proto_depIdxs = []int32{
-	4,  // 0: topology.Topology.nodes:type_name -> topology.Node
-	11, // 1: topology.Topology.links:type_name -> topology.Link
+	5,  // 0: topology.Topology.nodes:type_name -> topology.Node
+	12, // 1: topology.Topology.links:type_name -> topology.Link
 	0,  // 2: topology.Node.type:type_name -> topology.NodeRole
-	9,  // 3: topology.Node.ports:type_name -> topology.Port
-	6,  // 4: topology.Node.device_info:type_name -> topology.DeviceInfo
-	7,  // 5: topology.Node.management_info:type_name -> topology.ManagementInfo
-	8,  // 6: topology.Node.inventory_info:type_name -> topology.InventoryInfo
-	5,  // 7: topology.Node.properties:type_name -> topology.NodeProperties
+	10, // 3: topology.Node.ports:type_name -> topology.Port
+	7,  // 4: topology.Node.device_info:type_name -> topology.DeviceInfo
+	8,  // 5: topology.Node.management_info:type_name -> topology.ManagementInfo
+	9,  // 6: topology.Node.inventory_info:type_name -> topology.InventoryInfo
+	6,  // 7: topology.Node.properties:type_name -> topology.NodeProperties
 	1,  // 8: topology.ManagementInfo.protocol:type_name -> topology.ManagementProtocol
-	10, // 9: topology.Port.capabilities:type_name -> topology.InterfaceCapabilities
-	2,  // 10: topology.InterfaceCapabilities.mode:type_name -> topology.DuplexMode
-	11, // [11:11] is the sub-list for method output_type
-	11, // [11:11] is the sub-list for method input_type
-	11, // [11:11] is the sub-list for extension type_name
-	11, // [11:11] is the sub-list for extension extendee
-	0,  // [0:11] is the sub-list for field type_name
+	2,  // 9: topology.ManagementInfo.transport:type_name -> topology.ManagementTransport
+	11, // 10: topology.Port.capabilities:type_name -> topology.InterfaceCapabilities
+	3,  // 11: topology.InterfaceCapabilities.mode:type_name -> topology.DuplexMode
+	12, // [12:12] is the sub-list for method output_type
+	12, // [12:12] is the sub-list for method input_type
+	12, // [12:12] is the sub-list for extension type_name
+	12, // [12:12] is the sub-list for extension extendee
+	0,  // [0:12] is the sub-list for field type_name
 }
 
 func init() { file_common_structures_topology_topology_proto_init() }
@@ -1107,7 +1153,7 @@ func file_common_structures_topology_topology_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_common_structures_topology_topology_proto_rawDesc), len(file_common_structures_topology_topology_proto_rawDesc)),
-			NumEnums:      3,
+			NumEnums:      4,
 			NumMessages:   9,
 			NumExtensions: 0,
 			NumServices:   0,

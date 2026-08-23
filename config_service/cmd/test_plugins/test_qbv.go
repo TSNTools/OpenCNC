@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 
+	"OpenCNC_config_service/common/structures/credentials"
 	qbv "OpenCNC_config_service/common/structures/qbv"
 	"OpenCNC_config_service/common/structures/topology"
 	opencncModel "OpenCNC_config_service/config_service/opencnc_model"
@@ -68,10 +69,16 @@ func TestQbvPlugin_tttech() {
 	target := managementSessions.DeviceTarget{
 		InterfaceName: "sw0p3",
 		Logger:        logger,
-		Secret:        "", // password is empty
+		Credentials: &credentials.ManagementCredentials{
+			Authentication: &credentials.ManagementCredentials_UsernamePassword{
+				UsernamePassword: &credentials.UsernamePassword{
+					Username: "root",
+					Password: "root",
+				},
+			},
+		},
 		Info: &topology.ManagementInfo{
 			IpAddress:      "192.168.0.1", // IP address
-			UserName:       "root",        // username
 			ManagementPort: 830,           // default NETCONF port
 			Protocol:       topology.ManagementProtocol_NETCONF,
 		},

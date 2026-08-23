@@ -217,10 +217,9 @@ func (p *QbvNetconfPlugin) Push(mapped any, target managementSessions.DeviceTarg
 		return fmt.Errorf("failed to build XML: %w", err)
 	}
 
-	session, err := managementSessions.CreateSession(
+	session, err := managementSessions.CreateSessionWithPassword(
 		target.Info.IpAddress,
-		target.Info.UserName,
-		target.Secret,
+		target.Credentials.GetUsernamePassword(),
 	)
 	if err != nil {
 		return fmt.Errorf("NETCONF session failed: %w", err)

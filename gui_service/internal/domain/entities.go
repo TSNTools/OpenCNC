@@ -37,9 +37,10 @@ type MonitoringTarget struct {
 }
 
 type MonitoringValue struct {
-	ID    string `json:"id"`
-	Label string `json:"label"`
-	Value string `json:"value"`
+	ID             string `json:"id"`
+	Label          string `json:"label"`
+	Value          string `json:"value"`
+	PollIntervalMs uint32 `json:"pollIntervalMs,omitempty"`
 }
 
 type MonitoringTargetData struct {
@@ -56,7 +57,8 @@ type Node struct {
 	Type               string   `json:"type"`
 	DeviceModel        string   `json:"deviceModel"`
 	PortIds            []string `json:"ports"`
-	Links              string   `json:"links"`
+	Username           string   `json:"username"`
+	Password           string   `json:"password"` // this needs to change
 	ManagementIp       string   `json:"managementIp"`
 	ManagementProtocol string   `json:"managementProtocol"`
 	ManagementPort     uint32   `json:"managementPort"`
@@ -115,7 +117,8 @@ type LogsQuery struct {
 }
 
 type MonitoringDataQuery struct {
-	Node      string
-	TargetID  string
-	MetricIDs []string
+	Node          string            `json:"node"`
+	TargetID      string            `json:"targetId"`
+	MetricIDs     []string          `json:"metricIds"`
+	PollIntervals map[string]uint32 `json:"pollIntervals"`
 }

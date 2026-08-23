@@ -5,6 +5,7 @@ package managementSessions
 // go run Connect_netconf.go  -s 192.168.4.64 -e -f config.xml
 
 import (
+	"OpenCNC_config_service/common/structures/credentials"
 	"encoding/xml"
 	"fmt"
 	"io/ioutil"
@@ -16,6 +17,15 @@ import (
 	"golang.org/x/crypto/ssh"
 )
 
+var logger = slog.New(
+	slog.NewJSONHandler(
+		os.Stdout,
+		&slog.HandlerOptions{
+			Level: slog.LevelWarn,
+		},
+	),
+)
+
 // createSession connects to a NETCONF server and returns the session.
 func CreateSession(host, user, pass string) (*netconf.Session, error) {
 	sshConfig := &ssh.ClientConfig{
@@ -24,7 +34,6 @@ func CreateSession(host, user, pass string) (*netconf.Session, error) {
 		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
 	}
 
-	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
 	address := fmt.Sprintf("%s:830", host)
 
 	session, err := netconf.NewSessionFromSSHConfig(address, sshConfig, netconf.WithSessionLogger(logger))
@@ -135,9 +144,10 @@ func getRunningConfigWithFilter(session *netconf.Session, filter string) error {
 
 // GetWithFilter retrieves operational state using a NETCONF <get>.
 func GetWithFilter(session *netconf.Session, filter string) (string, error) {
-	fmt.Println("filter:", filter)
+	//fmt.Println("filter:", filter)
 	rpc := message.NewGet("subtree", filter)
 	//fmt.Println("rpc:", rpc)
+
 	reply, err := session.SyncRPC(rpc, 5)
 
 	if err != nil {
@@ -148,7 +158,36 @@ func GetWithFilter(session *netconf.Session, filter string) (string, error) {
 		return "", fmt.Errorf("empty reply from get")
 	}
 
-	fmt.Println(reply.RawReply)
+	//fmt.Println(reply.RawReply)
 
 	return reply.RawReply, nil
+}
+
+func CreateSessionWithPassword(host string, creds *credentials.UsernamePassword) (*netconf.Session, error) {
+	if creds == nil {
+		return nil, fmt.Errorf("username/password credentials are required")
+	}
+
+	sshConfig := &ssh.ClientConfig{
+		User:            creds.GetUsername(),
+		Auth:            []ssh.AuthMethod{ssh.Password(creds.GetPassword())},
+		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+	}
+
+	address := fmt.Sprintf("%s:830", host)
+
+	session, err := netconf.NewSessionFromSSHConfig(address, sshConfig, netconf.WithSessionLogger(logger))
+	if err != nil {
+		return nil, fmt.Errorf("failed to connect: %w", err)
+	}
+
+	err = session.SendHello(&message.Hello{
+		Capabilities: netconf.DefaultCapabilities,
+	})
+	if err != nil {
+		session.Close()
+		return nil, fmt.Errorf("failed to send hello: %w", err)
+	}
+
+	return session, nil
 }

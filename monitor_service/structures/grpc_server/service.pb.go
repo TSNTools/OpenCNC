@@ -114,7 +114,7 @@ type StartMonitoringRequest struct {
 	state         protoimpl.MessageState  `protogen:"open.v1"`
 	Id            string                  `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
 	Resource      *monitoring.ResourceKey `protobuf:"bytes,2,opt,name=resource,proto3" json:"resource,omitempty"`
-	Items         []string                `protobuf:"bytes,3,rep,name=items,proto3" json:"items,omitempty"`
+	Settings      []*MonitoringSetting    `protobuf:"bytes,3,rep,name=settings,proto3" json:"settings,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -163,11 +163,63 @@ func (x *StartMonitoringRequest) GetResource() *monitoring.ResourceKey {
 	return nil
 }
 
-func (x *StartMonitoringRequest) GetItems() []string {
+func (x *StartMonitoringRequest) GetSettings() []*MonitoringSetting {
 	if x != nil {
-		return x.Items
+		return x.Settings
 	}
 	return nil
+}
+
+type MonitoringSetting struct {
+	state          protoimpl.MessageState `protogen:"open.v1"`
+	CapabilityId   string                 `protobuf:"bytes,1,opt,name=capability_id,json=capabilityId,proto3" json:"capability_id,omitempty"`
+	PollIntervalMs uint32                 `protobuf:"varint,2,opt,name=poll_interval_ms,json=pollIntervalMs,proto3" json:"poll_interval_ms,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
+}
+
+func (x *MonitoringSetting) Reset() {
+	*x = MonitoringSetting{}
+	mi := &file_monitor_service_structures_grpc_server_service_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *MonitoringSetting) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*MonitoringSetting) ProtoMessage() {}
+
+func (x *MonitoringSetting) ProtoReflect() protoreflect.Message {
+	mi := &file_monitor_service_structures_grpc_server_service_proto_msgTypes[3]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use MonitoringSetting.ProtoReflect.Descriptor instead.
+func (*MonitoringSetting) Descriptor() ([]byte, []int) {
+	return file_monitor_service_structures_grpc_server_service_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *MonitoringSetting) GetCapabilityId() string {
+	if x != nil {
+		return x.CapabilityId
+	}
+	return ""
+}
+
+func (x *MonitoringSetting) GetPollIntervalMs() uint32 {
+	if x != nil {
+		return x.PollIntervalMs
+	}
+	return 0
 }
 
 type MonitoringResponse struct {
@@ -180,7 +232,7 @@ type MonitoringResponse struct {
 
 func (x *MonitoringResponse) Reset() {
 	*x = MonitoringResponse{}
-	mi := &file_monitor_service_structures_grpc_server_service_proto_msgTypes[3]
+	mi := &file_monitor_service_structures_grpc_server_service_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -192,7 +244,7 @@ func (x *MonitoringResponse) String() string {
 func (*MonitoringResponse) ProtoMessage() {}
 
 func (x *MonitoringResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_monitor_service_structures_grpc_server_service_proto_msgTypes[3]
+	mi := &file_monitor_service_structures_grpc_server_service_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -205,7 +257,7 @@ func (x *MonitoringResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MonitoringResponse.ProtoReflect.Descriptor instead.
 func (*MonitoringResponse) Descriptor() ([]byte, []int) {
-	return file_monitor_service_structures_grpc_server_service_proto_rawDescGZIP(), []int{3}
+	return file_monitor_service_structures_grpc_server_service_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *MonitoringResponse) GetSuccess() bool {
@@ -231,7 +283,7 @@ type StopMonitoringRequest struct {
 
 func (x *StopMonitoringRequest) Reset() {
 	*x = StopMonitoringRequest{}
-	mi := &file_monitor_service_structures_grpc_server_service_proto_msgTypes[4]
+	mi := &file_monitor_service_structures_grpc_server_service_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -243,7 +295,7 @@ func (x *StopMonitoringRequest) String() string {
 func (*StopMonitoringRequest) ProtoMessage() {}
 
 func (x *StopMonitoringRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_monitor_service_structures_grpc_server_service_proto_msgTypes[4]
+	mi := &file_monitor_service_structures_grpc_server_service_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -256,7 +308,7 @@ func (x *StopMonitoringRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use StopMonitoringRequest.ProtoReflect.Descriptor instead.
 func (*StopMonitoringRequest) Descriptor() ([]byte, []int) {
-	return file_monitor_service_structures_grpc_server_service_proto_rawDescGZIP(), []int{4}
+	return file_monitor_service_structures_grpc_server_service_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *StopMonitoringRequest) GetId() string {
@@ -275,11 +327,14 @@ const file_monitor_service_structures_grpc_server_service_proto_rawDesc = "" +
 	"\bresource\x18\x01 \x01(\v2\x17.monitoring.ResourceKeyH\x00R\bresource\x88\x01\x01B\v\n" +
 	"\t_resource\"R\n" +
 	"\x14CapabilitiesResponse\x12:\n" +
-	"\fcapabilities\x18\x01 \x03(\v2\x16.monitoring.CapabilityR\fcapabilities\"s\n" +
+	"\fcapabilities\x18\x01 \x03(\v2\x16.monitoring.CapabilityR\fcapabilities\"\x95\x01\n" +
 	"\x16StartMonitoringRequest\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x123\n" +
-	"\bresource\x18\x02 \x01(\v2\x17.monitoring.ResourceKeyR\bresource\x12\x14\n" +
-	"\x05items\x18\x03 \x03(\tR\x05items\"H\n" +
+	"\bresource\x18\x02 \x01(\v2\x17.monitoring.ResourceKeyR\bresource\x126\n" +
+	"\bsettings\x18\x03 \x03(\v2\x1a.service.MonitoringSettingR\bsettings\"b\n" +
+	"\x11MonitoringSetting\x12#\n" +
+	"\rcapability_id\x18\x01 \x01(\tR\fcapabilityId\x12(\n" +
+	"\x10poll_interval_ms\x18\x02 \x01(\rR\x0epollIntervalMs\"H\n" +
 	"\x12MonitoringResponse\x12\x18\n" +
 	"\asuccess\x18\x01 \x01(\bR\asuccess\x12\x18\n" +
 	"\amessage\x18\x02 \x01(\tR\amessage\"'\n" +
@@ -302,31 +357,33 @@ func file_monitor_service_structures_grpc_server_service_proto_rawDescGZIP() []b
 	return file_monitor_service_structures_grpc_server_service_proto_rawDescData
 }
 
-var file_monitor_service_structures_grpc_server_service_proto_msgTypes = make([]protoimpl.MessageInfo, 5)
+var file_monitor_service_structures_grpc_server_service_proto_msgTypes = make([]protoimpl.MessageInfo, 6)
 var file_monitor_service_structures_grpc_server_service_proto_goTypes = []any{
 	(*CapabilitiesRequest)(nil),    // 0: service.CapabilitiesRequest
 	(*CapabilitiesResponse)(nil),   // 1: service.CapabilitiesResponse
 	(*StartMonitoringRequest)(nil), // 2: service.StartMonitoringRequest
-	(*MonitoringResponse)(nil),     // 3: service.MonitoringResponse
-	(*StopMonitoringRequest)(nil),  // 4: service.StopMonitoringRequest
-	(*monitoring.ResourceKey)(nil), // 5: monitoring.ResourceKey
-	(*monitoring.Capability)(nil),  // 6: monitoring.Capability
+	(*MonitoringSetting)(nil),      // 3: service.MonitoringSetting
+	(*MonitoringResponse)(nil),     // 4: service.MonitoringResponse
+	(*StopMonitoringRequest)(nil),  // 5: service.StopMonitoringRequest
+	(*monitoring.ResourceKey)(nil), // 6: monitoring.ResourceKey
+	(*monitoring.Capability)(nil),  // 7: monitoring.Capability
 }
 var file_monitor_service_structures_grpc_server_service_proto_depIdxs = []int32{
-	5, // 0: service.CapabilitiesRequest.resource:type_name -> monitoring.ResourceKey
-	6, // 1: service.CapabilitiesResponse.capabilities:type_name -> monitoring.Capability
-	5, // 2: service.StartMonitoringRequest.resource:type_name -> monitoring.ResourceKey
-	0, // 3: service.MonitorService.GetCapabilities:input_type -> service.CapabilitiesRequest
-	2, // 4: service.MonitorService.StartMonitoring:input_type -> service.StartMonitoringRequest
-	4, // 5: service.MonitorService.StopMonitoring:input_type -> service.StopMonitoringRequest
-	1, // 6: service.MonitorService.GetCapabilities:output_type -> service.CapabilitiesResponse
-	3, // 7: service.MonitorService.StartMonitoring:output_type -> service.MonitoringResponse
-	3, // 8: service.MonitorService.StopMonitoring:output_type -> service.MonitoringResponse
-	6, // [6:9] is the sub-list for method output_type
-	3, // [3:6] is the sub-list for method input_type
-	3, // [3:3] is the sub-list for extension type_name
-	3, // [3:3] is the sub-list for extension extendee
-	0, // [0:3] is the sub-list for field type_name
+	6, // 0: service.CapabilitiesRequest.resource:type_name -> monitoring.ResourceKey
+	7, // 1: service.CapabilitiesResponse.capabilities:type_name -> monitoring.Capability
+	6, // 2: service.StartMonitoringRequest.resource:type_name -> monitoring.ResourceKey
+	3, // 3: service.StartMonitoringRequest.settings:type_name -> service.MonitoringSetting
+	0, // 4: service.MonitorService.GetCapabilities:input_type -> service.CapabilitiesRequest
+	2, // 5: service.MonitorService.StartMonitoring:input_type -> service.StartMonitoringRequest
+	5, // 6: service.MonitorService.StopMonitoring:input_type -> service.StopMonitoringRequest
+	1, // 7: service.MonitorService.GetCapabilities:output_type -> service.CapabilitiesResponse
+	4, // 8: service.MonitorService.StartMonitoring:output_type -> service.MonitoringResponse
+	4, // 9: service.MonitorService.StopMonitoring:output_type -> service.MonitoringResponse
+	7, // [7:10] is the sub-list for method output_type
+	4, // [4:7] is the sub-list for method input_type
+	4, // [4:4] is the sub-list for extension type_name
+	4, // [4:4] is the sub-list for extension extendee
+	0, // [0:4] is the sub-list for field type_name
 }
 
 func init() { file_monitor_service_structures_grpc_server_service_proto_init() }
@@ -341,7 +398,7 @@ func file_monitor_service_structures_grpc_server_service_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_monitor_service_structures_grpc_server_service_proto_rawDesc), len(file_monitor_service_structures_grpc_server_service_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   5,
+			NumMessages:   6,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

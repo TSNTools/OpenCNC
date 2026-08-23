@@ -12,8 +12,11 @@ import (
 	"time"
 
 	storewrapper "OpenCNC_config_service/common/store-wrapper"
+	"OpenCNC_config_service/common/structures/credentials"
 	devicemodelregistry "OpenCNC_config_service/common/structures/devicemodelregistry"
+	streamproto "OpenCNC_config_service/common/structures/stream"
 	"OpenCNC_config_service/common/structures/topology"
+
 	"OpenCNC_config_service/gui_service/internal/domain"
 	"OpenCNC_config_service/monitor_service/structures/monitoring"
 
@@ -78,10 +81,10 @@ func (u *uploadYang) UnmarshalJSON(data []byte) error {
 }
 
 type Backend struct {
-	state     *MonitoringState
-	mu        sync.RWMutex
-	streams   []domain.Stream
-	streamSeq int
+	state *MonitoringState
+	mu    sync.RWMutex
+	//streams   []domain.Stream
+	//streamSeq int
 }
 
 var activityLog = struct {
@@ -93,9 +96,9 @@ const maxActivityLogEntries = 100
 
 func NewBackend(state *MonitoringState) *Backend {
 	return &Backend{
-		state:     state,
-		streams:   defaultStreams(),
-		streamSeq: 5,
+		state: state,
+		//streams:   defaultStreams(),
+		//streamSeq: 5,
 	}
 }
 
@@ -395,17 +398,13 @@ func formatMetricValue(data MetricData) string {
 func (b *Backend) GetMonitoringData(_ context.Context, query domain.MonitoringDataQuery) ([]domain.MonitoringTargetData, error) {
 	//fmt.Printf("[GUI] GetMonitoringData called with query: %+v\n", query)
 	//Ask monitor-service to StartMonitoring().
-	parts := strings.Split(query.TargetID, "_")
-	resource := &monitoring.ResourceKey{
-		NodeId: parts[0],
-		PortId: &parts[1],
-	}
-	_, err := requestStartMonitoring(query.TargetID, resource, query.MetricIDs)
+	_, err := requestStartMonitoring(query)
 	if err != nil {
 		return nil, err
 	}
 	// Update the shared state to let the kafka consumer collect the requested metrics.
 	b.state.SetWantedMetrics(query.MetricIDs)
+	b.state.SetWantedMetricIntervals(query.PollIntervals)
 
 	// Read the latest values currently available.
 	rtData := map[string]map[string]string{
@@ -497,9 +496,10 @@ func (b *Backend) GetMonitoringData(_ context.Context, query domain.MonitoringDa
 			}
 
 			values = append(values, domain.MonitoringValue{
-				ID:    metricID,
-				Label: labelByID[metricID],
-				Value: value,
+				ID:             metricID,
+				Label:          labelByID[metricID],
+				Value:          value,
+				PollIntervalMs: monitoringIntervalForMetric(query.PollIntervals, metricID),
 			})
 		}
 
@@ -513,6 +513,19 @@ func (b *Backend) GetMonitoringData(_ context.Context, query domain.MonitoringDa
 	}
 
 	return filtered, nil
+}
+
+func monitoringIntervalForMetric(intervals map[string]uint32, metricID string) uint32 {
+	if len(intervals) == 0 {
+		return 1000
+	}
+
+	interval, ok := intervals[metricID]
+	if !ok || interval <= 0 {
+		return 1000
+	}
+
+	return interval
 }
 
 func (b *Backend) GetNodes(_ context.Context) ([]domain.Node, error) {
@@ -565,12 +578,90 @@ func (b *Backend) GetLinks(_ context.Context) ([]domain.Link, error) {
 }
 
 func (b *Backend) GetStreams(_ context.Context) ([]domain.Stream, error) {
-	b.mu.RLock()
-	defer b.mu.RUnlock()
+	storedStreams, err := storewrapper.GetStreams()
+	if err != nil {
+		return nil, err
+	}
 
-	streams := make([]domain.Stream, len(b.streams))
-	copy(streams, b.streams)
-	return streams, nil
+	domainStreams := make([]domain.Stream, 0, len(storedStreams))
+
+	for _, stored := range storedStreams {
+		if stored.Stream == nil {
+			continue
+		}
+
+		pb := stored.Stream
+
+		var rank string
+
+		if pb.StreamRank != nil {
+			rank = pb.StreamRank.Rank.String()
+		}
+
+		var destinationMAC string
+		var sourceMAC string
+
+		if pb.FrameSpec != nil {
+			destinationMAC = pb.FrameSpec.DestinationMac
+			sourceMAC = pb.FrameSpec.SourceMac
+		}
+
+		var intervalNs int
+		var maxFrameSize int
+		var maxFramesPerInterval int
+
+		if pb.TrafficSpec != nil {
+			intervalNs = int(pb.TrafficSpec.IntervalNs)
+			maxFrameSize = int(pb.TrafficSpec.MaxFrameSize)
+			maxFramesPerInterval = int(pb.TrafficSpec.MaxIntervalFrames)
+		}
+
+		var maxLatencyNs int
+		var maxJitterNs int
+		var minTransmitOffsetNs int
+		var maxTransmitOffsetNs int
+		var numSeamlessTrees int
+
+		if pb.UserToNetworkRequirements != nil {
+			req := pb.UserToNetworkRequirements
+
+			maxLatencyNs = int(req.MaxLatencyNs)
+			maxJitterNs = int(req.MaxJitterNs)
+			numSeamlessTrees = int(req.NumSeamlessTrees)
+
+			if req.TransmitOffsetRange != nil {
+				minTransmitOffsetNs = int(req.TransmitOffsetRange.MinNs)
+				maxTransmitOffsetNs = int(req.TransmitOffsetRange.MaxNs)
+			}
+		}
+
+		stream := domain.Stream{
+			ID:                   stored.ID,
+			Name:                 pb.Description,
+			TalkerNodeID:         pb.TalkerNodeId,
+			ListenerNodeIDs:      append([]string(nil), pb.ListenerNodeIds...),
+			Rank:                 rank,
+			DestinationMAC:       destinationMAC,
+			SourceMAC:            sourceMAC,
+			IntervalNs:           intervalNs,
+			MaxFrameSize:         maxFrameSize,
+			MaxFramesPerInterval: maxFramesPerInterval,
+			MaxLatencyNs:         maxLatencyNs,
+			MaxJitterNs:          maxJitterNs,
+			MinTransmitOffsetNs:  minTransmitOffsetNs,
+			MaxTransmitOffsetNs:  maxTransmitOffsetNs,
+			NumSeamlessTrees:     numSeamlessTrees,
+		}
+
+		// Derived GUI fields.
+		stream.Source = stream.TalkerNodeID
+		stream.Listeners = strings.Join(stream.ListenerNodeIDs, ", ")
+		stream.Characteristics = streamCharacteristics(stream)
+
+		domainStreams = append(domainStreams, stream)
+	}
+
+	return domainStreams, nil
 }
 
 func (b *Backend) GetLogs(_ context.Context, query domain.LogsQuery) ([]domain.EventLog, error) {
@@ -1083,6 +1174,19 @@ func (b *Backend) EditNode(_ context.Context, node domain.Node) (domain.Operatio
 		b.recordEvent("info", "editNode", "nodes", fmt.Sprintf("Updated node %s", current.GetName()), current.GetName())
 	}
 
+	//update credentials if username provided (password can be "")
+	if node.Username != "" {
+		creds := &credentials.ManagementCredentials{
+			Authentication: &credentials.ManagementCredentials_UsernamePassword{
+				UsernamePassword: &credentials.UsernamePassword{
+					Username: node.Username,
+					Password: node.Password,
+				},
+			},
+		}
+		storewrapper.StoreCredentials(current.GetName(), creds)
+	}
+
 	return domain.OperationResult{
 		Success: true,
 		Name:    "editNode",
@@ -1092,7 +1196,6 @@ func (b *Backend) EditNode(_ context.Context, node domain.Node) (domain.Operatio
 			"name":   current.GetName(),
 			"type":   current.GetType().String(),
 			"ports":  strings.Join(node.PortIds, ","),
-			"links":  node.Links,
 		},
 	}, nil
 }
@@ -1419,17 +1522,65 @@ func (b *Backend) DeleteLink(_ context.Context, linkID string) (domain.Operation
 }
 
 func (b *Backend) AddStream(_ context.Context, stream domain.Stream) (domain.OperationResult, error) {
-	b.mu.Lock()
-	defer b.mu.Unlock()
-
 	stream = b.prepareStream(stream)
-	if stream.ID == "" {
-		stream.ID = fmt.Sprintf("stream-%03d", b.streamSeq)
-		b.streamSeq++
+
+	if strings.TrimSpace(stream.ID) == "" {
+		stream.ID = fmt.Sprintf("stream-%d", time.Now().UnixNano())
 	}
 
-	b.streams = append(b.streams, stream)
-	b.recordEvent("info", "addStream", "streams", fmt.Sprintf("Created stream %s", stream.Name), stream.ID)
+	pbStream := &streamproto.Stream{
+		TalkerNodeId:    stream.TalkerNodeID,
+		ListenerNodeIds: append([]string(nil), stream.ListenerNodeIDs...),
+		Description:     stream.Name,
+
+		StreamRank: &streamproto.StreamRank{
+			Rank: streamRankFromString(stream.Rank),
+		},
+
+		FrameSpec: &streamproto.DataFrameSpecification{
+			DestinationMac: stream.DestinationMAC,
+			SourceMac:      stream.SourceMAC,
+		},
+
+		TrafficSpec: &streamproto.TrafficSpecification{
+			IntervalNs:        uint64(stream.IntervalNs),
+			MaxFrameSize:      uint64(stream.MaxFrameSize),
+			MaxIntervalFrames: uint64(stream.MaxFramesPerInterval),
+		},
+
+		UserToNetworkRequirements: &streamproto.UserToNetworkRequirements{
+			MaxLatencyNs:     uint64(stream.MaxLatencyNs),
+			MaxJitterNs:      uint64(stream.MaxJitterNs),
+			NumSeamlessTrees: uint32(stream.NumSeamlessTrees),
+		},
+	}
+
+	if stream.MinTransmitOffsetNs != 0 ||
+		stream.MaxTransmitOffsetNs != 0 {
+
+		pbStream.UserToNetworkRequirements.TransmitOffsetRange =
+			&streamproto.TransmitOffsetRange{
+				MinNs: uint64(stream.MinTransmitOffsetNs),
+				MaxNs: uint64(stream.MaxTransmitOffsetNs),
+			}
+	}
+
+	if err := storewrapper.StoreStream(pbStream, stream.ID); err != nil {
+		return domain.OperationResult{
+			Success: false,
+			Name:    "addStream",
+			Message: fmt.Sprintf("failed to store stream %s", stream.ID),
+		}, err
+	}
+
+	b.recordEvent(
+		"info",
+		"addStream",
+		"streams",
+		fmt.Sprintf("Created stream %s", stream.Name),
+		stream.ID,
+	)
+
 	return domain.OperationResult{
 		Success: true,
 		Name:    "addStream",
@@ -1441,30 +1592,41 @@ func (b *Backend) AddStream(_ context.Context, stream domain.Stream) (domain.Ope
 	}, nil
 }
 
+func streamRankFromString(rank string) streamproto.StreamRankValue {
+	switch rank {
+	case "RANK_A":
+		return streamproto.StreamRankValue_RANK_A
+	case "RANK_B":
+		return streamproto.StreamRankValue_RANK_B
+	default:
+		return streamproto.StreamRankValue_RANK_UNSPECIFIED
+	}
+}
+
 func (b *Backend) UpdateStream(_ context.Context, streamID string, stream domain.Stream) (domain.OperationResult, error) {
 	b.mu.Lock()
 	defer b.mu.Unlock()
+	/*
+		for index := range b.streams {
+			if b.streams[index].ID != streamID {
+				continue
+			}
 
-	for index := range b.streams {
-		if b.streams[index].ID != streamID {
-			continue
+			stream = b.prepareStream(stream)
+			stream.ID = streamID
+			b.streams[index] = stream
+			b.recordEvent("info", "updateStream", "streams", fmt.Sprintf("Updated stream %s", stream.Name), streamID)
+			return domain.OperationResult{
+				Success: true,
+				Name:    "updateStream",
+				Message: fmt.Sprintf("stream %s updated", streamID),
+				Data: map[string]string{
+					"streamId": streamID,
+					"name":     stream.Name,
+				},
+			}, nil
 		}
-
-		stream = b.prepareStream(stream)
-		stream.ID = streamID
-		b.streams[index] = stream
-		b.recordEvent("info", "updateStream", "streams", fmt.Sprintf("Updated stream %s", stream.Name), streamID)
-		return domain.OperationResult{
-			Success: true,
-			Name:    "updateStream",
-			Message: fmt.Sprintf("stream %s updated", streamID),
-			Data: map[string]string{
-				"streamId": streamID,
-				"name":     stream.Name,
-			},
-		}, nil
-	}
-
+	*/
 	return domain.OperationResult{
 		Success: false,
 		Name:    "updateStream",
@@ -1475,34 +1637,39 @@ func (b *Backend) UpdateStream(_ context.Context, streamID string, stream domain
 	}, nil
 }
 
-func (b *Backend) RemoveStream(_ context.Context, streamID string) (domain.OperationResult, error) {
-	b.mu.Lock()
-	defer b.mu.Unlock()
+func (b *Backend) RemoveStream(_ context.Context, id string) (domain.OperationResult, error) {
+	id = strings.TrimSpace(id)
 
-	for index := range b.streams {
-		if b.streams[index].ID != streamID {
-			continue
-		}
-
-		removed := b.streams[index]
-		b.streams = append(b.streams[:index], b.streams[index+1:]...)
-		b.recordEvent("info", "removeStream", "streams", fmt.Sprintf("Removed stream %s", removed.Name), streamID)
+	if id == "" {
 		return domain.OperationResult{
-			Success: true,
+			Success: false,
 			Name:    "removeStream",
-			Message: fmt.Sprintf("stream %s removed", streamID),
-			Data: map[string]string{
-				"streamId": streamID,
-			},
+			Message: "stream ID cannot be empty",
 		}, nil
 	}
 
+	if err := storewrapper.DeleteStream(id); err != nil {
+		return domain.OperationResult{
+			Success: false,
+			Name:    "removeStream",
+			Message: fmt.Sprintf("failed to delete stream %s", id),
+		}, err
+	}
+
+	b.recordEvent(
+		"info",
+		"removeStream",
+		"streams",
+		fmt.Sprintf("Deleted stream %s", id),
+		id,
+	)
+
 	return domain.OperationResult{
-		Success: false,
+		Success: true,
 		Name:    "removeStream",
-		Message: fmt.Sprintf("stream %s not found", streamID),
+		Message: fmt.Sprintf("stream %s deleted", id),
 		Data: map[string]string{
-			"streamId": streamID,
+			"streamId": id,
 		},
 	}, nil
 }

@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"sync"
 
+	"OpenCNC_config_service/common/observability"
+	"OpenCNC_config_service/common/structures/credentials"
 	"OpenCNC_config_service/common/structures/topology"
 	"OpenCNC_config_service/monitor_service/pkg/catalog"
-	"OpenCNC_config_service/monitor_service/pkg/collectors"
 	"OpenCNC_config_service/monitor_service/pkg/managementSessions"
-	"OpenCNC_config_service/monitor_service/pkg/meters"
 	monitor "OpenCNC_config_service/monitor_service/pkg/monitors"
 	"OpenCNC_config_service/monitor_service/structures/monitoring"
 )
@@ -17,12 +17,14 @@ type Engine struct {
 	Catalog  *catalog.Catalog
 	monitors map[string]monitor.Monitor
 	mu       sync.Mutex // to protect the map
+	obs      *observability.Client
 }
 
-func NewEngine(catalog *catalog.Catalog) *Engine {
+func NewEngine(catalog *catalog.Catalog, obs *observability.Client) *Engine {
 	return &Engine{
 		Catalog:  catalog,
 		monitors: make(map[string]monitor.Monitor),
+		obs:      obs,
 	}
 }
 
@@ -48,6 +50,7 @@ func (e *Engine) AddMonitor(name string, m monitor.Monitor) error {
 
 	e.mu.Unlock()
 
+	fmt.Println("monitor registered: ", name)
 	// Start outside the mutex.
 	if err := m.Start(); err != nil {
 		e.mu.Lock()
@@ -91,23 +94,22 @@ func (e *Engine) Monitor(name string) (monitor.Monitor, bool) {
 	return m, exists
 }
 
-func (e *Engine) StartMonitoring(id string, resource *monitoring.ResourceKey, node *topology.Node, items []string) error {
-	if id == "" {
-		return fmt.Errorf("monitoring id is empty")
-	}
+func (e *Engine) StartMonitoring(resource *monitoring.ResourceKey, node *topology.Node, creds *credentials.ManagementCredentials, counters []*monitoring.Counter, metrics []*monitoring.Metric) error {
 
 	if resource == nil {
 		return fmt.Errorf("monitoring resource is nil")
 	}
 
-	if len(items) == 0 {
+	id := resource.String() // unique monitor per resource
+
+	if len(counters) == 0 && len(metrics) == 0 {
 		return fmt.Errorf("no monitoring items specified")
 	}
 
 	// ------------------------------------------------------------
 	// Check that this monitoring ID is not already active.
-	// the req id as used as the monitor name in the engine.
-	// The monitor name is the unique identifier.
+	// the req id is used as the monitor name in the engine.
+	// The monitor name is the unique identifier. this is not accurate
 	// ------------------------------------------------------------
 	e.mu.Lock()
 	if _, exists := e.monitors[id]; exists {
@@ -118,10 +120,9 @@ func (e *Engine) StartMonitoring(id string, resource *monitoring.ResourceKey, no
 
 	//------------------------------------------------------------
 	// Create monitor
-	session, err := managementSessions.CreateSession(
+	session, err := managementSessions.CreateSessionWithPassword(
 		node.ManagementInfo.IpAddress,
-		node.ManagementInfo.UserName,
-		"",
+		creds.GetUsernamePassword(),
 	)
 	if err != nil {
 		return fmt.Errorf("failed to reach target node: %w", err)
@@ -130,32 +131,25 @@ func (e *Engine) StartMonitoring(id string, resource *monitoring.ResourceKey, no
 	resourceMonitor := monitor.NewResourceMonitor(
 		resource,
 		e.HandleEvent,
+		e.obs,
 	)
 
-	for _, itemName := range items {
-		item := e.Catalog.GetItem(itemName)
-		if item == nil {
-			return fmt.Errorf("monitoring item %q not found in catalog", itemName)
-		}
-		if item.Kind == monitoring.DataType_RAW {
-			// TODO: make sure it is the right type of collector for the node, check the protocol
-			collector := collectors.NewNetconfCollector(resource, session, e.Catalog)
-			if collector == nil {
-				return fmt.Errorf("failed to collect item %q", itemName)
-			}
-			resourceMonitor.AddCollector(collector)
-		}
-
-		if item.Kind == monitoring.DataType_METRIC {
-			metric := e.Catalog.GetMetricByID(itemName)
-			//TODO: use the registry to select the right meter type based on the metric type.
-			meter, err := meters.NewPacketRateMeter(resource, metric)
-			if err != nil {
-				return fmt.Errorf("failed to create meter for item %q: %w", itemName, err)
-			}
-			resourceMonitor.AddMeter(meter)
+	// Add collectors to the monitor
+	for _, counter := range counters {
+		err := resourceMonitor.AddCollector(counter, resource, session, e.Catalog)
+		if err != nil {
+			return fmt.Errorf("failed to add collector for counter %q: %w", counter.Name, err)
 		}
 	}
+
+	// Add meters to the monitor
+	for _, metric := range metrics {
+		err := resourceMonitor.AddMeter(metric, resource)
+		if err != nil {
+			return fmt.Errorf("failed to add meter for metric %q: %w", metric.Name, err)
+		}
+	}
+
 	// Start the monitor
 	if err := e.AddMonitor(id, resourceMonitor); err != nil {
 		return fmt.Errorf("failed to start monitoring: %w", err)

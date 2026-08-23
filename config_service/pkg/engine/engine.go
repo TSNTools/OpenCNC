@@ -4,13 +4,16 @@ import (
 	"fmt"
 
 	"OpenCNC_config_service/common/observability"
+	"OpenCNC_config_service/common/structures/credentials"
 	"OpenCNC_config_service/common/structures/topology"
 	"OpenCNC_config_service/common/structures/topology_config"
+	"OpenCNC_config_service/config_service/pkg/managementSessions"
 	protocolbackends "OpenCNC_config_service/config_service/pkg/protocolbackends"
 )
 
 type Operation struct {
 	Node      *topology.Node
+	creds     *credentials.ManagementCredentials
 	Config    *topology_config.NodeConfig
 	Backend   protocolbackends.ProtocolBackend
 	Prepared  bool
@@ -28,7 +31,7 @@ func (t *ConfigurationTransaction) Commit() error {
 
 		op := &t.Operations[i]
 
-		if err := op.Backend.Commit(op.Node); err != nil {
+		if err := op.Backend.Commit(op.Node, op.creds); err != nil {
 
 			// Roll back everything that was already committed.
 			t.Rollback()
@@ -58,7 +61,7 @@ func (t *ConfigurationTransaction) Rollback() error {
 			continue
 		}
 
-		if err := op.Backend.Rollback(op.Node); err != nil {
+		if err := op.Backend.Rollback(op.Node, op.creds); err != nil {
 			if firstErr == nil {
 				firstErr = err
 			}
@@ -128,7 +131,7 @@ func (m *MappingEngine) GetLastTransactionId() *string {
 	return &m.lastTransaction.ConfigId
 }
 
-func (m *MappingEngine) ApplyConfiguration(topo *topology.Topology, cfg *topology_config.TopologyConfig, secret string) error {
+func (m *MappingEngine) ApplyConfiguration(topo *topology.Topology, cfg *topology_config.TopologyConfig, secret []managementSessions.NodeCredentials) error {
 	if topo == nil || cfg == nil {
 		return fmt.Errorf("topology and config must not be nil")
 	}
@@ -153,10 +156,20 @@ func (m *MappingEngine) ApplyConfiguration(topo *topology.Topology, cfg *topolog
 			continue
 		}
 
+		var nodeCredentials *credentials.ManagementCredentials
+
+		for _, secret := range secret {
+			if secret.ID == node.Name {
+				nodeCredentials = secret.Credentials
+				break
+			}
+		}
+
 		tx.Operations = append(tx.Operations, Operation{
 			Node:    node,
 			Config:  nodeCfg,
 			Backend: backend,
+			creds:   nodeCredentials,
 		})
 	}
 

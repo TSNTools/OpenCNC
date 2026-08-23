@@ -399,7 +399,7 @@ func (Severity) EnumDescriptor() ([]byte, []int) {
 // a capability is a counter or a metric
 type Capability struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Name          string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"` //the id of
+	Name          string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"` //the id of counter or metric
 	Description   string                 `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
 	Kind          DataType               `protobuf:"varint,3,opt,name=kind,proto3,enum=monitoring.DataType" json:"kind,omitempty"`
 	unknownFields protoimpl.UnknownFields

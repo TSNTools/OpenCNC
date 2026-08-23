@@ -78,6 +78,20 @@ func (c *Catalog) GetItem(name string) *monitoring.Capability {
 	return nil
 }
 
+func (c *Catalog) GetCounter(name string) *monitoring.Counter {
+	if c == nil {
+		return nil
+	}
+
+	for i := range c.Counters {
+		if c.Counters[i].Name == name {
+			return c.Counters[i]
+		}
+	}
+
+	return nil
+}
+
 func (c *Catalog) GetCounterByID(name string) *monitoring.Counter {
 	if c == nil {
 		return nil

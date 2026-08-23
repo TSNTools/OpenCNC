@@ -168,11 +168,18 @@ func (h *Handler) MonitoringData(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 	}
-	fmt.Println("Query:", r.URL.Query())
+	intervals := map[string]uint32{}
+	if rawPollIntervals := strings.TrimSpace(r.URL.Query().Get("pollIntervals")); rawPollIntervals != "" {
+		if err := json.Unmarshal([]byte(rawPollIntervals), &intervals); err != nil {
+			writeJSON(w, http.StatusBadRequest, map[string]string{"error": fmt.Sprintf("invalid pollIntervals payload: %v", err)})
+			return
+		}
+	}
 	query := domain.MonitoringDataQuery{
-		Node:      strings.TrimSpace(r.URL.Query().Get("node")),
-		TargetID:  strings.TrimSpace(r.URL.Query().Get("targetId")),
-		MetricIDs: metricIDs,
+		Node:          strings.TrimSpace(r.URL.Query().Get("node")),
+		TargetID:      strings.TrimSpace(r.URL.Query().Get("targetId")),
+		MetricIDs:     metricIDs,
+		PollIntervals: intervals,
 	}
 
 	data, err := h.service.GetMonitoringData(r.Context(), query)
@@ -284,7 +291,8 @@ func (h *Handler) NodeByID(w http.ResponseWriter, r *http.Request) {
 			ManagementProtocol: input.ManagementProtocol,
 			ManagementPort:     input.ManagementPort,
 			PortIds:            strings.Split(input.Ports, ","),
-			Links:              input.Links,
+			Username:           input.Username,
+			Password:           input.Password,
 		}
 
 		result, err := h.service.EditNode(r.Context(), node)
@@ -378,6 +386,14 @@ func (h *Handler) Streams(w http.ResponseWriter, r *http.Request) {
 	case http.MethodPost:
 		input := decodeInput(r)
 		result, err := h.service.AddStream(r.Context(), streamFromInput(input))
+		if err != nil {
+			internalError(w, err)
+			return
+		}
+		writeJSON(w, http.StatusOK, result)
+	case http.MethodDelete:
+		id := strings.TrimPrefix(r.URL.Path, "/api/v1/streams/")
+		result, err := h.service.RemoveStream(r.Context(), id)
 		if err != nil {
 			internalError(w, err)
 			return

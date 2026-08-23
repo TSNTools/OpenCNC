@@ -6,6 +6,7 @@ import (
 
 	"OpenCNC_config_service/common/observability"
 	storewrapper "OpenCNC_config_service/common/store-wrapper"
+	credentials "OpenCNC_config_service/common/structures/credentials"
 	"OpenCNC_config_service/common/structures/topology"
 	topology_config "OpenCNC_config_service/common/structures/topology_config"
 	"OpenCNC_config_service/config_service/pkg/managementSessions"
@@ -29,7 +30,7 @@ func (s *NetconfSnapshot) Clone() Snapshot {
 	}
 }
 
-func (s *NetconfSnapshot) Update(feature *plugins.FeatureXML, target managementSessions.DeviceTarget) error {
+func (s *NetconfSnapshot) Update(feature *plugins.FeatureXML, node *topology.Node) error {
 
 	if feature == nil {
 		return fmt.Errorf("feature XML is nil")
@@ -60,7 +61,7 @@ func (s *NetconfSnapshot) Update(feature *plugins.FeatureXML, target managementS
 			continue
 		}
 
-		if name.Text() == target.InterfaceName {
+		if name.Text() == node.Name {
 			interfaceElement = intf
 			break
 		}
@@ -69,7 +70,7 @@ func (s *NetconfSnapshot) Update(feature *plugins.FeatureXML, target managementS
 	if interfaceElement == nil {
 		return fmt.Errorf(
 			"interface %q not found in snapshot",
-			target.InterfaceName,
+			node.Name,
 		)
 	}
 
@@ -199,13 +200,6 @@ func (b *NetconfBackend) PrepareSnapshot(msg *topology_config.NodeConfig, node *
 
 		logger.Printf("======================================================")
 		logger.Printf("Processing port %q", portConfig.PortId)
-
-		target := managementSessions.DeviceTarget{
-			InterfaceName: portConfig.PortId,
-			Logger:        logger,
-			Secret:        "",
-			Info:          node.ManagementInfo,
-		}
 
 		used := make(map[string]struct{})
 
@@ -345,7 +339,7 @@ func (b *NetconfBackend) PrepareSnapshot(msg *topology_config.NodeConfig, node *
 
 			if err := snapshotSet.Working.Update(
 				featureXML,
-				target,
+				node,
 			); err != nil {
 				return fmt.Errorf("failed to update snapshot: %w", err)
 			}
@@ -400,7 +394,7 @@ func (b *NetconfBackend) PrepareSnapshot(msg *topology_config.NodeConfig, node *
 	return nil
 }
 
-func (b *NetconfBackend) Commit(target *topology.Node) error {
+func (b *NetconfBackend) Commit(target *topology.Node, cred *credentials.ManagementCredentials) error {
 
 	if target == nil {
 		return fmt.Errorf("Commit: node is nil")
@@ -432,6 +426,7 @@ func (b *NetconfBackend) Commit(target *topology.Node) error {
 	if err := b.pushSnapshot(
 		snapshotSet.Working,
 		target,
+		cred,
 	); err != nil {
 		return fmt.Errorf(
 			"commit failed: %w",
@@ -454,7 +449,7 @@ func (b *NetconfBackend) Commit(target *topology.Node) error {
 	return nil
 }
 
-func (b *NetconfBackend) Rollback(target *topology.Node) error {
+func (b *NetconfBackend) Rollback(target *topology.Node, cred *credentials.ManagementCredentials) error {
 
 	if target == nil {
 		return fmt.Errorf("Rollback: node is nil")
@@ -486,6 +481,7 @@ func (b *NetconfBackend) Rollback(target *topology.Node) error {
 	if err := b.pushSnapshot(
 		snapshotSet.LastStable,
 		target,
+		cred,
 	); err != nil {
 		return fmt.Errorf(
 			"rollback failed: %w",
@@ -507,7 +503,7 @@ func (b *NetconfBackend) Rollback(target *topology.Node) error {
 	return nil
 }
 
-func (b *NetconfBackend) pushSnapshot(snapshot *NetconfSnapshot, node *topology.Node) error {
+func (b *NetconfBackend) pushSnapshot(snapshot *NetconfSnapshot, node *topology.Node, cred *credentials.ManagementCredentials) error {
 
 	if snapshot == nil {
 		return fmt.Errorf("snapshot is nil")
@@ -517,10 +513,9 @@ func (b *NetconfBackend) pushSnapshot(snapshot *NetconfSnapshot, node *topology.
 		return fmt.Errorf("snapshot XML is empty")
 	}
 
-	session, err := managementSessions.CreateSession(
+	session, err := managementSessions.CreateSessionWithPassword(
 		node.ManagementInfo.IpAddress,
-		node.ManagementInfo.UserName,
-		"",
+		cred.GetUsernamePassword(),
 	)
 
 	if err != nil {

@@ -35,7 +35,7 @@ func main() {
 		log.Fatalf("failed loading catalog: %v", err)
 	}
 
-	monitorEngine := engine.NewEngine(catalog)
+	monitorEngine := engine.NewEngine(catalog, obsClient)
 	server := service.NewMonitorServer(monitorEngine)
 
 	listener, err := net.Listen("tcp", ":5151")

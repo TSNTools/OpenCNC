@@ -26,6 +26,7 @@ import (
 
 	devicemodelregistry "OpenCNC_config_service/common/structures/devicemodelregistry"
 	moduleregistry "OpenCNC_config_service/common/structures/module-registry"
+	"OpenCNC_config_service/common/structures/stream"
 	"OpenCNC_config_service/common/structures/topology"
 	"OpenCNC_config_service/common/structures/topology_config"
 
@@ -374,3 +375,156 @@ func StoreConfiguration(cfg *topology_config.TopologyConfig) error {
 
 	return nil
 }
+
+func StoreStream(streamObj *stream.Stream, id string) error {
+	if streamObj == nil {
+		return fmt.Errorf("cannot store nil stream")
+	}
+
+	id = strings.TrimSpace(id)
+	if id == "" {
+		return fmt.Errorf("stream ID cannot be empty")
+	}
+
+	obj, err := proto.Marshal(streamObj)
+	if err != nil {
+		return fmt.Errorf(
+			"failed to marshal stream %s: %w",
+			id,
+			err,
+		)
+	}
+
+	urn := "streams." + id
+
+	if err := SendToStore(obj, urn); err != nil {
+		return fmt.Errorf(
+			"failed to store stream %s: %w",
+			id,
+			err,
+		)
+	}
+
+	return nil
+}
+
+func GetStreamByID(id string) (*stream.Stream, error) {
+	if strings.TrimSpace(id) == "" {
+		return nil, fmt.Errorf("stream ID cannot be empty")
+	}
+
+	rawData, err := getFromStoreWithPrefix("streams." + id)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(rawData.Kvs) == 0 {
+		return nil, fmt.Errorf("stream %s not found", id)
+	}
+
+	streamObj := &stream.Stream{}
+
+	if err := proto.Unmarshal(
+		[]byte(rawData.Kvs[0].Value),
+		streamObj,
+	); err != nil {
+		return nil, fmt.Errorf(
+			"failed unmarshaling stream %s: %w",
+			id,
+			err,
+		)
+	}
+
+	return streamObj, nil
+}
+
+func DeleteStream(id string) error {
+	id = strings.TrimSpace(id)
+
+	if id == "" {
+		return fmt.Errorf("stream ID cannot be empty")
+	}
+
+	client, err := createEtcdClient()
+	if err != nil {
+		return err
+	}
+	defer client.Close()
+
+	key := "streams/" + id
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	_, err = client.Delete(ctx, key)
+	if err != nil {
+		return fmt.Errorf(
+			"failed to delete stream %s: %w",
+			id,
+			err,
+		)
+	}
+
+	return nil
+}
+
+type StoredStream struct {
+	ID     string
+	Stream *stream.Stream
+}
+
+func GetStreams() ([]StoredStream, error) {
+	rawData, err := getFromStoreWithPrefix("streams")
+	if err != nil {
+		return nil, err
+	}
+
+	streams := make([]StoredStream, 0, len(rawData.Kvs))
+
+	for _, rawStream := range rawData.Kvs {
+		streamObj := &stream.Stream{}
+
+		if err := proto.Unmarshal([]byte(rawStream.Value), streamObj); err != nil {
+			log.Errorf("Failed unmarshaling stream: %v", err)
+			continue
+		}
+
+		key := string(rawStream.Key)
+
+		// Expected key:
+		// streams/<stream-id>
+		id := strings.TrimPrefix(key, "streams/")
+
+		streams = append(streams, StoredStream{
+			ID:     id,
+			Stream: streamObj,
+		})
+	}
+
+	return streams, nil
+}
+
+/*
+func GetStreams(prefix string) []*stream.Stream {
+	var streams []*stream.Stream
+
+	rawData, err := getFromStoreWithPrefix(prefix)
+	if err != nil {
+		log.Errorf("Failed getting streams from store: %v", err)
+		return streams
+	}
+
+	for _, rawStream := range rawData.Kvs {
+		streamObj := &stream.Stream{}
+
+		if err = proto.Unmarshal([]byte(rawStream.Value), streamObj); err != nil {
+			log.Errorf("Failed unmarshaling stream: %v", err)
+			return streams
+		}
+
+		streams = append(streams, streamObj)
+	}
+
+	return streams
+}
+*/

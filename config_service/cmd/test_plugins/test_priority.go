@@ -3,10 +3,11 @@ package main
 import (
 	"log"
 
-	managementSessions "OpenCNC_config_service/config_service/pkg/managementSessions"
-	netconf "OpenCNC_config_service/config_service/pkg/plugins/netconf"
+	"OpenCNC_config_service/common/structures/credentials"
 	topology "OpenCNC_config_service/common/structures/topology"
 	topology_config "OpenCNC_config_service/common/structures/topology_config"
+	managementSessions "OpenCNC_config_service/config_service/pkg/managementSessions"
+	netconf "OpenCNC_config_service/config_service/pkg/plugins/netconf"
 
 	"github.com/gogo/protobuf/proto"
 )
@@ -18,10 +19,16 @@ func TestPriorityPlugin_tttech() {
 	target := managementSessions.DeviceTarget{
 		InterfaceName: "sw0p3",
 		Logger:        logger,
-		Secret:        "", // password is empty
+		Credentials: &credentials.ManagementCredentials{
+			Authentication: &credentials.ManagementCredentials_UsernamePassword{
+				UsernamePassword: &credentials.UsernamePassword{
+					Username: "root",
+					Password: "root",
+				},
+			},
+		},
 		Info: &topology.ManagementInfo{
 			IpAddress:      "192.168.0.1", // IP address
-			UserName:       "root",        // username
 			ManagementPort: 830,           // default NETCONF port
 			Protocol:       topology.ManagementProtocol_NETCONF,
 		},

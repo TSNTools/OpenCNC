@@ -62,12 +62,11 @@ message DeviceInfo {
 
 // Reflects how the CNC should connect to the node's management plane
 message ManagementInfo {
-    repeated string key_certificates = 1;
-    string ip_address = 2;
-    uint32 management_port = 3;         // TCP port (e.g., 830 for NETCONF)
-    string user_name = 4;
-    uint32 management_vlan = 5;         // VLAN used for management (IEEE 802.1Qcp context)
-    ManagementProtocol protocol = 6;    // NETCONF / SNMP / etc.
+    string ip_address = 1;
+    uint32 management_port = 2;         // TCP port (e.g., 830 for NETCONF)
+    uint32 management_vlan = 3;         // VLAN used for management (IEEE 802.1Qcp context)
+    ManagementProtocol protocol = 4;    // NETCONF / SNMP / etc.
+    ManagementTransport transport = 5;
 }
 
 enum ManagementProtocol {
@@ -75,6 +74,12 @@ enum ManagementProtocol {
     NETCONF = 1;
     SNMP = 2;
     // Extendable for RESTCONF, gNMI, etc.
+}
+
+enum ManagementTransport {
+    MANAGEMENT_TRANSPORT_UNSPECIFIED = 0;
+    SSH = 1;
+    TLS = 2;
 }
 
 message InventoryInfo {

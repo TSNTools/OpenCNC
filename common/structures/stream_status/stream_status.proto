@@ -1,0 +1,31 @@
+syntax = "proto3";
+
+package tsn.stream;
+
+/*
+ * Runtime status information for a TSN stream.
+ * Reflects real-time monitoring data, errors, and health metrics.
+ */
+
+message StreamState {
+  StreamID stream_id = 1;  // Reference to the unique stream identifier
+
+  uint64 accumulated_latency_ns = 2;  // Total latency accumulated along the stream path (in nanoseconds)
+  uint64 jitter_ns = 3;                // Jitter observed on the stream (in nanoseconds)
+
+  bool is_active = 4;                  // Whether the stream is currently active/operational
+
+  // Enumerates known error codes associated with stream operation
+  enum StreamErrorCode {
+    ERROR_NONE = 0;           // No error detected
+    ERROR_OVERLATENCY = 1;    // Latency exceeds acceptable limits
+    ERROR_LOSS = 2;           // Packet loss detected
+    ERROR_MISCONFIGURED = 3;  // Stream misconfiguration detected
+    ERROR_UNKNOWN = 100;      // Unknown or unspecified error
+  }
+
+  StreamErrorCode last_error_code = 5;  // Most recent error code
+  string last_error = 6;                 // Optional textual description of the last error
+
+  uint64 last_updated_timestamp_ns = 7; // Timestamp of last status update (nanoseconds since epoch)
+}

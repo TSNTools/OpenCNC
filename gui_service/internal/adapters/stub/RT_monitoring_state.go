@@ -8,6 +8,9 @@ type MonitoringState struct {
 	// Metrics currently requested by the GUI.
 	wantedMetrics map[string]struct{}
 
+	// Requested polling interval per metric.
+	wantedMetricIntervals map[string]uint32
+
 	// Latest metric data received from Kafka.
 	metrics map[string]MetricData
 }
@@ -20,8 +23,9 @@ type MetricData struct {
 
 func NewMonitoringState() *MonitoringState {
 	return &MonitoringState{
-		wantedMetrics: make(map[string]struct{}),
-		metrics:       make(map[string]MetricData),
+		wantedMetrics:         make(map[string]struct{}),
+		wantedMetricIntervals: make(map[string]uint32),
+		metrics:               make(map[string]MetricData),
 	}
 }
 
@@ -39,6 +43,31 @@ func (s *MonitoringState) SetWantedMetrics(metrics []string) {
 
 		s.wantedMetrics[metric] = struct{}{}
 	}
+}
+
+// SetWantedMetricIntervals replaces the currently requested polling intervals.
+func (s *MonitoringState) SetWantedMetricIntervals(intervals map[string]uint32) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	s.wantedMetricIntervals = make(map[string]uint32, len(intervals))
+
+	for metric, interval := range intervals {
+		if metric == "" || interval <= 0 {
+			continue
+		}
+
+		s.wantedMetricIntervals[metric] = interval
+	}
+}
+
+// WantedMetricInterval returns the requested interval for a metric.
+func (s *MonitoringState) WantedMetricInterval(metric string) (uint32, bool) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	interval, ok := s.wantedMetricIntervals[metric]
+	return interval, ok
 }
 
 // ClearWantedMetrics removes all requested metrics.

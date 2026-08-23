@@ -2,10 +2,13 @@ package service
 
 import (
 	"context"
+	"fmt"
 
 	storewrapper "OpenCNC_config_service/common/store-wrapper"
 	"OpenCNC_config_service/monitor_service/pkg/engine"
 	monitoring "OpenCNC_config_service/monitor_service/structures/monitoring"
+
+	"google.golang.org/protobuf/proto"
 )
 
 type MonitorServer struct {
@@ -96,14 +99,36 @@ func (s *MonitorServer) StartMonitoring(ctx context.Context, req *StartMonitorin
 		}, nil
 	}
 
-	if len(req.Items) == 0 {
+	if len(req.Settings) == 0 {
 		return &MonitoringResponse{
 			Success: false,
 			Message: "no monitoring items specified",
 		}, nil
 	}
 
-	if err := s.engine.StartMonitoring(req.Id, req.Resource, node, req.Items); err != nil {
+	// get node credentials
+	creds, err := storewrapper.GetCredentials(req.Resource.NodeId)
+	if err != nil {
+		return &MonitoringResponse{
+			Success: false,
+			Message: "No credentials found for node: " + err.Error(),
+		}, nil
+	}
+
+	counters, metrics, err := s.parseMonitoringSettings(req.Settings)
+	if err != nil {
+		return &MonitoringResponse{
+			Success: false,
+			Message: "failed to parse monitoring settings: " + err.Error(),
+		}, nil
+	}
+	if err := s.engine.StartMonitoring(
+		req.Resource,
+		node,
+		creds,
+		counters,
+		metrics,
+	); err != nil {
 		return &MonitoringResponse{
 			Success: false,
 			Message: err.Error(),
@@ -114,6 +139,41 @@ func (s *MonitorServer) StartMonitoring(ctx context.Context, req *StartMonitorin
 		Success: true,
 		Message: "monitoring started",
 	}, nil
+}
+
+func (s *MonitorServer) parseMonitoringSettings(items []*MonitoringSetting) ([]*monitoring.Counter, []*monitoring.Metric, error) {
+	counters := []*monitoring.Counter{}
+	metrics := []*monitoring.Metric{}
+
+	for _, item := range items {
+		capability := s.engine.Catalog.GetItem(item.CapabilityId)
+		if capability == nil {
+			return nil, nil, fmt.Errorf("monitoring item %q not found in catalog", item.CapabilityId)
+		}
+		//counters
+		if capability.Kind == monitoring.DataType_RAW {
+			counter := proto.Clone(
+				s.engine.Catalog.GetCounter(capability.Name),
+			).(*monitoring.Counter)
+			if counter == nil {
+				return nil, nil, fmt.Errorf("item %q is not a counter", capability.Name)
+			}
+			counter.PollIntervalMs = item.PollIntervalMs
+			counters = append(counters, counter)
+		}
+		//metrics
+		if capability.Kind == monitoring.DataType_METRIC {
+			metric := proto.Clone(
+				s.engine.Catalog.GetMetricByID(capability.Name),
+			).(*monitoring.Metric)
+			if metric == nil {
+				return nil, nil, fmt.Errorf("item %q is not a metric", capability.Name)
+			}
+			metric.EvaluationIntervalMs = item.PollIntervalMs
+			metrics = append(metrics, metric)
+		}
+	}
+	return counters, metrics, nil
 }
 
 func (s *MonitorServer) StopMonitoring(ctx context.Context, req *StopMonitoringRequest) (*MonitoringResponse, error) {

@@ -229,7 +229,8 @@ func (p *OldQbvNetconfPlugin) Push(mapped any, target managementSessions.DeviceT
 
 	//p.logger.Printf("[OldQBV] XML generated for interface %s", target.InterfaceName)
 
-	session, err := managementSessions.CreateSession(target.Info.IpAddress, target.Info.UserName, target.Secret)
+	session, err := managementSessions.CreateSessionWithPassword(target.Info.IpAddress, target.Credentials.GetUsernamePassword())
+
 	if err != nil {
 		return fmt.Errorf("NETCONF session failed: %w", err)
 	}

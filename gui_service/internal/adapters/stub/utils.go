@@ -3,8 +3,10 @@ package stub
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
+	"OpenCNC_config_service/gui_service/internal/domain"
 	service "OpenCNC_config_service/monitor_service/structures/grpc_server"
 	"OpenCNC_config_service/monitor_service/structures/monitoring"
 
@@ -51,11 +53,35 @@ func requestGetCapabilities(resource *monitoring.ResourceKey) (*service.Capabili
 	return resp, nil
 }
 
-func requestStartMonitoring(
-	id string,
-	resource *monitoring.ResourceKey,
-	items []string,
-) (*service.MonitoringResponse, error) {
+func requestStartMonitoring(query domain.MonitoringDataQuery) (*service.MonitoringResponse, error) {
+
+	//parse  query and build the request
+	parts := strings.SplitN(query.TargetID, "_", 2)
+	nodeId := parts[0]
+	portId := ""
+	if len(parts) > 1 {
+		portId = parts[1]
+	}
+	resource := &monitoring.ResourceKey{
+		NodeId: nodeId,
+		PortId: &portId,
+	}
+
+	settings := make([]*service.MonitoringSetting, len(query.MetricIDs))
+	for i, metricID := range query.MetricIDs {
+		settings[i] = &service.MonitoringSetting{
+			CapabilityId:   metricID,
+			PollIntervalMs: query.PollIntervals[metricID],
+		}
+	}
+
+	req := &service.StartMonitoringRequest{
+		Id:       query.TargetID,
+		Resource: resource,
+		Settings: settings,
+	}
+
+	// Create a context with a timeout for the gRPC call
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
@@ -75,15 +101,9 @@ func requestStartMonitoring(
 	defer conn.Close()
 
 	client := service.NewMonitorServiceClient(conn)
+	resp, err := client.StartMonitoring(ctx, req)
+	//fmt.Println("requestStartMonitoring: ", req)
 
-	resp, err := client.StartMonitoring(
-		ctx,
-		&service.StartMonitoringRequest{
-			Id:       id,
-			Resource: resource,
-			Items:    items,
-		},
-	)
 	if err != nil {
 		return nil, fmt.Errorf(
 			"monitor service StartMonitoring RPC failed: %w",

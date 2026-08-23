@@ -58,7 +58,6 @@ var bridge = &topology.Node{
 	},
 	ManagementInfo: &topology.ManagementInfo{
 		IpAddress:      "192.168.0.1",
-		UserName:       "root",
 		ManagementPort: 830,
 		Protocol:       topology.ManagementProtocol_NETCONF,
 	},

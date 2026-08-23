@@ -5,6 +5,7 @@ package managementSessions
 // go run Connect_netconf.go  -s 192.168.4.64 -e -f config.xml
 
 import (
+	"OpenCNC_config_service/common/structures/credentials"
 	"encoding/xml"
 	"fmt"
 	"io/ioutil"
@@ -21,6 +22,36 @@ func CreateSession(host, user, pass string) (*netconf.Session, error) {
 	sshConfig := &ssh.ClientConfig{
 		User:            user,
 		Auth:            []ssh.AuthMethod{ssh.Password(pass)},
+		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+	}
+
+	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
+	address := fmt.Sprintf("%s:830", host)
+
+	session, err := netconf.NewSessionFromSSHConfig(address, sshConfig, netconf.WithSessionLogger(logger))
+	if err != nil {
+		return nil, fmt.Errorf("failed to connect: %w", err)
+	}
+
+	err = session.SendHello(&message.Hello{
+		Capabilities: netconf.DefaultCapabilities,
+	})
+	if err != nil {
+		session.Close()
+		return nil, fmt.Errorf("failed to send hello: %w", err)
+	}
+
+	return session, nil
+}
+
+func CreateSessionWithPassword(host string, creds *credentials.UsernamePassword) (*netconf.Session, error) {
+	if creds == nil {
+		return nil, fmt.Errorf("username/password credentials are required")
+	}
+
+	sshConfig := &ssh.ClientConfig{
+		User:            creds.GetUsername(),
+		Auth:            []ssh.AuthMethod{ssh.Password(creds.GetPassword())},
 		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
 	}
 

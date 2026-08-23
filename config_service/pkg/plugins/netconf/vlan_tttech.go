@@ -260,7 +260,7 @@ func (v *VlanNetconfPlugin) Push(mapped any, target managementSessions.DeviceTar
 		return fmt.Errorf("device target info is nil")
 	}
 
-	session, err := managementSessions.CreateSession(target.Info.IpAddress, target.Info.UserName, target.Secret)
+	session, err := managementSessions.CreateSessionWithPassword(target.Info.IpAddress, target.Credentials.GetUsernamePassword())
 	if err != nil {
 		return fmt.Errorf("NETCONF session failed: %w", err)
 	}
