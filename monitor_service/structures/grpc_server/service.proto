@@ -45,4 +45,19 @@ service MonitorService {
 
   rpc StopMonitoring(StopMonitoringRequest)
       returns (MonitoringResponse);
+
+  rpc TestRollback(TestRollbackRequest)
+  returns (TestRollbackResponse);
+}
+
+////// TO REMOVE ////////
+message TestRollbackRequest {
+  string id = 1;
+  string node_name = 2;
+  string port_name = 3;
+}
+
+message TestRollbackResponse {
+  bool success = 1;
+  string message = 2;
 }

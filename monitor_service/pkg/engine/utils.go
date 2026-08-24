@@ -14,7 +14,7 @@ import (
 
 const defaultConfigServiceAddress = "localhost:5150"
 
-func handleRequestRollback(event *monitoring.MonitoringEvent) error {
+func HandleRequestRollback(event *monitoring.MonitoringEvent) error {
 	if event == nil {
 		return fmt.Errorf("event is nil")
 	}

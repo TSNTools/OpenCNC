@@ -191,7 +191,7 @@ func (e *Engine) HandleEvent(event *monitoring.MonitoringEvent) error {
 	for _, action := range event.Actions {
 		switch action {
 		case monitoring.EventAction_REQUEST_ROLLBACK:
-			if err := handleRequestRollback(event); err != nil {
+			if err := HandleRequestRollback(event); err != nil {
 				return fmt.Errorf("handle rollback action: %w", err)
 			}
 		case monitoring.EventAction_REQUEST_RECONFIGURATION:

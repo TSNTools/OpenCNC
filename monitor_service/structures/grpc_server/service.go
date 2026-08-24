@@ -197,3 +197,32 @@ func (s *MonitorServer) StopMonitoring(ctx context.Context, req *StopMonitoringR
 		Message: "monitoring stopped",
 	}, nil
 }
+
+// ///////////////////////
+func (s *MonitorServer) TestRollback(ctx context.Context, req *TestRollbackRequest) (*TestRollbackResponse, error) {
+	if req == nil || req.Id == "" {
+		return &TestRollbackResponse{
+			Success: false,
+			Message: "rollback id is required",
+		}, nil
+	}
+
+	event := &monitoring.MonitoringEvent{
+		Source:   &monitoring.ResourceKey{NodeId: req.NodeName, PortId: &req.PortName},
+		Type:     monitoring.EventType_TYPE_UNSPECIFIED,
+		Severity: monitoring.Severity_CRITICAL,
+		Actions:  []monitoring.EventAction{monitoring.EventAction_REQUEST_ROLLBACK},
+	}
+
+	if err := engine.HandleRequestRollback(event); err != nil {
+		return &TestRollbackResponse{
+			Success: false,
+			Message: err.Error(),
+		}, nil
+	}
+
+	return &TestRollbackResponse{
+		Success: true,
+		Message: "rollback test succeeded",
+	}, nil
+}
