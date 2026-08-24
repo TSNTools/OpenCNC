@@ -3,12 +3,12 @@
     {
       "name": "unicast-packet-rate",
       "type": 16,
-      "evaluationIntervalMs": 1000,
-      "inputIds": [
-        "in-unicast-pkts",
-        "out-unicast-pkts"
+      "evaluation_interval_ms": 1000,
+      "input_ids": [
+        "if_state_in_unicast_pkts",
+        "if_state_out_unicast_pkts"
       ],
-      "windowSize": 2,
+      "window_size": 2,
       "description": "Combined incoming and outgoing unicast packet rate.",
       "thresholds": [
         {

@@ -8,6 +8,7 @@ import (
 type Collector interface {
 	// Get the list of counters that this collector is appointed to collect.
 	Counters() []*monitoring.Counter
+	CounterIds() []string
 
 	// Protocol implemented by this collector.
 	Protocol() string
@@ -27,7 +28,6 @@ type Collector interface {
 
 	// Read a subset (or all) of the supported counters.
 	Collect(
-		counters []*monitoring.Counter,
 		ctx context.Context,
 	) ([]*monitoring.DataSample, error)
 }

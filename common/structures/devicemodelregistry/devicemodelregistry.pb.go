@@ -23,8 +23,10 @@ const (
 
 type DeviceModel struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Name          string                 `protobuf:"bytes,1,opt,name=Name,json=model-name,proto3" json:"Name,omitempty"`
-	YangFiles     []*YangFile            `protobuf:"bytes,2,rep,name=YangFiles,json=yang-files,proto3" json:"YangFiles,omitempty"`
+	Name          string                 `protobuf:"bytes,1,opt,name=name,json=model-name,proto3" json:"name,omitempty"`
+	Vendor        string                 `protobuf:"bytes,2,opt,name=vendor,proto3" json:"vendor,omitempty"`
+	Software      string                 `protobuf:"bytes,3,opt,name=software,proto3" json:"software,omitempty"`
+	YangFiles     []*YangModule          `protobuf:"bytes,4,rep,name=yangFiles,json=yang-files,proto3" json:"yangFiles,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -66,36 +68,50 @@ func (x *DeviceModel) GetName() string {
 	return ""
 }
 
-func (x *DeviceModel) GetYangFiles() []*YangFile {
+func (x *DeviceModel) GetVendor() string {
+	if x != nil {
+		return x.Vendor
+	}
+	return ""
+}
+
+func (x *DeviceModel) GetSoftware() string {
+	if x != nil {
+		return x.Software
+	}
+	return ""
+}
+
+func (x *DeviceModel) GetYangFiles() []*YangModule {
 	if x != nil {
 		return x.YangFiles
 	}
 	return nil
 }
 
-type YangFile struct {
+type YangModule struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Name          string                 `protobuf:"bytes,1,opt,name=Name,json=file-name,proto3" json:"Name,omitempty"`
-	Revision      string                 `protobuf:"bytes,2,opt,name=Revision,json=file-revision,proto3" json:"Revision,omitempty"`
-	Description   string                 `protobuf:"bytes,3,opt,name=description,json=structure,proto3" json:"description,omitempty"`
+	Name          string                 `protobuf:"bytes,1,opt,name=name,json=file-name,proto3" json:"name,omitempty"`
+	Revision      string                 `protobuf:"bytes,2,opt,name=revision,json=file-revision,proto3" json:"revision,omitempty"`
+	Description   string                 `protobuf:"bytes,3,opt,name=description,proto3" json:"description,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *YangFile) Reset() {
-	*x = YangFile{}
+func (x *YangModule) Reset() {
+	*x = YangModule{}
 	mi := &file_common_structures_devicemodelregistry_devicemodelregistry_proto_msgTypes[1]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *YangFile) String() string {
+func (x *YangModule) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*YangFile) ProtoMessage() {}
+func (*YangModule) ProtoMessage() {}
 
-func (x *YangFile) ProtoReflect() protoreflect.Message {
+func (x *YangModule) ProtoReflect() protoreflect.Message {
 	mi := &file_common_structures_devicemodelregistry_devicemodelregistry_proto_msgTypes[1]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -107,26 +123,26 @@ func (x *YangFile) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use YangFile.ProtoReflect.Descriptor instead.
-func (*YangFile) Descriptor() ([]byte, []int) {
+// Deprecated: Use YangModule.ProtoReflect.Descriptor instead.
+func (*YangModule) Descriptor() ([]byte, []int) {
 	return file_common_structures_devicemodelregistry_devicemodelregistry_proto_rawDescGZIP(), []int{1}
 }
 
-func (x *YangFile) GetName() string {
+func (x *YangModule) GetName() string {
 	if x != nil {
 		return x.Name
 	}
 	return ""
 }
 
-func (x *YangFile) GetRevision() string {
+func (x *YangModule) GetRevision() string {
 	if x != nil {
 		return x.Revision
 	}
 	return ""
 }
 
-func (x *YangFile) GetDescription() string {
+func (x *YangModule) GetDescription() string {
 	if x != nil {
 		return x.Description
 	}
@@ -137,16 +153,19 @@ var File_common_structures_devicemodelregistry_devicemodelregistry_proto protore
 
 const file_common_structures_devicemodelregistry_devicemodelregistry_proto_rawDesc = "" +
 	"\n" +
-	"?common/structures/devicemodelregistry/devicemodelregistry.proto\x12\x13devicemodelregistry\"e\n" +
+	"?common/structures/devicemodelregistry/devicemodelregistry.proto\x12\x13devicemodelregistry\"\x9b\x01\n" +
 	"\vDeviceModel\x12\x18\n" +
-	"\x04Name\x18\x01 \x01(\tR\n" +
-	"model-name\x12<\n" +
-	"\tYangFiles\x18\x02 \x03(\v2\x1d.devicemodelregistry.YangFileR\n" +
-	"yang-files\"d\n" +
-	"\bYangFile\x12\x17\n" +
-	"\x04Name\x18\x01 \x01(\tR\tfile-name\x12\x1f\n" +
-	"\bRevision\x18\x02 \x01(\tR\rfile-revision\x12\x1e\n" +
-	"\vdescription\x18\x03 \x01(\tR\tstructureB\x17Z\x15./devicemodelregistryb\x06proto3"
+	"\x04name\x18\x01 \x01(\tR\n" +
+	"model-name\x12\x16\n" +
+	"\x06vendor\x18\x02 \x01(\tR\x06vendor\x12\x1a\n" +
+	"\bsoftware\x18\x03 \x01(\tR\bsoftware\x12>\n" +
+	"\tyangFiles\x18\x04 \x03(\v2\x1f.devicemodelregistry.YangModuleR\n" +
+	"yang-files\"h\n" +
+	"\n" +
+	"YangModule\x12\x17\n" +
+	"\x04name\x18\x01 \x01(\tR\tfile-name\x12\x1f\n" +
+	"\brevision\x18\x02 \x01(\tR\rfile-revision\x12 \n" +
+	"\vdescription\x18\x03 \x01(\tR\vdescriptionB\x17Z\x15./devicemodelregistryb\x06proto3"
 
 var (
 	file_common_structures_devicemodelregistry_devicemodelregistry_proto_rawDescOnce sync.Once
@@ -163,10 +182,10 @@ func file_common_structures_devicemodelregistry_devicemodelregistry_proto_rawDes
 var file_common_structures_devicemodelregistry_devicemodelregistry_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
 var file_common_structures_devicemodelregistry_devicemodelregistry_proto_goTypes = []any{
 	(*DeviceModel)(nil), // 0: devicemodelregistry.DeviceModel
-	(*YangFile)(nil),    // 1: devicemodelregistry.YangFile
+	(*YangModule)(nil),  // 1: devicemodelregistry.YangModule
 }
 var file_common_structures_devicemodelregistry_devicemodelregistry_proto_depIdxs = []int32{
-	1, // 0: devicemodelregistry.DeviceModel.YangFiles:type_name -> devicemodelregistry.YangFile
+	1, // 0: devicemodelregistry.DeviceModel.yangFiles:type_name -> devicemodelregistry.YangModule
 	1, // [1:1] is the sub-list for method output_type
 	1, // [1:1] is the sub-list for method input_type
 	1, // [1:1] is the sub-list for extension type_name

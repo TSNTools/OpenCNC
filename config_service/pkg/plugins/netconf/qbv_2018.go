@@ -48,7 +48,7 @@ func (p *OldQbvNetconfPlugin) FeatureName() string {
 }
 
 func (p *OldQbvNetconfPlugin) SupportedByDevice(model *devicemodelregistry.DeviceModel) bool {
-	requiredYangs := []devicemodelregistry.YangFile{
+	requiredYangs := []devicemodelregistry.YangModule{
 		{Name: "ieee802-dot1q-sched.yang", Revision: "2018-09-10"},
 		{Name: "ieee802-dot1q-bridge.yang", Revision: "2018-03-07"},
 	}

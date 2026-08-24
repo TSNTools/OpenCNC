@@ -58,7 +58,7 @@ func (p *QbvNetconfPlugin) SupportedFields(msg proto.Message) []string {
 }
 
 func (p *QbvNetconfPlugin) SupportedByDevice(model *devicemodelregistry.DeviceModel) bool {
-	requiredYangs := []devicemodelregistry.YangFile{
+	requiredYangs := []devicemodelregistry.YangModule{
 		{
 			Name:     "ieee802-dot1q-sched.yang",
 			Revision: "2021-04-09",

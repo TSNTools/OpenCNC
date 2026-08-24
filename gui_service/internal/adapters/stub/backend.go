@@ -419,33 +419,6 @@ func (b *Backend) GetMonitoringData(_ context.Context, query domain.MonitoringDa
 		rtData[query.TargetID][metricID] = formatMetricValue(data)
 	}
 
-	// TODO replace it with Kafka consumer to get real-time data from monitor service
-	rawValues := map[string]map[string]string{
-		"D_Port1": {
-			"rx_packets":          "1500",
-			"tx_packets":          "18",
-			"rx_drops":            "2",
-			"tx_drops":            "1",
-			"unicast-packet-rate": "41%",
-			"latency_mean":        "0.8 ms",
-			"packet_loss_rate":    "0.12%",
-		},
-		"sw1_sw0p4": {
-			"rx_packets":       "700",
-			"tx_packets":       "1498",
-			"bandwidth_usage":  "72%",
-			"latency_mean":     "1.3 ms",
-			"packet_loss_rate": "0.08%",
-		},
-		"sw2_sw0p1": {
-			"rx_packets":        "924",
-			"tx_packets":        "907",
-			"stream_rejections": "5",
-			"bandwidth_usage":   "58%",
-			"packet_loss_rate":  "0.20%",
-		},
-	}
-
 	targets, err := b.GetMonitoringTargets(context.Background())
 	if err != nil {
 		return nil, err
@@ -469,11 +442,6 @@ func (b *Backend) GetMonitoringData(_ context.Context, query domain.MonitoringDa
 		labelByID[item.ID] = item.Label
 	}
 
-	metricIDs := query.MetricIDs
-	if len(metricIDs) == 0 {
-		metricIDs = []string{"rx_packets", "tx_packets"}
-	}
-
 	filtered := make([]domain.MonitoringTargetData, 0)
 	for _, target := range targets {
 		if query.TargetID != "" && target.ID != query.TargetID {
@@ -484,8 +452,8 @@ func (b *Backend) GetMonitoringData(_ context.Context, query domain.MonitoringDa
 		}
 
 		values := make([]domain.MonitoringValue, 0)
-		for _, metricID := range metricIDs {
-			valueByMetric, found := rawValues[target.ID]
+		for _, metricID := range query.MetricIDs {
+			valueByMetric, found := rtData[target.ID]
 			if !found {
 				continue
 			}
@@ -757,7 +725,7 @@ func (b *Backend) UploadModel(_ context.Context, query string) (domain.Operation
 			if strings.TrimSpace(yang.Name) == "" {
 				continue
 			}
-			model.YangFiles = append(model.YangFiles, &devicemodelregistry.YangFile{
+			model.YangFiles = append(model.YangFiles, &devicemodelregistry.YangModule{
 				Name:        yang.Name,
 				Revision:    yang.Revision,
 				Description: yang.Structure,

@@ -59,7 +59,7 @@ func (p *PcpMappingNetconfPlugin) SupportedFields(msg proto.Message) []string {
 }
 
 func (p *PcpMappingNetconfPlugin) SupportedByDevice(model *devicemodelregistry.DeviceModel) bool {
-	requiredYangs := []devicemodelregistry.YangFile{{
+	requiredYangs := []devicemodelregistry.YangModule{{
 		Name:     "ieee802-dot1q-bridge.yang",
 		Revision: "2018-03-07",
 	}}

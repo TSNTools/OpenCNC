@@ -1,8 +1,11 @@
 package meters
 
 import (
+	"context"
 	"fmt"
 
+	"OpenCNC_config_service/common/observability"
+	observabilityv1 "OpenCNC_config_service/common/structures/logging"
 	"OpenCNC_config_service/monitor_service/structures/monitoring"
 )
 
@@ -47,8 +50,8 @@ import (
 func init() {
 	Register(MeterFactory{
 		Type: monitoring.MetricType_PACKET_RATE,
-		New: func(resource *monitoring.ResourceKey, metric *monitoring.Metric) (Meter, error) {
-			return NewPacketRateMeter(resource, metric)
+		New: func(resource *monitoring.ResourceKey, obs *observability.Client, metric *monitoring.Metric) (Meter, error) {
+			return NewPacketRateMeter(resource, obs, metric)
 		},
 	})
 }
@@ -58,9 +61,11 @@ type PacketRateMeter struct {
 	nodeID  string
 	portID  string
 	windows map[string]*SamplesWindow
+
+	obs *observability.Client
 }
 
-func NewPacketRateMeter(resource *monitoring.ResourceKey, PacketRateMetric *monitoring.Metric) (*PacketRateMeter, error) {
+func NewPacketRateMeter(resource *monitoring.ResourceKey, obs *observability.Client, PacketRateMetric *monitoring.Metric) (*PacketRateMeter, error) {
 
 	if PacketRateMetric.Name != "unicast-packet-rate" {
 		return nil, fmt.Errorf(
@@ -86,6 +91,7 @@ func NewPacketRateMeter(resource *monitoring.ResourceKey, PacketRateMetric *moni
 		nodeID:  resource.GetNodeId(),
 		portID:  resource.GetPortId(),
 		windows: windows,
+		obs:     obs,
 	}, nil
 }
 
@@ -111,7 +117,12 @@ func (m *PacketRateMeter) UsesInput(inputID string) bool {
 	return false
 }
 
+func (m *PacketRateMeter) RequiredCounter() []string {
+	return m.metric.InputIds
+}
+
 func (m *PacketRateMeter) AddSample(sample *monitoring.DataSample) error {
+
 	if sample == nil {
 		return fmt.Errorf("sample is nil")
 	}
@@ -120,7 +131,7 @@ func (m *PacketRateMeter) AddSample(sample *monitoring.DataSample) error {
 		return fmt.Errorf("sample timestamp is nil")
 	}
 
-	if sample.Id != m.nodeID {
+	if sample.Source.NodeId != m.nodeID {
 		return nil
 	}
 
@@ -135,14 +146,12 @@ func (m *PacketRateMeter) AddSample(sample *monitoring.DataSample) error {
 	}
 
 	window.Add(sample)
-
 	return nil
 }
 
 func (m *PacketRateMeter) Ready() bool {
 	for _, inputID := range m.metric.InputIds {
 		window := m.windows[inputID]
-
 		if !window.Ready() {
 			return false
 		}
@@ -151,7 +160,7 @@ func (m *PacketRateMeter) Ready() bool {
 	return true
 }
 
-func (m *PacketRateMeter) Evaluate() (*monitoring.DataSample, error) {
+func (m *PacketRateMeter) Evaluate(ctx context.Context) (*monitoring.DataSample, error) {
 	if !m.Ready() {
 		return nil, fmt.Errorf(
 			"meter %q is not ready",
@@ -205,6 +214,16 @@ func (m *PacketRateMeter) Evaluate() (*monitoring.DataSample, error) {
 	if m.portID != "" {
 		portID = &m.portID
 	}
+
+	m.obs.Metric(
+		ctx,
+		observabilityv1.Severity_SEVERITY_INFO,
+		m.metric.Name,
+		observabilityv1.MetricType_METRIC_TYPE_GAUGE,
+		packetRate,
+		"p/s", //To check
+		nil,
+	)
 
 	return &monitoring.DataSample{
 		Id:        m.metric.Name,

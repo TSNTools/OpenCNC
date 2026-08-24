@@ -11,7 +11,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 
-	service "OpenCNC_config_service/common/structures/service"
+	service "OpenCNC_config_service/config_service/structures/service"
 	"OpenCNC_config_service/common/structures/topology"
 	"OpenCNC_config_service/config_service/pkg/engine" // Your wrapper implementing GNMIService
 	"OpenCNC_config_service/config_service/pkg/plugins"

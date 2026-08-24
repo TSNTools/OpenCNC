@@ -16,7 +16,7 @@ import (
 
 var model = &devicemodelregistry.DeviceModel{
 	Name: "TTTech-EVB",
-	YangFiles: []*devicemodelregistry.YangFile{
+	YangFiles: []*devicemodelregistry.YangModule{
 		{
 			Name:        "ieee802-dot1q-sched.yang",
 			Revision:    "2018-09-10",

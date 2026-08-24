@@ -109,9 +109,7 @@ func (c *MetricsConsumer) Close() error {
 	return c.reader.Close()
 }
 
-func (c *MetricsConsumer) handleMetric(
-	event *observabilityv1.EventEnvelope,
-) {
+func (c *MetricsConsumer) handleMetric(event *observabilityv1.EventEnvelope) {
 	if event == nil {
 		return
 	}
@@ -141,11 +139,17 @@ func (c *MetricsConsumer) handleMetric(
 		Timestamp: timestamp,
 	})
 
+	// log.Printf(
+	// 	"metric event=%s source=%s metric=%s value=%v",
+	// 	event.GetEventId(),
+	// 	event.GetSource().GetService(),
+	// 	metricPayload.GetName(),
+	// 	metricPayload.GetValue(),
+	// )
 	log.Printf(
-		"metric event=%s source=%s metric=%s value=%v",
-		event.GetEventId(),
-		event.GetSource().GetService(),
+		"metric=%s value=%v timestamp=%d",
 		metricPayload.GetName(),
 		metricPayload.GetValue(),
+		timestamp,
 	)
 }

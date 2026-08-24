@@ -120,11 +120,14 @@ func test_netconf_collector() {
 		catalog.GetCounterByID("if_state_out_unicast_pkts"),
 	}
 
+	for _, counter := range requestedCounters {
+		collector.AddCounter(counter)
+	}
+
 	//
 	// Collect
 	//
 	samples, err := collector.Collect(
-		requestedCounters,
 		ctx,
 	)
 

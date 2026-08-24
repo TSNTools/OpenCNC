@@ -21,7 +21,7 @@ const state = {
   monitoringPollIntervalsByTarget: {},
 };
 
-const DEFAULT_MONITORING_POLL_INTERVAL_MS = 1000;
+const DEFAULT_MONITORING_POLL_INTERVAL_S = 1;
 
 initializeNavigation();
 initializeActionButtons();
@@ -512,7 +512,7 @@ function initializeMonitoringUI() {
   }
 
   if (pollIntervalInput) {
-    pollIntervalInput.value = String(DEFAULT_MONITORING_POLL_INTERVAL_MS);
+    pollIntervalInput.value = String(DEFAULT_MONITORING_POLL_INTERVAL_S);
     pollIntervalInput.addEventListener("input", () => {
       const targetID = getCurrentMonitoringTargetID();
       const itemID = state.activeMonitoringItemID;
@@ -1224,7 +1224,7 @@ function renderMonitoringSelectedList() {
     const li = document.createElement("li");
     li.className = "monitoring-selected-item";
     li.dataset.id = item.id;
-    li.textContent = `${item.label} (${getMonitoringPollInterval(targetID, item.id)} ms)`;
+    li.textContent = `${item.label} (${getMonitoringPollInterval(targetID, item.id)} s)`;
     if (item.id === state.activeMonitoringItemID) {
       li.classList.add("selected");
     }
@@ -1258,7 +1258,7 @@ function clearMonitoringDetail() {
   setText("monitoring-detail-description", "-");
   setText("monitoring-detail-type", "-");
   setText("monitoring-detail-target", "-");
-  setMonitoringPollIntervalInput(DEFAULT_MONITORING_POLL_INTERVAL_MS);
+  setMonitoringPollIntervalInput(DEFAULT_MONITORING_POLL_INTERVAL_S);
 }
 
 async function loadMonitoringDataPanel() {
@@ -1364,7 +1364,7 @@ function getMonitoringPollIntervalsForTarget(targetID, createIfMissing = true) {
 function normalizeMonitoringPollInterval(value) {
   const parsed = Number.parseInt(String(value), 10);
   if (!Number.isFinite(parsed) || parsed < 1) {
-    return DEFAULT_MONITORING_POLL_INTERVAL_MS;
+    return DEFAULT_MONITORING_POLL_INTERVAL_S;
   }
   return parsed;
 }
@@ -1372,15 +1372,15 @@ function normalizeMonitoringPollInterval(value) {
 function getMonitoringPollInterval(targetID, itemID, createIfMissing = true) {
   const intervals = getMonitoringPollIntervalsForTarget(targetID, createIfMissing);
   if (!intervals || !itemID) {
-    return DEFAULT_MONITORING_POLL_INTERVAL_MS;
+    return DEFAULT_MONITORING_POLL_INTERVAL_S;
   }
 
   const interval = intervals[itemID];
   if (!interval || interval < 1) {
     if (createIfMissing) {
-      intervals[itemID] = DEFAULT_MONITORING_POLL_INTERVAL_MS;
+      intervals[itemID] = DEFAULT_MONITORING_POLL_INTERVAL_S;
     }
-    return DEFAULT_MONITORING_POLL_INTERVAL_MS;
+    return DEFAULT_MONITORING_POLL_INTERVAL_S;
   }
 
   return interval;
@@ -1410,7 +1410,7 @@ function buildMonitoringPollIntervals(targetID, idSet) {
 
   Array.from(idSet).forEach((metricID) => {
     intervals[metricID] = normalizeMonitoringPollInterval(
-      targetIntervals[metricID] || DEFAULT_MONITORING_POLL_INTERVAL_MS
+      targetIntervals[metricID] || DEFAULT_MONITORING_POLL_INTERVAL_S
     );
   });
 

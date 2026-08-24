@@ -11,6 +11,8 @@ import (
 	"OpenCNC_config_service/monitor_service/pkg/managementSessions"
 	monitor "OpenCNC_config_service/monitor_service/pkg/monitors"
 	"OpenCNC_config_service/monitor_service/structures/monitoring"
+
+	"google.golang.org/protobuf/proto"
 )
 
 type Engine struct {
@@ -50,7 +52,6 @@ func (e *Engine) AddMonitor(name string, m monitor.Monitor) error {
 
 	e.mu.Unlock()
 
-	fmt.Println("monitor registered: ", name)
 	// Start outside the mutex.
 	if err := m.Start(); err != nil {
 		e.mu.Lock()
@@ -111,12 +112,17 @@ func (e *Engine) StartMonitoring(resource *monitoring.ResourceKey, node *topolog
 	// the req id is used as the monitor name in the engine.
 	// The monitor name is the unique identifier. this is not accurate
 	// ------------------------------------------------------------
+
 	e.mu.Lock()
-	if _, exists := e.monitors[id]; exists {
-		e.mu.Unlock()
-		return fmt.Errorf("monitoring %q already exists", id)
-	}
+	resourceMonitor, exists := e.monitors[id]
 	e.mu.Unlock()
+	if !exists {
+		resourceMonitor = monitor.NewResourceMonitor(
+			resource,
+			e.HandleEvent,
+			e.obs,
+		)
+	}
 
 	//------------------------------------------------------------
 	// Create monitor
@@ -128,12 +134,6 @@ func (e *Engine) StartMonitoring(resource *monitoring.ResourceKey, node *topolog
 		return fmt.Errorf("failed to reach target node: %w", err)
 	}
 
-	resourceMonitor := monitor.NewResourceMonitor(
-		resource,
-		e.HandleEvent,
-		e.obs,
-	)
-
 	// Add collectors to the monitor
 	for _, counter := range counters {
 		err := resourceMonitor.AddCollector(counter, resource, session, e.Catalog)
@@ -144,6 +144,20 @@ func (e *Engine) StartMonitoring(resource *monitoring.ResourceKey, node *topolog
 
 	// Add meters to the monitor
 	for _, metric := range metrics {
+		// Add dependencies counters of the monitor
+		for _, counterID := range metric.InputIds {
+			//need to add the counters to the collector
+			counter := proto.Clone(e.Catalog.GetCounter(counterID)).(*monitoring.Counter)
+			if counter == nil {
+				return fmt.Errorf("failed to add dependency counter %q for metric %q", counterID, metric.Name)
+			}
+			counter.PollIntervalMs = metric.EvaluationIntervalMs
+			err := resourceMonitor.AddCollector(counter, resource, session, e.Catalog)
+			if err != nil {
+				return fmt.Errorf("failed to add collector for counter %q: %w", counter.Name, err)
+			}
+		}
+
 		err := resourceMonitor.AddMeter(metric, resource)
 		if err != nil {
 			return fmt.Errorf("failed to add meter for metric %q: %w", metric.Name, err)

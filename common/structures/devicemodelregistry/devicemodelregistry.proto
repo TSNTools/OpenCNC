@@ -4,13 +4,15 @@ package devicemodelregistry;
 option go_package = "./devicemodelregistry";  // Use './' to indicate the current directory
 
 message DeviceModel {
-    string Name = 1 [json_name="model-name"];
-    repeated YangFile YangFiles = 2 [json_name="yang-files"];
+    string name = 1 [json_name="model-name"];
+    string vendor = 2 [json_name="vendor"];
+    string software = 3 [json_name="software"];
+    repeated YangModule yangFiles = 4 [json_name="yang-files"];
    
 }
 
-message YangFile {
-    string Name = 1 [json_name="file-name"];
-    string Revision = 2 [json_name="file-revision"];
-    string description = 3 [json_name="structure"];
+message YangModule {
+    string name = 1 [json_name="file-name"];
+    string revision = 2 [json_name="file-revision"];
+    string description = 3 [json_name="description"];
 }

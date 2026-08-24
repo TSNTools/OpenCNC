@@ -28,10 +28,10 @@ type Client struct {
 // NewFromEnv builds a simplified observability client from OBS_* environment variables.
 // It supports automatic fallback to stdout when publishing is unavailable or fails.
 func NewFromEnv(service string) (*Client, error) {
-	obsEnabled := parseEnvBool("OBS_ENABLED", false)
-	kafkaEnabled := parseEnvBool("OBS_KAFKA_ENABLED", false)
+	obsEnabled := parseEnvBool("OBS_ENABLED", true)
+	kafkaEnabled := parseEnvBool("OBS_KAFKA_ENABLED", true)
 	failOpen := parseEnvBool("OBS_FAIL_OPEN", true)
-	brokers := parseCSVEnv("OBS_BROKERS")
+	brokers := parseCSVEnv("OBS_BROKERS", "localhost:9092")
 	cmdMirror := parseEnvBool("OBS_CMD_MIRROR", true)
 
 	p, err := NewProducer(Config{
@@ -309,10 +309,10 @@ func parseEnvBool(key string, defaultValue bool) bool {
 	}
 }
 
-func parseCSVEnv(key string) []string {
+func parseCSVEnv(key string, defaults ...string) []string {
 	raw := strings.TrimSpace(os.Getenv(key))
 	if raw == "" {
-		return nil
+		return defaults
 	}
 
 	parts := strings.Split(raw, ",")
@@ -323,6 +323,10 @@ func parseCSVEnv(key string) []string {
 			continue
 		}
 		items = append(items, trimmed)
+	}
+
+	if len(items) == 0 {
+		return defaults
 	}
 
 	return items

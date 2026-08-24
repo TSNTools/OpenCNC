@@ -2,6 +2,7 @@ package meters
 
 import (
 	"OpenCNC_config_service/monitor_service/structures/monitoring"
+	"context"
 )
 
 // Meter can't own the goroutines that collect samples,
@@ -20,6 +21,7 @@ type Meter interface {
 
 	// UsesCounter reports whether the meter uses the specified counter.
 	UsesInput(inputID string) bool
+	RequiredCounter() []string
 
 	// AddSample provides a normalized counter sample to the meter.
 	AddSample(sample *monitoring.DataSample) error
@@ -30,7 +32,7 @@ type Meter interface {
 
 	// Evaluate calculates the metric from the currently available samples.
 	// The returned DataSample contains only the calculated metric value.
-	Evaluate() (*monitoring.DataSample, error)
+	Evaluate(ctx context.Context) (*monitoring.DataSample, error)
 
 	// Reset clears the meter's internal history/state.
 	Reset()

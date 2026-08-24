@@ -69,9 +69,13 @@ func requestStartMonitoring(query domain.MonitoringDataQuery) (*service.Monitori
 
 	settings := make([]*service.MonitoringSetting, len(query.MetricIDs))
 	for i, metricID := range query.MetricIDs {
+		intervalSeconds := query.PollIntervals[metricID]
+		if intervalSeconds == 0 {
+			intervalSeconds = 1
+		}
 		settings[i] = &service.MonitoringSetting{
 			CapabilityId:   metricID,
-			PollIntervalMs: query.PollIntervals[metricID],
+			PollIntervalMs: intervalSeconds * 1000,
 		}
 	}
 

@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package service;
 
-option go_package = "OpenCNC_config_service/common/structures/service;service";
+option go_package = "OpenCNC_config_service/config_service/structures/service;service";
 
 import "common/structures/topology_config/topology_config.proto";
 

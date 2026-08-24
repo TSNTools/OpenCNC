@@ -65,7 +65,7 @@ func (m *ResourceMonitor) Resource() *monitoring.ResourceKey {
 
 // Start starts the background monitoring scheduler.
 func (m *ResourceMonitor) Start() error {
-	fmt.Println("monitor start invoked for: ", m.target)
+
 	m.mu.Lock()
 
 	if m.running {
@@ -96,7 +96,23 @@ func (m *ResourceMonitor) Start() error {
 	for i, group := range schedule {
 		fmt.Printf("Group %d\n", i+1)
 		fmt.Printf("  Interval: %s\n", group.interval)
-		fmt.Printf("  Collectors: %d\n", len(group.collectors))
+		fmt.Printf("  Collectors: [")
+
+		for i, collector := range group.collectors {
+			if i > 0 {
+				fmt.Printf(",")
+			}
+			fmt.Printf("[")
+			for j, counterID := range collector.CounterIds() {
+				if j > 0 {
+					fmt.Printf(",")
+				}
+				fmt.Printf("%q", counterID)
+			}
+			fmt.Printf("]")
+		}
+
+		fmt.Printf("]\n")
 		fmt.Printf("  Metrics:  %v\n", group.metricIDs)
 		fmt.Printf("  Ticker:   %v\n", group.ticker != nil)
 		fmt.Println()
@@ -125,6 +141,7 @@ func (m *ResourceMonitor) Stop() {
 
 // AddCollector registers a collector used by this monitor.
 func (m *ResourceMonitor) AddCollector(counter *monitoring.Counter, resource *monitoring.ResourceKey, session *netconf.Session, catalog *catalog.Catalog) error {
+
 	if counter == nil {
 		return fmt.Errorf("counter is nil")
 	}
@@ -177,6 +194,7 @@ func (m *ResourceMonitor) AddCollector(counter *monitoring.Counter, resource *mo
 
 // AddMeter registers a meter used by this monitor.
 func (m *ResourceMonitor) AddMeter(metric *monitoring.Metric, resource *monitoring.ResourceKey) error {
+
 	if metric == nil {
 		return fmt.Errorf("metric is nil")
 	}
@@ -189,7 +207,7 @@ func (m *ResourceMonitor) AddMeter(metric *monitoring.Metric, resource *monitori
 		return nil // Meter already registered, update the evaluation interval.
 	}
 
-	meter, err := meters.NewPacketRateMeter(resource, metric)
+	meter, err := meters.NewPacketRateMeter(resource, m.obs, metric)
 	if err != nil {
 		return fmt.Errorf("failed to create meter for metric %q: %w", metric.Name, err)
 	}
@@ -347,7 +365,7 @@ func (m *ResourceMonitor) collectAndFeedWith(collectorsSnapshot []collectors.Col
 		}
 
 		//fmt.Println("collecting data: ", counters)
-		collected, err := collector.Collect(counters, m.ctx)
+		collected, err := collector.Collect(m.ctx)
 		if err != nil {
 			return fmt.Errorf(
 				"collector %q failed: %w",
@@ -391,6 +409,7 @@ func (m *ResourceMonitor) measureAndFeed(metricIDs []string) error {
 }
 
 func (m *ResourceMonitor) measureAndFeedWith(metersSnapshot map[string]meters.Meter, metricIDs []string) error {
+
 	m.mu.Lock()
 	target := m.target
 	m.mu.Unlock()
@@ -422,6 +441,7 @@ func (m *ResourceMonitor) measureAndFeedWith(metersSnapshot map[string]meters.Me
 
 	// Evaluate scheduled metrics in dependency order.
 	for len(pending) > 0 {
+
 		progress := false
 
 		for name, meter := range pending {
@@ -480,12 +500,11 @@ func (m *ResourceMonitor) measureAndFeedWith(metersSnapshot map[string]meters.Me
 			if !meter.Ready() {
 				continue
 			}
-
 			// ------------------------------------------------
 			// Evaluate the metric.
 			// ------------------------------------------------
 
-			result, err := meter.Evaluate()
+			result, err := meter.Evaluate(m.ctx)
 			if err != nil {
 				return fmt.Errorf(
 					"evaluate meter %q: %w",
