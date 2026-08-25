@@ -49,6 +49,8 @@ func (u *uploadWrapper) UnmarshalJSON(data []byte) error {
 
 type uploadModel struct {
 	Name      string       `json:"model-name"`
+	Vendor    string       `json:"vendor"`
+	Version   string       `json:"version"`
 	YangFiles []uploadYang `json:"yang-files"`
 }
 
@@ -285,8 +287,8 @@ func (b *Backend) GetDeviceModels(_ context.Context) ([]domain.DeviceModel, erro
 		models = append(models, domain.DeviceModel{
 			ID:      model.GetName(),
 			Name:    model.GetName(),
-			Version: "-",
-			Vendor:  "-",
+			Version: model.GetVersion(),
+			Vendor:  model.GetVendor(),
 			Yang:    strings.Join(yangNames, ", "),
 		})
 	}
@@ -720,7 +722,11 @@ func (b *Backend) UploadModel(_ context.Context, query string) (domain.Operation
 			continue
 		}
 
-		model := &devicemodelregistry.DeviceModel{Name: modelInput.Name}
+		model := &devicemodelregistry.DeviceModel{
+			Name:    modelInput.Name,
+			Vendor:  modelInput.Vendor,
+			Version: modelInput.Version,
+		}
 		for _, yang := range modelInput.YangFiles {
 			if strings.TrimSpace(yang.Name) == "" {
 				continue
@@ -787,6 +793,14 @@ func (b *Backend) EditModel(_ context.Context, modelID, name, version, vendor, y
 		}, nil
 	}
 
+	if strings.TrimSpace(version) != "" {
+		current.Version = strings.TrimSpace(version)
+	}
+
+	if strings.TrimSpace(vendor) != "" {
+		current.Vendor = strings.TrimSpace(vendor)
+	}
+
 	if strings.TrimSpace(name) != "" && strings.TrimSpace(name) != current.GetName() {
 		previousName := current.GetName()
 		current.Name = name
@@ -810,6 +824,15 @@ func (b *Backend) EditModel(_ context.Context, modelID, name, version, vendor, y
 		}
 		b.recordEvent("info", "editModel", "device-models", fmt.Sprintf("Renamed model %s to %s", previousName, current.GetName()), current.GetName())
 	} else {
+		if err := storewrapper.StoreDeviceModel(current); err != nil {
+			b.recordEvent("error", "editModel", "device-models", fmt.Sprintf("Failed saving model %s", modelID), modelID)
+			return domain.OperationResult{
+				Success: false,
+				Name:    "editModel",
+				Message: fmt.Sprintf("failed to save model %s: %v", modelID, err),
+				Data:    map[string]string{"modelId": modelID},
+			}, nil
+		}
 		b.recordEvent("info", "editModel", "device-models", fmt.Sprintf("Updated model %s", current.GetName()), current.GetName())
 	}
 
@@ -820,8 +843,8 @@ func (b *Backend) EditModel(_ context.Context, modelID, name, version, vendor, y
 		Data: map[string]string{
 			"modelId": current.GetName(),
 			"name":    current.GetName(),
-			"version": version,
-			"vendor":  vendor,
+			"version": current.GetVersion(),
+			"vendor":  current.GetVendor(),
 			"yang":    yang,
 		},
 	}, nil
@@ -1655,7 +1678,7 @@ func (b *Backend) result(name string, data map[string]string) domain.OperationRe
 	return domain.OperationResult{
 		Success: true,
 		Name:    name,
-		Message: fmt.Sprintf("%s executed (stub)", name),
+		Message: fmt.Sprintf("%s executed !!", name),
 		Data:    data,
 	}
 }

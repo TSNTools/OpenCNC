@@ -6,7 +6,7 @@ option go_package = "./devicemodelregistry";  // Use './' to indicate the curren
 message DeviceModel {
     string name = 1 [json_name="model-name"];
     string vendor = 2 [json_name="vendor"];
-    string software = 3 [json_name="software"];
+    string version = 3 [json_name="version"];
     repeated YangModule yangFiles = 4 [json_name="yang-files"];
    
 }

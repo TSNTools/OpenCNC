@@ -1,0 +1,16 @@
+syntax="proto3";
+package devicemodelregistry;
+
+option go_package = "./devicemodelregistry";  // Use './' to indicate the current directory
+
+message DeviceModel {
+    string Name = 1 [json_name="model-name"];
+    repeated YangFile YangFiles = 2 [json_name="yang-files"];
+   
+}
+
+message YangFile {
+    string Name = 1 [json_name="file-name"];
+    string Revision = 2 [json_name="file-revision"];
+    string Structure = 3 [json_name="structure"];
+}

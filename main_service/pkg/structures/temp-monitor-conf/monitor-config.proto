@@ -1,0 +1,33 @@
+syntax = "proto3";
+package monitorConfig;
+
+option go_package = "/monitor-config";
+
+/
+/*            MONITOR CONFIGURATION            */
+/
+
+message DeviceCounter {
+	string Name = 1 [json_name="name"];
+	string Path = 2 [json_name="path"];
+}
+
+message IntervalCounters {
+	int32 Interval = 1 [json_name="interval"];
+	repeated DeviceCounter Counters = 2 [json_name="counters"];
+}
+
+message Conf {
+	repeated IntervalCounters Counters = 1 [json_name="config"];
+}
+
+message MonitorConfig {
+	string DeviceIP = 1 [json_name="device_ip"];
+	string DeviceName = 2 [json_name="device_name"];
+	string Protocol = 3 [json_name="protocol"];
+	repeated Conf Configs = 4 [json_name="configs"];
+}
+
+message Config {
+	repeated MonitorConfig Devices = 1 [json_name="devices_with_monitoring"];
+}

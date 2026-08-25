@@ -1,0 +1,100 @@
+{
+  "version": 1.0,
+  "requests": [
+    {
+      "talker": {
+        "stream-id": {
+          "mac-address": "00-00-00-00-00-01",
+          "unique-id": "stream-1"
+        },
+        "stream-rank": {
+          "rank": 1
+        },
+        "end-station-interfaces": [
+          {
+            "index": 0,
+            "interface-id": {
+              "mac-address": "00-00-00-00-00-02",
+              "interface-name": "eth0"
+            }
+          }
+        ],
+        "data-frame-specification": [
+          {
+            "index": 0,
+            "ieee802-mac-addresses": {
+              "destination-mac-address": "FF-FF-FF-FF-FF-FF",
+              "source-mac": "00-00-00-00-00-01"
+            },
+            "ieee802-vlan-tag": {
+              "priority-code-point": 5,
+              "vlan-id": 100
+            },
+            "ipv4tup": {
+              "src-ip-addr": "192.168.1.1",
+              "dest-ip-addr": "192.168.1.2",
+              "dscp": 0,
+              "protocol": 17,
+              "src-port": 5000,
+              "dest-port": 6000
+            },
+            "ipv6tup": {
+              "src-ip-addr": "::1",
+              "dest-ip-addr": "::2",
+              "dscp": 0,
+              "protocol": 17,
+              "src-port": 5001,
+              "dest-port": 6001
+            }
+          }
+        ],
+        "traffic-specification": {
+          "interval": {
+            "numerator": 1,
+            "denominator": 1000
+          },
+          "max-frames-per-interval": 8,
+          "max-frame-size": 1500,
+          "transmission-selection": 0,
+          "time-aware": {
+            "earliest-transmit-offset": 100,
+            "latest-transmit-offset": 200,
+            "jitter": 10
+          }
+        },
+        "user-to-network-requirements": {
+          "num-seamless-trees": 2,
+          "max-latency": 1000
+        },
+        "interface-capabilities": {
+          "vlan-tag-capable": true
+        }
+      },
+      "listener-list": [
+        {
+          "index": 1,
+          "stream-id": {
+            "mac-address": "00-00-00-00-00-01",
+            "unique-id": "stream-1"
+          },
+          "end-station-interfaces": [
+            {
+              "index": 1,
+              "interface-id": {
+                "mac-address": "00-00-00-00-00-03",
+                "interface-name": "eth1"
+              }
+            }
+          ],
+          "user-to-network-requirements": {
+            "num-seamless-trees": 2,
+            "max-latency": 1000
+          },
+          "interface-capabilities": {
+            "vlan-tag-capable": true
+          }
+        }
+      ]
+    }
+  ]
+}

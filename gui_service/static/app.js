@@ -605,7 +605,6 @@ function initializeListSelection() {
     state.selectedLinkID = item.dataset.id || "";
     setText("link-detail-source", item.dataset.source || "-");
     setText("link-detail-destination", item.dataset.destination || "-");
-    setText("link-detail-state", item.dataset.state || "-");
     setText("link-detail-bandwidth", item.dataset.bandwidth || "-");
   });
 
@@ -843,7 +842,6 @@ async function loadLinks() {
     li.dataset.id = link.id || "";
     li.dataset.source = link.source || "";
     li.dataset.destination = link.destination || "";
-    li.dataset.state = link.state || "";
     li.dataset.bandwidth = link.bandwidth || "";
     return li;
   }, "No links available");
@@ -2225,7 +2223,6 @@ function clearLinkDetails() {
   state.selectedLinkID = "";
   setText("link-detail-source", "-");
   setText("link-detail-destination", "-");
-  setText("link-detail-state", "-");
   setText("link-detail-bandwidth", "-");
 }
 

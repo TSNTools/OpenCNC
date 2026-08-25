@@ -1,0 +1,85 @@
+
+participant main_service
+
+
+participantgroup #white **tsn_service**
+participant main.go
+participantgroup #white **pkg**
+participantgroup #lightgray **notificationServer**
+participant serverDefinition.go
+end
+participantgroup #lightgray **structures**
+participantgroup #white **notification**
+participant server.go
+end
+end
+participantgroup#lightgray **notification-handler**
+participant notificationHandler.go
+participant "utils.go" as 1-utils.go
+end
+participantgroup #lightgray **store_wrapper**
+participant store.go
+participant "utils.go" as 0-utils.go
+end
+participantgroup #lightgray **internal_optimizer**
+participant internalOptimizer.go
+participant "utils.go" as 2-utils.go
+end
+
+end
+end
+
+autoactivation on 
+main.go->internalOptimizer.go:**optimizer.CreateDefaultSchedule**()
+internalOptimizer.go->internalOptimizer.go:readFile("default-schedule.yaml")
+deactivate internalOptimizer.go
+internalOptimizer.go->store.go:store.StoreSchedule()
+deactivateafter store.go
+deactivateafter internalOptimizer.go
+
+main.go->serverDefinition.go: server.**CreateServer**("tcp", ":5150")
+serverDefinition.go->serverDefinition.go: lis= net.Listen("tcp", ":5150")
+deactivateafter serverDefinition.go
+serverDefinition.go->server.go:s= notification.Server{}
+deactivate server.go
+serverDefinition.go->serverDefinition.go: grpcServer.Serve(lis)
+deactivate serverDefinition.go
+deactivateafter serverDefinition.go
+
+main.go->serverDefinition.go: server.**CreateNotificationServiceServer**("tcp", ":5151")
+serverDefinition.go->serverDefinition.go: lis= net.Listen("tcp", ":5151")
+deactivateafter serverDefinition.go
+serverDefinition.go->server.go:s= notificationService.Server{}
+deactivate server.go
+serverDefinition.go->serverDefinition.go: grpcServer.Serve(lis)
+deactivate serverDefinition.go
+deactivateafter serverDefinition.go
+
+main_service->server.go: confId= **client.CalcConfig**(context, reqIds)
+server.go->notificationHandler.go: configId= handler.**CalculateConfiguration**(reqId)
+notificationHandler.go->store.go: reqData= **store.GetRequestData**(reqId)
+deactivateafter store.go
+notificationHandler.go->1-utils.go: topology= getTopology()
+deactivateafter 1-utils.go
+notificationHandler.go->1-utils.go: oldConfig= getConfiguration()
+deactivateafter 1-utils.go
+parallel 
+notificationHandler.go->internalOptimizer.go: newConfig= internalOptimizer.CalculateConf( topology, oldConfig)
+note right of internalOptimizer.go:oldConfig not used
+parallel off
+internalOptimizer.go->store.go: store.GetSchedule(defaultSchedID)
+deactivateafter store.go
+internalOptimizer.go->2-utils.go:configSetReq= createConfigurationFromSchedule(\n sched, topology)
+deactivateafter 2-utils.go
+internalOptimizer.go-->notificationHandler.go:newConfig=configSetReq
+notificationHandler.go->store.go: **store.StoreConfiguration**(newConfig, confId)
+store.go-->notificationHandler.go: confId
+notificationHandler.go-->server.go:confId
+server.go-->main_service:confId
+
+
+//////////////////////////
+
+
+
+

@@ -1,0 +1,380 @@
+{
+	"version": 1.0,
+	"responses": [
+		{
+			"stream-id": "00-00-00-00-00-01:00-01",
+			"status-info": {
+				"talker-status": 1,
+				"listener-status": 1,
+				"failure-code": 0
+			},
+			"failed-interfaces": [],
+			"status-talker-listener": [
+				{
+					"index": 0,
+					"accumulated-latency": 50000,
+					"interface-configuration": {
+						"interface-list": [
+							{
+								"interface-id": {
+									"mac-address": "00-00-00-00-00-01",
+									"interface-name": ""
+								},
+								"config-list": [
+									{
+										"index": 0,
+										"ieee802-mac-addresses": {
+											"destination-mac-address": "00-00-00-0F-00-00",
+											"source-mac-address": "00-00-00-00-00-01"
+										}
+									},
+									{
+										"index": 1,
+										"ieee802-vlan-tag": {
+											"priority-code-point": 6,
+											"vlan-id": 0
+										}
+									},
+									{
+										"index": 2,
+										"time-aware-offset": 100
+									}
+								]
+							}
+						]
+					}
+				},
+				{
+					"index": 1,
+					"accumulated-latency": 50000,
+					"interface-configuration": {
+						"interface-list": [
+							{
+								"interface-id": {
+									"mac-address": "00-00-00-0F-00-00",
+									"interface-name": ""
+								},
+								"config-list": [
+									{
+										"index": 0,
+										"ieee802-mac-addresses": {
+											"destination-mac-address": "00-00-00-0F-00-00",
+											"source-mac-address": "00-00-00-00-00-01"
+										}
+									},
+									{
+										"index": 1,
+										"ieee802-vlan-tag": {
+											"priority-code-point": 6,
+											"vlan-id": 0
+										}
+									}
+								]
+							}
+						]
+					}
+				}
+			]
+		},
+		{
+			"stream-id": "00-00-00-00-00-02:00-01",
+			"status-info": {
+				"talker-status": 1,
+				"listener-status": 1,
+				"failure-code": 0
+			},
+			"failed-interfaces": [],
+			"status-talker-listener": [
+				{
+					"index": 0,
+					"accumulated-latency": 50000,
+					"interface-configuration": {
+						"interface-list": [
+							{
+								"interface-id": {
+									"mac-address": "00-00-00-00-00-02",
+									"interface-name": ""
+								},
+								"config-list": [
+									{
+										"index": 0,
+										"ieee802-mac-addresses": {
+											"destination-mac-address": "00-00-00-0F-00-00",
+											"source-mac-address": "00-00-00-00-00-02"
+										}
+									},
+									{
+										"index": 1,
+										"ieee802-vlan-tag": {
+											"priority-code-point": 6,
+											"vlan-id": 0
+										}
+									},
+									{
+										"index": 2,
+										"time-aware-offset": 120
+									}
+								]
+							}
+						]
+					}
+				},
+				{
+					"index": 1,
+					"accumulated-latency": 50000,
+					"interface-configuration": {
+						"interface-list": [
+							{
+								"interface-id": {
+									"mac-address": "00-00-00-0F-00-00",
+									"interface-name": ""
+								},
+								"config-list": [
+									{
+										"index": 0,
+										"ieee802-mac-addresses": {
+											"destination-mac-address": "00-00-00-0F-00-00",
+											"source-mac-address": "00-00-00-00-00-02"
+										}
+									},
+									{
+										"index": 1,
+										"ieee802-vlan-tag": {
+											"priority-code-point": 6,
+											"vlan-id": 0
+										}
+									}
+								]
+							}
+						]
+					}
+				}
+			]
+		},
+		{
+			"stream-id": "00-00-00-00-0A-00:00-01",
+			"status-info": {
+				"talker-status": 1,
+				"listener-status": 1,
+				"failure-code": 0
+			},
+			"failed-interfaces": [],
+			"status-talker-listener": [
+				{
+					"index": 0,
+					"accumulated-latency": 50000,
+					"interface-configuration": {
+						"interface-list": [
+							{
+								"interface-id": {
+									"mac-address": "00-00-00-00-0A-00",
+									"interface-name": ""
+								},
+								"config-list": [
+									{
+										"index": 0,
+										"ieee802-mac-addresses": {
+											"destination-mac-address": "00-00-00-0F-00-00",
+											"source-mac-address": "00-00-00-00-0A-00"
+										}
+									},
+									{
+										"index": 1,
+										"ieee802-vlan-tag": {
+											"priority-code-point": 6,
+											"vlan-id": 0
+										}
+									},
+									{
+										"index": 2,
+										"time-aware-offset": 140
+									}
+								]
+							}
+						]
+					}
+				},
+				{
+					"index": 1,
+					"accumulated-latency": 50000,
+					"interface-configuration": {
+						"interface-list": [
+							{
+								"interface-id": {
+									"mac-address": "00-00-00-0F-00-00",
+									"interface-name": ""
+								},
+								"config-list": [
+									{
+										"index": 0,
+										"ieee802-mac-addresses": {
+											"destination-mac-address": "00-00-00-0F-00-00",
+											"source-mac-address": "00-00-00-00-0A-00"
+										}
+									},
+									{
+										"index": 1,
+										"ieee802-vlan-tag": {
+											"priority-code-point": 6,
+											"vlan-id": 0
+										}
+									}
+								]
+							}
+						]
+					}
+				}
+			]
+		},
+		{
+			"stream-id": "00-00-00-0F-00-00:00-01",
+			"status-info": {
+				"talker-status": 1,
+				"listener-status": 1,
+				"failure-code": 0
+			},
+			"failed-interfaces": [],
+			"status-talker-listener": [
+				{
+					"index": 0,
+					"accumulated-latency": 50000,
+					"interface-configuration": {
+						"interface-list": [
+							{
+								"interface-id": {
+									"mac-address": "00-00-00-0F-00-00",
+									"interface-name": ""
+								},
+								"config-list": [
+									{
+										"index": 0,
+										"ieee802-mac-addresses": {
+											"destination-mac-address": "00-00-00-00-0A-00",
+											"source-mac-address": "00-00-00-0F-00-00"
+										}
+									},
+									{
+										"index": 1,
+										"ieee802-vlan-tag": {
+											"priority-code-point": 6,
+											"vlan-id": 0
+										}
+									},
+									{
+										"index": 2,
+										"time-aware-offset": 180
+									}
+								]
+							}
+						]
+					}
+				},
+				{
+					"index": 1,
+					"accumulated-latency": 50000,
+					"interface-configuration": {
+						"interface-list": [
+							{
+								"interface-id": {
+									"mac-address": "00-00-00-00-0A-00",
+									"interface-name": ""
+								},
+								"config-list": [
+									{
+										"index": 0,
+										"ieee802-mac-addresses": {
+											"destination-mac-address": "00-00-00-00-0A-00",
+											"source-mac-address": "00-00-00-0F-00-00"
+										}
+									},
+									{
+										"index": 1,
+										"ieee802-vlan-tag": {
+											"priority-code-point": 6,
+											"vlan-id": 0
+										}
+									}
+								]
+							}
+						]
+					}
+				}
+			]
+		},
+		{
+			"stream-id": "00-00-00-0F-00-00:00-02",
+			"status-info": {
+				"talker-status": 1,
+				"listener-status": 1,
+				"failure-code": 0
+			},
+			"failed-interfaces": [],
+			"status-talker-listener": [
+				{
+					"index": 0,
+					"accumulated-latency": 50000,
+					"interface-configuration": {
+						"interface-list": [
+							{
+								"interface-id": {
+									"mac-address": "00-00-00-0F-00-00",
+									"interface-name": ""
+								},
+								"config-list": [
+									{
+										"index": 0,
+										"ieee802-mac-addresses": {
+											"destination-mac-address": "00-00-0D-00-00-00",
+											"source-mac-address": "00-00-00-0F-00-00"
+										}
+									},
+									{
+										"index": 1,
+										"ieee802-vlan-tag": {
+											"priority-code-point": 6,
+											"vlan-id": 0
+										}
+									},
+									{
+										"index": 2,
+										"time-aware-offset": 220
+									}
+								]
+							}
+						]
+					}
+				},
+				{
+					"index": 1,
+					"accumulated-latency": 50000,
+					"interface-configuration": {
+						"interface-list": [
+							{
+								"interface-id": {
+									"mac-address": "00-00-0D-00-00-00",
+									"interface-name": ""
+								},
+								"config-list": [
+									{
+										"index": 0,
+										"ieee802-mac-addresses": {
+											"destination-mac-address": "00-00-0D-00-00-00",
+											"source-mac-address": "00-00-00-0F-00-00"
+										}
+									},
+									{
+										"index": 1,
+										"ieee802-vlan-tag": {
+											"priority-code-point": 6,
+											"vlan-id": 0
+										}
+									}
+								]
+							}
+						]
+					}
+				}
+			]
+		}
+	]
+}

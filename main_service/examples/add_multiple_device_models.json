@@ -1,0 +1,29 @@
+{
+  "models": [
+    {
+      "model-name": "Cisco9300",
+      "yang-files": [
+        {
+          "file-name": "openconfig-interfaces.yang",
+          "file-revision": "2022-05-03",
+          "structure": ""
+        },
+        {
+          "file-name": "openconfig-platform.yang",
+          "file-revision": "2021-09-15",
+          "structure": ""
+        }
+      ]
+    },
+    {
+      "model-name": "TSN-PC",
+      "yang-files": [
+        {
+          "file-name": "tsn-bridge.yang",
+          "file-revision": "2023-01-01",
+          "structure": ""
+        }
+      ]
+    }
+  ]
+}

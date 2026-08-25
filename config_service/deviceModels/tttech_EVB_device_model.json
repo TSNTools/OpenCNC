@@ -1,5 +1,7 @@
 {
   "model-name": "TTTech-EVB",
+  "vendor": "TTTech Computertechnik AG",
+  "version": "1.0",
   "yang-files": [
     {
       "file-name": "iana-crypt-hash.yang",

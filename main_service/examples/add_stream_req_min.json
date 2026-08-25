@@ -1,0 +1,52 @@
+{
+  "version": 1.0,
+  "requests": [
+    {
+      "talker": {
+        "stream-id": {
+          "mac-address": "00-00-00-00-00-01",
+          "unique-id": "stream-1"
+        },
+        "stream-rank": {
+          "rank": 1
+        },
+        "end-station-interfaces": [
+          {
+            "index": 0,
+            "interface-id": {
+              "mac-address": "00-00-00-00-00-02",
+              "interface-name": "eth0"
+            }
+          }
+        ],
+        "data-frame-specification": [
+          {
+            "index": 0
+          }
+        ],
+        "traffic-specification": {
+          "interval": {
+            "numerator": 1,
+            "denominator": 1000
+          },
+          "max-frames-per-interval": 1,
+          "max-frame-size": 64,
+          "transmission-selection": 0,
+          "time-aware": {
+            "earliest-transmit-offset": 0,
+            "latest-transmit-offset": 0,
+            "jitter": 0
+          }
+        },
+        "user-to-network-requirements": {
+          "num-seamless-trees": 1,
+          "max-latency": 1000
+        },
+        "interface-capabilities": {
+          "vlan-tag-capable": false
+        }
+      },
+      "listener-list": []
+    }
+  ]
+}

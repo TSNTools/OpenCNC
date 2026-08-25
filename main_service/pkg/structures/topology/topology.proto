@@ -1,0 +1,153 @@
+// Generated with: protoc --go_out=. --go_opt=paths=source_relative ./pkg/structures/topology/topology.proto
+syntax = "proto3";
+
+package topology;
+
+option go_package = "/topology";
+
+/*
+ * Topology: Captures the static TSN-aware topology view.
+ * Includes network nodes (end stations, bridges), ports, and physical links.
+ * Dynamic configuration is handled in topology_config.proto, and operational state in topology_status.proto.
+ */
+
+message Topology {
+    repeated Node nodes = 1 [json_name = "nodes"];
+    repeated Link links = 2 [json_name = "links"];
+    optional int32 version = 3 [json_name = "version"]; // Optional topology version/revision
+}
+
+/*
+ * Node: Represents a network device.
+ * Role may be END_STATION, BRIDGE, or BRIDGED_END_STATION as per IEEE 802.1Q-2022 Clause 3.
+ */
+message Node {
+    string name = 1 [json_name = "name"]; // Node unique identifier
+    NodeRole type = 2 [json_name = "type"];
+    repeated Port ports = 3 [json_name = "ports"];
+
+    DeviceInfo device_info = 4 [json_name = "deviceInfo"];
+    ManagementInfo management_info = 5 [json_name = "managementInfo"];
+    InventoryInfo inventory_info = 6 [json_name = "inventoryInfo"];
+
+    NodeProperties properties = 7 [json_name = "properties"];
+}
+
+enum NodeRole {
+    UNKNOWN = 0;
+    END_STATION = 1;
+    BRIDGE = 2;
+    BRIDGED_END_STATION = 3;
+}
+
+message NodeProperties {
+    optional BridgeProperties bridge = 1;
+    optional EndStationProperties end_station = 2;
+    optional BridgedEndStationProperties bridged_end_station = 3;
+}
+
+// Clause 8.6.1.4: Specifies internal processing delays for bridges
+message BridgeProperties {
+    int32 processing_delay_ns = 1 [json_name = "procDelay"]; // Nanoseconds
+}
+
+message EndStationProperties {
+    string application_type = 1;   // Informational tag (e.g., "RobotArm")
+    string function = 2;           // Role in the network (e.g., sensor/controller/etc.)
+}
+
+// Clause 5.3: End stations that forward traffic (not just terminate)
+message BridgedEndStationProperties {
+    int32 processing_delay_ns = 1 [json_name = "procDelay"];
+}
+
+message DeviceInfo {
+    string device_model = 1;                 // Model name or code
+    repeated string supported_protocols = 2; // E.g., ["IEEE 802.1Qbv", "IEEE 802.1CB"]
+}
+
+// Reflects how the CNC should connect to the node's management plane
+message ManagementInfo {
+    repeated string key_certificates = 1;
+    string ip_address = 2;
+    uint32 management_port = 3;         // TCP port (e.g., 830 for NETCONF)
+    string user_name = 4;
+    uint32 management_vlan = 5;         // VLAN used for management (IEEE 802.1Qcp context)
+    ManagementProtocol protocol = 6;    // NETCONF / SNMP / etc.
+}
+
+enum ManagementProtocol {
+    UNRECOGNIZED = 0;
+    NETCONF = 1;
+    SNMP = 2;
+    // Extendable for RESTCONF, gNMI, etc.
+}
+
+message InventoryInfo {
+    string software_version = 1;
+    // Optional extension: hardware_revision, serial_number, etc.
+}
+
+/*
+ * Port: Logical interface on a node.
+ * Represents physical or virtual ports. Maps to ifIndex in SNMP/YANG.
+ */
+message Port {
+    string id = 1 [json_name = "id"];
+    string name = 2 [json_name = "name"];
+    string description = 3;
+    string device_model = 4;     // NIC model
+    string mac_address = 5;
+    string ip_address = 6;
+
+    int32 number_of_queues = 7 [json_name = "numberOfQueues"];
+    string manufacturer = 8;
+    string software_version = 9;
+
+    InterfaceCapabilities capabilities = 11;
+}
+
+/*
+ * InterfaceCapabilities: Per-port capabilities.
+ * Maps to IEEE 802.1Qcp YANG models and Clause 6.4 / Annex L (managed objects)
+ */
+message InterfaceCapabilities {
+    int32 port_speed = 1;                     // Current active speed (Mbps)
+    repeated int32 advertised_speeds = 2;     // All supported speeds (e.g., [100, 1000, 10000])
+    
+    repeated uint32 supported_vlan_ids = 3;   // Per IEEE 802.1Q Clause 6.9
+    repeated uint32 supported_pcp_values = 4; // Clause 8.6.6: Priority Code Point (0–7)
+    DuplexMode mode = 5;
+    int32 maximum_transmission_unit = 6;      // MTU in bytes
+
+    bool auto_negotiation_enabled = 7;        // IEEE 802.3 Clause 28
+    bool supports_time_sync = 8;              // Indicates 802.1AS-2020 support
+    bool supports_frame_preemption = 9;       // IEEE 802.1Qbu
+    bool supports_stream_filtering = 10;      // IEEE 802.1Qci
+    bool supports_frer = 11;                  // IEEE 802.1CB
+    bool supports_tas = 12;                   // Time-Aware Shaper (IEEE 802.1Qbv)
+    bool supports_cqf = 13;                   // Cyclic Queuing and Forwarding (802.1Qch)
+    bool supports_cbs = 14;                   // Credit-Based Shaper (802.1Qav)
+
+    bool supports_interface_time_offset = 15; // Indicates whether this interface supports applying a time offset (in nanoseconds) for Qbv schedule (non standard feature)
+}
+
+enum DuplexMode {
+    HD = 0;  // Half Duplex
+    FD = 1;  // Full Duplex
+}
+
+/*
+ * Link: Physical connection between two ports.
+ * Can be inferred from LLDP or CNC-side discovery.
+ */
+message Link {
+    string id = 1 [json_name = "id"];
+    string source_node = 2 [json_name = "source"];
+    string target_node = 3 [json_name = "target"];
+    string source_port = 4;
+    string target_port = 5;
+
+    int64 propagation_delay_ns = 6 [json_name = "propagationDelay"]; // In nanoseconds
+    int64 bandwidth = 7 [json_name = "bandwidth"];                   // In bits per second
+}

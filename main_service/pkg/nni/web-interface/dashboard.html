@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>NNI Server Dashboard</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<header>NNI Server Dashboard</header>
+
+<div class="container">
+
+<!-- Upload Card -->
+<div class="card">
+    <h3>Add Topology / Devices</h3>
+    <label for="fileInput">Select JSON file</label>
+    <input type="file" id="fileInput" accept=".json">
+    <button onclick="upload('/add_device_model')">Upload Device Model</button>
+    <button onclick="upload('/add_topology')">Upload Topology</button>
+    <button onclick="uploadWithWarning('/extend_topology')">Upload Extended Topology</button>
+    <textarea id="responseUpload" readonly placeholder="Server response will appear here..."></textarea>
+    <div id="messageUpload" class="note"></div>
+</div>
+
+<!-- Get Data Card -->
+<div class="card">
+    <h3>Get Data</h3>
+    <button onclick="getData('/get_talkers', 'talkersTable')">Get Talkers</button>
+    <button onclick="getData('/get_listeners', 'listenersTable')">Get Listeners</button>
+    <button onclick="getData('/get_switches', 'switchesTable')">Get Switches</button>
+    <button onclick="getData('/get_streams', 'streamsTable')">Get Streams</button>
+    <button onclick="getData('/get_topology', 'topologyTable')">Get Topology</button>
+    <button onclick="getData('/get_device_models', 'deviceModelsTable')">Get Device Models</button>
+
+    <!-- Container for all dynamically rendered tables -->
+    <div id="tablesContainer"></div>
+    <div id="messageGet" class="note"></div>
+</div>
+
+<script src="/static/script.js"></script>
+</body>
+</html>

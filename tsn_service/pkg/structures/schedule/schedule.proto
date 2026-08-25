@@ -1,0 +1,23 @@
+syntax = "proto3";
+package schedule;
+
+option go_package = "/schedule";
+
+message gclConfiguration {
+	repeated ConfigMap configs = 1;
+}
+
+message ConfigMap {
+  string NodePort = 1; //nodeId.PortId
+  schedule Sched = 2; 
+}
+
+message schedule {
+	float GatingCycle = 1 [json_name="gating-cycle"];
+	repeated TrafficClass TrafficClasses = 2 [json_name="traffic-classes"];
+}
+
+message TrafficClass {
+	string Name = 1 [json_name="name"];
+	int32 AssignedPortion = 2 [json_name="assigned-portion"];
+}

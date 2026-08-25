@@ -1,0 +1,173 @@
+#title
+
+participantgroup #white <size:18>**main_service(ms)**
+participant "<size:18>main.go" as main.go
+participantgroup #white <size:18>**pkg**
+participantgroup #lightgray <size:18>**store_wrapper**
+participant "<size:18>store.go" as store.go
+participant "<size:18>utils.go" as utils.go
+end
+participantgroup#lightgray <size:18>**uni**
+participant "<size:18>server.go" as server.go
+participant "<size:18>utils.go" as utils-1.go
+end
+participantgroup#lightgray <size:18>**nni**
+participant "<size:18>server.go" as _server.go
+participant "<size:18>utils.go" as utils-2.go
+end
+participantgroup #lightgray <size:18>**counter-conf-handler**
+participant "<size:18>utils.go" as utils-3.go
+participant "<size:18>topo.go" as topo.go
+end
+participantgroup #lightgray <size:18>**event-handler**
+participant "<size:18>handler.go" as handler.go
+participant "<size:18>config.go" as config.go
+participant "<size:18>utils.go" as utils-4.go
+end
+#participantgroup #lightgray **admission-control**
+#participant admissionCheck.go
+#participant admissionCollection.go
+#end
+#participantgroup #lightgray **management-entity**
+#participant startMonitoring.go
+#end
+#participantgroup #lightgray **ras**
+#participant mstp.go
+#participant ras.go
+#end
+end
+end
+participant "<size:18>monitor_service" as monitor_service
+participant "<size:18>atomix" as atomix
+participant "<size:18>tsn_service" as tsn_service
+
+
+autoactivation on 
+
+main.go->store.go:<size:18>store.CreateStores()</size>
+store.go->atomix:<size:18>GetMap()
+deactivateafter store.go
+deactivate atomix
+
+main.go->main.go: <size:18>addSwitches()
+main.go->main.go:<size:18>createKind("netconf-device")
+deactivateafter main.go
+main.go->main.go:<size:18>createDevice("192.168.0.1",\n "gnmi-netconf-adapter:11161",    \n "netconf-device",\n "tsn-model", "1.0.2") {\n conn= connectToGrpcService( \n "onos-topo:5150")}
+deactivate main.go
+deactivateafter main.go
+main.go->main.go:<size:18>addLinks()
+main.go->main.go:<size:18>createKind("link") {\n conn= connectToGrpcService( \n "onos-topo:5150")}
+deactivate main.go
+main.go->main.go:<size:18> createLink("link0", "link", \n "192.168.0.1", "sw0p1", \n "192.168.0.2", "sw0p2") {\n conn= connectToGrpcService( \n "onos-topo:5150")}
+deactivate main.go
+deactivateafter main.go
+main.go->store.go:<size:18>StoreAdapter(...)
+store.go->utils.go:<size:18> sendToStore()
+deactivate utils.go
+deactivateafter store.go
+#deactivate admissionCollection.go
+#deactivateafter admissionCollection.go
+main.go->topo.go:<size:18> switches= GetSwitchesFromTopo(...)
+#topo.go->topo.go:switchesTopo = getTopology()
+deactivateafter topo.go
+#main.go->main.go:**addMonitorConf()**
+#main.go->main.go:conf= yaml.YAMLToJSON(fileContent) \n &monitor.config()
+#deactivate main.go
+#main.go->utils.go:**sendToStore**(rawConf, \n"configurations.monitor-config.192.168.0.1")
+#deactivateafter utils.go
+
+#main.go->main.go:data= proto.Marshal(&monitor.Adapter{ \n Protocol: "NETCONF", \n Address:  "gnmi-netconf-adapter",})
+#deactivate main.go
+#main.go->utils.go:sendToStore(data, \n"configurations.adapter.NETCONF")
+#deactivateafter utils.go
+#deactivateafter main.go
+main.go->main.go:<size:18>startDeviceDataCollection(switches)
+main.go->monitor_service: <size:18>Get(ctx, GetRequest)
+monitor_service-->main.go: <size:18>GetResponse
+deactivateafter main.go
+main.go->main.go:<size:18>resource = createResource()
+main.go->store.go:<size:18>StoreResource(resource)
+store.go->utils.go:<size:18>sendToStore()
+deactivate utils.go
+deactivateafter store.go
+deactivateafter main.go
+main.go->main.go:<size:18>pollConfigSubsystemForAvailability()
+main.go->utils-4.go:<size:18>ConnectToGnmiService()
+deactivate utils-4.go
+deactivateafter main.go
+main.go->_server.go: <size:18>nni.StartServer() 
+_server.go->_server.go: <size:18>http.HandleFunc("/get_talkers", getTalkers)
+_server.go->store.go:<size:18>nodes = GetAllNodesOfType("talker")
+deactivate store.go
+_server.go->utils-2.go:<size:18>jsonResp = convertNodesToJson(nodes)
+deactivate utils-2.go
+deactivateafter _server.go
+_server.go->_server.go: <size:18>http.HandleFunc("/get_listeners", getListeners)
+_server.go->store.go:<size:18>nodes = GetAllNodesOfType("listener")
+deactivate store.go
+_server.go->utils-2.go:<size:18>jsonResp = convertNodesToJson(nodes)
+deactivate utils-2.go
+deactivateafter _server.go
+_server.go->_server.go: <size:18>http.HandleFunc("/get_streams", getStreams)
+_server.go->store.go:streams = GetAllStreams()
+deactivate store.go
+_server.go->utils-2.go:<size:18>jsonResp = convertNodesToJson(nodes)
+deactivate utils-2.go
+deactivate _server.go
+deactivateafter _server.go
+main.go->server.go: <size:18>northboundinterface.StartServer()   
+server.go->server.go: <size:18>http.HandleFunc("/add_stream", addStream)
+deactivate server.go
+server.go->handler.go:<size:18>configId= handler.HandleAddStreamEvent
+handler.go->config.go: <size:18>requestId= storeRequestsInStore(\n request, timeOfReq)
+config.go->config.go: <size:18>storeEvent(request, timeOfReq)
+config.go->config.go:<size:18>ev=createEvent(req, timeOfReq)
+deactivate config.go
+config.go->store.go:<size:18>store//log.Event(ev)
+deactivateafter store.go
+deactivate config.go
+deactivateafter config.go
+handler.go->utils-4.go: <size:18>configId= notifyTsnService(requestIds)
+utils-4.go->utils-4.go: <size:18>conn= grpc.Dial("tsn-service:5150",\n grpc.WithInsecure())
+deactivate utils-4.go
+utils-4.go->utils-4.go:<size:18>client= notification.NewNotificationClient(conn)
+deactivate utils-4.go
+utils-4.go->tsn_service: <size:18>confId= client.CalcConfig(context, reqIds)
+tsn_service-->utils-4.go:<size:18>confId
+utils-4.go-->handler.go:<size:18>confId
+handler.go->utils-4.go: <size:18>applyConfiguration(configId)
+utils-4.go->utils-4.go:<size:18>client= connectToGnmiService( \n "onos-config:5150")
+deactivate utils-4.go
+utils-4.go->store.go:<size:18>confReq= store.GetConfigurationRequest(configId)
+store.go-->utils-4.go:<size:18>config
+utils-4.go->utils-4.go: <size:18>client..Set(context, confReq)
+deactivate utils-4.go
+deactivateafter utils-4.go
+handler.go-->server.go:<size:18>configId
+server.go->utils-1.go: <size:18>createResponse(confId)
+utils-1.go->utils-1.go:<size:18>storeStreams()
+utils-1.go->store.go:<size:18>StoreStream()
+deactivateafter utils-1.go
+store.go->utils.go:<size:18>sendToStore()
+deactivate utils.go
+deactivateafter store.go
+utils-1.go-->server.go: <size:18>resp
+deactivateafter server.go
+server.go->server.go: <size:18>http.HandleFunc("/update_stream", updateStream)
+deactivate server.go
+server.go->server.go: <size:18>http.HandleFunc("/remove_stream", removeStream)
+deactivate server.go
+server.go->server.go: <size:18>http.HandleFunc("/join_stream", joinStream)
+deactivate server.go
+server.go->server.go: <size:18>http.HandleFunc("/leave_stream", leaveStream)
+deactivate server.go
+server.go->server.go: <size:18>http.HandleFunc("/register_node", registerNode)
+server.go->handler.go:<size:18>RegisterNode()
+deactivateafter server.go
+handler.go->store.go:<size:18>StoreNode()
+deactivateafter handler.go
+store.go->utils.go:<size:18>sendToStore()
+deactivate utils.go
+deactivateafter store.go
+
+/

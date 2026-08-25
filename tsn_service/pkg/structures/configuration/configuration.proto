@@ -1,0 +1,172 @@
+syntax = "proto3";
+package configuration;
+
+option go_package = "/configuration";
+
+/////////////////////////////////////////////////
+/*                CONFIG REQUEST               */
+/////////////////////////////////////////////////
+
+message UserToNetworkRequirements {
+	uint32 NumSeamlessTrees = 1 [json_name="num-seamless-trees"];
+	uint32 MaxLatency = 2 [json_name="max-latency"];
+}
+
+message InterfaceCapabilities {
+	bool VlanTagCapable = 1 [json_name="vlan-tag-capable"];
+}
+
+message StreamId {
+	string MacAddress = 1 [json_name="mac-address"];
+	string UniqueId = 2 [json_name="unique-id"];
+}
+
+message InterfaceId {
+	string MacAddress = 1 [json_name="mac-address"];
+	string InterfaceName = 2 [json_name="interface-name"];
+}
+
+message Interface {
+	int32 Index = 1 [json_name="index"];
+	InterfaceId InterfaceId = 2 [json_name="interface-id"];
+}
+
+message ListenerGroup {
+	uint32 Index = 1 [json_name="index"];
+	StreamId StrId = 2 [json_name="stream-id"];
+	repeated Interface EndStationInterfaces = 3 [json_name="end-station-interfaces"];
+	UserToNetworkRequirements UserToNetReq = 4 [json_name="user-to-network-requirements"];
+	InterfaceCapabilities InterfCap = 5 [json_name="interface-capabilities"];
+}
+
+message StreamRank {
+	uint32 Rank = 1 [json_name="rank"];
+}
+
+message IeeeMacAddress {
+	string DestinationMac = 1 [json_name="destination-mac-address"];
+	string SourceMac = 2 [json_name="source-mac"];
+}
+
+message IeeeVlanTag {
+	uint32 PriorityCodePoint = 1 [json_name="priority-code-point"];
+	uint32 VlanId = 2 [json_name="vlan-id"];
+}
+
+message Ipv4Tuple {
+	string SrcIpAddr = 1 [json_name="src-ip-addr"];
+	string DestIpAddr = 2 [json_name="dest-ip-addr"];
+	uint32 Dscp = 3 [json_name="dscp"];
+	uint32 Protocol = 4 [json_name="protocol"];
+	uint32 SrcPort = 5 [json_name="src-port"];
+	uint32 DestPort = 6 [json_name="dest-port"];
+}
+
+message Ipv6Tuple {
+	string SrcIpAddr = 1 [json_name="src-ip-addr"];
+	string DestIpAddr = 2 [json_name="dest-ip-addr"];
+	uint32 Dscp = 3 [json_name="dscp"];
+	uint32 Protocol = 4 [json_name="protocol"];
+	uint32 SrcPort = 5 [json_name="src-port"];
+	uint32 DestPort = 6 [json_name="dest-port"];
+}
+
+message DataFrameSpecification {
+	uint32 Index = 1 [json_name="index"];
+	IeeeMacAddress MacAddr = 2 [json_name="ieee802-mac-addresses"];
+	IeeeVlanTag VlanTag = 3 [json_name="ieee802-vlan-tag"];
+	Ipv4Tuple Ipv4Tup = 4 [json_name="ipv4tup"];
+	Ipv6Tuple Ipv6Tup = 5 [json_name="ipv6tup"];
+}
+
+message Interval {
+	uint32 Numerator = 1 [json_name="numerator"];
+	uint32 Denominator = 2 [json_name="denominator"];
+}
+
+message TimeAware {
+	uint32 EarliestTransmitOffset = 1 [json_name="earliest-transmit-offset"];
+	uint32 LatestTransmitOffset = 2 [json_name="latest-transmit-offset"];
+	uint32 Jitter = 3 [json_name="jitter"];
+}
+
+message TrafficSpecification {
+	Interval Interval = 1 [json_name="interval"];
+	uint32 MaxFramesPerInterval = 2 [json_name="max-frames-per-interval"];
+	uint32 MaxFrameSize = 3 [json_name="max-frame-size"];
+	uint32 TransmissionSelection = 4 [json_name="transmission-selection"];
+	TimeAware TimeAware = 5 [json_name="time-aware"];
+}
+
+message TalkerGroup {
+	StreamId StrId = 1 [json_name="stream-id"];
+	StreamRank StrRank = 2 [json_name="stream-rank"];
+	repeated Interface EndStationInterfaces = 3 [json_name="end-station-interfaces"];
+	repeated DataFrameSpecification DataFrameSpecification = 4 [json_name="data-frame-specification"];
+	TrafficSpecification TrafficSpecification = 5 [json_name="traffic-specification"];
+	UserToNetworkRequirements UserToNetReq = 6 [json_name="user-to-network-requirements"];
+	InterfaceCapabilities InterfCap = 7 [json_name="interface-capabilities"];
+}
+
+message Request {
+	TalkerGroup Talker = 1 [json_name="talker"];
+	repeated ListenerGroup ListenerList = 2 [json_name="listener-list"];
+}
+
+message ConfigRequest {
+  float Version = 1 [json_name="version"];
+  repeated Request Requests = 2 [json_name="requests"];
+}
+
+/////////////////////////////////////////////////
+/*              RESPONSE STRUCTURE             */
+/////////////////////////////////////////////////
+
+message StatusInfo {
+	int32 TalkerStatus = 1; // TODO: update to enum: 0 = None, 1 = ready, 2 = failed
+	int32 ListenerStatus = 2; // TODO: update to enum: 0 = None, 1 = ready, 2 = partial-failed, 3 = failed
+	uint32 FailureCode = 3;
+}
+
+message AccumulatedLatency {
+	uint32 AccumulatedLatency = 1;
+}
+
+message TimeAwareOffset {
+	uint32 Offset = 1; // ns, EarlisetTransmitOffset < offset < LatestTransmitOffset
+}
+
+message InterfaceConfiguration {
+	InterfaceId InterfaceId = 1;
+	int32 Type = 2; // 1 = mac-address/vlan, 2 = ipv4, 3 = ipv6
+	IeeeMacAddress MacAddr = 3;
+	IeeeVlanTag VlanTag = 4;
+	Ipv4Tuple Ipv4Tup = 5;
+	Ipv6Tuple Ipv6Tup = 6;
+	// provided if TimeAware is present in talker group
+	TimeAwareOffset TimeAwareOffset = 7;
+}
+
+message TalkerListenerStatus {
+	uint32 Index = 1;
+	AccumulatedLatency AccumulatedLatency = 2;
+	repeated InterfaceConfiguration InterfaceConfiguration = 3;
+}
+
+message StatusGroup {
+	StreamId StrId = 1;
+	StatusInfo StatusInfo = 2;
+	repeated InterfaceId FailedInterfaces = 3;
+	repeated TalkerListenerStatus StatusTalkerListener = 4;
+	repeated Interface EndStationInterfaces = 5;
+}
+
+
+message Response {
+	StatusGroup StatusGroup = 1;
+}
+
+message ConfigResponse {
+	float Version = 1;
+	repeated Response Responses = 2;
+}

@@ -1,0 +1,19 @@
+{
+  "models": [
+    {
+      "model-name": "ExampleModel",
+      "yang-files": [
+        {
+          "file-name": "ieee802-ethernet-interface.yang",
+          "file-revision": "",
+          "structure": ""
+        },
+        {
+          "file-name": "ieee802-dot1as-hs.yang",
+          "file-revision": "2023-12-15",
+          "structure": ""
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,43 @@
+{
+    "nodes": [
+      {
+        "type": "BRIDGE",
+        "name": "Relyum-switch",
+        "address": "70-F8-E7-D0-00-01",
+        "management": {
+          "address": "192.168.64.4",
+          "user" :"sys-admin",
+	        "passsword" :"sys-admin",
+          "model-name": "RELY-TSN4"
+        },
+        "ports": [
+          {
+            "id": "P0",
+            "name": "PORT_0",
+            "portSpeed": 1000,
+            "numberOfQueues": 8
+          },
+          {
+            "id": "P1",
+            "name": "PORT_1",
+            "portSpeed": 1000,
+            "numberOfQueues": 8
+          },
+          {
+            "id": "P2",
+            "name": "PORT_2",
+            "portSpeed": 1000,
+            "numberOfQueues": 8
+          },
+          {
+            "id": "P3",
+            "name": "PORT_3",
+            "portSpeed": 1000,
+            "numberOfQueues": 8
+          }
+        ]
+      }
+    ],
+    "links": [],
+    "index": 0
+  }

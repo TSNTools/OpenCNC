@@ -1,0 +1,16 @@
+syntax = "proto3";
+package notificationService;
+
+option go_package = "/notificationService";
+
+message Event {
+	string Event = 1;
+}
+
+message Received {
+    bool Received = 1;
+}
+
+service Notification {
+	rpc ConfigNotification(Event) returns (Received) {}
+}

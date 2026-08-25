@@ -1,0 +1,11 @@
+{
+    "node_type": "talker",
+    "node_of_interest": "",
+    "interface": "eth0",
+    "cycle_time": 2,
+    "payload_size": 2,
+    "stream_mac": "1A:2B:3C:4D:5E:6F",
+    "vid": 2,
+    "pcp": 4,
+    "tx_offset": 20
+}

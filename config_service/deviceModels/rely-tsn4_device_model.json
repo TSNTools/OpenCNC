@@ -1,0 +1,117 @@
+{
+  "model-name": "RELY-TSN4",
+  "vendor": "SOCE",
+  "version": "1.0",
+  "yang-files": [
+    {
+      "file-name": "ietf-yang-metadata.yang",
+      "file-revision": "2016-08-05",
+      "description": ""
+    },
+    {
+      "file-name": "yang.yang",
+      "file-revision": "2021-04-07",
+      "description": ""
+    },
+    {
+      "file-name": "ietf-inet-types.yang",
+      "file-revision": "2013-07-15",
+      "description": ""
+    },
+    {
+      "file-name": "ietf-yang-types.yang",
+      "file-revision": "2013-07-15",
+      "description": ""
+    },
+    {
+      "file-name": "sysrepo-plugind.yang",
+      "file-revision": "2020-12-10",
+      "description": ""
+    },
+    {
+      "file-name": "ietf-netconf.yang",
+      "file-revision": "2013-09-29",
+      "description": "NETCONF protocol configuration and management"
+    },
+    {
+      "file-name": "ietf-netconf-acm.yang",
+      "file-revision": "2018-02-14",
+      "description": "NETCONF access control model"
+    },
+    {
+      "file-name": "ietf-netconf-with-defaults.yang",
+      "file-revision": "2011-06-01",
+      "description": "NETCONF with-defaults capability"
+    },
+    {
+      "file-name": "ietf-netconf-notifications.yang",
+      "file-revision": "2012-02-06",
+      "description": "NETCONF notifications"
+    },
+    {
+      "file-name": "ietf-netconf-monitoring.yang",
+      "file-revision": "2010-10-04",
+      "description": "NETCONF monitoring"
+    },
+    {
+      "file-name": "nc-notifications.yang",
+      "file-revision": "2008-07-14",
+      "description": "NETCONF notification definitions"
+    },
+    {
+      "file-name": "notifications.yang",
+      "file-revision": "2008-07-14",
+      "description": "NETCONF notification definitions"
+    },
+    {
+      "file-name": "ietf-x509-cert-to-name.yang",
+      "file-revision": "2014-12-10",
+      "description": "X.509 certificate to name mapping"
+    },
+    {
+      "file-name": "iana-crypt-hash.yang",
+      "file-revision": "2014-08-06",
+      "description": "Cryptographic hash identities and types"
+    },
+    {
+      "file-name": "ieee802-types.yang",
+      "file-revision": "2020-10-23",
+      "description": "Common IEEE 802 types"
+    },
+    {
+      "file-name": "ieee802-dot1q-types.yang",
+      "file-revision": "2023-08-29",
+      "description": "Common IEEE 802.1Q types"
+    },
+    {
+      "file-name": "iana-if-type.yang",
+      "file-revision": "2017-01-19",
+      "description": "IANA interface type identities"
+    },
+    {
+      "file-name": "ieee802-dot1q-bridge.yang",
+      "file-revision": "2021-04-09",
+      "description": "IEEE 802.1Q bridge configuration"
+    },
+    {
+      "file-name": "ieee802-dot1q-sched.yang",
+      "file-revision": "2021-04-09",
+      "description": "IEEE 802.1Q scheduled traffic (802.1Qbv) configuration"
+    },
+    {
+      "file-name": "ieee802-dot1q-preemption.yang",
+      "file-revision": "2020-07-07",
+      "description": "IEEE 802.1Q frame preemption configuration"
+    },
+    {
+      "file-name": "rtaw-cbs.yang",
+      "file-revision": "2021-10-12",
+      "description": "IEEE 802.1Q credit-based shaper (CBS) configuration"
+    },
+    {
+      "file-name": "ieee802-dot1q-psfp.yang",
+      "file-revision": "2020-07-07",
+      "description": "IEEE 802.1Q per-stream filtering and policing (PSFP) configuration"
+    }
+  ]
+}

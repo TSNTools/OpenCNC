@@ -1,0 +1,38 @@
+syntax = "proto3";
+package event;
+
+option go_package = "/event";
+
+/
+/*                    EVENT                    */
+/
+
+enum EventType {
+	ADD_STREAM = 0;
+	REMOVE_STREAM = 1;
+}
+
+enum EventStatus {
+	PLANNED = 0;
+	PASSED = 1;
+}
+
+message EventHandler {
+	string Handler = 1;
+}
+
+message LogInfo {
+	string Info = 1;
+}
+
+message Event {
+	string EventId = 1;
+	EventType EventType = 2;
+	EventStatus Status = 3;
+	repeated EventHandler Handlers = 4;
+	string EventGroupId = 5;
+	uint32 ExecutionTime = 6;
+	int64 OccurenceTime = 7;
+	uint32 Duration = 8;
+	LogInfo LogInfo = 9;
+}

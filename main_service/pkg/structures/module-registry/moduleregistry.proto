@@ -1,0 +1,14 @@
+syntax = "proto3";
+package moduleregistry;
+
+option go_package = "./moduleregistry";  // Use './' to indicate the current directory
+
+message ModuleRegistry {
+    repeated YangModule YangModules = 1;
+}
+
+message YangModule {
+    string Name = 1 [json_name = "name"];
+    string Structure = 2 [json_name = "structure"];
+    string Revision = 3 [json_name = "revision"];
+}

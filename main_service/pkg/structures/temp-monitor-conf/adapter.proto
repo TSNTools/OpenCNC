@@ -1,0 +1,13 @@
+syntax = "proto3";
+package monitorConfig;
+
+option go_package = "/monitor-config";
+
+/
+/*                   ADAPTER                   */
+/
+
+message Adapter {
+	string Protocol = 1;
+	string Address = 2;
+}

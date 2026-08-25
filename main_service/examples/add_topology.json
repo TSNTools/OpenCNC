@@ -1,0 +1,96 @@
+{
+  "nodes": [
+    {
+      "name": "host-1-p0",
+      "type": "END_STATION",
+       "deviceInfo": {
+        "deviceModel": "ExampleModel",
+        "supportedProtocols": ["A", "IEEE 802.1Qbv", "IEEE 802.1CB"]
+      },
+      "ports": [
+        {
+          "id": "P11",
+          "name": "Port1",
+          "capabilities": {
+            "port_speed": 1000
+          },
+          "numberOfQueues": 8
+        }
+      ],
+      "properties": {
+        "end_station": {
+          "application_type": "generic",
+          "function": "host"
+        }
+      }
+    },
+    {
+      "name": "switch-c1",
+      "type": "BRIDGE",
+       "deviceInfo": {
+        "deviceModel": "ExampleModel",
+        "supportedProtocols": ["B", "IEEE 802.1CB"]
+      },
+      "ports": [
+        {"id": "P21", "name": "Port1", "capabilities": {"port_speed": 1000}, "numberOfQueues": 8},
+        {"id": "P22", "name": "Port2", "capabilities": {"port_speed": 1000}, "numberOfQueues": 8},
+        {"id": "P23", "name": "Port3", "capabilities": {"port_speed": 1000}, "numberOfQueues": 8},
+        {"id": "P24", "name": "Port4", "capabilities": {"port_speed": 1000}, "numberOfQueues": 8}
+      ],
+      "properties": {
+        "bridge": {
+          "procDelay": 40000
+        }
+      }
+    },
+    {
+      "name": "switch-c2",
+      "type": "BRIDGE",
+       "deviceInfo": {
+        "deviceModel": "ExampleModel",
+        "supportedProtocols": ["C", "IEEE 802.1CB"]
+      },
+      "ports": [
+        {"id": "P31", "name": "Port1", "capabilities": {"port_speed": 1000}, "numberOfQueues": 8},
+        {"id": "P32", "name": "Port2", "capabilities": {"port_speed": 1000}, "numberOfQueues": 8},
+        {"id": "P43", "name": "Port3", "capabilities": {"port_speed": 1000}, "numberOfQueues": 8},
+        {"id": "P44", "name": "Port4", "capabilities": {"port_speed": 1000}, "numberOfQueues": 8}
+      ],
+      "properties": {
+        "bridge": {
+          "procDelay": 40000
+        }
+      }
+    }
+  ],
+  "links": [
+    {
+      "id": "l1",
+      "source_node": "switch-c4",
+      "source_port": "Port2",
+      "target_node": "switch-p1-a2",
+      "target_port": "Port4",
+      "propagationDelay": 10,
+      "bandwidth": 1000
+    },
+    {
+      "id": "l2",
+      "source_node": "switch-c4",
+      "source_port": "Port3",
+      "target_node": "switch-p2-a2",
+      "target_port": "Port4",
+      "propagationDelay": 10,
+      "bandwidth": 1000
+    },
+    {
+      "id": "l3",
+      "source_node": "switch-c4",
+      "source_port": "Port4",
+      "target_node": "switch-p3-a2",
+      "target_port": "Port4",
+      "propagationDelay": 10,
+      "bandwidth": 1000
+    }
+  ],
+  "version": 0
+}

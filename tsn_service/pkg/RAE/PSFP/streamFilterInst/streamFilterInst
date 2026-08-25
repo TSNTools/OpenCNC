@@ -1,0 +1,68 @@
+package streamFilterInst
+
+/*
+Functions to set configuration for stream filter instance table
+*/
+
+import (
+	//"git.cs.kau.se/hamzchah/opencnc_kafka-exporter/logger/pkg/logger"
+
+	st "tsn-service/pkg/RAE/dataStructures/SchemaTreeMethods"
+
+	pb "github.com/openconfig/gnmi/proto/gnmi"
+)
+
+/*
+	the stream filer instance table
+
+key parameters:
+
+	port, deviceIp
+	streamId: which stream the table is for
+	gateTableId: which stream-gate-instance-table that correlate to this table
+
+Parameters to set:
+
+	maxSduSize:
+	flowId:
+	streamBlockedDueToOversizeFrame: Default false
+	streamBlockedDueToOversizeFrameEnabled: default false
+*/
+func StreamFilterInstanceTable(root *st.SchemaTree, port string, deviceIp string,
+	streamId int, gateTableId int, maxSduSize []uint, flowId []uint,
+	streamBlockedDueToOversizeFrame bool, streamBlockedDueToOversizeFrameEnabled bool) (updates []*pb.Update, err error) {
+
+	err = nil
+
+	updates = append(updates, setStreamHandleSpecification(root, port, deviceIp, streamId))
+	updates = append(updates, setPrioritySpecification(root, port, deviceIp, streamId)) //TODO: the value should not be streamID
+	updates = append(updates, setStreamGateInstanceId(root, port, deviceIp, gateTableId))
+
+	// Set filter-specification-table
+	// TODO: check if logical structure
+	filterSpecUpdate, err := setFilterSpecTables(root, port, deviceIp, maxSduSize, flowId)
+	if err != nil {
+		//log.Errorf("Failed setting filter specification table for stream filter instance table: %v", err)
+	} else {
+		updates = append(updates, filterSpecUpdate...)
+	}
+
+	updates = append(updates, setStreamBlockedDueToOversizeFrameEnabled(root, port, deviceIp, streamBlockedDueToOversizeFrame))
+	updates = append(updates, setStreamBlockedDueToOversizeFrame(root, port, deviceIp, streamBlockedDueToOversizeFrame))
+
+	return updates, nil
+}
+
+/*
+Default stream filter instance table
+*/
+func setDefaultStreamFilterInstanceTable(root st.SchemaTree, port string, deviceIp string,
+	streamId int, gateTableId int, maxSduSize []uint, flowId []uint) ([]*pb.Update, error) {
+
+	var streamBlockedDueToOversizeFrame bool = false
+	var streamBlockedDueToOversizeFrameEnabled bool = false
+
+	return setStreamFilterInstanceTable(root, port, deviceIp,
+		streamId, gateTableId, maxSduSize, flowId,
+		streamBlockedDueToOversizeFrame, streamBlockedDueToOversizeFrameEnabled)
+}

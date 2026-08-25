@@ -1,0 +1,23 @@
+syntax = "proto3";
+package streamObjects;
+
+option go_package = "/streamObjects";
+
+message NodeObject {
+    string NodeType = 1 [json_name="node_type"];
+    string NodeOfInterestMac = 2 [json_name="node_of_interest_mac"];
+    string NodeOfInterestUniqueId = 3 [json_name="node_of_interest_unique_id"];
+    string Interface = 4 [json_name="interface"];
+    string IpAddress = 5 [json_name="ip_addr"];
+    int64 CycleTime = 6 [json_name="cycle_time"];
+    int32 PayloadSize = 7 [json_name="payload_size"];
+    string StreamMAC = 8 [json_name="stream_mac"];
+    string UniqueId = 9 [json_name="unique_id"];
+    int32 VID = 10 [json_name="vid"];
+    int32 PCP = 11 [json_name="pcp"];
+    int32 TXOffset = 12 [json_name="tx_offset"];
+}
+
+message NodeList {
+    repeated NodeObject Nodes = 1 [json_name = "nodes"];
+}

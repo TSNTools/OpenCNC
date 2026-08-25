@@ -1,0 +1,71 @@
+counter_conf: 
+ - config:
+   - interval: 20000
+     counters:
+      - name: sw0p1-eth-interface-in-total-frames # name/id name should be unique and contain counter name
+        path: "elem: <name: 'interfaces' key: <key: 'namespace' value: 'urn:ietf:params:xml:ns:yang:ietf-interfaces'>> 
+             elem: <name: 'interface' key: <key:'name' value: 'sw0p1'>> 
+             elem: <name: 'ethernet' <key: 'namespace' value: 'urn:ieee:std:802.3:yang:ieee802-ethernet-interface'>> 
+             elem: <name: 'statistics'> elem: <name: 'frame'> elem: <name: 'in-total-frames'>"
+      - name: test-counter
+        path: "elem: <name: 'interfaces' key: <key: 'namespace' value: 'urn:ietf:params:xml:ns:yang:ietf-interfaces'>> 
+             elem: <name: 'interface' key: <key:'name' value: 'sw0p1'>> 
+             elem: <name: 'ethernet' <key: 'namespace' value: 'urn:ieee:std:802.3:yang:ieee802-ethernet-interface'>> 
+             elem: <name: 'statistics'> elem: <name: 'frame'> elem: <name: 'in-total-octets'>"
+   - interval: 15000
+     counters:
+      - name: sw0p1-eth-interface-in-total-frames
+        path: "elem: <name: 'interfaces' key: <key: 'namespace' value: 'urn:ietf:params:xml:ns:yang:ietf-interfaces'>> 
+             elem: <name: 'interface' key: <key:'name' value: 'sw0p1'>> 
+             elem: <name: 'ethernet' <key: 'namespace' value: 'urn:ieee:std:802.3:yang:ieee802-ethernet-interface'>> 
+             elem: <name: 'statistics'> elem: <name: 'frame'> elem: <name: 'in-total-frames'>"
+      - name: sw0p1-eth-interface-in-octets
+        path: "elem: <name: 'interfaces' key: <key: 'namespace' value: 'urn:ietf:params:xml:ns:yang:ietf-interfaces'>> 
+             elem: <name: 'interface' key: <key:'name' value: 'sw0p1'>> 
+             elem: <name: 'statistics'>
+             elem: <name: 'in-octets'>"
+      - name: sw0p1-eth-interface-out-octets
+        path: "elem: <name: 'interfaces' key: <key: 'namespace' value: 'urn:ietf:params:xml:ns:yang:ietf-interfaces'>> 
+             elem: <name: 'interface' key: <key:'name' value: 'sw0p1'>> 
+             elem: <name: 'statistics'>
+             elem: <name: 'out-octets'>"
+      - name: sw0p1-eth-interface-in-unicast-pkts
+        path: "elem: <name: 'interfaces' key: <key: 'namespace' value: 'urn:ietf:params:xml:ns:yang:ietf-interfaces'>> 
+             elem: <name: 'interface' key: <key:'name' value: 'sw0p1'>> 
+             elem: <name: 'statistics'>
+             elem: <name: 'in-unicast-pkts'>"
+      - name: sw0p1-eth-interface-out-unicast-pkts
+        path: "elem: <name: 'interfaces' key: <key: 'namespace' value: 'urn:ietf:params:xml:ns:yang:ietf-interfaces'>> 
+             elem: <name: 'interface' key: <key:'name' value: 'sw0p1'>> 
+             elem: <name: 'statistics'>
+             elem: <name: 'out-unicast-pkts'>"
+      - name: sw0p1-eth-interface-in-multicast-pkts
+        path: "elem: <name: 'interfaces' key: <key: 'namespace' value: 'urn:ietf:params:xml:ns:yang:ietf-interfaces'>> 
+             elem: <name: 'interface' key: <key:'name' value: 'sw0p1'>> 
+             elem: <name: 'statistics'>
+             elem: <name: 'in-multicast-pkts'>"
+      - name: sw0p1-eth-interface-out-multicast-pkts
+        path: "elem: <name: 'interfaces' key: <key: 'namespace' value: 'urn:ietf:params:xml:ns:yang:ietf-interfaces'>> 
+             elem: <name: 'interface' key: <key:'name' value: 'sw0p1'>> 
+             elem: <name: 'statistics'>
+             elem: <name: 'out-multicast-pkts'>"
+      - name: sw0p1-eth-interface-in-discards
+        path: "elem: <name: 'interfaces' key: <key: 'namespace' value: 'urn:ietf:params:xml:ns:yang:ietf-interfaces'>> 
+             elem: <name: 'interface' key: <key:'name' value: 'sw0p1'>> 
+             elem: <name: 'statistics'>
+             elem: <name: 'in-discards'>"
+      - name: sw0p1-eth-interface-out-discards
+        path: "elem: <name: 'interfaces' key: <key: 'namespace' value: 'urn:ietf:params:xml:ns:yang:ietf-interfaces'>> 
+             elem: <name: 'interface' key: <key:'name' value: 'sw0p1'>> 
+             elem: <name: 'statistics'>
+             elem: <name: 'out-discards'>"
+      - name: sw0p1-interface-speed
+        path: "elem: <name: 'interfaces' key: <key: 'namespace' value: 'urn:ietf:params:xml:ns:yang:ietf-interfaces'>> 
+             elem: <name: 'interface' key: <key:'name' value: 'sw0p1'>> 
+             elem: <name: 'ethernet' <key: 'namespace' value: 'urn:ieee:std:802.3:yang:ieee802-ethernet-interface'>> 
+             elem: <name: 'speed'>"
+ - config:
+   - interval: 50000
+     counters:
+     - name: full-configuration-test
+       path: ""

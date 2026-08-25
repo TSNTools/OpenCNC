@@ -1,0 +1,60 @@
+syntax = "proto3";
+package resources;
+
+option go_package = "/resources";
+
+message Switch{
+    repeated Bridge Bridges = 1;
+    repeated Port Ports = 2;
+    repeated Link Links = 3;
+    string IpAddress = 4;
+
+}
+
+message Bridge{
+    string Name = 1;
+    string Id = 2;
+    InventoryInfo InventoryInfo = 3;
+    string Status = 4;
+    repeated string SupportedProtocols = 5;
+    repeated string Capabilities = 6;
+    repeated Port AvailiablePorts = 7;
+    ManagementInfo ManagementInfo = 8;
+}
+
+message ManagementInfo{
+    // Type will most likely change
+    repeated string KeyCertificates = 1;
+    string IpAddress = 2;
+    string UserName = 3;
+    // Type will most likely change
+    string ManageVlan = 4;
+}
+message InventoryInfo{
+    string SoftwareVersion = 1;
+    //TODO: add more
+}
+
+
+message Port{
+    string Id = 1;
+    string Name = 2;
+    int64 PortSpeed = 3;
+    string Model = 4;
+    string MacAddress = 5;
+    string IpAddress = 6;
+    int32 NumberOfQueues = 7;
+    int32 MaximumTransmissionUnit = 8;
+    map<string,int32> TrafficClassMTUs = 9;
+    map<string,int32> TrafficClassQueues = 10;
+    repeated string PortCapabilities = 11;
+    
+}
+
+message Link{
+    int64 PropogationDelay = 1;
+    repeated Port EndPorts = 2;
+}
+
+
+

@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>NNI Server Dashboard</title>
+    <style>
+        body {
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 0;
+        }
+
+        header {
+            background-color: #4CAF50;
+            color: white;
+            text-align: center;
+            padding: 1rem;
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+            padding: 2rem;
+            justify-content: center;
+            gap: 2rem;
+        }
+
+        .card {
+            background-color: #fff;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            padding: 1.5rem;
+            width: 350px;
+            max-width: 90%;
+        }
+
+        .card h3 {
+            margin-top: 0;
+            text-align: center;
+            color: #333;
+        }
+
+        button {
+            display: block;
+            width: 100%;
+            padding: 0.6rem;
+            margin: 0.5rem 0;
+            background-color: #4CAF50;
+            color: white;
+            font-size: 1rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        input[type="file"] {
+            display: block;
+            margin: 1rem auto;
+        }
+
+        textarea {
+            width: 100%;
+            height: 150px;
+            padding: 0.5rem;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+            resize: vertical;
+            font-family: monospace;
+            margin-top: 1rem;
+        }
+
+        .note {
+            font-size: 0.85rem;
+            color: #555;
+            text-align: center;
+            margin-top: 0.5rem;
+        }
+
+        .error { color: #c00; font-weight: bold; }
+        .success { color: #090; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<header>NNI Server Dashboard</header>
+
+<div class="container">
+
+    <!-- Add Endpoints Card -->
+    <div class="card">
+        <h3>Add Topology / Devices</h3>
+
+        <label for="fileInput">Select JSON file</label>
+        <input type="file" id="fileInput" accept=".json">
+
+        <button onclick="upload('/add_device_model', false)">Upload Device Model</button>
+        <button onclick="upload('/add_topology', false)">Upload Topology</button>
+        <button onclick="upload('/extend_topology', true)">Extend Topology</button>
+
+        <textarea id="responseUpload" readonly placeholder="Server response will appear here..."></textarea>
+        <div id="messageUpload" class="note"></div>
+    </div>
+
+    <!-- Get Endpoints Card -->
+    <div class="card">
+        <h3>Get Data</h3>
+
+        <button onclick="getData('/get_talkers')">Get Talkers</button>
+        <button onclick="getData('/get_listeners')">Get Listeners</button>
+        <button onclick="getData('/get_switches')">Get Switches</button>
+        <button onclick="getData('/get_streams')">Get Streams</button>
+
+        <textarea id="responseGet" readonly placeholder="Server response will appear here..."></textarea>
+        <div id="messageGet" class="note"></div>
+    </div>
+
+</div>
+
+<script>
+    async function upload1(endpoint) {
+    const fileInput = document.getElementById("fileInput");
+    const responseBox = document.getElementById("responseUpload");
+    const message = document.getElementById("messageUpload");
+    message.textContent = '';
+    responseBox.value = '';
+
+    if (!fileInput.files.length) {
+        alert("Please select a JSON file first.");
+        return;
+    }
+
+    const file = fileInput.files[0];
+    let text;
+    try {
+        text = await file.text();
+    } catch (err) {
+        message.textContent = "Error reading file: " + err;
+        message.className = "error";
+        return;
+    }
+
+    let json;
+    try {
+        json = JSON.parse(text);
+    } catch (err) {
+        message.textContent = "Invalid JSON: " + err.message;
+        message.className = "error";
+        return;
+    }
+
+    try {
+        const r = await fetch(endpoint, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(json)
+        });
+
+        const bodyText = await r.text(); // read once
+        let jsonResponse;
+        try {
+            jsonResponse = JSON.parse(bodyText);
+        } catch {
+            jsonResponse = { status: r.status, text: bodyText };
+        }
+
+        responseBox.value = JSON.stringify(jsonResponse, null, 2);
+        message.textContent = r.ok ? "Upload successful!" : "Upload failed!";
+        message.className = r.ok ? "success" : "error";
+    } catch (err) {
+        responseBox.value = "Error connecting to server:\n" + err;
+        message.textContent = "Failed to upload to server.";
+        message.className = "error";
+    }
+}
+
+    async function upload(endpoint, isExtend) {
+    const fileInput = document.getElementById("fileInput"); 
+    const responseBox = document.getElementById("responseUpload");
+    const message = document.getElementById("messageUpload");
+    message.textContent = '';
+    responseBox.value = '';
+
+    if (!fileInput.files.length) {
+        alert("Please select a JSON file first.");
+        return;
+    }
+
+    // Read file
+    let text;
+    try {
+        text = await fileInput.files[0].text();
+    } catch (err) {
+        message.textContent = "Error reading file: " + err;
+        message.className = "error";
+        return;
+    }
+
+    // Parse JSON
+    let json;
+    try {
+        json = JSON.parse(text);
+    } catch (err) {
+        message.textContent = "Invalid JSON: " + err.message;
+        message.className = "error";
+        return;
+    }
+
+    // -----------------------------------------------------
+    //     SHOW WARNING ONLY IN "EXTEND TOPOLOGY" MODE
+    // -----------------------------------------------------
+    if (isExtend) {
+        const hasNodes = Array.isArray(json.nodes) && json.nodes.length > 0;
+        const hasLinks = Array.isArray(json.links) && json.links.length > 0;
+
+        if (hasNodes || hasLinks) {
+            const confirmed = confirm(
+                "⚠️ EXTENDED TOPOLOGY WARNING\n\n" +
+                "You are uploading an extension to the topology.\n" +
+                "If any of the nodes or links already exist, they WILL be overwritten.\n\n" +
+                "Do you want to proceed?"
+            );
+            if (!confirmed) return;
+        }
+    }
+    // -----------------------------------------------------
+
+    // Upload to server
+    try {
+        const r = await fetch(endpoint, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(json)
+        });
+
+        const bodyText = await r.text();
+        let jsonResponse;
+        try {
+            jsonResponse = JSON.parse(bodyText);
+        } catch {
+            jsonResponse = { status: r.status, text: bodyText };
+        }
+
+        responseBox.value = JSON.stringify(jsonResponse, null, 2);
+        message.textContent = r.ok ? "Upload successful!" : "Upload failed!";
+        message.className = r.ok ? "success" : "error";
+
+    } catch (err) {
+        responseBox.value = "Error connecting to server:\n" + err;
+        message.textContent = "Failed to upload to server.";
+        message.className = "error";
+    }
+}
+
+    async function getData(endpoint) {
+    const responseBox = document.getElementById("responseGet");
+    const message = document.getElementById("messageGet");
+    message.textContent = '';
+    responseBox.value = '';
+
+    try {
+        const r = await fetch(endpoint);
+
+        const bodyText = await r.text(); // read body once
+        let jsonResponse;
+        try {
+            jsonResponse = JSON.parse(bodyText); // try parsing JSON
+        } catch {
+            jsonResponse = { status: r.status, text: bodyText }; // fallback to raw text
+        }
+
+        responseBox.value = JSON.stringify(jsonResponse, null, 2);
+        message.textContent = r.ok ? "Data fetched successfully!" : "Failed to fetch data!";
+        message.className = r.ok ? "success" : "error";
+    } catch (err) {
+        responseBox.value = "Error connecting to server:\n" + err;
+        message.textContent = "Failed to fetch data.";
+        message.className = "error";
+    }
+}
+
+</script>
+
+</body>
+</html>

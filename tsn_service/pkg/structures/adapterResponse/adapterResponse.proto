@@ -1,0 +1,16 @@
+syntax = "proto3";
+package adapterResponse;
+
+option go_package = "/adapterResponse";
+
+message AdapterResponse {
+    repeated SchemaEntry Entries = 1;
+    int64 Timestamp = 2;
+}
+
+message SchemaEntry {
+    string Name = 1;
+    string Tag = 2;
+    string Namespace = 3;
+    string Value = 4;
+}
