@@ -11,11 +11,8 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 
-	service "OpenCNC/config_service/structures/service"
-	"OpenCNC/common/structures/topology"
 	"OpenCNC/config_service/pkg/engine" // Your wrapper implementing GNMIService
-	"OpenCNC/config_service/pkg/plugins"
-	"OpenCNC/config_service/pkg/protocolbackends"
+	service "OpenCNC/config_service/structures/service"
 	// Official gNMI package
 )
 
@@ -76,10 +73,6 @@ func main() {
 
 	// --- Create the configuration engine and register backends ---
 	engine := engine.NewMappingEngine(obsClient)
-	// register the Netconf backend
-	netconfPlugins := plugins.ForProtocol(topology.ManagementProtocol_NETCONF, obsClient)
-	netconf_backend := protocolbackends.NewNetconfBackend("netconf", obsClient, netconfPlugins...)
-	engine.RegisterBackend(netconf_backend)
 
 	// --- Register ConfigService and gNMI service ---
 	svc := service.NewConfigServiceServerImpl(obsClient, engine)

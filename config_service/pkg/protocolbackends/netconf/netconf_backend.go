@@ -1,145 +1,100 @@
-package protocolbackends
+package netconf
 
 import (
+	"context"
 	"fmt"
 	"reflect"
 
+	"OpenCNC/common/managementSessions"
 	"OpenCNC/common/observability"
 	storewrapper "OpenCNC/common/store-wrapper"
 	credentials "OpenCNC/common/structures/credentials"
 	"OpenCNC/common/structures/topology"
 	topology_config "OpenCNC/common/structures/topology_config"
-	"OpenCNC/config_service/pkg/managementSessions"
 	"OpenCNC/config_service/pkg/plugins"
+	protocolbackends "OpenCNC/config_service/pkg/protocolbackends"
 
-	"github.com/beevik/etree"
 	"github.com/golang/protobuf/proto"
+	"github.com/openshift-telco/go-netconf-client/netconf"
 )
 
-var _ ProtocolBackend = (*NetconfBackend)(nil)
-
-type NetconfSnapshot struct {
-	XML []byte // parsed model, cached payload, metadata...
-
-}
-
-func (s *NetconfSnapshot) Clone() Snapshot {
-	//todo: check it, this is a placeholder so far
-	return &NetconfSnapshot{
-		XML: append([]byte(nil), s.XML...),
-	}
-}
-
-func (s *NetconfSnapshot) Update(feature *plugins.FeatureXML, node *topology.Node) error {
-
-	if feature == nil {
-		return fmt.Errorf("feature XML is nil")
-	}
-
-	if len(feature.XML) == 0 {
-		return fmt.Errorf("feature XML is empty")
-	}
-
-	doc := etree.NewDocument()
-
-	if err := doc.ReadFromBytes(s.XML); err != nil {
-		return fmt.Errorf("failed parsing snapshot XML: %w", err)
-	}
-
-	interfaces := doc.FindElement("//interfaces")
-	if interfaces == nil {
-		return fmt.Errorf("snapshot does not contain <interfaces>")
-	}
-
-	var interfaceElement *etree.Element
-
-	for _, intf := range interfaces.FindElements("interface") {
-
-		name := intf.FindElement("name")
-
-		if name == nil {
-			continue
-		}
-
-		if name.Text() == node.Name {
-			interfaceElement = intf
-			break
-		}
-	}
-
-	if interfaceElement == nil {
-		return fmt.Errorf(
-			"interface %q not found in snapshot",
-			node.Name,
-		)
-	}
-
-	// Remove existing feature subtree.
-	if existing := interfaceElement.FindElement(feature.Container); existing != nil {
-		interfaceElement.RemoveChild(existing)
-	}
-
-	// Parse new feature subtree.
-	featureDoc := etree.NewDocument()
-
-	if err := featureDoc.ReadFromBytes(feature.XML); err != nil {
-		return fmt.Errorf(
-			"failed parsing feature XML: %w",
-			err,
-		)
-	}
-
-	if featureDoc.Root() == nil {
-		return fmt.Errorf(
-			"feature XML has no root element",
-		)
-	}
-
-	// Add the updated feature subtree.
-	interfaceElement.AddChild(
-		featureDoc.Root().Copy(),
-	)
-
-	// Store updated snapshot.
-	doc.Indent(2)
-
-	updatedXML, err := doc.WriteToBytes()
-	if err != nil {
-		return fmt.Errorf(
-			"failed serializing updated snapshot: %w",
-			err,
-		)
-	}
-
-	s.XML = updatedXML
-
-	return nil
-}
+var _ protocolbackends.ProtocolBackend = (*NetconfBackend)(nil)
 
 //-----------------------------------
 // Definition of the NetconfBackend
 //-----------------------------------
 
 type NetconfBackend struct {
-	name      string
-	protocol  topology.ManagementProtocol
-	plugins   []plugins.Plugin
-	logger    observability.Logger
-	snapshots map[string]*SnapshotSet[*NetconfSnapshot]
+	target         *topology.Node
+	protocol       topology.ManagementProtocol
+	plugins        []plugins.Plugin
+	logger         observability.Logger
+	snapshots      *protocolbackends.SnapshotSet[*NetconfSnapshot]
+	sessionFactory *managementSessions.NetconfFactory
 }
 
-func NewNetconfBackend(name string, logger observability.Logger, plugins ...plugins.Plugin) *NetconfBackend {
-	return &NetconfBackend{
-		name:      name,
-		protocol:  topology.ManagementProtocol_NETCONF,
-		plugins:   plugins,
-		logger:    observability.NormalizeLogger(logger),
-		snapshots: make(map[string]*SnapshotSet[*NetconfSnapshot]),
+func NewNetconfBackend(target *topology.Node, cred *credentials.ManagementCredentials, logger observability.Logger) (*NetconfBackend, error) {
+
+	if target == nil {
+		return nil, fmt.Errorf("target node is nil")
 	}
+	if cred == nil {
+		return nil, fmt.Errorf("management credentials are nil")
+	}
+
+	backend := &NetconfBackend{
+		target:         target,
+		protocol:       topology.ManagementProtocol_NETCONF,
+		plugins:        plugins.ForProtocol(topology.ManagementProtocol_NETCONF, logger),
+		logger:         observability.NormalizeLogger(logger),
+		snapshots:      &protocolbackends.SnapshotSet[*NetconfSnapshot]{},
+		sessionFactory: managementSessions.NewNetconfFactory(target, cred),
+	}
+
+	// get curent configuration
+	if err := backend.Initialize(); err != nil {
+		return nil, fmt.Errorf("failed to initialize NETCONF backend: %w", err)
+	}
+	return backend, nil
+}
+
+func init() {
+	protocolbackends.Register(protocolbackends.BackendFactory{
+		Protocol: topology.ManagementProtocol_NETCONF,
+		New: func(
+			target *topology.Node,
+			cred *credentials.ManagementCredentials,
+			logger observability.Logger,
+		) (protocolbackends.ProtocolBackend, error) {
+			return NewNetconfBackend(target, cred, logger)
+		},
+	})
+}
+
+func (b *NetconfBackend) Initialize() error {
+
+	if b.sessionFactory == nil {
+		return fmt.Errorf("session factory is nil")
+	}
+
+	session, err := b.sessionFactory.NewSession()
+	if err != nil {
+		return fmt.Errorf("failed to create NETCONF session: %w", err)
+	}
+	defer session.Close()
+
+	snapshot, err := GetRunningSnapshot(session)
+	if err != nil {
+		return fmt.Errorf("failed to retrieve running configuration: %w", err)
+	}
+
+	b.snapshots.Current = snapshot
+
+	return nil
 }
 
 func (b *NetconfBackend) Name() string {
-	return b.name
+	return b.target.Name + "-" + b.protocol.String()
 }
 
 func (b *NetconfBackend) Protocol() topology.ManagementProtocol {
@@ -154,10 +109,15 @@ func (b *NetconfBackend) Plugins() []plugins.Plugin {
 	return b.plugins
 }
 
-func (b *NetconfBackend) PrepareSnapshot(msg *topology_config.NodeConfig, node *topology.Node) error {
+func (b *NetconfBackend) PrepareSnapshot(ctx context.Context, msg *topology_config.NodeConfig) error {
 	logger := b.logger
 
-	if node == nil {
+	// Check cancellation before doing any work.
+	if err := ctx.Err(); err != nil {
+		return err
+	}
+
+	if b.target == nil {
 		return fmt.Errorf("PrepareSnapshot: node is nil")
 	}
 
@@ -166,22 +126,21 @@ func (b *NetconfBackend) PrepareSnapshot(msg *topology_config.NodeConfig, node *
 		return fmt.Errorf("PrepareSnapshot: nodeConfig is nil")
 	}
 
-	snapshotSet, ok := b.snapshots[node.Name]
-	if !ok {
-		return fmt.Errorf("no snapshot exists for node %s", node.Name)
+	if b.snapshots == nil || b.snapshots.Current == nil {
+		return fmt.Errorf("no snapshot exists for node %s", b.target.Name)
 	}
 
 	//
 	// Snapshot starts:
 	// Current -> Working snapshot
 	//
-	snapshotSet.Working = snapshotSet.Current.Clone().(*NetconfSnapshot)
+	b.snapshots.Working = b.snapshots.Current.Clone().(*NetconfSnapshot)
 
-	if snapshotSet.Working == nil {
+	if b.snapshots.Working == nil {
 		return fmt.Errorf("failed creating working snapshot")
 	}
 
-	modelName := node.DeviceInfo.GetDeviceModel()
+	modelName := b.target.DeviceInfo.GetDeviceModel()
 
 	nodeDeviceModel, err := storewrapper.GetDeviceModel(modelName)
 	if err != nil {
@@ -193,6 +152,11 @@ func (b *NetconfBackend) PrepareSnapshot(msg *topology_config.NodeConfig, node *
 	}
 
 	for _, portConfig := range nodeConfig.PortConfigs {
+
+		// Cancellation check between ports.
+		if err := ctx.Err(); err != nil {
+			return err
+		}
 
 		if portConfig == nil {
 			continue
@@ -207,6 +171,10 @@ func (b *NetconfBackend) PrepareSnapshot(msg *topology_config.NodeConfig, node *
 		srcType := src.Type()
 
 		for _, plugin := range b.plugins {
+			// Cancellation check between plugins.
+			if err := ctx.Err(); err != nil {
+				return err
+			}
 
 			if !plugin.SupportedByDevice(nodeDeviceModel) {
 				logger.Printf(
@@ -263,7 +231,6 @@ func (b *NetconfBackend) PrepareSnapshot(msg *topology_config.NodeConfig, node *
 
 				input = fieldMsg
 				used[fields[0]] = struct{}{}
-
 			} else {
 
 				dst := &topology_config.PortConfig{}
@@ -273,6 +240,10 @@ func (b *NetconfBackend) PrepareSnapshot(msg *topology_config.NodeConfig, node *
 				var mappedFields []string
 
 				for _, name := range fields {
+					// Cancellation check inside the field loop too.
+					if err := ctx.Err(); err != nil {
+						return err
+					}
 
 					sf := src.FieldByName(name)
 
@@ -315,31 +286,28 @@ func (b *NetconfBackend) PrepareSnapshot(msg *topology_config.NodeConfig, node *
 
 			logger.Printf("  -> calling Map()")
 
+			// Check before calling plugin work.
+			if err := ctx.Err(); err != nil {
+				return err
+			}
 			mapped, err := plugin.Map(input)
 			if err != nil {
-				return fmt.Errorf(
-					"%s: %w",
-					plugin.Name(),
-					err,
-				)
+				return fmt.Errorf("%s: %w", plugin.Name(), err)
 			}
-
-			logger.Printf(
-				"  <- Map() returned %T",
-				mapped,
-			)
-
+			logger.Printf("  <- Map() returned %T", mapped)
 			logger.Printf("  -> building feature XML")
-
 			featureXML, err := plugin.BuildFeatureXML(mapped)
-
 			if err != nil {
 				return fmt.Errorf("%s: %w", plugin.Name(), err)
 			}
 
-			if err := snapshotSet.Working.Update(
+			// Check before modifying the working snapshot.
+			if err := ctx.Err(); err != nil {
+				return err
+			}
+			if err := b.snapshots.Working.Update(
 				featureXML,
-				node,
+				b.target,
 			); err != nil {
 				return fmt.Errorf("failed to update snapshot: %w", err)
 			}
@@ -388,46 +356,37 @@ func (b *NetconfBackend) PrepareSnapshot(msg *topology_config.NodeConfig, node *
 
 	logger.Printf(
 		"Snapshot prepared successfully for node %s",
-		node.Name,
+		b.target.Name,
 	)
 
 	return nil
 }
 
-func (b *NetconfBackend) Commit(target *topology.Node, cred *credentials.ManagementCredentials) error {
+func (b *NetconfBackend) Commit(ctx context.Context) error {
 
-	if target == nil {
-		return fmt.Errorf("Commit: node is nil")
-	}
-
-	snapshotSet, ok := b.snapshots[target.Name]
-	if !ok {
+	if b.snapshots == nil {
 		return fmt.Errorf(
 			"no snapshot exists for node %s",
-			target.Name,
+			b.target.Name,
 		)
 	}
 
-	if snapshotSet.Working == nil {
+	if b.snapshots.Working == nil {
 		return fmt.Errorf(
 			"no working snapshot for node %s",
-			target.Name,
+			b.target.Name,
 		)
 	}
 
 	b.logger.Printf(
 		"Committing configuration for node %s",
-		target.Name,
+		b.target.Name,
 	)
 
 	//
 	// Push working configuration
 	//
-	if err := b.pushSnapshot(
-		snapshotSet.Working,
-		target,
-		cred,
-	); err != nil {
+	if err := b.pushSnapshot(b.snapshots.Working); err != nil {
 		return fmt.Errorf(
 			"commit failed: %w",
 			err,
@@ -437,73 +396,59 @@ func (b *NetconfBackend) Commit(target *topology.Node, cred *credentials.Managem
 	//
 	// Snapshot promotion
 	//
-	snapshotSet.LastStable = snapshotSet.Current
-	snapshotSet.Current = snapshotSet.Working
-	snapshotSet.Working = nil
+	b.snapshots.LastStable = b.snapshots.Current.Clone().(*NetconfSnapshot)
+	b.snapshots.Current = b.snapshots.Working
+	b.snapshots.Working = nil
 
 	b.logger.Printf(
 		"Commit successful for node %s",
-		target.Name,
+		b.target.Name,
 	)
 
 	return nil
 }
 
-func (b *NetconfBackend) Rollback(target *topology.Node, cred *credentials.ManagementCredentials) error {
+func (b *NetconfBackend) Rollback(ctx context.Context) error {
 
-	if target == nil {
-		return fmt.Errorf("Rollback: node is nil")
-	}
-
-	snapshotSet, ok := b.snapshots[target.Name]
-	if !ok {
+	if b.snapshots == nil {
 		return fmt.Errorf(
 			"no snapshot exists for node %s",
-			target.Name,
+			b.target.Name,
 		)
 	}
 
-	if snapshotSet.LastStable == nil {
+	if b.snapshots.LastStable == nil {
 		return fmt.Errorf(
-			"no last stable snapshot for node %s",
-			target.Name,
+			"no last stable snapshot for node %s, need to commit before rollback",
+			b.target.Name,
 		)
 	}
 
 	b.logger.Printf(
 		"Rolling back configuration for node %s",
-		target.Name,
+		b.target.Name,
 	)
 
 	//
 	// Restore device configuration
 	//
-	if err := b.pushSnapshot(
-		snapshotSet.LastStable,
-		target,
-		cred,
-	); err != nil {
-		return fmt.Errorf(
-			"rollback failed: %w",
-			err,
-		)
+	if err := b.pushSnapshot(b.snapshots.LastStable); err != nil {
+		return fmt.Errorf("rollback failed: %w", err)
 	}
 
 	//
 	// Restore runtime state
 	//
-	snapshotSet.Current = snapshotSet.LastStable.Clone().(*NetconfSnapshot)
-	snapshotSet.Working = nil
+	b.snapshots.Current = b.snapshots.LastStable.Clone().(*NetconfSnapshot)
+	b.snapshots.LastStable = nil
+	b.snapshots.Working = nil
 
-	b.logger.Printf(
-		"Rollback successful for node %s",
-		target.Name,
-	)
+	b.logger.Printf("Rollback successful for node %s", b.target.Name)
 
 	return nil
 }
 
-func (b *NetconfBackend) pushSnapshot(snapshot *NetconfSnapshot, node *topology.Node, cred *credentials.ManagementCredentials) error {
+func (b *NetconfBackend) pushSnapshot(snapshot *NetconfSnapshot) error {
 
 	if snapshot == nil {
 		return fmt.Errorf("snapshot is nil")
@@ -513,11 +458,7 @@ func (b *NetconfBackend) pushSnapshot(snapshot *NetconfSnapshot, node *topology.
 		return fmt.Errorf("snapshot XML is empty")
 	}
 
-	session, err := managementSessions.CreateSessionWithPassword(
-		node.ManagementInfo.IpAddress,
-		cred.GetUsernamePassword(),
-	)
-
+	session, err := b.sessionFactory.NewSession()
 	if err != nil {
 		return fmt.Errorf("NETCONF session failed: %w", err)
 	}
@@ -532,4 +473,18 @@ func (b *NetconfBackend) pushSnapshot(snapshot *NetconfSnapshot, node *topology.
 	}
 
 	return nil
+}
+
+func GetRunningSnapshot(session *netconf.Session) (*NetconfSnapshot, error) {
+	if session == nil {
+		return nil, fmt.Errorf("GetRunningSnapshot: session is nil")
+	}
+
+	rawXML, err := managementSessions.GetRunningConfig(session)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get running config: %w", err)
+	}
+
+	xmlBytes := []byte(rawXML)
+	return &NetconfSnapshot{XML: append([]byte(nil), xmlBytes...)}, nil
 }

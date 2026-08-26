@@ -1,10 +1,10 @@
 package protocolbackends
 
 import (
-	credentials "OpenCNC/common/structures/credentials"
 	"OpenCNC/common/structures/topology"
 	topology_config "OpenCNC/common/structures/topology_config"
 	"OpenCNC/config_service/pkg/plugins"
+	"context"
 )
 
 type ProtocolBackend interface {
@@ -14,9 +14,9 @@ type ProtocolBackend interface {
 	AddPlugin(plugin plugins.Plugin)
 	Plugins() []plugins.Plugin
 
-	PrepareSnapshot(msg *topology_config.NodeConfig, node *topology.Node) error
-	Commit(target *topology.Node, cred *credentials.ManagementCredentials) error
-	Rollback(target *topology.Node, cred *credentials.ManagementCredentials) error
+	PrepareSnapshot(ctx context.Context, cmsg *topology_config.NodeConfig) error
+	Commit(ctx context.Context) error
+	Rollback(ctx context.Context) error
 }
 
 type Snapshot interface {

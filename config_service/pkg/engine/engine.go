@@ -5,6 +5,7 @@ import (
 	"os"
 	"runtime"
 	"strconv"
+	"sync"
 
 	"OpenCNC/common/observability"
 	"OpenCNC/common/structures/credentials"
@@ -22,34 +23,39 @@ import (
 type MappingEngine struct {
 	logger observability.Logger
 
-	lastTransaction *ConfigurationTransaction // last applied configuration transaction
+	lastTransaction   *ConfigurationTransaction // last applied configuration transaction
+	lastTransactionMu sync.RWMutex
 
-	backends map[topology.ManagementProtocol]protocolbackends.ProtocolBackend
+	backends map[string]protocolbackends.ProtocolBackend // this is extra now
 }
 
 func NewMappingEngine(logger observability.Logger) *MappingEngine {
 	return &MappingEngine{
 		logger:   observability.NormalizeLogger(logger),
-		backends: make(map[topology.ManagementProtocol]protocolbackends.ProtocolBackend),
+		backends: make(map[string]protocolbackends.ProtocolBackend),
 	}
 }
 
-func (m *MappingEngine) RegisterBackend(backend protocolbackends.ProtocolBackend) {
-	m.backends[backend.Protocol()] = backend
+func (m *MappingEngine) RegisterBackend(target string, backend protocolbackends.ProtocolBackend) {
+	m.backends[target] = backend
 }
 
 func (m *MappingEngine) GetLastTransactionId() *string {
+	m.lastTransactionMu.RLock()
+	defer m.lastTransactionMu.RUnlock()
+
 	if m.lastTransaction == nil {
 		return nil
 	}
 	return &m.lastTransaction.ConfigId
 }
 
-func (m *MappingEngine) ApplyConfiguration(topo *topology.Topology, cfg *topology_config.TopologyConfig, secret []managementSessions.NodeCredentials) error {
+func (m *MappingEngine) ApplyConfiguration(topo *topology.Topology, cfg *topology_config.TopologyConfig, creds []managementSessions.NodeCredentials) error {
 	if topo == nil || cfg == nil {
 		return fmt.Errorf("topology and config must not be nil")
 	}
 
+	// create a new configuration transaction
 	tx := NewConfigurationTransaction(cfg.GetConfigId())
 
 	for _, node := range topo.Nodes {
@@ -62,30 +68,27 @@ func (m *MappingEngine) ApplyConfiguration(topo *topology.Topology, cfg *topolog
 			continue
 		}
 
-		backend, ok := m.backends[node.ManagementInfo.Protocol]
-		if !ok {
-			if m.logger != nil {
-				m.logger.Printf("no backend registered for protocol %v", node.ManagementInfo.Protocol)
-			}
-			continue
-		}
-
 		var nodeCredentials *credentials.ManagementCredentials
 
-		for _, secret := range secret {
-			if secret.ID == node.Name {
-				nodeCredentials = secret.Credentials
+		for _, cred := range creds {
+			if cred.ID == node.Name {
+				nodeCredentials = cred.Credentials
 				break
 			}
 		}
 
-		tx.Operations = append(tx.Operations, Operation{
-			Node:    node,
-			Config:  nodeCfg,
-			Backend: backend,
-			creds:   nodeCredentials,
-		})
+		backend, err := protocolbackends.ForProtocol(node.ManagementInfo.Protocol, node, nodeCredentials, m.logger)
+		if err != nil {
+			m.logger.Printf("no backend registered for protocol %v", node.ManagementInfo.Protocol)
+			continue
+		}
+		m.RegisterBackend(backend.Name(), backend)
+
+		tx.Operations = append(tx.Operations, Operation{Config: nodeCfg, Backend: backend})
 	}
+
+	//set concurrency limit based on available workers
+	tx.MAX_CONCURRENT_CONFIGS, _ = getAvailableWorkers()
 
 	if err := tx.Prepare(); err != nil {
 		return err
@@ -96,7 +99,9 @@ func (m *MappingEngine) ApplyConfiguration(topo *topology.Topology, cfg *topolog
 	}
 
 	// transaction promotion: update the current and previous transaction IDs
+	m.lastTransactionMu.Lock()
 	m.lastTransaction = tx
+	m.lastTransactionMu.Unlock()
 
 	// TODO:
 	// Persist the new configuration in the KV store only after all
@@ -115,6 +120,8 @@ func findNodeConfig(cfg *topology_config.TopologyConfig, nodeName string) *topol
 }
 
 func (m *MappingEngine) Rollback() error {
+	m.lastTransactionMu.Lock()
+	defer m.lastTransactionMu.Unlock()
 
 	if m.lastTransaction == nil {
 		return fmt.Errorf("transaction rollback is available only after a successful configuration transaction!!")
@@ -125,7 +132,6 @@ func (m *MappingEngine) Rollback() error {
 	}
 
 	m.lastTransaction = nil
-
 	return nil
 }
 

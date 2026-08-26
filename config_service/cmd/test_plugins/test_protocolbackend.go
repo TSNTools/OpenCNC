@@ -3,13 +3,13 @@ package main
 import (
 	"log"
 
+	"OpenCNC/common/structures/credentials"
 	"OpenCNC/common/structures/qbv"
 	"OpenCNC/common/structures/topology"
 	topology_config "OpenCNC/common/structures/topology_config"
 	vlan "OpenCNC/common/structures/vlan"
 	"OpenCNC/config_service/pkg/engine"
-	"OpenCNC/config_service/pkg/plugins"
-	"OpenCNC/config_service/pkg/protocolbackends"
+	netconfbackend "OpenCNC/config_service/pkg/protocolbackends/netconf"
 
 	"github.com/openconfig/ygot/ygot"
 	"google.golang.org/protobuf/proto"
@@ -18,23 +18,21 @@ import (
 var logger = log.New(log.Writer(), "[TEST-tttech-TRAFFIC-CLASSES] ", log.LstdFlags)
 
 func TestNetconfProtocol() {
+	target := target
+	nodecfg := nodecfg
+	cred := cred
 
-	//plugin_qbv := netconf.NewQbvNetconfPlugin_tttech(logger)
-	//plugin_pcp := netconf.NewPcpMappingNetconfPlugin(logger)
-	//plugin_tc := netconf.NewTrafficClassNetconfPlugin(logger)
-	netconfPlugins := plugins.ForProtocol(
-		topology.ManagementProtocol_NETCONF,
+	backend, err := netconfbackend.NewNetconfBackend(
+		target,
+		cred,
 		logger,
 	)
+	if err != nil {
+		log.Fatalf("Failed to create Netconf backend: %v", err)
+	}
 
-	backend := protocolbackends.NewNetconfBackend(
-		"netconf",
-		logger,
-		netconfPlugins...,
-	)
 	//backend := protocolbackends.NewNetconfBackend("netconf", plugin_qbv, plugin_pcp)
 	operation := &engine.Operation{
-		Node:    target,
 		Config:  nodecfg,
 		Backend: backend,
 	}
@@ -44,6 +42,15 @@ func TestNetconfProtocol() {
 	}
 
 	tx.Commit()
+}
+
+var cred = &credentials.ManagementCredentials{
+	Authentication: &credentials.ManagementCredentials_UsernamePassword{
+		UsernamePassword: &credentials.UsernamePassword{
+			Username: "root",
+			Password: "",
+		},
+	},
 }
 
 var target = &topology.Node{

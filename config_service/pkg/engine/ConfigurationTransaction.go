@@ -1,8 +1,6 @@
 package engine
 
 import (
-	"OpenCNC/common/structures/credentials"
-	"OpenCNC/common/structures/topology"
 	"OpenCNC/common/structures/topology_config"
 	protocolbackends "OpenCNC/config_service/pkg/protocolbackends"
 	"context"
@@ -11,8 +9,6 @@ import (
 )
 
 type Operation struct {
-	Node      *topology.Node
-	creds     *credentials.ManagementCredentials
 	Config    *topology_config.NodeConfig
 	Backend   protocolbackends.ProtocolBackend
 	Prepared  bool
@@ -38,15 +34,21 @@ func (t *ConfigurationTransaction) Prepare() error {
 
 		op := &t.Operations[i]
 
-		if err := op.Backend.PrepareSnapshot(op.Config, op.Node); err != nil {
+		if err := op.Backend.PrepareSnapshot(ctx, op.Config); err != nil {
 
 			return fmt.Errorf(
 				"prepare failed for node %s: %w",
-				op.Node.Name,
+				op.Backend.Name(),
 				err,
 			)
 		}
 
+		// Do not mark the operation as prepared if the transaction
+		// was cancelled while the backend operation was running.
+		if ctx.Err() != nil {
+			op.Prepared = false
+			return ctx.Err()
+		}
 		op.Prepared = true
 
 		return nil
@@ -60,12 +62,16 @@ func (t *ConfigurationTransaction) Commit() error {
 	err := t.executeConcurrently(func(ctx context.Context, i int) error {
 
 		op := &t.Operations[i]
+		// Only commit operations that were successfully prepared.
+		if !op.Prepared {
+			return fmt.Errorf("operation was not prepared!")
+		}
 
-		if err := op.Backend.Commit(op.Node, op.creds); err != nil {
+		if err := op.Backend.Commit(ctx); err != nil {
 
 			return fmt.Errorf(
 				"commit failed for node %s: %w",
-				op.Node.Name,
+				op.Backend.Name(),
 				err,
 			)
 		}
@@ -97,8 +103,8 @@ func (t *ConfigurationTransaction) Rollback() error {
 			return nil // nothing to rollback
 		}
 
-		if err := op.Backend.Rollback(op.Node, op.creds); err != nil {
-			return fmt.Errorf("rollback failed for node %s: %w", op.Node.Name, err)
+		if err := op.Backend.Rollback(ctx); err != nil {
+			return fmt.Errorf("rollback failed for node %s: %w", op.Backend.Name(), err)
 		}
 
 		op.Committed = false
@@ -107,6 +113,11 @@ func (t *ConfigurationTransaction) Rollback() error {
 }
 
 func (t *ConfigurationTransaction) executeConcurrently(fn func(ctx context.Context, index int) error) error {
+
+	if t.MAX_CONCURRENT_CONFIGS < 1 {
+		t.MAX_CONCURRENT_CONFIGS = 1
+	}
+
 	var wg sync.WaitGroup //wait for all operations to finish.
 	var mu sync.Mutex     // safely store the first error.
 	ctx, cancel := context.WithCancel(context.Background())

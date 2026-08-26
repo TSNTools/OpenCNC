@@ -10,8 +10,8 @@ import (
 
 	eventhandler "OpenCNC/main_service/pkg/event-handler"
 	"OpenCNC/main_service/pkg/nni"
-	store "OpenCNC/main_service/pkg/store-wrapper"
 	monitor "OpenCNC/main_service/pkg/structures/temp-monitor-conf"
+	"OpenCNC/main_service/pkg/uni"
 
 	"github.com/openconfig/gnmi/proto/gnmi"
 
@@ -35,10 +35,13 @@ func main() {
 	//store.StoreAdapter("NETCONF", "gnmi-netconf-adapter")
 
 	//Create and save the module registry
-	store.StoreModuleRegistry()
+	//store.StoreModuleRegistry()
 
 	// Start NNI server
 	go nni.StartServer()
+
+	// Start UNI server
+	go uni.StartServer()
 
 	// Not working on local network, needs to be connected to switches
 	//switches := counterConfHandler.GetMonitorConfigDevices()

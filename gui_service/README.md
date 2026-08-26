@@ -103,3 +103,54 @@ React build output:
 * **Topology object additions:** Currently, only one object at a time can be added to the topology object. This applies to **nodes, links, and device models**, which must be added individually using the JSON format.
 
 * **Topology propagation:** After the topology is updated, the entire OpenCNC system needs to be informed about the updated topology object. The updated topology should then be pulled again by all relevant microservices so that they operate on the latest topology state. **This propagation is not implemented yet.**
+
+
+GUI
+ │
+ │ POST /add_stream
+ ▼
+UNI server
+ │
+ │ ConfigRequest
+ ▼
+StoreUniConfRequest()
+ │
+ │ streams.requests.<UUID>
+ ▼
+notifyTsnService()
+ │
+ │ gRPC
+ ▼
+TSN CalcConfig()
+ │
+ ▼
+CalculateConfiguration()
+ │
+ ├── reads the request from etcd
+ │
+ ├── gets topology
+ │
+ └── internalOptimizer.CalculateConf(topology, nil)
+
+
+ GUI Backend
+    │
+    │ HTTP POST /add_stream
+    ▼
+UNI Server
+    │
+    │ configuration.ConfigRequest
+    ▼
+StoreUniConfRequest()
+    │
+    │ proto.Marshal(Request)
+    ▼
+etcd
+    │
+    │ streams/requests/<UUID>
+    ▼
+TSN service
+    │
+    │ GetRequestData()
+    ▼
+configuration.Request

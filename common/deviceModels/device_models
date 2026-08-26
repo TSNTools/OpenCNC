@@ -1,4 +1,4 @@
-package managementSessions
+package deviceModels
 
 import (
 	"fmt"
