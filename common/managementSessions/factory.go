@@ -38,3 +38,7 @@ func (f *NetconfFactory) NewSession() (*netconf.Session, error) {
 		f.cred.GetUsernamePassword(),
 	)
 }
+
+func (f *NetconfFactory) UpdateCredentials(cred *credentials.ManagementCredentials) {
+	f.cred = cred
+}

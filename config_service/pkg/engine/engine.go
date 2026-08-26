@@ -77,12 +77,29 @@ func (m *MappingEngine) ApplyConfiguration(topo *topology.Topology, cfg *topolog
 			}
 		}
 
-		backend, err := protocolbackends.ForProtocol(node.ManagementInfo.Protocol, node, nodeCredentials, m.logger)
-		if err != nil {
-			m.logger.Printf("no backend registered for protocol %v", node.ManagementInfo.Protocol)
-			continue
+		// Get backend for the target node
+		key := node.Name + "-" + node.ManagementInfo.Protocol.String()
+		backend, ok := m.backends[key]
+		if ok {
+			backend.UpdateCredentials(nodeCredentials)
+		} else {
+			var err error
+			backend, err = protocolbackends.ForProtocol(
+				node.ManagementInfo.Protocol,
+				node,
+				nodeCredentials,
+				m.logger,
+			)
+			if err != nil {
+				m.logger.Printf(
+					"failed to create backend for %s: %v",
+					key,
+					err,
+				)
+				continue
+			}
+			m.RegisterBackend(key, backend)
 		}
-		m.RegisterBackend(backend.Name(), backend)
 
 		tx.Operations = append(tx.Operations, Operation{Config: nodeCfg, Backend: backend})
 	}

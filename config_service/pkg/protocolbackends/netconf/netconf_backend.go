@@ -101,6 +101,10 @@ func (b *NetconfBackend) Protocol() topology.ManagementProtocol {
 	return b.protocol
 }
 
+func (b *NetconfBackend) UpdateCredentials(cred *credentials.ManagementCredentials) {
+	b.sessionFactory.UpdateCredentials(cred)
+}
+
 func (b *NetconfBackend) AddPlugin(plugin plugins.Plugin) {
 	b.plugins = append(b.plugins, plugin)
 }
