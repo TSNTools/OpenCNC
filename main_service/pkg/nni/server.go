@@ -7,9 +7,9 @@ import (
 	"io"
 	"net/http"
 
-	store "main-service/pkg/store-wrapper"
-	devicemodelregistry "main-service/pkg/structures/device-model-registry"
-	"main-service/pkg/structures/topology"
+	store "OpenCNC/main_service/pkg/store-wrapper"
+	devicemodelregistry "OpenCNC/main_service/pkg/structures/device-model-registry"
+	"OpenCNC/main_service/pkg/structures/topology"
 
 	//"git.cs.kau.se/hamzchah/opencnc_kafka-exporter/logger/pkg/logger"
 

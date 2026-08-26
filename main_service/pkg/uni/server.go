@@ -9,9 +9,9 @@ import (
 	"strings"
 	"time"
 
-	handler "main-service/pkg/event-handler"
-	"main-service/pkg/structures/configuration"
-	"main-service/pkg/structures/streamObjects"
+	handler "OpenCNC/main_service/pkg/event-handler"
+	"OpenCNC/main_service/pkg/structures/configuration"
+	"OpenCNC/main_service/pkg/structures/streamObjects"
 
 	//	"git.cs.kau.se/hamzchah/opencnc_kafka-exporter/logger/pkg/logger"
 	"github.com/go-openapi/runtime/middleware/header"

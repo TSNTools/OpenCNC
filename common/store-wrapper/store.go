@@ -24,11 +24,11 @@ import (
 	"strings"
 	"time"
 
-	devicemodelregistry "OpenCNC_config_service/common/structures/devicemodelregistry"
-	moduleregistry "OpenCNC_config_service/common/structures/module-registry"
-	"OpenCNC_config_service/common/structures/stream"
-	"OpenCNC_config_service/common/structures/topology"
-	"OpenCNC_config_service/common/structures/topology_config"
+	devicemodelregistry "OpenCNC/common/structures/devicemodelregistry"
+	moduleregistry "OpenCNC/common/structures/module-registry"
+	"OpenCNC/common/structures/stream"
+	"OpenCNC/common/structures/topology"
+	"OpenCNC/common/structures/topology_config"
 
 	"git.cs.kau.se/hamzchah/opencnc_kafka-exporter/logger/pkg/logger"
 	clientv3 "go.etcd.io/etcd/client/v3"

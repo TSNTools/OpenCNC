@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"log"
 
-	"OpenCNC_config_service/common/structures/credentials"
-	qbv "OpenCNC_config_service/common/structures/qbv"
-	"OpenCNC_config_service/common/structures/topology"
-	opencncModel "OpenCNC_config_service/config_service/opencnc_model"
-	managementSessions "OpenCNC_config_service/config_service/pkg/managementSessions"
-	netconf "OpenCNC_config_service/config_service/pkg/plugins/netconf"
+	"OpenCNC/common/structures/credentials"
+	qbv "OpenCNC/common/structures/qbv"
+	"OpenCNC/common/structures/topology"
+	opencncModel "OpenCNC/config_service/opencnc_model"
+	managementSessions "OpenCNC/config_service/pkg/managementSessions"
+	netconf "OpenCNC/config_service/pkg/plugins/netconf"
 
 	"github.com/golang/protobuf/proto"
 	"github.com/openconfig/ygot/ygot"

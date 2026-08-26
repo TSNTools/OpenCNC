@@ -4,11 +4,11 @@ import (
 	"context"
 	"fmt"
 
-	"OpenCNC_config_service/common/observability"
-	storewrapper "OpenCNC_config_service/common/store-wrapper"
-	observabilityv1 "OpenCNC_config_service/common/structures/logging"
-	"OpenCNC_config_service/common/structures/topology_config"
-	"OpenCNC_config_service/config_service/pkg/engine"
+	"OpenCNC/common/observability"
+	storewrapper "OpenCNC/common/store-wrapper"
+	observabilityv1 "OpenCNC/common/structures/logging"
+	"OpenCNC/common/structures/topology_config"
+	"OpenCNC/config_service/pkg/engine"
 )
 
 // ConfigServiceServer implements the generated gRPC interface.

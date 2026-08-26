@@ -1043,7 +1043,7 @@ const file_monitor_service_structures_monitoring_monitoring_proto_rawDesc = "" +
 	"\x14SEVERITY_UNSPECIFIED\x10\x00\x12\b\n" +
 	"\x04INFO\x10\x01\x12\v\n" +
 	"\aWARNING\x10\x02\x12\f\n" +
-	"\bCRITICAL\x10\x03BIZGOpenCNC_config_service/monitor_service/structures/monitoring;monitoringb\x06proto3"
+	"\bCRITICAL\x10\x03BIZGOpenCNC/monitor_service/structures/monitoring;monitoringb\x06proto3"
 
 var (
 	file_monitor_service_structures_monitoring_monitoring_proto_rawDescOnce sync.Once

@@ -1,12 +1,12 @@
 package storewrapper
 
 import (
+	"OpenCNC/tsn_service/pkg/structures/topology"
 	"context"
 	"fmt"
 	"os"
 	"strings"
 	"time"
-	"tsn-service/pkg/structures/topology"
 
 	clientv3 "go.etcd.io/etcd/client/v3"
 	"google.golang.org/protobuf/proto"

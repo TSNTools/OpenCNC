@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"strings"
 
-	"OpenCNC_config_service/gui_service/internal/app"
-	"OpenCNC_config_service/gui_service/internal/config"
+	"OpenCNC/gui_service/internal/app"
+	"OpenCNC/gui_service/internal/config"
 )
 
 type Router struct {

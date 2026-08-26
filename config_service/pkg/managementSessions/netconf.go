@@ -1,8 +1,8 @@
 package managementSessions
 
 import (
-	commonmgmt "OpenCNC_config_service/common/managementSessions"
-	"OpenCNC_config_service/common/structures/credentials"
+	commonmgmt "OpenCNC/common/managementSessions"
+	"OpenCNC/common/structures/credentials"
 
 	"github.com/openshift-telco/go-netconf-client/netconf"
 )

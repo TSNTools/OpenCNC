@@ -1,7 +1,7 @@
 package notificationHandler
 
 import (
-	"tsn-service/pkg/structures/schedule"
+	"OpenCNC/tsn_service/pkg/structures/schedule"
 )
 
 //	"git.cs.kau.se/hamzchah/opencnc_kafka-exporter/logger/pkg/logger"

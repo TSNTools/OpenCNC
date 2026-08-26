@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 
-	"OpenCNC_config_service/common/observability"
-	observabilityv1 "OpenCNC_config_service/common/structures/logging"
-	"OpenCNC_config_service/monitor_service/structures/monitoring"
+	"OpenCNC/common/observability"
+	observabilityv1 "OpenCNC/common/structures/logging"
+	"OpenCNC/monitor_service/structures/monitoring"
 )
 
 /*

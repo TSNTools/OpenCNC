@@ -6,10 +6,10 @@ import (
 	"net"
 	"time"
 
-	"OpenCNC_config_service/common/observability"
-	"OpenCNC_config_service/monitor_service/pkg/catalog"
-	"OpenCNC_config_service/monitor_service/pkg/engine"
-	service "OpenCNC_config_service/monitor_service/structures/grpc_server"
+	"OpenCNC/common/observability"
+	"OpenCNC/monitor_service/pkg/catalog"
+	"OpenCNC/monitor_service/pkg/engine"
+	service "OpenCNC/monitor_service/structures/grpc_server"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"

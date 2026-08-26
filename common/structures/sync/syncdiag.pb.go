@@ -210,7 +210,7 @@ const file_common_structures_sync_syncdiag_proto_rawDesc = "" +
 	"\x16SYNC_STATE_UNSPECIFIED\x10\x00\x12\v\n" +
 	"\aON_TIME\x10\x01\x12\b\n" +
 	"\x04LATE\x10\x02\x12\t\n" +
-	"\x05EARLY\x10\x03B8Z6OpenCNC_config_service/common/structures/sync;syncdiagb\x06proto3"
+	"\x05EARLY\x10\x03B8Z6OpenCNC/common/structures/sync;syncdiagb\x06proto3"
 
 var (
 	file_common_structures_sync_syncdiag_proto_rawDescOnce sync.Once

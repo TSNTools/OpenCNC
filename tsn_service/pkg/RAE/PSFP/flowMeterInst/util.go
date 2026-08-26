@@ -6,9 +6,9 @@ Set configuration for the flow meter instance table
 
 import (
 	"fmt"
-	st "tsn-service/pkg/RAE/dataStructures/SchemaTreeMethods"
-	path "tsn-service/pkg/RAE/dataStructures/composit"
-	"tsn-service/pkg/RAE/dataStructures/pbMethods"
+	st "OpenCNC/tsn_service/pkg/RAE/dataStructures/SchemaTreeMethods"
+	path "OpenCNC/tsn_service/pkg/RAE/dataStructures/composit"
+	"OpenCNC/tsn_service/pkg/RAE/dataStructures/pbMethods"
 
 	pb "github.com/openconfig/gnmi/proto/gnmi"
 )

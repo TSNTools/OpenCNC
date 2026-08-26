@@ -539,7 +539,7 @@ const file_common_structures_stp_stp_proto_rawDesc = "" +
 	"\x16PORT_STATE_UNSPECIFIED\x10\x00\x12\x19\n" +
 	"\x15PORT_STATE_DISCARDING\x10\x01\x12\x17\n" +
 	"\x13PORT_STATE_LEARNING\x10\x02\x12\x19\n" +
-	"\x15PORT_STATE_FORWARDING\x10\x03B2Z0OpenCNC_config_service/common/structures/stp;stpb\x06proto3"
+	"\x15PORT_STATE_FORWARDING\x10\x03B2Z0OpenCNC/common/structures/stp;stpb\x06proto3"
 
 var (
 	file_common_structures_stp_stp_proto_rawDescOnce sync.Once

@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package qbv_status;
 
-option go_package = "OpenCNC_config_service/common/structures/qbv;qbv";
+option go_package = "OpenCNC/common/structures/qbv;qbv";
 
 import "common/structures/sync/syncdiag.proto";
 

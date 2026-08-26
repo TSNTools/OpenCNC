@@ -8,11 +8,11 @@ import (
 	"strings"
 	"time"
 
-	"OpenCNC_config_service/common/observability"
-	observabilityv1 "OpenCNC_config_service/common/structures/logging"
-	counters "OpenCNC_config_service/monitor_service/pkg/catalog"
-	"OpenCNC_config_service/monitor_service/pkg/managementSessions"
-	"OpenCNC_config_service/monitor_service/structures/monitoring"
+	"OpenCNC/common/observability"
+	observabilityv1 "OpenCNC/common/structures/logging"
+	counters "OpenCNC/monitor_service/pkg/catalog"
+	"OpenCNC/monitor_service/pkg/managementSessions"
+	"OpenCNC/monitor_service/structures/monitoring"
 
 	"github.com/openshift-telco/go-netconf-client/netconf"
 	"google.golang.org/protobuf/types/known/timestamppb"

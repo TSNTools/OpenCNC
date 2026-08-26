@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"os"
 
-	"OpenCNC_config_service/monitor_service/structures/monitoring"
+	"OpenCNC/monitor_service/structures/monitoring"
 )
 
 const (

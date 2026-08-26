@@ -1,7 +1,7 @@
 package collectors
 
 import (
-	"OpenCNC_config_service/monitor_service/structures/monitoring"
+	"OpenCNC/monitor_service/structures/monitoring"
 	"context"
 )
 

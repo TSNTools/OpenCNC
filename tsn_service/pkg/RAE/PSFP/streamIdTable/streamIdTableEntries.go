@@ -7,11 +7,11 @@ Functions to set values at the stream identification table, that are not part of
 import (
 	//"git.cs.kau.se/hamzchah/opencnc_kafka-exporter/logger/pkg/logger"
 
-	pbMethods "tsn-service/pkg/RAE/dataStructures/pbMethods"
+	pbMethods "OpenCNC/tsn_service/pkg/RAE/dataStructures/pbMethods"
 
+	st "OpenCNC/tsn_service/pkg/RAE/dataStructures/SchemaTreeMethods"
+	path "OpenCNC/tsn_service/pkg/RAE/dataStructures/composit"
 	"fmt"
-	st "tsn-service/pkg/RAE/dataStructures/SchemaTreeMethods"
-	path "tsn-service/pkg/RAE/dataStructures/composit"
 
 	pb "github.com/openconfig/gnmi/proto/gnmi"
 )

@@ -6,9 +6,9 @@ import (
 	"strings"
 	"time"
 
-	"OpenCNC_config_service/gui_service/internal/domain"
-	service "OpenCNC_config_service/monitor_service/structures/grpc_server"
-	"OpenCNC_config_service/monitor_service/structures/monitoring"
+	"OpenCNC/gui_service/internal/domain"
+	service "OpenCNC/monitor_service/structures/grpc_server"
+	"OpenCNC/monitor_service/structures/monitoring"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"

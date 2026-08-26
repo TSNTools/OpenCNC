@@ -5,13 +5,13 @@ import (
 	"fmt"
 	"log"
 
-	"OpenCNC_config_service/common/observability"
-	"OpenCNC_config_service/common/structures/credentials"
-	"OpenCNC_config_service/common/structures/topology"
-	"OpenCNC_config_service/monitor_service/pkg/catalog"
-	"OpenCNC_config_service/monitor_service/pkg/collectors"
-	"OpenCNC_config_service/monitor_service/pkg/managementSessions"
-	"OpenCNC_config_service/monitor_service/structures/monitoring"
+	"OpenCNC/common/observability"
+	"OpenCNC/common/structures/credentials"
+	"OpenCNC/common/structures/topology"
+	"OpenCNC/monitor_service/pkg/catalog"
+	"OpenCNC/monitor_service/pkg/collectors"
+	"OpenCNC/monitor_service/pkg/managementSessions"
+	"OpenCNC/monitor_service/structures/monitoring"
 
 	"github.com/openconfig/ygot/ygot"
 )

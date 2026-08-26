@@ -11,14 +11,14 @@ import (
 	"sync"
 	"time"
 
-	storewrapper "OpenCNC_config_service/common/store-wrapper"
-	"OpenCNC_config_service/common/structures/credentials"
-	devicemodelregistry "OpenCNC_config_service/common/structures/devicemodelregistry"
-	streamproto "OpenCNC_config_service/common/structures/stream"
-	"OpenCNC_config_service/common/structures/topology"
+	storewrapper "OpenCNC/common/store-wrapper"
+	"OpenCNC/common/structures/credentials"
+	devicemodelregistry "OpenCNC/common/structures/devicemodelregistry"
+	streamproto "OpenCNC/common/structures/stream"
+	"OpenCNC/common/structures/topology"
 
-	"OpenCNC_config_service/gui_service/internal/domain"
-	"OpenCNC_config_service/monitor_service/structures/monitoring"
+	"OpenCNC/gui_service/internal/domain"
+	"OpenCNC/monitor_service/structures/monitoring"
 
 	"google.golang.org/protobuf/encoding/protojson"
 )

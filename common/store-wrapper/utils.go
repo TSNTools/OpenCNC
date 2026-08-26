@@ -1,7 +1,7 @@
 package storewrapper
 
 import (
-	"OpenCNC_config_service/common/structures/topology"
+	"OpenCNC/common/structures/topology"
 	"context"
 	"fmt"
 	"strings"

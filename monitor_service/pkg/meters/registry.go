@@ -3,8 +3,8 @@ package meters
 import (
 	"fmt"
 
-	"OpenCNC_config_service/common/observability"
-	"OpenCNC_config_service/monitor_service/structures/monitoring"
+	"OpenCNC/common/observability"
+	"OpenCNC/monitor_service/structures/monitoring"
 )
 
 type MeterFactory struct {

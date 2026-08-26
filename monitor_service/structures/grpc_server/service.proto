@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package service;
 
-option go_package = "OpenCNC_config_service/monitor_service/structures/grpc_service;service";
+option go_package = "OpenCNC/monitor_service/structures/grpc_service;service";
 
 import "monitor_service/structures/monitoring/monitoring.proto";
 

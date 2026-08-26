@@ -1,9 +1,9 @@
 package nni
 
 import (
-	"main-service/pkg/structures/configuration"
-	monitor "main-service/pkg/structures/temp-monitor-conf"
-	"main-service/pkg/structures/topology"
+	"OpenCNC/main_service/pkg/structures/configuration"
+	monitor "OpenCNC/main_service/pkg/structures/temp-monitor-conf"
+	"OpenCNC/main_service/pkg/structures/topology"
 	"strings"
 
 	"encoding/json"

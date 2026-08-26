@@ -1,8 +1,8 @@
 package monitor
 
 import (
-	"OpenCNC_config_service/monitor_service/pkg/catalog"
-	"OpenCNC_config_service/monitor_service/structures/monitoring"
+	"OpenCNC/monitor_service/pkg/catalog"
+	"OpenCNC/monitor_service/structures/monitoring"
 
 	"github.com/openshift-telco/go-netconf-client/netconf"
 )

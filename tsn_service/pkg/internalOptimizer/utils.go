@@ -3,8 +3,8 @@ package internalOptimizer
 import (
 	"fmt"
 	"strings"
-	"tsn-service/pkg/structures/schedule"
-	"tsn-service/pkg/structures/topology"
+	"OpenCNC/tsn_service/pkg/structures/schedule"
+	"OpenCNC/tsn_service/pkg/structures/topology"
 
 	pb "github.com/openconfig/gnmi/proto/gnmi"
 )

@@ -1,17 +1,17 @@
 package main
 
 import (
-	store "OpenCNC_config_service/common/store-wrapper"
+	store "OpenCNC/common/store-wrapper"
 	"fmt"
 
 	"github.com/openconfig/ygot/ygot"
 	"google.golang.org/protobuf/proto"
 
-	"OpenCNC_config_service/common/structures/devicemodelregistry"
-	qbv "OpenCNC_config_service/common/structures/qbv"
-	"OpenCNC_config_service/common/structures/topology"
-	topology_config "OpenCNC_config_service/common/structures/topology_config"
-	"OpenCNC_config_service/common/structures/vlan"
+	"OpenCNC/common/structures/devicemodelregistry"
+	qbv "OpenCNC/common/structures/qbv"
+	"OpenCNC/common/structures/topology"
+	topology_config "OpenCNC/common/structures/topology_config"
+	"OpenCNC/common/structures/vlan"
 )
 
 var model = &devicemodelregistry.DeviceModel{

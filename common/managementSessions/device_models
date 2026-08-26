@@ -1,0 +1,88 @@
+package managementSessions
+
+import (
+	"fmt"
+	"strings"
+
+	devicemodelregistry "OpenCNC_config_service/common/structures/devicemodelregistry"
+
+	"github.com/openshift-telco/go-netconf-client/netconf"
+)
+
+func DiscoverDeviceModel(session *netconf.Session) (*devicemodelregistry.DeviceModel, error) {
+	if session == nil {
+		return nil, fmt.Errorf("NETCONF session is nil")
+	}
+
+	modules := discoverYangModules(session)
+
+	return &devicemodelregistry.DeviceModel{
+		YangFiles: modules,
+	}, nil
+}
+
+func discoverYangModules(session *netconf.Session) []*devicemodelregistry.YangModule {
+	modules := make(map[string]*devicemodelregistry.YangModule)
+
+	for _, capability := range session.Capabilities {
+		moduleName, revision, ok := parseYangCapability(capability)
+		if !ok {
+			continue
+		}
+
+		key := moduleName + "@" + revision
+
+		if _, exists := modules[key]; exists {
+			continue
+		}
+
+		modules[key] = &devicemodelregistry.YangModule{
+			Name:     moduleName + ".yang",
+			Revision: revision,
+		}
+	}
+
+	result := make([]*devicemodelregistry.YangModule, 0, len(modules))
+
+	for _, module := range modules {
+		result = append(result, module)
+	}
+
+	return result
+}
+
+func parseYangCapability(capability string) (string, string, bool) {
+	moduleIndex := strings.Index(capability, "module=")
+	if moduleIndex == -1 {
+		return "", "", false
+	}
+
+	moduleStart := moduleIndex + len("module=")
+	moduleEnd := len(capability)
+
+	if index := strings.Index(capability[moduleStart:], "&"); index != -1 {
+		moduleEnd = moduleStart + index
+	}
+
+	moduleName := capability[moduleStart:moduleEnd]
+
+	if moduleName == "" {
+		return "", "", false
+	}
+
+	revision := ""
+
+	revisionIndex := strings.Index(capability, "revision=")
+	if revisionIndex != -1 {
+		revisionStart := revisionIndex + len("revision=")
+		revisionEnd := len(capability)
+
+		if index := strings.Index(capability[revisionStart:], "&"); index != -1 {
+			revisionEnd = revisionStart + index
+		}
+
+		revision = capability[revisionStart:revisionEnd]
+	}
+
+	return moduleName, revision, true
+}

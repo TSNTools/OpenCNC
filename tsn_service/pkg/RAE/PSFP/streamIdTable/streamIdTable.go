@@ -12,7 +12,7 @@ Ref:
 */
 
 import (
-	st "tsn-service/pkg/RAE/dataStructures/SchemaTreeMethods"
+	st "OpenCNC/tsn_service/pkg/RAE/dataStructures/SchemaTreeMethods"
 
 	pb "github.com/openconfig/gnmi/proto/gnmi"
 	// logger "git.cs.kau.se/hamzchah/opencnc_kafka-exporter/logger/pkg/logger"

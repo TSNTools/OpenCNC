@@ -5,7 +5,7 @@ import (
 	"log"
 	"time"
 
-	observabilityv1 "OpenCNC_config_service/common/structures/logging"
+	observabilityv1 "OpenCNC/common/structures/logging"
 
 	"github.com/segmentio/kafka-go"
 	"google.golang.org/protobuf/proto"

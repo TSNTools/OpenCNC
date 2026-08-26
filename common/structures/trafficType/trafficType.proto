@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package traffic_type;
 
-option go_package = "OpenCNC_config_service/common/structures/trafficType;traffic_type";
+option go_package = "OpenCNC/common/structures/trafficType;traffic_type";
 
 /*
  * Defines TSN traffic types and their mappings to ports and VLANs.

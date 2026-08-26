@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	observabilityv1 "OpenCNC_config_service/common/structures/logging"
+	observabilityv1 "OpenCNC/common/structures/logging"
 
 	"google.golang.org/protobuf/types/known/timestamppb"
 )

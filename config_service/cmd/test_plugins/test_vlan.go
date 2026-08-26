@@ -3,12 +3,12 @@ package main
 import (
 	"log"
 
-	"OpenCNC_config_service/common/structures/credentials"
-	topology "OpenCNC_config_service/common/structures/topology"
-	topology_config "OpenCNC_config_service/common/structures/topology_config"
-	vlan "OpenCNC_config_service/common/structures/vlan"
-	managementSessions "OpenCNC_config_service/config_service/pkg/managementSessions"
-	netconf "OpenCNC_config_service/config_service/pkg/plugins/netconf"
+	"OpenCNC/common/structures/credentials"
+	topology "OpenCNC/common/structures/topology"
+	topology_config "OpenCNC/common/structures/topology_config"
+	vlan "OpenCNC/common/structures/vlan"
+	managementSessions "OpenCNC/config_service/pkg/managementSessions"
+	netconf "OpenCNC/config_service/pkg/plugins/netconf"
 
 	"google.golang.org/protobuf/proto"
 )

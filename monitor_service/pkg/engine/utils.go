@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"time"
 
-	configservice "OpenCNC_config_service/config_service/structures/service"
-	"OpenCNC_config_service/monitor_service/structures/monitoring"
+	configservice "OpenCNC/config_service/structures/service"
+	"OpenCNC/monitor_service/structures/monitoring"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"

@@ -1,7 +1,7 @@
 package managementSessions
 
 import (
-	"OpenCNC_config_service/common/structures/credentials"
+	"OpenCNC/common/structures/credentials"
 	"encoding/xml"
 	"fmt"
 	"log/slog"

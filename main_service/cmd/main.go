@@ -6,12 +6,12 @@ import (
 
 	"time"
 
-	// admissioncontrol "main-service/pkg/admission-control"
+	// admissioncontrol "OpenCNC/main_service/pkg/admission-control"
 
-	eventhandler "main-service/pkg/event-handler"
-	"main-service/pkg/nni"
-	store "main-service/pkg/store-wrapper"
-	monitor "main-service/pkg/structures/temp-monitor-conf"
+	eventhandler "OpenCNC/main_service/pkg/event-handler"
+	"OpenCNC/main_service/pkg/nni"
+	store "OpenCNC/main_service/pkg/store-wrapper"
+	monitor "OpenCNC/main_service/pkg/structures/temp-monitor-conf"
 
 	"github.com/openconfig/gnmi/proto/gnmi"
 

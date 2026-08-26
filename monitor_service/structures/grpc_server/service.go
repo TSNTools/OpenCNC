@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 
-	storewrapper "OpenCNC_config_service/common/store-wrapper"
-	"OpenCNC_config_service/monitor_service/pkg/engine"
-	monitoring "OpenCNC_config_service/monitor_service/structures/monitoring"
+	storewrapper "OpenCNC/common/store-wrapper"
+	"OpenCNC/monitor_service/pkg/engine"
+	monitoring "OpenCNC/monitor_service/structures/monitoring"
 
 	"google.golang.org/protobuf/proto"
 )

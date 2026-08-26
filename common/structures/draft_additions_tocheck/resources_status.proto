@@ -3,7 +3,7 @@ syntax = "proto3";
 package resource_status;
 
 option go_package =
-"OpenCNC_config_service/common/structures/resource_status;resource_status";
+"OpenCNC/common/structures/resource_status;resource_status";
 
 
 message ResourceStatus {

@@ -2,8 +2,8 @@ package admissioncontrol
 
 import (
 	"fmt"
-	store "main-service/pkg/store-wrapper"
-	"main-service/pkg/structures/resources"
+	store "OpenCNC/main_service/pkg/store-wrapper"
+	"OpenCNC/main_service/pkg/structures/resources"
 	//"git.cs.kau.se/hamzchah/opencnc_kafka-exporter/logger/pkg/logger"
 )
 

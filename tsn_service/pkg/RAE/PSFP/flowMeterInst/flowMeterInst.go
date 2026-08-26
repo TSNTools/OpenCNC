@@ -11,7 +11,7 @@ TODO:
 	Implement its paths in the yang file (can not find it in the yang files)
 */
 import (
-	st "tsn-service/pkg/RAE/dataStructures/SchemaTreeMethods"
+	st "OpenCNC/tsn_service/pkg/RAE/dataStructures/SchemaTreeMethods"
 
 	pb "github.com/openconfig/gnmi/proto/gnmi"
 )

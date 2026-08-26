@@ -8,9 +8,9 @@ import (
 	"os"
 	"strings"
 
-	store "main-service/pkg/store-wrapper"
-	// "main-service/pkg/structures/configuration"
-	"main-service/pkg/structures/notification"
+	store "OpenCNC/main_service/pkg/store-wrapper"
+	// "OpenCNC/main_service/pkg/structures/configuration"
+	"OpenCNC/main_service/pkg/structures/notification"
 	"time"
 
 	"github.com/openconfig/gnmi/client"
@@ -23,10 +23,10 @@ import (
 func notifyTsnService(reqIds *notification.IdList) (*notification.UUID, error) {
 	// Create gRPC client and connect to TSN service
 	// TODO: consider having a constant connection to TSN service
-	conn, err := grpc.Dial("tsn-service:5150", grpc.WithInsecure())
+	conn, err := grpc.Dial("tsn_service:5150", grpc.WithInsecure())
 	if err != nil {
-		//log.Fatalf("Failed dialing tsn-service: %v", err)
-		fmt.Printf("Failed dialing tsn-service: %v", err)
+		//log.Fatalf("Failed dialing tsn_service: %v", err)
+		fmt.Printf("Failed dialing tsn_service: %v", err)
 		return nil, err
 	}
 

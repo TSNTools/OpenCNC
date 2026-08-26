@@ -4,7 +4,7 @@ import (
 	"context"
 	"log"
 
-	"OpenCNC_config_service/gui_service/internal/domain"
+	"OpenCNC/gui_service/internal/domain"
 )
 
 type Service struct {

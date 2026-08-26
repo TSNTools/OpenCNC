@@ -357,7 +357,7 @@ const file_common_structures_qav_qav_proto_rawDesc = "" +
 	"\n" +
 	"AdminState\x12\f\n" +
 	"\bDISABLED\x10\x00\x12\v\n" +
-	"\aENABLED\x10\x01B2Z0OpenCNC_config_service/common/structures/qav;qavb\x06proto3"
+	"\aENABLED\x10\x01B2Z0OpenCNC/common/structures/qav;qavb\x06proto3"
 
 var (
 	file_common_structures_qav_qav_proto_rawDescOnce sync.Once

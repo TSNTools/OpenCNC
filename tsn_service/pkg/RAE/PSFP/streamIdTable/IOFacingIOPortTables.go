@@ -5,11 +5,11 @@ Functions to set the configuration for the {in/out}Facing{In/Out}putPort list in
 */
 
 import (
+	"OpenCNC/tsn_service/pkg/RAE/dataStructures/SchemaTreeMethods"
+	"OpenCNC/tsn_service/pkg/RAE/dataStructures/composit"
 	"fmt"
-	"tsn-service/pkg/RAE/dataStructures/SchemaTreeMethods"
-	"tsn-service/pkg/RAE/dataStructures/composit"
 
-	"tsn-service/pkg/RAE/dataStructures/pbMethods"
+	"OpenCNC/tsn_service/pkg/RAE/dataStructures/pbMethods"
 
 	pb "github.com/openconfig/gnmi/proto/gnmi"
 )

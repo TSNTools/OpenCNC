@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package gui.domain;
 
-option go_package = "OpenCNC_config_service/gui_service/internal/domain/protos;guiprotos";
+option go_package = "OpenCNC/gui_service/internal/domain/protos;guiprotos";
 
 message OperationRequest {
   string name = 1;

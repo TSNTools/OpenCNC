@@ -1,10 +1,10 @@
 package streamIdTable
 
 import (
+	st "OpenCNC/tsn_service/pkg/RAE/dataStructures/SchemaTreeMethods"
+	rae "OpenCNC/tsn_service/pkg/RAE/dataStructures/composit"
+	pbMethods "OpenCNC/tsn_service/pkg/RAE/dataStructures/pbMethods"
 	"fmt"
-	st "tsn-service/pkg/RAE/dataStructures/SchemaTreeMethods"
-	rae "tsn-service/pkg/RAE/dataStructures/composit"
-	pbMethods "tsn-service/pkg/RAE/dataStructures/pbMethods"
 
 	pb "github.com/openconfig/gnmi/proto/gnmi"
 )

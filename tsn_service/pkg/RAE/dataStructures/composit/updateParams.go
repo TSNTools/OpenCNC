@@ -1,8 +1,8 @@
 package composit
 
 import (
-	st "tsn-service/pkg/RAE/dataStructures/SchemaTreeMethods"
-	pbMethods "tsn-service/pkg/RAE/dataStructures/pbMethods"
+	st "OpenCNC/tsn_service/pkg/RAE/dataStructures/SchemaTreeMethods"
+	pbMethods "OpenCNC/tsn_service/pkg/RAE/dataStructures/pbMethods"
 
 	pb "github.com/openconfig/gnmi/proto/gnmi"
 )

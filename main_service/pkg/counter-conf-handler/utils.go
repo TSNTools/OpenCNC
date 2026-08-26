@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"os"
 
-	storewrapper "main-service/pkg/store-wrapper"
-	monitor "main-service/pkg/structures/temp-monitor-conf"
+	storewrapper "OpenCNC/main_service/pkg/store-wrapper"
+	monitor "OpenCNC/main_service/pkg/structures/temp-monitor-conf"
 
 	//"git.cs.kau.se/hamzchah/opencnc_kafka-exporter/logger/pkg/logger"
 	"github.com/ghodss/yaml"

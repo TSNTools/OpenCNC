@@ -889,7 +889,7 @@ const file_common_structures_trafficType_trafficType_proto_rawDesc = "" +
 	"INDUSTRIAL\x10\x00\x12\x0e\n" +
 	"\n" +
 	"AUTOMOTIVE\x10\x01\x12\r\n" +
-	"\tAEROSPACE\x10\x02BCZAOpenCNC_config_service/common/structures/trafficType;traffic_typeb\x06proto3"
+	"\tAEROSPACE\x10\x02BCZAOpenCNC/common/structures/trafficType;traffic_typeb\x06proto3"
 
 var (
 	file_common_structures_trafficType_trafficType_proto_rawDescOnce sync.Once

@@ -10,8 +10,8 @@ import (
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
 
-	//storewrapper "OpenCNC_config_service/common/store-wrapper"
-	"OpenCNC_config_service/common/structures/topology"
+	//storewrapper "OpenCNC/common/store-wrapper"
+	"OpenCNC/common/structures/topology"
 )
 
 func main() {

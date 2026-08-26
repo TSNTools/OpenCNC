@@ -6,16 +6,16 @@ import (
 	"net"
 	"time"
 
-	"OpenCNC_config_service/common/observability"
+	"OpenCNC/common/observability"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 
-	service "OpenCNC_config_service/config_service/structures/service"
-	"OpenCNC_config_service/common/structures/topology"
-	"OpenCNC_config_service/config_service/pkg/engine" // Your wrapper implementing GNMIService
-	"OpenCNC_config_service/config_service/pkg/plugins"
-	"OpenCNC_config_service/config_service/pkg/protocolbackends"
+	service "OpenCNC/config_service/structures/service"
+	"OpenCNC/common/structures/topology"
+	"OpenCNC/config_service/pkg/engine" // Your wrapper implementing GNMIService
+	"OpenCNC/config_service/pkg/plugins"
+	"OpenCNC/config_service/pkg/protocolbackends"
 	// Official gNMI package
 )
 

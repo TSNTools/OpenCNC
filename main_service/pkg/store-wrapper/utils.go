@@ -3,9 +3,9 @@ package storewrapper
 import (
 	"context"
 	"fmt"
-	"main-service/pkg/structures/configuration"
-	"main-service/pkg/structures/streamObjects"
-	"main-service/pkg/structures/topology"
+	"OpenCNC/main_service/pkg/structures/configuration"
+	"OpenCNC/main_service/pkg/structures/streamObjects"
+	"OpenCNC/main_service/pkg/structures/topology"
 	"os"
 	"strings"
 	"time"

@@ -4,9 +4,9 @@ import (
 	"bytes"
 	"fmt"
 	"os"
-	store "tsn-service/pkg/storewrapper"
-	"tsn-service/pkg/structures/schedule"
-	"tsn-service/pkg/structures/topology"
+	store "OpenCNC/tsn_service/pkg/storewrapper"
+	"OpenCNC/tsn_service/pkg/structures/schedule"
+	"OpenCNC/tsn_service/pkg/structures/topology"
 
 	//	"git.cs.kau.se/hamzchah/opencnc_kafka-exporter/logger/pkg/logger"
 

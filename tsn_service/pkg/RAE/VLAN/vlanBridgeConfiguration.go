@@ -1,11 +1,11 @@
 package vlan
 
 import (
+	st "OpenCNC/tsn_service/pkg/RAE/dataStructures/SchemaTreeMethods"
+	path "OpenCNC/tsn_service/pkg/RAE/dataStructures/composit"
+	pbMethods "OpenCNC/tsn_service/pkg/RAE/dataStructures/pbMethods"
 	"errors"
 	"fmt"
-	st "tsn-service/pkg/RAE/dataStructures/SchemaTreeMethods"
-	path "tsn-service/pkg/RAE/dataStructures/composit"
-	pbMethods "tsn-service/pkg/RAE/dataStructures/pbMethods"
 
 	pb "github.com/openconfig/gnmi/proto/gnmi"
 )

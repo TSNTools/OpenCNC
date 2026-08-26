@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	observabilityv1 "OpenCNC_config_service/common/structures/logging"
+	observabilityv1 "OpenCNC/common/structures/logging"
 )
 
 func TestNewFromEnv_DisabledBuildsClient(t *testing.T) {

@@ -270,7 +270,7 @@ const file_common_structures_qav_qav_status_proto_rawDesc = "" +
 	"\x0ftraffic_classes\x18\x03 \x03(\v2!.qav_status.CbsTrafficClassStatusR\x0etrafficClasses\x12=\n" +
 	"\flast_updated\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\vlastUpdated\"B\n" +
 	"\x0fQavStatusReport\x12/\n" +
-	"\x05ports\x18\x01 \x03(\v2\x19.qav_status.QavPortStatusR\x05portsB2Z0OpenCNC_config_service/common/structures/qav;qavb\x06proto3"
+	"\x05ports\x18\x01 \x03(\v2\x19.qav_status.QavPortStatusR\x05portsB2Z0OpenCNC/common/structures/qav;qavb\x06proto3"
 
 var (
 	file_common_structures_qav_qav_status_proto_rawDescOnce sync.Once

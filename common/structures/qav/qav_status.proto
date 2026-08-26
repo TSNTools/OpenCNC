@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package qav_status;
 
-option go_package = "OpenCNC_config_service/common/structures/qav;qav";
+option go_package = "OpenCNC/common/structures/qav;qav";
 
 import "google/protobuf/timestamp.proto";
 

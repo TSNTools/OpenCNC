@@ -3,10 +3,10 @@ package uni
 import (
 	"errors"
 	"fmt"
-	store "main-service/pkg/store-wrapper"
-	"main-service/pkg/structures/configuration"
-	"main-service/pkg/structures/notification"
-	"main-service/pkg/structures/schedule"
+	store "OpenCNC/main_service/pkg/store-wrapper"
+	"OpenCNC/main_service/pkg/structures/configuration"
+	"OpenCNC/main_service/pkg/structures/notification"
+	"OpenCNC/main_service/pkg/structures/schedule"
 	"math"
 
 	"google.golang.org/protobuf/encoding/protojson"

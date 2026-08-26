@@ -405,7 +405,7 @@ const file_common_structures_stp_stp_status_proto_rawDesc = "" +
 	" \x01(\bR\x11topologyChangeAck\x12%\n" +
 	"\x0etc_propagation\x18\v \x01(\bR\rtcPropagation\x12+\n" +
 	"\x11proposal_received\x18\f \x01(\bR\x10proposalReceived\x12\x1c\n" +
-	"\tagreement\x18\r \x01(\bR\tagreementB2Z0OpenCNC_config_service/common/structures/stp;stpb\x06proto3"
+	"\tagreement\x18\r \x01(\bR\tagreementB2Z0OpenCNC/common/structures/stp;stpb\x06proto3"
 
 var (
 	file_common_structures_stp_stp_status_proto_rawDescOnce sync.Once

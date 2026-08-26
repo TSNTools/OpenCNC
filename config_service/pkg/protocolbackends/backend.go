@@ -1,10 +1,10 @@
 package protocolbackends
 
 import (
-	credentials "OpenCNC_config_service/common/structures/credentials"
-	"OpenCNC_config_service/common/structures/topology"
-	topology_config "OpenCNC_config_service/common/structures/topology_config"
-	"OpenCNC_config_service/config_service/pkg/plugins"
+	credentials "OpenCNC/common/structures/credentials"
+	"OpenCNC/common/structures/topology"
+	topology_config "OpenCNC/common/structures/topology_config"
+	"OpenCNC/config_service/pkg/plugins"
 )
 
 type ProtocolBackend interface {

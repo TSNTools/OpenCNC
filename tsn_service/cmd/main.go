@@ -3,12 +3,13 @@ package main
 import (
 	"fmt"
 	"time"
-	"tsn-service/pkg/internalOptimizer"
+
+	"OpenCNC/tsn_service/pkg/internalOptimizer"
 
 	//	"git.cs.kau.se/hamzchah/opencnc_kafka-exporter/logger/pkg/logger"
 
-	server "tsn-service/pkg/notificationServer"
-	store "tsn-service/pkg/storewrapper"
+	server "OpenCNC/tsn_service/pkg/notificationServer"
+	store "OpenCNC/tsn_service/pkg/storewrapper"
 )
 
 //var log = logger.GetLogger()

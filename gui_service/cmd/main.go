@@ -10,10 +10,10 @@ import (
 	"syscall"
 	"time"
 
-	"OpenCNC_config_service/gui_service/internal/adapters/stub"
-	"OpenCNC_config_service/gui_service/internal/app"
-	"OpenCNC_config_service/gui_service/internal/config"
-	httptransport "OpenCNC_config_service/gui_service/internal/transport/http"
+	"OpenCNC/gui_service/internal/adapters/stub"
+	"OpenCNC/gui_service/internal/app"
+	"OpenCNC/gui_service/internal/config"
+	httptransport "OpenCNC/gui_service/internal/transport/http"
 )
 
 func main() {

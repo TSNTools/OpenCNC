@@ -7,11 +7,11 @@ import (
 	"sync"
 	"time"
 
-	"OpenCNC_config_service/common/observability"
-	"OpenCNC_config_service/monitor_service/pkg/catalog"
-	"OpenCNC_config_service/monitor_service/pkg/collectors"
-	"OpenCNC_config_service/monitor_service/pkg/meters"
-	"OpenCNC_config_service/monitor_service/structures/monitoring"
+	"OpenCNC/common/observability"
+	"OpenCNC/monitor_service/pkg/catalog"
+	"OpenCNC/monitor_service/pkg/collectors"
+	"OpenCNC/monitor_service/pkg/meters"
+	"OpenCNC/monitor_service/structures/monitoring"
 
 	"github.com/openshift-telco/go-netconf-client/netconf"
 	"google.golang.org/protobuf/proto"

@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"strings"
 
-	credentials "OpenCNC_config_service/common/structures/credentials"
-	"OpenCNC_config_service/config_service/pkg/managementSessions"
+	credentials "OpenCNC/common/structures/credentials"
+	"OpenCNC/config_service/pkg/managementSessions"
 
 	"google.golang.org/protobuf/proto"
 )

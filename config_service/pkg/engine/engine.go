@@ -2,103 +2,17 @@ package engine
 
 import (
 	"fmt"
+	"os"
+	"runtime"
+	"strconv"
 
-	"OpenCNC_config_service/common/observability"
-	"OpenCNC_config_service/common/structures/credentials"
-	"OpenCNC_config_service/common/structures/topology"
-	"OpenCNC_config_service/common/structures/topology_config"
-	"OpenCNC_config_service/config_service/pkg/managementSessions"
-	protocolbackends "OpenCNC_config_service/config_service/pkg/protocolbackends"
+	"OpenCNC/common/observability"
+	"OpenCNC/common/structures/credentials"
+	"OpenCNC/common/structures/topology"
+	"OpenCNC/common/structures/topology_config"
+	"OpenCNC/config_service/pkg/managementSessions"
+	protocolbackends "OpenCNC/config_service/pkg/protocolbackends"
 )
-
-type Operation struct {
-	Node      *topology.Node
-	creds     *credentials.ManagementCredentials
-	Config    *topology_config.NodeConfig
-	Backend   protocolbackends.ProtocolBackend
-	Prepared  bool
-	Committed bool
-}
-
-type ConfigurationTransaction struct {
-	ConfigId   string
-	Operations []Operation
-}
-
-func (t *ConfigurationTransaction) Commit() error {
-
-	for i := range t.Operations {
-
-		op := &t.Operations[i]
-
-		if err := op.Backend.Commit(op.Node, op.creds); err != nil {
-
-			// Roll back everything that was already committed.
-			t.Rollback()
-
-			return fmt.Errorf(
-				"commit failed for node %s, Aborted transaction and rolled back previous commits",
-				op.Node.Name,
-			)
-		}
-
-		op.Committed = true
-		op.Prepared = false
-	}
-
-	return nil
-}
-
-func (t *ConfigurationTransaction) Rollback() error {
-
-	var firstErr error
-
-	for i := len(t.Operations) - 1; i >= 0; i-- {
-
-		op := &t.Operations[i]
-
-		if !op.Committed {
-			continue
-		}
-
-		if err := op.Backend.Rollback(op.Node, op.creds); err != nil {
-			if firstErr == nil {
-				firstErr = err
-			}
-			continue
-		}
-		op.Committed = false
-	}
-
-	return firstErr
-}
-
-func (t *ConfigurationTransaction) Prepare() error {
-
-	for i := range t.Operations {
-
-		op := &t.Operations[i]
-
-		if err := op.Backend.PrepareSnapshot(op.Config, op.Node); err != nil {
-
-			return fmt.Errorf(
-				"prepare failed for node %s: %w",
-				op.Node.Name,
-				err,
-			)
-		}
-
-		op.Prepared = true
-	}
-
-	return nil
-}
-
-func NewConfigurationTransaction(configId string) *ConfigurationTransaction {
-	return &ConfigurationTransaction{
-		ConfigId: configId,
-	}
-}
 
 //=================================
 // definition of the MappingEngine
@@ -213,6 +127,23 @@ func (m *MappingEngine) Rollback() error {
 	m.lastTransaction = nil
 
 	return nil
+}
+
+func getAvailableWorkers() (int, error) {
+	maxWorkers := runtime.NumCPU() * 2
+
+	if envVal := os.Getenv("MAX_WORKERS"); envVal != "" {
+		parsedVal, err := strconv.Atoi(envVal)
+		if err != nil || parsedVal <= 0 {
+			return 0, fmt.Errorf("invalid MAX_WORKERS value: %q", envVal)
+		}
+		maxWorkers = parsedVal
+	}
+	if maxWorkers < 1 {
+		maxWorkers = 1
+	}
+
+	return maxWorkers, nil
 }
 
 /*

@@ -2,10 +2,10 @@ package eventhandler
 
 import (
 	"fmt"
-	store "main-service/pkg/store-wrapper"
-	"main-service/pkg/structures/configuration"
-	"main-service/pkg/structures/event"
-	"main-service/pkg/structures/notification"
+	store "OpenCNC/main_service/pkg/store-wrapper"
+	"OpenCNC/main_service/pkg/structures/configuration"
+	"OpenCNC/main_service/pkg/structures/event"
+	"OpenCNC/main_service/pkg/structures/notification"
 	"time"
 
 	"github.com/google/uuid"

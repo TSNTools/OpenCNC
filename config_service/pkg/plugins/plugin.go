@@ -1,8 +1,8 @@
 package plugins
 
 import (
-	devicemodelregistry "OpenCNC_config_service/common/structures/devicemodelregistry"
-	managementSessions "OpenCNC_config_service/config_service/pkg/managementSessions"
+	devicemodelregistry "OpenCNC/common/structures/devicemodelregistry"
+	managementSessions "OpenCNC/config_service/pkg/managementSessions"
 
 	"github.com/golang/protobuf/proto"
 )

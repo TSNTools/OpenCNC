@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"net"
 
-	"tsn-service/pkg/structures/notification"
-	"tsn-service/pkg/structures/notificationService"
+	"OpenCNC/tsn_service/pkg/structures/notification"
+	"OpenCNC/tsn_service/pkg/structures/notificationService"
 
 	//	"git.cs.kau.se/hamzchah/opencnc_kafka-exporter/logger/pkg/logger"
 

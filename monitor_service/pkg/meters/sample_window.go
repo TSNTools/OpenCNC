@@ -1,6 +1,6 @@
 package meters
 
-import "OpenCNC_config_service/monitor_service/structures/monitoring"
+import "OpenCNC/monitor_service/structures/monitoring"
 
 type SamplesWindow struct {
 	size    uint32

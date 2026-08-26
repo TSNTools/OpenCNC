@@ -7,7 +7,7 @@
 package qbv
 
 import (
-	sync "OpenCNC_config_service/common/structures/sync"
+	sync "OpenCNC/common/structures/sync"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
@@ -401,7 +401,7 @@ const file_common_structures_qbv_qbv_status_proto_rawDesc = "" +
 	"\x16GATE_STATE_UNSPECIFIED\x10\x00\x12\b\n" +
 	"\x04OPEN\x10\x01\x12\n" +
 	"\n" +
-	"\x06CLOSED\x10\x02B2Z0OpenCNC_config_service/common/structures/qbv;qbvb\x06proto3"
+	"\x06CLOSED\x10\x02B2Z0OpenCNC/common/structures/qbv;qbvb\x06proto3"
 
 var (
 	file_common_structures_qbv_qbv_status_proto_rawDescOnce sync1.Once

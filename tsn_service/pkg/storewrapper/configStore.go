@@ -1,7 +1,7 @@
 package storewrapper
 
 import (
-	adapterResp "tsn-service/pkg/structures/adapterResponse"
+	adapterResp "OpenCNC/tsn_service/pkg/structures/adapterResponse"
 
 	"google.golang.org/protobuf/proto"
 )

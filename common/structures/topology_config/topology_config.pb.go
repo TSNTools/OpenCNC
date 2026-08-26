@@ -7,10 +7,10 @@
 package topology_config
 
 import (
-	qav "OpenCNC_config_service/common/structures/qav"
-	qbv "OpenCNC_config_service/common/structures/qbv"
-	stp "OpenCNC_config_service/common/structures/stp"
-	vlan "OpenCNC_config_service/common/structures/vlan"
+	qav "OpenCNC/common/structures/qav"
+	qbv "OpenCNC/common/structures/qbv"
+	stp "OpenCNC/common/structures/stp"
+	vlan "OpenCNC/common/structures/vlan"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"

@@ -1,10 +1,10 @@
 package storewrapper
 
 import (
+	"OpenCNC/tsn_service/pkg/structures/configuration"
+	"OpenCNC/tsn_service/pkg/structures/schedule"
+	"OpenCNC/tsn_service/pkg/structures/topology"
 	"fmt"
-	"tsn-service/pkg/structures/configuration"
-	"tsn-service/pkg/structures/schedule"
-	"tsn-service/pkg/structures/topology"
 
 	//	"git.cs.kau.se/hamzchah/opencnc_kafka-exporter/logger/pkg/logger"
 

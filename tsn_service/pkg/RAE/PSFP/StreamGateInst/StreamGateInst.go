@@ -12,7 +12,7 @@ Ref (for all methods):
 
 import (
 	"errors"
-	st "tsn-service/pkg/RAE/dataStructures/SchemaTreeMethods"
+	st "OpenCNC/tsn_service/pkg/RAE/dataStructures/SchemaTreeMethods"
 
 	//"git.cs.kau.se/hamzchah/opencnc_kafka-exporter/logger/pkg/logger"
 

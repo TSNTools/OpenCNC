@@ -5,9 +5,9 @@ Start updating the requested configuration
 */
 
 import (
+	"OpenCNC/tsn_service/pkg/RAE/mstp"
+	handler "OpenCNC/tsn_service/pkg/notificationHandler"
 	"fmt"
-	"tsn-service/pkg/RAE/mstp"
-	handler "tsn-service/pkg/notificationHandler"
 
 	//"git.cs.kau.se/hamzchah/opencnc_kafka-exporter/logger/pkg/logger"
 

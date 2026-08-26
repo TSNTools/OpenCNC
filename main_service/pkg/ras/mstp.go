@@ -7,7 +7,7 @@ Functions to send request to update configuration for MSTP (Multiple Spanning Tr
 import (
 	"context"
 	"fmt"
-	notification "main-service/pkg/structures/notification"
+	notification "OpenCNC/main_service/pkg/structures/notification"
 
 	"google.golang.org/grpc"
 	// "git.cs.kau.se/hamzchah/opencnc_kafka-exporter/logger/pkg/logger"
@@ -108,9 +108,9 @@ func setConfigMstpPortTable(newPrio int32, newPathCost int32, keycomponentId uin
 	keyport uint32, keymstid uint32, newKVGetter bool, newCSSetter bool) (err error) {
 
 	var conn *grpc.ClientConn
-	conn, err = grpc.Dial("tsn-service:5150", grpc.WithInsecure())
+	conn, err = grpc.Dial("tsn_service:5150", grpc.WithInsecure())
 	if err != nil {
-		fmt.Printf("Failed dialing tsn-service: %v", err)
+		fmt.Printf("Failed dialing tsn_service: %v", err)
 
 		return err
 	}

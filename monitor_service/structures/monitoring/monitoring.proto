@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package monitoring;
 
-option go_package = "OpenCNC_config_service/monitor_service/structures/monitoring;monitoring";
+option go_package = "OpenCNC/monitor_service/structures/monitoring;monitoring";
 
 import "google/protobuf/timestamp.proto";
 

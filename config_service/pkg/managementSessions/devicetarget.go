@@ -1,9 +1,9 @@
 package managementSessions
 
 import (
-	"OpenCNC_config_service/common/observability"
-	"OpenCNC_config_service/common/structures/credentials"
-	topology "OpenCNC_config_service/common/structures/topology"
+	"OpenCNC/common/observability"
+	"OpenCNC/common/structures/credentials"
+	topology "OpenCNC/common/structures/topology"
 
 	"github.com/openshift-telco/go-netconf-client/netconf"
 )

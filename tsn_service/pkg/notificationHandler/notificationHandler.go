@@ -3,9 +3,9 @@ package notificationHandler
 import (
 	"fmt"
 
-	"tsn-service/pkg/internalOptimizer"
-	store "tsn-service/pkg/storewrapper"
-	"tsn-service/pkg/structures/configuration"
+	"OpenCNC/tsn_service/pkg/internalOptimizer"
+	store "OpenCNC/tsn_service/pkg/storewrapper"
+	"OpenCNC/tsn_service/pkg/structures/configuration"
 
 	//	"git.cs.kau.se/hamzchah/opencnc_kafka-exporter/logger/pkg/logger"
 
