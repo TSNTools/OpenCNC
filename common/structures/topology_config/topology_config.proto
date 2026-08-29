@@ -8,6 +8,8 @@ import "common/structures/qbv/qbv.proto";  // IEEE 802.1Qbv time aware shaper
 import "common/structures/qav/qav.proto";  // IEEE 802.1Qav credit based shaper
 import "common/structures/stp/stp.proto";  // IEEE 802.1D/Q STP
 import "common/structures/vlan/vlan.proto"; // IEEE 802.1Q VLAN domain model
+import "common/structures/pcp/pcp.proto"; 
+
 
 
 /*
@@ -42,12 +44,22 @@ message NodeConfig {
 // ===========================
 
 message BridgeConfig {
-  optional stp.StpConfiguration stp = 1;
-  optional bool gptp_enabled = 2;
-  optional bool frame_preemption_enabled = 3;
-  optional vlan.BridgeVlanConfig vlan_config = 4;
+  /*
+   * Master administrative enable/disable for STP/RSTP/MSTP.
+   * This is the topology-level control. The actual STP parameters
+   * are contained in stp_configuration.
+   */
+  optional bool stp_enabled = 1;
 
-  optional stp.BridgeMstConfig mst_config = 5; // MST resource mapping (FID -> MSTID)
+  /*
+   * Complete bridge-level STP/RSTP/MSTP configuration.
+   * Per-port STP configuration belongs to PortConfig.stp.
+   */
+  optional stp.StpConfiguration stp_configuration = 2;
+
+  optional bool gptp_enabled = 3;
+  optional bool frame_preemption_enabled = 4;
+  optional vlan.BridgeVlanConfig vlan_config = 5;
 }
 
 message EndStationConfig {
@@ -65,32 +77,32 @@ message BridgedEndStationConfig {
 message PortConfig {
   string port_id = 1;
 
-  optional bool is_edge_port = 2;
+  optional AdminState admin_state = 2;
+  optional bool ingress_enabled = 3;
+  optional bool egress_enabled = 4;
 
-  optional AdminState admin_state = 3;
-  optional bool ingress_enabled = 4;
-  optional bool egress_enabled = 5;
+  optional uint32 default_priority = 5; // 0–7, used for untagged ingress frames
+  optional bool pcp_mapping_enabled = 6; // Enables PCP → internal priority mapping (8.6.6.1)
 
-  optional uint32 default_priority = 6; // 0–7, used for untagged ingress frames
-  optional bool pcp_mapping_enabled = 7; // Enables PCP → internal priority mapping (8.6.6.1)
-  repeated TrafficClassTableEntry traffic_class_table = 8;
+  optional pcp.PcpPortConfig pcp_config = 7;
 
 
-  optional uint32 default_vlan_id = 9;
-  repeated vlan.VlanMembership vlan_memberships = 10;
+  optional uint32 default_vlan_id = 8;
+  repeated vlan.VlanMembership vlan_memberships = 9;
 
 // New: Optional gPTP port role (if gPTP is enabled at node level)
-  optional GptpRole gptp_role = 11;
+  optional GptpRole gptp_role = 10;
   
-  optional bool stp_enabled = 12;
-  optional qbv.GateControlList gcl = 13;
+  optional stp.StpPortConfiguration stp = 11;
 
-  repeated QueueConfig queue_configs = 14;
+  optional qbv.GateControlList gcl = 12;
 
-  string description = 15;
+  repeated QueueConfig queue_configs = 13;
+
+  string description = 14;
 
   // Optional advanced 802.1Q bridge-port VLAN controls.
-  optional vlan.PortVlanAdvancedConfig vlan_advanced = 16;
+  optional vlan.PortVlanAdvancedConfig vlan_advanced = 15;
 }
 
 enum AdminState {
@@ -105,14 +117,6 @@ enum GptpRole {
   GPTP_ROLE_SLAVE = 2;
   GPTP_ROLE_PASSIVE = 3;
   GPTP_ROLE_DISABLED = 4;
-}
-
-
-// IEEE 802.1Q Clause 8.6.6.1
-// Per-port Priority to traffic class (=egress queue id) mapping
-message TrafficClassTableEntry {
-  uint32 pcp = 1;         // Priority Code Point (0–7)
-  uint32 egress_queue_id = 2; // Traffic class index (0–7)
 }
 
 message QueueConfig {

@@ -7,47 +7,544 @@ option go_package = "OpenCNC/common/structures/stp;stp";
 import "common/structures/stp/stp.proto";
 
 /*
- * STP (Spanning Tree Protocol) runtime status and managed objects.
- * Reflects current operational state as reported by bridges.
- * References IEEE 802.1Q-2022:
- * - Clause 13 (Spanning Tree Protocol behavior)
- * - Clause 12.30 (Bridge Management Information)
+ * ============================================================================
+ * STP / RSTP / MSTP operational status
+ * ============================================================================
+ *
+ * This file contains OPERATIONAL / RUNTIME STATE ONLY.
+ *
+ * Administrative configuration is defined in:
+ *
+ *   common/structures/stp/stp.proto
+ *
+ * Standard reference:
+ *
+ *   IEEE 802.1Q-2022, Clause 13
+ *   IEEE 802.1Q-2022, Clause 12.30
+ *
+ * ============================================================================
+ * DOMAIN SEPARATION
+ * ============================================================================
+ *
+ * stp.proto
+ *   -> administrative/configuration state
+ *
+ * stp_status.proto
+ *   -> operational/runtime state
+ *
+ * topology_config.proto
+ *   -> topology-level configuration references
+ *
+ * topology_status.proto
+ *   -> topology-level status aggregation
+ *
+ * ============================================================================
+ * OWNERSHIP MODEL
+ * ============================================================================
+ *
+ * Bridge/node-level STP state:
+ *
+ *   topology_status.NodeStatus
+ *       -> stp_status.BridgeStpStatus
+ *
+ * Port-level STP state:
+ *
+ *   topology_status.PortStatus
+ *       -> stp_status.PortStpStatus
+ *
+ * Instance-level state:
+ *
+ *   BridgeStpStatus.instances[]
+ *       -> StpInstanceStatus
+ *
+ * Per-port/per-instance state:
+ *
+ *   PortStpStatus.cist
+ *   PortStpStatus.msti_states[]
+ *
+ * There is intentionally NO port state inside StpInstanceStatus.
+ *
+ * This establishes a single authoritative location for each scope of
+ * operational STP state.
  */
 
+
+/*
+ * ============================================================================
+ * STP status report
+ * ============================================================================
+ */
+
+/*
+ * Runtime STP status for one or more bridges.
+ *
+ * This message is useful for STP-specific telemetry or APIs.
+ *
+ * topology_status.proto may instead embed the individual
+ * BridgeStpStatus and PortStpStatus objects into the topology status model.
+ */
 message StpStatusReport {
-  repeated BridgeStpStatus bridges = 1; // Status of all bridges in the network
+  repeated BridgeStpStatus bridges = 1;
 }
 
+
+/*
+ * ============================================================================
+ * Bridge / node-level STP status
+ * ============================================================================
+ */
+
+/*
+ * Operational STP status for one bridge.
+ *
+ * This message contains bridge/node-level STP state only.
+ *
+ * Port-specific state belongs exclusively to PortStpStatus.
+ */
 message BridgeStpStatus {
-  string bridge_id = 1;                   // Unique identifier for the bridge (MAC or UUID)
-  string node_id = 2;                     // Matches Node.name in topology
+  /*
+   * OpenCNC topology node identifier.
+   *
+   * Matches Node.name in topology.proto.
+   */
+  string node_id = 1;
 
-  repeated StpInstanceStatus instances = 3; // Status of each STP instance on the bridge
-  bool stp_enabled = 4;                   // Global STP enable status (Clause 13.5.1)
-  string bridge_priority = 5;            // Bridge priority as seen in BPDUs (informational)
-  uint64 last_updated_ns = 6;            // Timestamp of last update (nanoseconds since epoch)
+  /*
+   * Protocol mode currently operating on the bridge.
+   */
+  stp.StpProtocolMode protocol_mode = 3;
+
+  /*
+   * Operational state of the CIST and MSTIs.
+   *
+   * These are instance-level values only.
+   *
+   * Port-specific values are not stored here.
+   */
+  repeated StpInstanceStatus instances = 4;
+
+  /*
+   * Whether STP is currently operationally enabled.
+   */
+  bool stp_enabled = 5;
+
+  /*
+   * Current operational bridge priority.
+   */
+  uint32 bridge_priority = 6;
+
+  /*
+   * Timestamp of this status sample.
+   *
+   * Nanoseconds since Unix epoch.
+   */
+  uint64 last_updated_ns = 7;
+
+  /*
+   * Operational MST configuration.
+   *
+   * Present when MSTP is active.
+   */
+  optional MstConfigurationStatus mst_configuration = 8;
+
+  /*
+   * Whether the bridge is currently operating as part of an MST region.
+   */
+  bool mst_region_active = 9;
+
+  /*
+   * Number of topology changes observed by the bridge.
+   */
+  uint64 topology_change_count = 10;
+
+  /*
+   * Timestamp of the most recent bridge-level topology change.
+   *
+   * Nanoseconds since Unix epoch.
+   */
+  uint64 last_topology_change_ns = 11;
 }
 
+
+/*
+ * ============================================================================
+ * Spanning-tree instance status
+ * ============================================================================
+ */
+
+/*
+ * Operational status of one spanning-tree instance.
+ *
+ * This message contains INSTANCE-LEVEL state only.
+ *
+ * It does not contain any per-port state.
+ *
+ * msti_id:
+ *
+ *   0       = CIST
+ *   1..4094 = MSTI
+ */
 message StpInstanceStatus {
-  string instance_id = 1;                 // Instance identifier ("cist", "mst0", etc.)
-  string root_bridge_id = 2;              // Root bridge ID for this instance
-  uint32 root_path_cost = 3;              // Cost to reach root bridge
-  string designated_bridge_id = 4;        // Designated bridge ID for this instance
-  repeated PortStpStatus port_states = 5; // Per-port STP state information
+
+  /*
+   * Canonical spanning-tree instance identifier.
+   *
+   * 0 = CIST.
+   * 1..4094 = MSTI.
+   */
+  uint32 msti_id = 1;
+
+  /*
+   * Human-readable instance identifier.
+   *
+   * Examples:
+   *
+   *   "cist"
+   *   "mst1"
+   *   "mst2"
+   *
+   * The numeric msti_id is authoritative.
+   */
+  string instance_id = 2;
+
+  /*
+   * Operational IEEE Bridge Identifier of the current root bridge
+   * for this instance.
+   */
+  string root_bridge_id = 3;
+
+  /*
+   * Operational path cost from this bridge to the root bridge.
+   */
+  uint32 root_path_cost = 4;
+
+  /*
+   * Operational designated bridge identifier for the relevant
+   * spanning-tree instance context.
+   */
+  string designated_bridge_id = 5;
+
+  /*
+   * Whether this bridge is currently the root bridge for this instance.
+   */
+  bool is_root_bridge = 6;
+
+  /*
+   * Current operational bridge priority for this instance.
+   */
+  uint32 bridge_priority = 7;
+
+  /*
+   * Number of topology changes observed for this instance.
+   */
+  uint64 topology_change_count = 8;
+
+  /*
+   * Timestamp of the most recent topology change for this instance.
+   *
+   * Nanoseconds since Unix epoch.
+   */
+  uint64 last_topology_change_ns = 9;
 }
 
+
+/*
+ * ============================================================================
+ * Port-level STP status
+ * ============================================================================
+ */
+
+/*
+ * Operational STP status for one topology port.
+ *
+ * This message is intended to be embedded in:
+ *
+ *   topology_status.PortStatus
+ *
+ * This is the SINGLE authoritative STP status object for a topology port.
+ *
+ * It contains:
+ *
+ *   - port-wide STP state
+ *   - CIST port state
+ *   - MSTI-specific port state
+ *   - BPDU state/counters
+ *   - edge state
+ *   - point-to-point state
+ *   - port-level topology-change information
+ *
+ * No port state is duplicated in BridgeStpStatus or StpInstanceStatus.
+ */
 message PortStpStatus {
-  string port_id = 1;                     // Matches Port.id in topology
-  stp.PortRole role = 2;                  // Port role (Clause 13.25.5)
-  stp.PortState state = 3;                // Port state (Clause 13.25.6)
-  bool forwarding = 4;                    // Whether port is currently forwarding frames
-  uint32 port_priority = 5;               // Admin or operational port priority
-  uint32 port_path_cost = 6;              // Port cost (Clause 13.24.2)
-  string designated_root = 7;             // Root bridge ID as reported in BPDU
-  string designated_bridge = 8;           // Designated bridge on the segment
-  string designated_port_id = 9;          // Port ID of the designated port
-  bool topology_change_ack = 10;          // True if Topology Change ACK received
-  bool tc_propagation = 11;               // Topology Change propagation flag
-  bool proposal_received = 12;            // Indicates if RSTP proposal was received
-  bool agreement = 13;                    // Indicates RSTP handshake agreement status
+
+  /*
+   * OpenCNC topology Port.id.
+   *
+   * Identifies the topology port to which this status belongs.
+   */
+  string port_id = 1;
+
+  /*
+   * Operational STP state of this port in the CIST/common spanning tree.
+   */
+  PortInstanceStpStatus cist = 2;
+
+  /*
+   * Operational STP state of this port for MSTIs.
+   *
+   * Empty when MSTP is not active or the port has no MSTI state.
+   */
+  repeated MstiPortStpStatus msti_states = 3;
+
+  /*
+   * Whether the port is currently participating in STP.
+   *
+   * This is a PORT-WIDE operational value.
+   */
+  bool participating = 4;
+
+  /*
+   * Current operational edge-port state.
+   */
+  bool oper_edge_port = 5;
+
+  /*
+   * Current operational point-to-point status.
+   */
+  bool oper_point_to_point = 6;
+
+  /*
+   * Current BPDU reception status.
+   */
+  bool bpdu_rx_active = 7;
+
+  /*
+   * Current BPDU transmission status.
+   */
+  bool bpdu_tx_active = 8;
+
+  /*
+   * Number of BPDUs received on this port.
+   */
+  uint64 bpdu_rx_count = 9;
+
+  /*
+   * Number of BPDUs transmitted on this port.
+   */
+  uint64 bpdu_tx_count = 10;
+
+  /*
+   * Number of topology changes observed on this port.
+   */
+  uint64 topology_change_count = 11;
+
+  /*
+   * Timestamp at which the port entered its current common/CIST
+   * operational STP state.
+   *
+   * Nanoseconds since Unix epoch.
+   */
+  uint64 state_change_time_ns = 12;
+}
+
+
+/*
+ * ============================================================================
+ * CIST port-level STP status
+ * ============================================================================
+ */
+
+/*
+ * Operational STP state of a port within the CIST/common spanning tree.
+ *
+ * This is PORT + CIST state.
+ */
+message PortInstanceStpStatus {
+
+  /*
+   * Current operational STP port role.
+   */
+  stp.PortRole role = 1;
+
+  /*
+   * Current operational STP port state.
+   */
+  stp.PortState state = 2;
+
+  /*
+   * Whether the port is currently forwarding frames in the CIST.
+   *
+   * Retained as a convenient operational value even though it can
+   * normally be inferred from state.
+   */
+  bool forwarding = 3;
+
+  /*
+   * Current operational port priority in the CIST.
+   */
+  uint32 port_priority = 4;
+
+  /*
+   * Current operational path cost in the CIST.
+   */
+  uint32 port_path_cost = 5;
+
+  /*
+   * Root bridge identifier currently associated with this port.
+   */
+  string designated_root = 6;
+
+  /*
+   * Designated bridge identifier for the segment.
+   */
+  string designated_bridge = 7;
+
+  /*
+   * Designated port identifier for the segment.
+   */
+  string designated_port_id = 8;
+
+  /*
+   * Whether a topology-change acknowledgement was received.
+   */
+  bool topology_change_ack = 9;
+
+  /*
+   * Whether topology-change propagation is currently active.
+   */
+  bool tc_propagation = 10;
+
+  /*
+   * Whether an RSTP/MSTP proposal was received.
+   */
+  bool proposal_received = 11;
+
+  /*
+   * Whether the RSTP/MSTP proposal/agreement handshake has reached
+   * agreement.
+   */
+  bool agreement = 12;
+
+  /*
+   * Number of topology changes observed for this CIST port state.
+   */
+  uint64 topology_change_count = 13;
+
+  /*
+   * Timestamp at which the port entered this CIST STP state.
+   *
+   * Nanoseconds since Unix epoch.
+   */
+  uint64 state_change_time_ns = 14;
+}
+
+
+/*
+ * ============================================================================
+ * MSTI port-level STP status
+ * ============================================================================
+ */
+
+/*
+ * Operational STP state of a port within one MSTI.
+ *
+ * This is PORT + MSTI state.
+ */
+message MstiPortStpStatus {
+
+  /*
+   * MSTI identifier.
+   *
+   * 1..4094.
+   */
+  uint32 msti_id = 1;
+
+  /*
+   * Current operational MSTI port role.
+   */
+  stp.PortRole role = 2;
+
+  /*
+   * Current operational MSTI port state.
+   */
+  stp.PortState state = 3;
+
+  /*
+   * Whether this port is currently forwarding frames for this MSTI.
+   */
+  bool forwarding = 4;
+
+  /*
+   * Current operational MSTI port priority.
+   */
+  uint32 port_priority = 5;
+
+  /*
+   * Current operational MSTI path cost.
+   */
+  uint32 port_path_cost = 6;
+
+  /*
+   * Whether this port is currently acting as the MSTI master port.
+   *
+   * This may also be represented by PORT_ROLE_MASTER where applicable,
+   * but is retained as an explicit operational value for convenience.
+   */
+  bool master_port = 7;
+
+  /*
+   * Number of topology changes observed for this MSTI on this port.
+   */
+  uint64 topology_change_count = 8;
+
+  /*
+   * Timestamp at which the port entered this MSTI state.
+   *
+   * Nanoseconds since Unix epoch.
+   */
+  uint64 state_change_time_ns = 9;
+}
+
+
+/*
+ * ============================================================================
+ * MST operational status
+ * ============================================================================
+ */
+
+/*
+ * Operational MST Configuration Identifier.
+ *
+ * This describes the MST configuration currently being used by the bridge.
+ */
+message MstConfigurationStatus {
+
+  /*
+   * Operational MST Configuration Name.
+   */
+  string configuration_name = 1;
+
+  /*
+   * Operational MST Configuration Revision Level.
+   */
+  uint32 revision_level = 2;
+
+  /*
+   * Operational MST Configuration Format Selector.
+   */
+  uint32 format_selector = 3;
+
+  /*
+   * Operational MST Configuration Digest.
+   *
+   * Typically the 16-octet digest calculated from the MST configuration
+   * according to IEEE MSTP.
+   */
+  bytes configuration_digest = 4;
+
+  /*
+   * Whether the operational MST configuration matches the expected
+   * local configuration.
+   */
+  optional bool configuration_match = 5;
 }

@@ -2,94 +2,135 @@ syntax = "proto3";
 
 package notification;
 
-import "google/protobuf/empty.proto";
+option go_package = "OpenCNC/tsn_service/pkg/structures/notification;notification";
 
-option go_package = "/notification";
-
+import "google/protobuf/timestamp.proto";
 
 service Notification {
-	rpc CalcConfig(IdList) returns (UUID) {}
-	// MSTP tables to configure
-	rpc UpdateConfigMstpCistPortTable   (InMstpCistPortTableRequest)    returns (google.protobuf.Empty) {}
-	rpc UpdateConfigMstpCistTable       (InMstpCistTableRequest)        returns (google.protobuf.Empty) {}
-	rpc UpdateConfigMstpConfigTable     (InMstpConfigTableRequest)      returns (google.protobuf.Empty) {}
-	rpc UpdateConfigMstpFidToMstiV2Table(InMstpFidToMstiV2TableRequest) returns (google.protobuf.Empty) {}
-	rpc UpdateConfigMstpPortTable       (InMstpPortTableRequest)        returns (google.protobuf.Empty) {}
-	rpc UpdateConfigMstpTable           (InMstpTableRequest)            returns (google.protobuf.Empty) {}
+
+  // Single intake point for notifications from other OpenCNC services.
+  rpc Notify(Event) returns (NotifyResponse) {}
 }
 
 
-// Region CalcConfig
-	message UUID {
-		string Value = 1;
-	}
+// ============================================================================
+// Event
+// ============================================================================
 
-	message IdList {
-		repeated UUID Values = 1;
-	}
+message Event {
+
+  string event_id = 1;
+
+  EventType type = 2;
+
+  google.protobuf.Timestamp occurred_at = 3;
+
+  // Service that generated the event.
+  //
+  // Examples:
+  //   "monitor-service"
+  //   "main-service"
+  string source = 4;
+
+  oneof payload {
+    StreamAdded stream_added = 10;
+    StreamRemoved stream_removed = 11;
+    NetworkEvent network_event = 12;
+  }
+}
 
 
-// Region MSTP
-	message InMstpCistPortTableRequest {
-		int32  PathCost          =  1;
-		bool   EdgePort          =  2;
-		bool   MacEnabled        =  3;
-		bool   RestrictedRole    =  4;
-		bool   RestrictedTcn     =  5;
-		bool   ProtocolMigration =  6;
-		bool   EnableBPDURx      =  7;
-		bool   EnableBPDUTx      =  8;
-		bytes  PseudoRootId      =  9;
-		bool   IsL2Gp            = 10;
-		uint32 Port              = 11;
-		uint32 ComponentID       = 12;
-		string DeviceIP          = 13;
-		bool   KVGetter          = 14;
-		bool   CSSetter          = 15;
-	}
+// ============================================================================
+// Event types
+// ============================================================================
 
-	message InMstpCistTableRequest {
-		int32  MaxHops     = 1;
-		uint32 ComponentID = 2;
-		string DeviceIP    = 3;
-		bool   KVGetter    = 4;
-		bool   CSSetter    = 5;
-	}
+enum EventType {
 
-	message InMstpConfigTableRequest {
-		int32  FormatSelector    = 1;
-		string ConfigurationName = 2;
-		uint32 RevisionLevel     = 3;
-		uint32 ComponentID       = 4;
-		string DeviceIP          = 5;
-		bool   KVGetter          = 6;
-		bool   CSSetter          = 7;
-	}
+  EVENT_TYPE_UNSPECIFIED = 0;
 
-	message InMstpFidToMstiV2TableRequest {
-		uint32 fid         = 1;
-		uint32 ComponentID = 2;
-		string DeviceIP    = 3;
-		bool   KVGetter    = 4;
-		bool   CSSetter    = 5;
-	}
+  // A new TSN stream/reservation was requested.
+  STREAM_ADDED = 1;
 
-	message InMstpPortTableRequest {
-		int32  Priority    = 1;
-		int32  PathCost    = 2;
-		uint32 ComponentID = 3;
-		uint32 Port        = 4;
-		uint32 MstID       = 5;
-		string DeviceIP    = 6;
-		bool   KVGetter    = 7;
-		bool   CSSetter    = 8;
-	}
+  // An existing TSN stream/reservation was removed.
+  STREAM_REMOVED = 2;
 
-	message InMstpTableRequest {
-		int32  BridgePriority = 1;
-		uint32 ComponentID    = 2;
-		int32  MstpID         = 3;
-		string DeviceIP       = 4;
-		bool   KVGetter       = 5;
-		bool   CSSetter       = 6;
-	}
+  // A network/topology event was detected.
+  NETWORK_EVENT = 3;
+}
+
+
+// ============================================================================
+// Stream events
+// ============================================================================
+
+message StreamAdded {
+
+  // Identifier(s) associated with the stream request.
+  repeated string request_ids = 1;
+
+  // Optional stream identifier.
+  string stream_id = 2;
+}
+
+
+message StreamRemoved {
+
+  // Identifier(s) associated with the stream request.
+  repeated string request_ids = 1;
+
+  // Optional stream identifier.
+  string stream_id = 2;
+
+  string reason = 3;
+}
+
+
+// ============================================================================
+// Network events
+// ============================================================================
+
+message NetworkEvent {
+
+  NetworkTrigger trigger = 1;
+
+  // Objects known to be affected by the event.
+  repeated string affected_node_ids = 2;
+  repeated string affected_link_ids = 3;
+
+  string reason = 4;
+}
+
+
+enum NetworkTrigger {
+
+  NETWORK_TRIGGER_UNSPECIFIED = 0;
+
+  LINK_DOWN = 1;
+  LINK_UP = 2;
+
+  NODE_DOWN = 3;
+  NODE_UP = 4;
+
+  TOPOLOGY_CHANGED = 5;
+
+  RESOURCE_THRESHOLD = 6;
+
+  MANUAL_RECALCULATION = 7;
+}
+
+
+// ============================================================================
+// Response
+// ============================================================================
+
+message NotifyResponse {
+
+  // Notification was accepted by the TSN service.
+  bool accepted = 1;
+
+  // Optional identifier for the internal configuration/reconfiguration
+  // workflow started by the event.
+  string workflow_id = 2;
+
+  string message = 3;
+}

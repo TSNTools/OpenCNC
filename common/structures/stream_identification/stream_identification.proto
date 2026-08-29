@@ -1,0 +1,697 @@
+syntax = "proto3";
+
+package tsn.stream_identification;
+
+option go_package = "OpenCNC/common/structures/stream_identification;stream_identification";
+
+import "common/structures/stream/stream.proto";
+
+/*
+ * IEEE 802.1CB Stream Identification
+ *
+ * Primary references:
+ *
+ *   IEEE Std 802.1CB-2017
+ *   IEEE Std 802.1CBcv-2021
+ *   IEEE Std 802.1CBdb-2021
+ *
+ * This model represents the Stream identification functionality used
+ * by a Bridge or end station to identify frames belonging to a Stream
+ * and associate them with a local Stream handle.
+ *
+ * IEEE-defined Stream identification functions:
+ *
+ *   Type 1 - Null Stream identification
+ *   Type 2 - Source MAC and VLAN Stream identification
+ *   Type 3 - Active Destination MAC and VLAN Stream identification
+ *   Type 4 - IP Stream identification
+ *
+ * IEEE Std 802.1CBdb-2021 additionally defines Mask-and-match
+ * Stream identification.
+ *
+ * Architectural separation:
+ *
+ *   stream.proto
+ *       Logical/application-level Stream description.
+ *
+ *   stream_identification.proto
+ *       IEEE 802.1CB Stream identification and local Stream handles.
+ *
+ *   frer.proto
+ *       IEEE 802.1CB Frame Replication and Elimination for Reliability.
+ *
+ *   psfp.proto
+ *       IEEE 802.1Q Per-Stream Filtering and Policing.
+ *
+ * The Stream identification function establishes the association
+ * between received frames and a local Stream handle. FRER and other
+ * stream-aware functions may subsequently use that handle.
+ */
+
+
+/* ========================================================================= */
+/* Stream identification function                                            */
+/* ========================================================================= */
+
+/*
+ * IEEE 802.1CB Stream identification function type number.
+ *
+ * IEEE-defined values:
+ *
+ *   0 - Reserved
+ *   1 - Null Stream identification
+ *   2 - Source MAC and VLAN Stream identification
+ *   3 - Active Destination MAC and VLAN Stream identification
+ *   4 - IP Stream identification
+ *
+ * IEEE 802.1CBdb additionally defines:
+ *
+ *   5 - Mask-and-match Stream identification
+ *
+ * The type number is used together with the OUI/CID identifying
+ * the organization defining the Stream identification function.
+ */
+enum StreamIdentificationType {
+  STREAM_IDENTIFICATION_TYPE_UNSPECIFIED = 0;
+
+  NULL_STREAM = 1;
+  SOURCE_MAC_AND_VLAN = 2;
+  ACTIVE_DESTINATION_MAC_AND_VLAN = 3;
+  IP_STREAM = 4;
+  MASK_AND_MATCH = 5;
+}
+
+
+/*
+ * Identifies a Stream identification function.
+ *
+ * IEEE 802.1CB identifies a Stream identification function using
+ * an OUI/CID together with a type number.
+ *
+ * IEEE-defined Stream identification functions use the IEEE OUI/CID
+ * associated with the standard.
+ *
+ * Organization-specific functions may use an organization-specific
+ * OUI/CID and type number.
+ */
+message StreamIdentificationFunction {
+
+  /*
+   * OUI/CID identifying the organization defining the function.
+   *
+   * Canonical textual representation:
+   *
+   *   XX-XX-XX
+   *
+   * for an OUI.
+   */
+  string oui_cid = 1;
+
+  /*
+   * Stream identification function type number.
+   */
+  uint32 type_number = 2;
+}
+
+
+/* ========================================================================= */
+/* VLAN identification                                                        */
+/* ========================================================================= */
+
+/*
+ * IEEE 802.1CB VLAN tag identification type.
+ *
+ * TAGGED:
+ *   The frame must contain a VLAN tag.
+ *
+ * PRIORITY:
+ *   The frame is untagged or has VLAN ID 0.
+ *
+ * ALL:
+ *   Tagged and untagged frames are accepted for identification.
+ *
+ * Reference:
+ *   IEEE 802.1CB-2017, Stream identification types.
+ */
+enum VlanTagIdentificationType {
+  VLAN_TAG_IDENTIFICATION_TYPE_UNSPECIFIED = 0;
+
+  TAGGED = 1;
+  PRIORITY = 2;
+  ALL = 3;
+}
+
+
+/*
+ * VLAN identifier used by a Stream identification function.
+ *
+ * IEEE VLAN identifiers are 12-bit values:
+ *
+ *   0..4095
+ *
+ * VLAN ID 0 has special meaning for priority-tagged/untagged frames.
+ */
+message VlanIdentification {
+
+  /*
+   * VLAN tagging mode used for identification.
+   */
+  VlanTagIdentificationType tagged = 1;
+
+  /*
+   * VLAN identifier.
+   *
+   * Valid range: 0..4095.
+   */
+  optional uint32 vlan_id = 2;
+}
+
+
+/* ========================================================================= */
+/* Null Stream identification                                                */
+/* ========================================================================= */
+
+/*
+ * Null Stream identification.
+ *
+ * Frames are identified using destination MAC address and VLAN
+ * identification parameters.
+ *
+ * Reference:
+ *   IEEE 802.1CB-2017, Clause 6.4 and Clause 9.1.2.
+ */
+message NullStreamIdentification {
+
+  /*
+   * Destination MAC address used for Stream identification.
+   */
+  optional string destination_mac = 1;
+
+  /*
+   * VLAN identification parameters.
+   */
+  optional VlanIdentification vlan = 2;
+}
+
+
+/* ========================================================================= */
+/* Source MAC and VLAN Stream identification                                 */
+/* ========================================================================= */
+
+/*
+ * Source MAC and VLAN Stream identification.
+ *
+ * Frames are identified using source MAC address and VLAN
+ * identification parameters.
+ *
+ * Reference:
+ *   IEEE 802.1CB-2017, Clause 6.5 and Clause 9.1.3.
+ */
+message SourceMacVlanStreamIdentification {
+
+  /*
+   * Source MAC address used for Stream identification.
+   */
+  optional string source_mac = 1;
+
+  /*
+   * VLAN identification parameters.
+   */
+  optional VlanIdentification vlan = 2;
+}
+
+
+/* ========================================================================= */
+/* Active Destination MAC and VLAN Stream identification                     */
+/* ========================================================================= */
+
+/*
+ * Active Destination MAC and VLAN Stream identification.
+ *
+ * This identification function has separate parameters for the
+ * "down" and "up" directions.
+ *
+ * Reference:
+ *   IEEE 802.1CB-2017, Clause 6.6 and Clause 9.1.4.
+ */
+message ActiveDestinationMacVlanStreamIdentification {
+
+  /*
+   * Parameters toward the lower layers.
+   */
+  ActiveDestinationMacVlanParameters down = 1;
+
+  /*
+   * Parameters toward the upper layers.
+   */
+  ActiveDestinationMacVlanParameters up = 2;
+}
+
+
+/*
+ * Parameters for one direction of the Active Destination MAC and VLAN
+ * identification function.
+ */
+message ActiveDestinationMacVlanParameters {
+
+  /*
+   * Destination MAC address.
+   */
+  optional string destination_mac = 1;
+
+  /*
+   * VLAN identification parameters.
+   */
+  optional VlanIdentification vlan = 2;
+
+  /*
+   * Priority / PCP.
+   *
+   * Valid range: 0..7.
+   */
+  optional uint32 priority = 3;
+}
+
+
+/* ========================================================================= */
+/* IP Stream identification                                                  */
+/* ========================================================================= */
+
+/*
+ * IP Stream identification.
+ *
+ * Frames are identified using:
+ *
+ *   - destination MAC address
+ *   - VLAN identification
+ *   - IP source address
+ *   - IP destination address
+ *   - DSCP
+ *   - IP protocol / IPv6 Next Header
+ *   - source port
+ *   - destination port
+ *
+ * The IP address fields support both IPv4 and IPv6 textual addresses.
+ *
+ * Reference:
+ *   IEEE 802.1CB-2017, Clause 6.7 and Clause 9.1.5.
+ */
+message IpStreamIdentification {
+
+  /*
+   * Destination MAC address.
+   */
+  optional string destination_mac = 1;
+
+  /*
+   * VLAN identification parameters.
+   */
+  optional VlanIdentification vlan = 2;
+
+  /*
+   * IP source address.
+   *
+   * IPv4 or IPv6.
+   *
+   * An all-zero address represents "ignore source address" according
+   * to the IEEE identification model.
+   */
+  optional string ip_source = 3;
+
+  /*
+   * IP destination address.
+   *
+   * IPv4 or IPv6.
+   */
+  optional string ip_destination = 4;
+
+  /*
+   * Differentiated Services Code Point.
+   *
+   * Valid DSCP values are 0..63.
+   *
+   * The value 64 means that DSCP is ignored for Stream identification.
+   */
+  optional uint32 dscp = 5;
+
+  /*
+   * IP protocol / IPv6 Next Header value.
+   *
+   * The IEEE model uses a numeric protocol value rather than limiting
+   * Stream identification to UDP/TCP/SCTP.
+   *
+   * For the special "None" case, use 0xFFFF (65535).
+   *
+   * For IPv4, the lower 8 bits represent the IPv4 Protocol value.
+   * For IPv6, the value represents the IPv6 Next Header value.
+   */
+  optional uint32 next_protocol = 6;
+
+  /*
+   * Transport source port.
+   */
+  optional uint32 source_port = 7;
+
+  /*
+   * Transport destination port.
+   */
+  optional uint32 destination_port = 8;
+}
+
+
+/* ========================================================================= */
+/* Mask-and-match Stream identification                                      */
+/* ========================================================================= */
+
+/*
+ * IEEE 802.1CBdb Mask-and-match Stream identification.
+ *
+ * Mask-and-match extends Stream identification with matching based on:
+ *
+ *   - destination MAC address
+ *   - source MAC address
+ *   - MAC Service Data Unit contents
+ *
+ * The received value is masked and compared against the configured
+ * match value.
+ *
+ * Reference:
+ *   IEEE 802.1CBdb-2021, Clause 6.8 and Clause 9.1.6.
+ */
+message MaskAndMatchStreamIdentification {
+
+  /*
+   * Destination MAC address mask.
+   */
+  optional string destination_mac_mask = 1;
+
+  /*
+   * Expected masked destination MAC address.
+   */
+  optional string destination_mac_match = 2;
+
+  /*
+   * Source MAC address mask.
+   */
+  optional string source_mac_mask = 3;
+
+  /*
+   * Expected masked source MAC address.
+   */
+  optional string source_mac_match = 4;
+
+  /*
+   * Number of MSDU bytes to inspect.
+   *
+   * IEEE 802.1CBdb defines the supported range.
+   */
+  optional uint32 msdu_mask_length = 5;
+
+  /*
+   * Mask applied to the inspected MSDU bytes.
+   *
+   * The number of bytes must correspond to msdu_mask_length.
+   */
+  optional bytes msdu_mask = 6;
+
+  /*
+   * Expected masked MSDU value.
+   *
+   * The number of bytes must correspond to msdu_mask_length.
+   */
+  optional bytes msdu_match = 7;
+}
+
+
+/* ========================================================================= */
+/* Organization-specific Stream identification                               */
+/* ========================================================================= */
+
+/*
+ * Organization-specific Stream identification.
+ *
+ * This represents an identification function identified by an
+ * organization-specific OUI/CID and type number.
+ *
+ * The parameters are opaque because their interpretation is defined
+ * by the organization owning the OUI/CID.
+ */
+message OrganizationSpecificStreamIdentification {
+
+  StreamIdentificationFunction function = 1;
+
+  /*
+   * Organization-specific identification parameters.
+   */
+  bytes parameters = 2;
+}
+
+
+/* ========================================================================= */
+/* Stream identification entry                                               */
+/* ========================================================================= */
+
+/*
+ * One Stream identity table entry.
+ *
+ * Each entry associates:
+ *
+ *   - an index
+ *   - a local Stream handle
+ *   - an identification function
+ *   - identification parameters
+ *   - the ports on which the function applies
+ *
+ * Multiple entries may use the same Stream handle.
+ *
+ * Reference:
+ *   IEEE 802.1CB-2017, Clause 9.1.1.
+ */
+message StreamIdentificationEntry {
+
+  /*
+   * Unique index of this Stream identity table entry.
+   */
+  uint32 index = 1;
+
+  /*
+   * Local Stream handle.
+   *
+   * This is distinct from stream.StreamId.
+   */
+  uint32 stream_handle = 2;
+
+  /*
+   * Identification function.
+   */
+  StreamIdentificationFunction function = 3;
+
+  /*
+   * In-facing input ports.
+   */
+  repeated string in_facing_input_port_ids = 4;
+
+  /*
+   * In-facing output ports.
+   */
+  repeated string in_facing_output_port_ids = 5;
+
+  /*
+   * Out-facing input ports.
+   */
+  repeated string out_facing_input_port_ids = 6;
+
+  /*
+   * Out-facing output ports.
+   */
+  repeated string out_facing_output_port_ids = 7;
+
+  /*
+   * Identification-function-specific parameters.
+   *
+   * Exactly one branch should be configured.
+   */
+  oneof parameters {
+
+    NullStreamIdentification null_stream = 8;
+
+    SourceMacVlanStreamIdentification source_mac_vlan = 9;
+
+    ActiveDestinationMacVlanStreamIdentification
+        active_destination_mac_vlan = 10;
+
+    IpStreamIdentification ip_stream = 11;
+
+    MaskAndMatchStreamIdentification mask_and_match = 12;
+
+    OrganizationSpecificStreamIdentification organization_specific = 13;
+  }
+
+  /*
+   * Optional CNC association with the logical Stream.
+   *
+   * This is not the IEEE 802.1CB stream_handle.
+   */
+  optional stream.StreamId stream_id = 14;
+
+  /*
+   * CNC/application-level administrative state.
+   */
+  bool enabled = 15;
+
+  /*
+   * CNC/application-level description.
+   */
+  string description = 16;
+}
+
+
+/* ========================================================================= */
+/* Stream identity table                                                     */
+/* ========================================================================= */
+
+/*
+ * Stream identity table.
+ *
+ * Reference:
+ *   IEEE 802.1CB-2017, Clause 9.1.1.
+ */
+message StreamIdentificationTable {
+
+  /*
+   * Maximum number of current Stream identification functions
+   * supported by the implementation.
+   */
+  uint64 max_current_streams = 1;
+
+  /*
+   * Configured Stream identity entries.
+   */
+  repeated StreamIdentificationEntry entries = 2;
+}
+
+
+/* ========================================================================= */
+/* Operational statistics                                                    */
+/* ========================================================================= */
+
+/*
+ * Per-port Stream identification counters.
+ *
+ * Operational state corresponding to the IEEE Stream identification
+ * per-port counters.
+ */
+message StreamIdentificationPortCounters {
+
+  /*
+   * Number of packets received by the Stream identification function.
+   */
+  uint64 input_packets = 1;
+
+  /*
+   * Number of packets passed onward by the Stream identification
+   * function.
+   */
+  uint64 output_packets = 2;
+}
+
+
+/*
+ * Per-port / per-direction / per-stream counters.
+ */
+message StreamIdentificationStreamCounters {
+
+  /*
+   * Interface/port identifier.
+   */
+  string port_id = 1;
+
+  /*
+   * Direction of the Stream identification function.
+   *
+   * false = in-facing
+   * true  = out-facing
+   */
+  bool out_facing = 2;
+
+  /*
+   * Local Stream handle.
+   */
+  uint32 stream_handle = 3;
+
+  /*
+   * Number of packets received by the identification function.
+   */
+  uint64 input_packets = 4;
+
+  /*
+   * Number of packets passed onward.
+   */
+  uint64 output_packets = 5;
+}
+
+
+/*
+ * Operational Stream identification statistics.
+ */
+message StreamIdentificationStatistics {
+
+  /*
+   * Per-port counters.
+   *
+   * Key:
+   *   port_id
+   */
+  map<string, StreamIdentificationPortCounters> per_port = 1;
+
+  /*
+   * Per-port / per-direction / per-stream counters.
+   */
+  repeated StreamIdentificationStreamCounters per_stream = 2;
+}
+
+
+/* ========================================================================= */
+/* Complete configuration/state container                                    */
+/* ========================================================================= */
+
+/*
+ * Complete Stream identification configuration and operational state.
+ *
+ * Configuration:
+ *
+ *   table
+ *
+ * Operational state:
+ *
+ *   statistics
+ *
+ * CNC/application-level:
+ *
+ *   enabled
+ *   description
+ */
+message StreamIdentificationConfiguration {
+
+  /*
+   * Stream identity table configuration.
+   */
+  StreamIdentificationTable table = 1;
+
+  /*
+   * Operational statistics.
+   *
+   * Normally populated by telemetry/status rather than configuration.
+   */
+  StreamIdentificationStatistics statistics = 2;
+
+  /*
+   * CNC/application-level administrative state.
+   */
+  bool enabled = 3;
+
+  /*
+   * CNC/application-level description.
+   */
+  string description = 4;
+}

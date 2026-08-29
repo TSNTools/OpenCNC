@@ -7,6 +7,7 @@ import (
 
 	"OpenCNC/common/observability"
 	devicemodelregistry "OpenCNC/common/structures/devicemodelregistry"
+	"OpenCNC/common/structures/pcp"
 	"OpenCNC/common/structures/topology"
 	topology_config "OpenCNC/common/structures/topology_config"
 	opencncModel "OpenCNC/config_service/opencnc_model"
@@ -88,14 +89,14 @@ func (p *PcpMappingNetconfPlugin) Map(msg proto.Message) (any, error) {
 
 	availableQueues := buildQueueConfigSet(portCfg.GetQueueConfigs())
 	if len(availableQueues) > 0 {
-		for _, entry := range portCfg.GetTrafficClassTable() {
+		for _, entry := range portCfg.GetPcpConfig().GetTrafficClassTable() {
 			if entry == nil {
 				continue
 			}
 			if _, exists := availableQueues[entry.GetEgressQueueId()]; !exists {
 				return nil, fmt.Errorf(
 					"PcpMappingNetconfPlugin: traffic class PCP %d references missing queue_id %d",
-					entry.GetPcp(),
+					entry.GetPriority(),
 					entry.GetEgressQueueId(),
 				)
 			}
@@ -108,13 +109,13 @@ func (p *PcpMappingNetconfPlugin) Map(msg proto.Message) (any, error) {
 	trafficClass := &opencncModel.IETFInterfaces_Interfaces_Interface_BridgePort_TrafficClass{}
 	tcTable := &opencncModel.IETFInterfaces_Interfaces_Interface_BridgePort_TrafficClass_TrafficClassTable{}
 
-	for _, entry := range portCfg.GetTrafficClassTable() {
+	for _, entry := range portCfg.GetPcpConfig().GetTrafficClassTable() {
 		if entry == nil {
 			continue
 		}
 
 		queue := uint8(entry.GetEgressQueueId())
-		switch uint8(entry.GetPcp()) {
+		switch uint8(entry.GetPriority()) {
 		case 0:
 			priorityRegeneration.Priority0 = ygot.Uint8(queue)
 			tcTable.Priority0 = ygot.Uint8(queue)
@@ -142,7 +143,7 @@ func (p *PcpMappingNetconfPlugin) Map(msg proto.Message) (any, error) {
 		}
 	}
 
-	if n := inferNumberOfTrafficClasses(portCfg.GetTrafficClassTable(), portCfg.GetQueueConfigs()); n > 0 {
+	if n := inferNumberOfTrafficClasses(portCfg.GetPcpConfig().GetTrafficClassTable(), portCfg.GetQueueConfigs()); n > 0 {
 		tcTable.NumberOfTrafficClasses = ygot.Uint8(n)
 	}
 	trafficClass.TrafficClassTable = tcTable
@@ -345,7 +346,7 @@ func buildQueueConfigSet(queueConfigs []*topology_config.QueueConfig) map[uint32
 	return set
 }
 
-func inferNumberOfTrafficClasses(entries []*topology_config.TrafficClassTableEntry, queueConfigs []*topology_config.QueueConfig) uint8 {
+func inferNumberOfTrafficClasses(entries []*pcp.TrafficClassMappingEntry, queueConfigs []*topology_config.QueueConfig) uint8 {
 	queueSet := make(map[uint32]struct{})
 	for _, e := range entries {
 		if e == nil {

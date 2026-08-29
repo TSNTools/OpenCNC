@@ -4,6 +4,7 @@ import (
 	"log"
 
 	"OpenCNC/common/structures/credentials"
+	"OpenCNC/common/structures/pcp"
 	"OpenCNC/common/structures/qbv"
 	"OpenCNC/common/structures/topology"
 	topology_config "OpenCNC/common/structures/topology_config"
@@ -117,10 +118,13 @@ var nodecfg = &topology_config.NodeConfig{
 			PcpMappingEnabled: proto.Bool(true),
 			DefaultPriority:   proto.Uint32(0),
 			DefaultVlanId:     proto.Uint32(1),
-			TrafficClassTable: []*topology_config.TrafficClassTableEntry{
-				{Pcp: 7, EgressQueueId: 0},
-				{Pcp: 5, EgressQueueId: 1},
-				{Pcp: 0, EgressQueueId: 7},
+			PcpConfig: &pcp.PcpPortConfig{
+				TrafficClassTable: []*pcp.TrafficClassMappingEntry{
+					{Priority: 0, EgressQueueId: 0},
+					{Priority: 4, EgressQueueId: 4},
+					{Priority: 5, EgressQueueId: 5},
+					{Priority: 7, EgressQueueId: 7},
+				},
 			},
 			QueueConfigs: []*topology_config.QueueConfig{
 				{QueueId: 0, MaxFrameSize: 512, ShaperRateBps: 1000000000},

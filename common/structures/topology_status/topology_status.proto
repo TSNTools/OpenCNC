@@ -4,6 +4,8 @@ package topology_status;
 
 option go_package = "/topology_status";
 
+import "common/structures/stp/stp_status.proto";
+
 /*
  * Runtime status of nodes, ports, and links.
  * Populated via telemetry or network monitoring agents.
@@ -21,6 +23,9 @@ message NodeStatus {
 
   uint64 timestamp_ns = 3;            // Snapshot capture time (nanoseconds since epoch)
   string reason = 4;                  // Optional descriptive reason for node status or alerts
+
+  
+  optional stp_status.BridgeStpStatus stp = 5; // Operational STP/RSTP/MSTP status for this node, when applicable.
 }
 
 message PortStatus {
@@ -38,6 +43,8 @@ message PortStatus {
   string reason = 9;                  // Optional description for port status changes or alerts
   
   repeated QueueStatus queues = 10;  // TO CHECK
+  
+  optional stp_status.PortStpStatus stp = 11; // Operational STP/RSTP/MSTP status for this port.
 }
 
 message LinkStatus {

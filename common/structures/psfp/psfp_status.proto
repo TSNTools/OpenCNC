@@ -2,7 +2,9 @@ syntax = "proto3";
 
 package psfp_status;
 
-import "syncdiag.proto";
+option go_package = "/psfp";
+
+import "common/structures/sync/syncdiag.proto";
 
 /*
  * PSFP Runtime Status Model

@@ -2,13 +2,17 @@ syntax = "proto3";
 
 package tsn.stream;
 
+option go_package = "/stream_status";
+
+import "common/structures/stream/stream.proto";
+
 /*
  * Runtime status information for a TSN stream.
  * Reflects real-time monitoring data, errors, and health metrics.
  */
 
 message StreamState {
-  StreamID stream_id = 1;  // Reference to the unique stream identifier
+  .stream.StreamId stream_id = 1;  // Reference to the unique stream identifier
 
   uint64 accumulated_latency_ns = 2;  // Total latency accumulated along the stream path (in nanoseconds)
   uint64 jitter_ns = 3;                // Jitter observed on the stream (in nanoseconds)

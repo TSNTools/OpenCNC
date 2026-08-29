@@ -1,102 +1,448 @@
 syntax = "proto3";
 
-package psfp;
+package tsn.psfp;
+
+option go_package = "OpenCNC/common/structures/psfp;psfp";
 
 /*
- * Per-Stream Filtering and Policing (PSFP) Configuration
- * Based on IEEE 802.1Qci (2022) and aligned with Annex F YANG model.
- * 
- * References:
- * - Clause 8.6.5.1: Stream filter components (Match, Gate, Meter)
- * - Annex F: YANG modules (ieee802-dot1q-stream-filters-gates)
+ * Per-Stream Filtering and Policing (PSFP)
+ *
+ * Source of truth:
+ *
+ *   IEEE Std 802.1Q-2022
+ *
+ * Primary references:
+ *
+ *   - Clause 8.6.5   Per-Stream Filtering and Policing
+ *   - Clause 8.6.5.1 Stream Filter
+ *   - Clause 8.6.5.2 Stream Gate
+ *   - Clause 8.6.5.3 Maximum SDU Size Filtering
+ *   - Clause 12.31  Stream Filters and Stream Gates managed objects
+ *
+ * YANG reference:
+ *
+ *   ieee802-dot1q-stream-filters-gates.yang
+ *
+ * Architectural relationship:
+ *
+ *   Frame
+ *     |
+ *     v
+ *   Stream Identification
+ *     |
+ *     | stream_handle
+ *     v
+ *   PSFP Stream Filter
+ *     |
+ *     +--> Maximum SDU Size filtering
+ *     |
+ *     +--> Stream Gate
+ *     |
+ *     +--> Flow Meter / policing
+ *
+ * Stream identification is intentionally NOT modeled here.
+ * The stream_handle consumed by PSFP is produced by the
+ * IEEE 802.1CB Stream Identification functionality.
  */
 
-// Match criteria for identifying frames (Clause 8.6.5.1)
-message MatchCriteria {
-  optional uint32 vlan_id = 1;         // VLAN ID from 802.1Q tag
-  optional uint32 priority = 2;        // PCP: Priority Code Point (0–7)
-  optional string dst_mac = 3;         // Destination MAC address
-  optional string src_mac = 4;         // Source MAC address (future expansion)
-  optional string ethertype = 5;       // Ethertype match (e.g., 0x0800 for IPv4)
-  optional string ingress_port_id = 6; // Optional: ingress port match
+
+/* ========================================================================= */
+/* Common PSFP types                                                         */
+/* ========================================================================= */
+
+/*
+ * Priority specification used by PSFP.
+ *
+ * IEEE 802.1Q defines the priority specification as either:
+ *
+ *   - a specific priority value 0..7
+ *   - wildcard, matching any priority
+ *
+ * Reference:
+ *   IEEE 802.1Q-2022, 8.6.5.2
+ *   ieee802-dot1q-stream-filters-gates.yang priority-spec-type
+ */
+enum PrioritySpecification {
+  PRIORITY_SPECIFICATION_UNSPECIFIED = 0;
+
+  PRIORITY_0 = 1;
+  PRIORITY_1 = 2;
+  PRIORITY_2 = 3;
+  PRIORITY_3 = 4;
+  PRIORITY_4 = 5;
+  PRIORITY_5 = 6;
+  PRIORITY_6 = 7;
+  PRIORITY_7 = 8;
+
+  PRIORITY_WILDCARD = 9;
 }
 
-// Defines rules for frame validation and exceed behavior
-message FilterSpecification {
-  MatchCriteria match = 1;
-  uint32 max_sdu_size = 2;        // Max allowed frame size (bytes)
-  bool block_on_exceed = 3;       // If true, block entire stream after violation
+
+/*
+ * Internal Priority Value (IPV) specification used by a Stream Gate.
+ *
+ * The IPV is either:
+ *
+ *   - null
+ *   - an internal priority value 0..7
+ *
+ * If null, the frame's existing priority is used to determine
+ * the traffic class.
+ *
+ * If a priority is specified, that internal priority is used
+ * instead.
+ *
+ * Reference:
+ *   IEEE 802.1Q-2022, 8.6.5.2
+ */
+enum InternalPriorityValue {
+  INTERNAL_PRIORITY_VALUE_UNSPECIFIED = 0;
+
+  IPV_0 = 1;
+  IPV_1 = 2;
+  IPV_2 = 3;
+  IPV_3 = 4;
+  IPV_4 = 5;
+  IPV_5 = 6;
+  IPV_6 = 7;
+  IPV_7 = 8;
+
+  IPV_NULL = 9;
 }
 
-// Describes a single gate control entry for stream gating
-message GateControlEntry {
-  uint64 time_interval_ns = 1;       // Slot duration in nanoseconds
-  GateState gate_state = 2;          // Gate open/closed state for this slot
 
-  // Priority override during this slot.
-  // Matches "internal priority" from Clause 8.6.5.1 and YANG "priority-spec"
-  uint32 priority_override = 3;      // Queue priority to assign during slot (e.g., 0–7)
+/*
+ * Administrative Stream Gate state.
+ *
+ * Reference:
+ *   IEEE 802.1Q-2022, 12.31.3.2.1
+ */
+enum StreamGateState {
+  STREAM_GATE_STATE_UNSPECIFIED = 0;
+
+  STREAM_GATE_CLOSED = 1;
+  STREAM_GATE_OPEN = 2;
 }
 
-// Gate control instance for a stream
-message StreamGateInstance {
-  string name = 1; // Unique identifier for this gate instance
 
-  // Initial gate states bitmap (LSB = TC0). Follows 802.1Qci Annex F YANG
-  bytes admin_gate_states = 2;
+/* ========================================================================= */
+/* Stream Handle Specification                                               */
+/* ========================================================================= */
 
-  repeated GateControlEntry gate_control_list = 3;
+/*
+ * Specifies which Stream Handle a Stream Filter applies to.
+ *
+ * IEEE 802.1Q allows:
+ *
+ *   - a specific stream_handle
+ *   - wildcard, matching any stream
+ *
+ * IMPORTANT:
+ *
+ * stream_handle is produced by Stream Identification.
+ * PSFP does not independently identify the frame.
+ *
+ * Reference:
+ *   IEEE 802.1Q-2022, 12.31.2.2
+ */
+message StreamHandleSpecification {
 
-  // Optional scheduling parameters (aligned with QBV/Qci YANG)
-  uint64 base_time_ns = 4;      // Reference start time of schedule
-  uint64 cycle_time_ns = 5;     // Cycle duration (nanoseconds)
+  oneof value {
 
-  string description = 6;       // Human-readable explanation
+    /*
+     * Specific local stream handle.
+     */
+    uint32 stream_handle = 1;
+
+    /*
+     * Wildcard matching any stream handle.
+     *
+     * Presence of this field represents the IEEE wildcard value.
+     */
+    bool wildcard = 2;
+  }
 }
 
-// Gate slot state (Clause 8.6.5.1)
-enum GateState {
-  GATE_STATE_UNSPECIFIED = 0;
-  OPEN = 1;
-  CLOSED = 2;
-}
 
-// Metering: defines CIR/PIR and actions when limits are exceeded
-message FlowMeterInstance {
-  string name = 1;                  // Unique meter instance name
+/* ========================================================================= */
+/* Stream Filter Instance                                                    */
+/* ========================================================================= */
 
-  uint64 cir = 2;                   // Committed Information Rate (bps)
-  uint64 cbs = 3;                   // Committed Burst Size (bytes)
-
-  ExceededAction exceeded_action = 4; // Action on exceeding committed rate
-
-  uint64 pir = 5;                   // Peak Information Rate (bps)
-  uint64 pbs = 6;                   // Peak Burst Size (bytes)
-
-  string description = 7;          // Optional notes or comments
-}
-
-enum ExceededAction {
-  ACTION_UNSPECIFIED = 0;
-  DROP = 1;    // Drop packets
-  MARK = 2;    // Mark packets as exceeded (e.g., color marking)
-  POLICE = 3;  // Apply further shaping/policing
-}
-
-// Complete stream filter instance (Clause 8.6.5.1)
+/*
+ * Stream Filter Instance.
+ *
+ * A Stream Filter Instance determines which filtering and gating
+ * behavior applies to a received frame.
+ *
+ * Selection is based on:
+ *
+ *   stream_handle-spec
+ *   priority-spec
+ *
+ * If multiple entries match, the entry with the earliest position
+ * in the ordered Stream Filter Instance Table is selected.
+ *
+ * In the IEEE YANG model the integer stream-filter-instance-id
+ * determines this ordering: smaller values appear earlier.
+ *
+ * Reference:
+ *   IEEE 802.1Q-2022, 8.6.5.1
+ *   IEEE 802.1Q-2022, 12.31.2
+ */
 message StreamFilterInstance {
-  uint32 index = 1;                       // Unique per device
 
-  FilterSpecification filter_spec = 2;   // Identification + validation rules
+  /*
+   * Stream Filter Instance ID.
+   *
+   * This is also the ordering value:
+   * lower IDs appear earlier in the ordered list.
+   *
+   * Reference:
+   *   IEEE 802.1Q-2022, 12.31.2.1
+   */
+  uint32 stream_filter_instance_id = 1;
 
-  string gate_instance_name = 3;         // Reference to StreamGateInstance
-  string meter_instance_name = 4;        // Reference to FlowMeterInstance
+  /*
+   * Stream Handle selection criterion.
+   */
+  StreamHandleSpecification stream_handle_spec = 2;
 
-  string egress_queue_id = 5;           // egress queue id == traffic class
+  /*
+   * Priority selection criterion.
+   *
+   * Either priority 0..7 or wildcard.
+   */
+  PrioritySpecification priority_spec = 3;
 
-  string ingress_port_id = 6;            // Apply this filter on ingress port
+  /*
+   * Maximum SDU size accepted by this filter.
+   *
+   * Value 0 means that any SDU size is accepted.
+   *
+   * Units: octets.
+   *
+   * Reference:
+   *   IEEE 802.1Q-2022, 8.6.5.3.1
+   */
+  uint32 maximum_sdu_size = 4;
 
-  bool enabled = 7;                      // Defaults to true
+  /*
+   * Enables permanent stream blocking when a frame exceeds
+   * maximum_sdu_size.
+   *
+   * When enabled, an oversize frame causes
+   * stream_blocked_due_to_oversize_frame to become true.
+   *
+   * Reference:
+   *   IEEE 802.1Q-2022, 8.6.5.3.1
+   */
+  bool stream_blocked_due_to_oversize_frame_enabled = 5;
 
-  string description = 8;                // Optional human-readable comment
+  /*
+   * Operational state indicating that the stream has been blocked
+   * because an initial frame exceeded maximum_sdu_size.
+   *
+   * This is operational state rather than the configuration trigger.
+   *
+   * The value may be administratively reset to false.
+   *
+   * Reference:
+   *   IEEE 802.1Q-2022, 8.6.5.3.1
+   */
+  bool stream_blocked_due_to_oversize_frame = 6;
+
+  /*
+   * Stream Gate associated with this Stream Filter.
+   *
+   * A Stream Filter can reference one Stream Gate.
+   *
+   * Multiple Stream Filters may reference the same Stream Gate.
+   *
+   * This is the protobuf equivalent of the IEEE YANG
+   * stream-gate-ref leaf.
+   */
+  uint32 stream_gate_instance_id = 7;
+}
+
+
+/* ========================================================================= */
+/* Stream Gate                                                               */
+/* ========================================================================= */
+
+/*
+ * Stream Gate Instance.
+ *
+ * A Stream Gate controls whether frames associated with the selected
+ * Stream Filter are permitted to pass.
+ *
+ * The IEEE 802.1Q-2022 Stream Filters/Gates YANG model exposes the
+ * administrative gate state and administrative IPV.
+ *
+ * Reference:
+ *   IEEE 802.1Q-2022, 8.6.5.2
+ *   IEEE 802.1Q-2022, 12.31.3
+ */
+message StreamGateInstance {
+
+  /*
+   * Stream Gate Instance ID.
+   *
+   * Referenced by StreamFilterInstance.stream_gate_instance_id.
+   */
+  uint32 stream_gate_instance_id = 1;
+
+  /*
+   * Enables the Stream Gate state machines.
+   *
+   * IEEE default is false.
+   *
+   * Reference:
+   *   IEEE 802.1Q-2022, 8.6.9.4.14
+   */
+  bool gate_enabled = 2;
+
+  /*
+   * Administrative gate state.
+   *
+   * IEEE default is OPEN.
+   */
+  StreamGateState admin_gate_state = 3;
+
+  /*
+   * Administrative Internal Priority Value.
+   *
+   * IEEE default is NULL.
+   */
+  InternalPriorityValue admin_ipv = 4;
+}
+
+
+/* ========================================================================= */
+/* Stream Filter and Gate capabilities                                        */
+/* ========================================================================= */
+
+/*
+ * Implementation capabilities for PSFP Stream Filters and Gates.
+ *
+ * These correspond to the read-only max-* objects in the IEEE YANG
+ * model.
+ *
+ * Reference:
+ *   IEEE 802.1Q-2022, 12.31.1.1 and 12.31.1.2
+ */
+message PsfpCapabilities {
+
+  /*
+   * Maximum number of Stream Filter Instances supported by the
+   * Bridge component.
+   */
+  uint32 max_stream_filter_instances = 1;
+
+  /*
+   * Maximum number of Stream Gate Instances supported by the
+   * Bridge component.
+   */
+  uint32 max_stream_gate_instances = 2;
+}
+
+
+/* ========================================================================= */
+/* Operational counters                                                      */
+/* ========================================================================= */
+
+/*
+ * PSFP Stream Filter counters.
+ *
+ * These are intentionally kept separate from configuration.
+ *
+ * The exact counter set exposed by a particular implementation may
+ * depend on the managed objects supported by the bridge.
+ */
+message StreamFilterCounters {
+
+  /*
+   * Number of frames associated with this Stream Filter.
+   */
+  uint64 frames = 1;
+
+  /*
+   * Number of frames discarded because they exceeded
+   * maximum_sdu_size.
+   */
+  uint64 oversize_frames = 2;
+
+  /*
+   * Number of frames discarded while the stream was blocked because
+   * of an oversize frame.
+   */
+  uint64 blocked_frames = 3;
+
+  /*
+   * Number of frames discarded by the Stream Gate.
+   */
+  uint64 gate_closed_frames = 4;
+
+  /*
+   * Number of frames discarded by policing.
+   */
+  uint64 policed_frames = 5;
+}
+
+
+/*
+ * Operational PSFP state associated with a Stream Filter.
+ */
+message StreamFilterOperationalState {
+
+  uint32 stream_filter_instance_id = 1;
+
+  StreamFilterCounters counters = 2;
+}
+
+
+/* ========================================================================= */
+/* Complete PSFP configuration                                               */
+/* ========================================================================= */
+
+/*
+ * Complete PSFP configuration for a Bridge component.
+ *
+ * This message contains:
+ *
+ *   - Stream Filter Instances
+ *   - Stream Gate Instances
+ *   - implementation capabilities
+ *
+ * Flow Meter configuration is intentionally not duplicated here.
+ * It should be modeled according to the corresponding IEEE
+ * Bandwidth Profile / Flow Meter managed objects when the policing
+ * portion of PSFP is added.
+ */
+message PsfpConfiguration {
+
+  /*
+   * Stream Filter Instance Table.
+   *
+   * Entries are ordered by stream_filter_instance_id.
+   */
+  repeated StreamFilterInstance stream_filter_instances = 1;
+
+  /*
+   * Stream Gate Instance Table.
+   */
+  repeated StreamGateInstance stream_gate_instances = 2;
+
+  /*
+   * Bridge implementation capabilities.
+   *
+   * Normally read-only / discovered from the device.
+   */
+  PsfpCapabilities capabilities = 3;
+
+  /*
+   * Operational state.
+   *
+   * Normally populated by telemetry/status rather than configuration.
+   */
+  repeated StreamFilterOperationalState operational_state = 4;
 }

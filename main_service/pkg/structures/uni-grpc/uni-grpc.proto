@@ -1,0 +1,43 @@
+syntax = "proto3";
+
+package uni_grpc;
+
+option go_package = "OpenCNC/main_service/pkg/structures/uni_grpc";
+
+service UniService {
+    rpc AddStream(AddStreamRequest) returns (AddStreamResponse);
+}
+
+message AddStreamRequest {
+    string id = 1;
+    string name = 2;
+
+    string talker_node_id = 3;
+    repeated string listener_node_ids = 4;
+
+    string traffic_type = 5;
+    string rank = 6;
+
+    string destination_mac = 7;
+    string source_mac = 8;
+
+    uint32 vlan_id = 9;
+
+    uint64 interval_ns = 10;
+    uint64 max_frame_size = 11;
+    uint64 max_frames_per_interval = 12;
+
+    uint64 max_latency_ns = 13;
+    uint64 max_jitter_ns = 14;
+
+    uint64 min_transmit_offset_ns = 15;
+    uint64 max_transmit_offset_ns = 16;
+
+    uint32 num_seamless_trees = 17;
+}
+
+message AddStreamResponse {
+    bool success = 1;
+    string message = 2;
+    string configuration_id = 3;
+}

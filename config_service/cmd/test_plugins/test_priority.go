@@ -4,6 +4,7 @@ import (
 	"log"
 
 	"OpenCNC/common/structures/credentials"
+	"OpenCNC/common/structures/pcp"
 	topology "OpenCNC/common/structures/topology"
 	topology_config "OpenCNC/common/structures/topology_config"
 	managementSessions "OpenCNC/config_service/pkg/managementSessions"
@@ -42,11 +43,13 @@ func TestPriorityPlugin_tttech() {
 		PortId:            "sw0p3",
 		DefaultPriority:   proto.Uint32(0),
 		PcpMappingEnabled: proto.Bool(true),
-		TrafficClassTable: []*topology_config.TrafficClassTableEntry{
-			{Pcp: 0, EgressQueueId: 0},
-			{Pcp: 4, EgressQueueId: 4},
-			{Pcp: 5, EgressQueueId: 5},
-			{Pcp: 7, EgressQueueId: 7},
+		PcpConfig: &pcp.PcpPortConfig{
+			TrafficClassTable: []*pcp.TrafficClassMappingEntry{
+				{Priority: 0, EgressQueueId: 0},
+				{Priority: 4, EgressQueueId: 4},
+				{Priority: 5, EgressQueueId: 5},
+				{Priority: 7, EgressQueueId: 7},
+			},
 		},
 		QueueConfigs: []*topology_config.QueueConfig{
 			{QueueId: 0},

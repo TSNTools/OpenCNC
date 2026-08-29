@@ -2,14 +2,13 @@ package main
 
 import (
 	"fmt"
-	"time"
+	"log"
 
 	"OpenCNC/tsn_service/pkg/internalOptimizer"
 
 	//	"git.cs.kau.se/hamzchah/opencnc_kafka-exporter/logger/pkg/logger"
 
 	server "OpenCNC/tsn_service/pkg/notificationServer"
-	store "OpenCNC/tsn_service/pkg/storewrapper"
 )
 
 //var log = logger.GetLogger()
@@ -18,7 +17,7 @@ func main() {
 
 	// Create default schedule and store it in k/v store
 	if err := internalOptimizer.CreateDefaultSchedule(); err != nil {
-		//log.Fatalf("Failed creating default schedule: %v", err)
+		log.Fatalf("Failed creating default schedule: %v", err)
 		return
 	}
 	fmt.Println("Lets start the server!")
@@ -29,13 +28,10 @@ func main() {
 	go server.CreateServer("tcp", ":5150")
 	fmt.Println("Created and listening to 5150!")
 
-	go server.CreateNotificationServiceServer("tcp", ":5151")
-
-	fmt.Println("Created and listening to 5151!")
-
 	select {}
 }
 
+/*
 func test() {
 	time.Sleep(time.Second * 90)
 
@@ -47,3 +43,4 @@ func test() {
 
 	store.StoreDeviceConfig("192.168.0.2", tree)
 }
+*/

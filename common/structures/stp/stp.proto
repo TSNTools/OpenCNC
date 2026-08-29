@@ -5,83 +5,734 @@ package stp;
 option go_package = "OpenCNC/common/structures/stp;stp";
 
 /*
- * STP (Spanning Tree Protocol) configuration.
- * Reference: IEEE 802.1Q-2022 Clause 13 (Spanning Tree and VLAN Bridges)
+ * ============================================================================
+ * STP / RSTP / MSTP ADMINISTRATIVE CONFIGURATION
+ * ============================================================================
  *
- * Models the configuration and state of spanning tree protocol instances and
- * per-port spanning tree roles and states on bridges.
+ * This file contains ADMINISTRATIVE configuration only.
+ *
+ * Runtime / operational state is defined in:
+ *
+ *   common/structures/stp/stp_status.proto
+ *
+ * Standard reference:
+ *
+ *   IEEE 802.1Q-2022, Clause 13
+ *
+ * Supported operation:
+ *
+ *   - STP
+ *   - RSTP
+ *   - MSTP
+ *   - CIST
+ *   - MSTIs
+ *
+ * Domain separation:
+ *
+ *   stp.proto
+ *       -> what STP should be configured to do
+ *
+ *   stp_status.proto
+ *       -> what STP is currently doing
+ *
+ *   topology_config.proto
+ *       -> associates STP configuration with topology bridges/ports
+ *
+ * IMPORTANT:
+ *
+ * StpConfiguration contains BRIDGE-LEVEL configuration.
+ *
+ * StpPortConfiguration contains PORT-LEVEL configuration.
+ *
+ * This allows topology_config.proto to attach the complete STP
+ * configuration independently to a bridge and to each port.
  */
 
-message StpConfiguration {
-  // Clause 13.5.1 — Global Bridge Control
-  // Enable or disable STP on the bridge
-  optional bool stp_enabled = 1;
-
-  // Clause 13.25 — Multiple Spanning Tree Instances (MSTIs)
-  repeated SpanningTreeInstance spanning_tree_instances = 2;
-}
 
 /*
- * BridgeMstConfig captures bridge MST resource bindings that are used together
- * with VLAN VID->FID mappings:
- * - topology_config.VidToFidMapping maps VID -> FID
- * - BridgeMstConfig maps FID -> MSTID
+ * ============================================================================
+ * Top-level bridge STP configuration
+ * ============================================================================
  */
-message BridgeMstConfig {
-  repeated uint32 supported_mst_ids = 1;
-  repeated FidToMstidMapping fid_to_mstid_mappings = 2;
 
-  // Optional grouped/allocation representation.
-  repeated FidRangeToMstidAllocation fid_to_mstid_allocations = 3;
+/*
+ * Complete administrative STP configuration for one bridge.
+ *
+ * This message intentionally does NOT contain per-port configuration.
+ *
+ * Per-port configuration is represented by StpPortConfiguration and is
+ * attached to topology_config.PortConfig.
+ */
+message StpConfiguration {
+
+  /*
+   * Administrative enable/disable of the STP subsystem.
+   *
+   * This is the authoritative STP enable state in the STP configuration
+   * domain.
+   *
+   * topology_config.proto may expose a simple stp_enabled control as a
+   * convenient topology-level switch, but all STP parameters remain here.
+   */
+  optional bool stp_enabled = 1;
+
+  /*
+   * STP protocol variant.
+   *
+   * STP  = legacy Spanning Tree Protocol
+   * RSTP = Rapid Spanning Tree Protocol
+   * MSTP = Multiple Spanning Tree Protocol
+   */
+  StpProtocolMode protocol_mode = 2;
+
+  /*
+   * Common bridge-level STP configuration.
+   */
+  StpBridgeConfiguration bridge = 3;
+
+  /*
+   * MST configuration.
+   *
+   * Required when protocol_mode == STP_PROTOCOL_MSTP.
+   */
+  optional BridgeMstConfig mst_config = 4;
+
+  /*
+   * CIST / MSTI bridge configurations.
+   *
+   * msti_id = 0 represents the CIST.
+   *
+   * msti_id > 0 represents an MSTI.
+   *
+   * For STP/RSTP, normally only the CIST configuration is relevant.
+   */
+  repeated SpanningTreeInstance instances = 5;
 }
 
-message FidToMstidMapping {
-  uint32 fid = 1;
-  uint32 mst_id = 2;
+
+/*
+ * ============================================================================
+ * Protocol mode
+ * ============================================================================
+ */
+
+/*
+ * STP protocol operation of the bridge.
+ */
+enum StpProtocolMode {
+  STP_PROTOCOL_UNSPECIFIED = 0;
+
+  /*
+   * Legacy Spanning Tree Protocol operation.
+   *
+   * IEEE 802.1D behavior as incorporated into IEEE 802.1Q.
+   */
+  STP_PROTOCOL_STP = 1;
+
+  /*
+   * Rapid Spanning Tree Protocol.
+   */
+  STP_PROTOCOL_RSTP = 2;
+
+  /*
+   * Multiple Spanning Tree Protocol.
+   *
+   * Includes the CIST and zero or more MSTIs.
+   */
+  STP_PROTOCOL_MSTP = 3;
 }
 
-message FidRangeToMstidAllocation {
-  repeated uint32 fids = 1;
-  uint32 mst_id = 2;
+
+/*
+ * ============================================================================
+ * Bridge-level configuration
+ * ============================================================================
+ */
+
+/*
+ * Common bridge-level administrative STP configuration.
+ */
+message StpBridgeConfiguration {
+
+  /*
+   * Bridge priority used for root bridge selection.
+   *
+   * IEEE 802.1Q bridge priority is represented in increments of 4096.
+   *
+   * Typical valid values:
+   *
+   *   0, 4096, 8192, ... 61440
+   *
+   * The remaining Bridge Identifier information is formed from the
+   * system ID extension and bridge MAC address.
+   */
+  uint32 bridge_priority = 1;
+
+  /*
+   * Administrative bridge MAC address.
+   *
+   * When empty, the implementation derives the bridge address from
+   * the system/bridge MAC address.
+   *
+   * Expected length when specified: 6 bytes.
+   */
+  bytes bridge_address = 2;
+
+  /*
+   * STP/RSTP hello time in seconds.
+   *
+   * IEEE default: 2 seconds.
+   */
+  uint32 hello_time_seconds = 3;
+
+  /*
+   * Maximum age of spanning-tree information in seconds.
+   *
+   * Relevant to STP/RSTP/CIST operation.
+   *
+   * IEEE default: 20 seconds.
+   */
+  uint32 max_age_seconds = 4;
+
+  /*
+   * Forward delay in seconds.
+   *
+   * Primarily relevant to legacy STP state transitions.
+   *
+   * IEEE default: 15 seconds.
+   */
+  uint32 forward_delay_seconds = 5;
+
+  /*
+   * CIST maximum hop count.
+   *
+   * Used by MSTP to bound propagation of CIST information.
+   *
+   * Common valid range: 6..40.
+   *
+   * Typical default: 20.
+   */
+  uint32 max_hops = 6;
+
+  /*
+   * Restrict this bridge from becoming the root of the spanning tree.
+   */
+  bool restricted_role = 7;
+
+  /*
+   * Restrict topology-change propagation.
+   */
+  bool restricted_tcn = 8;
 }
 
-message SpanningTreeInstance {
-  string instance_id = 1;      // e.g., "cist", "mst0", "mst1"
-  string root_bridge_id = 2;   // Bridge ID for this MSTI root
 
-  // Per-port state/configuration within this instance
-  repeated StpPortState port_states = 3;
-}
+/*
+ * ============================================================================
+ * Port-level configuration
+ * ============================================================================
+ */
 
-message StpPortState {
+/*
+ * Complete administrative STP configuration for ONE bridge port.
+ *
+ * This is intentionally a standalone message so topology_config.proto can
+ * attach it directly to a PortConfig:
+ *
+ *   optional stp.StpPortConfiguration stp = ...;
+ *
+ * The configuration includes:
+ *
+ *   - common/CIST port configuration
+ *   - edge-port behavior
+ *   - BPDU behavior
+ *   - path cost
+ *   - port priority
+ *   - MSTI-specific overrides
+ */
+message StpPortConfiguration {
+
+  /*
+   * OpenCNC topology Port.id.
+   */
   string port_id = 1;
 
-  // Port role within the STP instance (Clause 13.25.5)
-  PortRole role = 2;
+  /*
+   * Administrative port priority.
+   *
+   * Normally encoded in increments of 16.
+   *
+   * Typical range: 0..240.
+   */
+  uint32 port_priority = 2;
 
-  // Port state within the STP instance (Clause 13.25.6)
-  PortState state = 3;
+  /*
+   * Administrative path cost.
+   *
+   * A value of zero may be interpreted by the implementation as
+   * automatic/default cost calculation.
+   */
+  uint32 path_cost = 3;
 
-  // Indicates if this port is currently forwarding frames.
-  // This is often derived from state but provided explicitly for convenience.
-  bool forwarding = 4;
+  /*
+   * Administrative edge-port setting.
+   *
+   * Edge ports are normally connected to end stations rather than
+   * other bridges.
+   */
+  bool edge_port = 4;
+
+  /*
+   * Administrative MAC operation enable.
+   */
+  bool mac_enabled = 5;
+
+  /*
+   * Prevent this port from becoming a root port.
+   *
+   * Corresponds to restrictedRole behavior.
+   */
+  bool restricted_role = 6;
+
+  /*
+   * Restrict topology-change propagation through this port.
+   *
+   * Corresponds to restrictedTcn behavior.
+   */
+  bool restricted_tcn = 7;
+
+  /*
+   * Allow protocol migration between STP/RSTP/MSTP operation.
+   */
+  bool protocol_migration = 8;
+
+  /*
+   * Administrative BPDU reception enable.
+   */
+  bool bpdu_rx_enabled = 9;
+
+  /*
+   * Administrative BPDU transmission enable.
+   */
+  bool bpdu_tx_enabled = 10;
+
+  /*
+   * Indicates that this port operates as an L2 gateway port.
+   *
+   * Retained for compatibility with the existing implementation.
+   */
+  bool l2_gateway_port = 11;
+
+  /*
+   * CIST pseudo-root identifier.
+   *
+   * Retained for compatibility with the existing implementation.
+   *
+   * The legacy implementation expects exactly 8 bytes.
+   *
+   * This is implementation-specific rather than a primary IEEE
+   * configuration parameter.
+   */
+  bytes pseudo_root_id = 12;
+
+  /*
+   * Administrative point-to-point link mode.
+   */
+  PointToPointMode point_to_point = 13;
+
+  /*
+   * BPDU guard behavior.
+   *
+   * Common implementation-specific protection for edge ports.
+   */
+  bool bpdu_guard = 14;
+
+  /*
+   * BPDU filtering behavior.
+   *
+   * Common implementation-specific edge-port feature.
+   */
+  bool bpdu_filter = 15;
+
+  /*
+   * MSTI-specific configuration for this port.
+   *
+   * Each entry overrides the common/CIST port priority/path cost for
+   * the specified MSTI where applicable.
+   */
+  repeated MstiPortConfiguration msti_configurations = 16;
 }
 
-// Port roles according to Clause 13.25.5
+
+/*
+ * Administrative point-to-point configuration.
+ */
+enum PointToPointMode {
+  POINT_TO_POINT_UNSPECIFIED = 0;
+
+  /*
+   * Determine the point-to-point status automatically.
+   */
+  POINT_TO_POINT_AUTO = 1;
+
+  /*
+   * Treat the link as point-to-point.
+   */
+  POINT_TO_POINT_TRUE = 2;
+
+  /*
+   * Treat the link as a shared link.
+   */
+  POINT_TO_POINT_FALSE = 3;
+}
+
+
+/*
+ * ============================================================================
+ * Spanning-tree instance configuration
+ * ============================================================================
+ */
+
+/*
+ * Administrative configuration for one spanning-tree instance.
+ *
+ * msti_id:
+ *
+ *   0      = CIST
+ *   1..4094 = MSTI
+ *
+ * For STP/RSTP operation, normally only the CIST instance is relevant.
+ *
+ * For MSTP, the bridge-level StpConfiguration contains the CIST and
+ * MSTI bridge configuration.
+ */
+message SpanningTreeInstance {
+
+  /*
+   * Canonical MST instance identifier.
+   *
+   * 0 = CIST
+   * 1..4094 = MSTI
+   */
+  uint32 msti_id = 1;
+
+  /*
+   * Human-readable instance identifier.
+   *
+   * Examples:
+   *
+   *   "cist"
+   *   "mst1"
+   *   "mst2"
+   *
+   * msti_id remains the authoritative identity.
+   *
+   * Retained for compatibility/convenience with existing OpenCNC code.
+   */
+  string instance_id = 2;
+
+  /*
+   * Administrative bridge priority for this spanning-tree instance.
+   *
+   * Normally encoded in increments of 4096.
+   */
+  uint32 bridge_priority = 3;
+}
+
+
+/*
+ * ============================================================================
+ * MSTI port configuration
+ * ============================================================================
+ */
+
+/*
+ * MSTI-specific administrative configuration for one port.
+ *
+ * This is nested under StpPortConfiguration because MSTI port configuration
+ * belongs to the port domain.
+ *
+ * It corresponds to the existing implementation's MSTP port table:
+ *
+ *   - port priority
+ *   - path cost
+ *   - restricted role
+ */
+message MstiPortConfiguration {
+
+  /*
+   * MSTI identifier to which this configuration applies.
+   *
+   * 1..4094 = MSTI.
+   *
+   * CIST-wide configuration belongs to the parent StpPortConfiguration
+   * and does not need a separate CIST entry here.
+   */
+  uint32 msti_id = 1;
+
+  /*
+   * MSTI-specific port priority.
+   *
+   * Normally encoded in increments of 16.
+   */
+  uint32 port_priority = 2;
+
+  /*
+   * MSTI-specific path cost.
+   */
+  uint32 path_cost = 3;
+
+  /*
+   * Prevent this port from becoming the root port for this MSTI.
+   */
+  optional bool restricted_role = 4;
+}
+
+
+/*
+ * ============================================================================
+ * MST bridge configuration
+ * ============================================================================
+ */
+
+/*
+ * Complete MST configuration for a bridge.
+ *
+ * Contains:
+ *
+ *   - MST Configuration Identifier
+ *   - VLAN/FID -> MSTI mapping
+ *
+ * The MST configuration is bridge-level and therefore belongs inside
+ * StpConfiguration.
+ */
+message BridgeMstConfig {
+
+  /*
+   * IEEE MST Configuration Identifier.
+   *
+   * Bridges with matching MST configuration identity and VLAN-to-MSTI
+   * mapping form an MST region.
+   */
+  MstConfigurationIdentifier configuration_identifier = 1;
+
+  /*
+   * Explicit FID -> MSTI mappings.
+   *
+   * Retained for compatibility with the existing OpenCNC implementation.
+   */
+  repeated FidToMstidMapping fid_to_mstid_mappings = 2;
+
+  /*
+   * Grouped FID -> MSTI representation.
+   *
+   * Retained for compatibility with the existing implementation.
+   *
+   * Implementations should define one representation as authoritative
+   * rather than configuring conflicting values in both.
+   */
+  repeated FidRangeToMstidAllocation fid_to_mstid_allocations = 3;
+
+  /*
+   * VLAN ID -> MSTI mappings.
+   *
+   * This is the preferred representation when the VLAN database is
+   * the source of the MST configuration.
+   *
+   * VLANs not explicitly mapped are normally associated with the CIST.
+   */
+  repeated VidToMstidMapping vid_to_mstid_mappings = 4;
+}
+
+
+/*
+ * ============================================================================
+ * MST Configuration Identifier
+ * ============================================================================
+ */
+
+/*
+ * IEEE MST Configuration Identifier.
+ *
+ * The MST Configuration Identifier consists of:
+ *
+ *   - Configuration Name
+ *   - Revision Level
+ *   - Configuration Format Selector
+ *
+ * The configuration digest is derived from the MST configuration and is
+ * not independently configured here.
+ */
+message MstConfigurationIdentifier {
+
+  /*
+   * MST Configuration Name.
+   *
+   * IEEE allocates 32 octets for this value.
+   *
+   * The existing OpenCNC implementation limits this to 32 characters.
+   */
+  string configuration_name = 1;
+
+  /*
+   * MST Configuration Revision Level.
+   *
+   * IEEE range: 0..65535.
+   */
+  uint32 revision_level = 2;
+
+  /*
+   * MST Configuration Format Selector.
+   *
+   * IEEE MST operation normally uses format selector 0.
+   *
+   * Retained because the existing implementation exposes this field.
+   */
+  uint32 format_selector = 3;
+}
+
+
+/*
+ * ============================================================================
+ * MST mappings
+ * ============================================================================
+ */
+
+/*
+ * Explicit Filtering Database Identifier -> MSTI mapping.
+ *
+ * Retained for compatibility with the existing OpenCNC implementation.
+ */
+message FidToMstidMapping {
+
+  /*
+   * Filtering Database Identifier.
+   */
+  uint32 fid = 1;
+
+  /*
+   * MST instance identifier.
+   *
+   * 0      = CIST
+   * 1..4094 = MSTI
+   */
+  uint32 mst_id = 2;
+}
+
+
+/*
+ * Grouped FID -> MSTI allocation.
+ *
+ * Convenience representation retained from the existing implementation.
+ */
+message FidRangeToMstidAllocation {
+
+  /*
+   * FIDs assigned to the MSTI.
+   */
+  repeated uint32 fids = 1;
+
+  /*
+   * Target MSTI.
+   *
+   * 0 = CIST.
+   */
+  uint32 mst_id = 2;
+}
+
+
+/*
+ * VLAN ID -> MSTI mapping.
+ *
+ * This is the preferred representation when MST configuration is
+ * expressed in terms of VLANs.
+ */
+message VidToMstidMapping {
+
+  /*
+   * VLAN identifier.
+   *
+   * IEEE VLAN IDs are 1..4094.
+   */
+  uint32 vlan_id = 1;
+
+  /*
+   * MST instance identifier.
+   *
+   * 0      = CIST
+   * 1..4094 = MSTI
+   */
+  uint32 mst_id = 2;
+}
+
+
+/*
+ * ============================================================================
+ * Shared STP operational enumerations
+ * ============================================================================
+ *
+ * These enums are schema types shared with stp_status.proto.
+ *
+ * They describe operational state when used by stp_status.proto, but they
+ * do not themselves constitute runtime state.
+ */
+
+
+/*
+ * STP/RSTP/MSTP port roles.
+ */
 enum PortRole {
-  PORT_ROLE_UNSPECIFIED = 0;            // Unknown or not assigned
-  PORT_ROLE_ROOT = 1;                   // Root port
-  PORT_ROLE_DESIGNATED = 2;             // Designated port
-  PORT_ROLE_ALTERNATE = 3;              // Alternate port
-  PORT_ROLE_BACKUP = 4;                 // Backup port
-  PORT_ROLE_MASTER = 5;                 // MSTI master port (Clause 13.27.2)
-  PORT_ROLE_NON_PARTICIPATING = 6;      // Disabled or not participating in STP
+  PORT_ROLE_UNSPECIFIED = 0;
+
+  /*
+   * Root port.
+   */
+  PORT_ROLE_ROOT = 1;
+
+  /*
+   * Designated port.
+   */
+  PORT_ROLE_DESIGNATED = 2;
+
+  /*
+   * Alternate port.
+   */
+  PORT_ROLE_ALTERNATE = 3;
+
+  /*
+   * Backup port.
+   */
+  PORT_ROLE_BACKUP = 4;
+
+  /*
+   * MSTI master port.
+   */
+  PORT_ROLE_MASTER = 5;
+
+  /*
+   * Port is not participating in the spanning tree.
+   */
+  PORT_ROLE_NON_PARTICIPATING = 6;
 }
 
-// Port states according to Clause 13.25.6
+
+/*
+ * STP/RSTP/MSTP port forwarding state.
+ */
 enum PortState {
-  PORT_STATE_UNSPECIFIED = 0;             // Unknown or not assigned
-  PORT_STATE_DISCARDING = 1;              // Not forwarding or learning
-  PORT_STATE_LEARNING = 2;                // Learning MAC addresses but not forwarding
-  PORT_STATE_FORWARDING = 3;              // Forwarding frames
+  PORT_STATE_UNSPECIFIED = 0;
+
+  /*
+   * Not learning and not forwarding.
+   */
+  PORT_STATE_DISCARDING = 1;
+
+  /*
+   * Learning source MAC addresses but not forwarding user frames.
+   */
+  PORT_STATE_LEARNING = 2;
+
+  /*
+   * Forwarding frames.
+   */
+  PORT_STATE_FORWARDING = 3;
 }

@@ -2,7 +2,9 @@ syntax = "proto3";
 
 package tsn.frer_status;
 
-import "tsn/stream.proto";
+option go_package = "/frer";
+
+import "common/structures/stream/stream.proto";
 
 //
 // FRER (Frame Replication and Elimination for Reliability) Runtime State (Clause 8 - Status Group)
@@ -10,7 +12,7 @@ import "tsn/stream.proto";
 
 // Per-stream runtime state (talker, relay, or listener)
 message FrerStreamStatus {
-  tsn.stream.StreamID stream_id = 1;    // Reference to the stream
+  stream.StreamId stream_id = 1;    // Reference to the stream
   string node_id = 2;                    // Node reporting the status
   string port_id = 3;                    // Port reporting the status
 

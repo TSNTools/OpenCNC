@@ -28,7 +28,6 @@ import (
 	moduleregistry "OpenCNC/common/structures/module-registry"
 	"OpenCNC/common/structures/stream"
 	"OpenCNC/common/structures/topology"
-	"OpenCNC/common/structures/topology_config"
 
 	"git.cs.kau.se/hamzchah/opencnc_kafka-exporter/logger/pkg/logger"
 	clientv3 "go.etcd.io/etcd/client/v3"
@@ -310,72 +309,6 @@ func GetModuleRegistry() (*moduleregistry.ModuleRegistry, error) {
 	return mregistry, nil
 }
 
-func GetConfiguration(confId string) (*topology_config.TopologyConfig, error) {
-	// this requires all configurations in the store to be normilized to topology_config.TopologyConfig,
-	//  otherwise it will fail to unmarshal
-	urn := "configurations." + confId
-
-	rawConf, err := GetFromStore(urn)
-	if err != nil {
-		return nil, fmt.Errorf("failed to retrieve configuration %s: %v", confId, err)
-	}
-
-	fmt.Println("Retrieved topology configuration from k/v store")
-
-	var config topology_config.TopologyConfig
-	if err := proto.Unmarshal(rawConf, &config); err != nil {
-		return nil, fmt.Errorf("failed to deserialize topology configuration: %v", err)
-	}
-
-	return &config, nil
-}
-
-/*
-	func GetLastConfiguration() (*schedule.GclConfiguration, string, error) {
-		const prefix = "configurations.tsn-configuration"
-
-		resp, err := getLastFromStoreWithPrefix(prefix)
-		if err != nil {
-			return nil, "", err
-		}
-		if len(resp.Kvs) == 0 {
-			return nil, "", fmt.Errorf("no configurations found")
-		}
-
-		kv := resp.Kvs[0]
-
-		// Convert the key back to your confId (if needed)
-		confId := path.Base(string(kv.Key)) // e.g. "4d8f7c72-f9e3-4d33-8210-3a5437b8a821"
-
-		var config schedule.GclConfiguration
-		if err := proto.Unmarshal(kv.Value, &config); err != nil {
-			return nil, "", fmt.Errorf("failed to unmarshal last config: %v", err)
-		}
-
-		return &config, confId, nil
-	}
-*/
-func StoreConfiguration(cfg *topology_config.TopologyConfig) error {
-	if cfg == nil {
-		return fmt.Errorf("cannot store nil configuration")
-	}
-
-	configBytes, err := proto.Marshal(cfg)
-	if err != nil {
-		return fmt.Errorf("failed to serialize configuration: %w", err)
-	}
-
-	err = SendToStore(
-		configBytes,
-		"configurations."+cfg.GetConfigId(),
-	)
-	if err != nil {
-		return fmt.Errorf("failed to store configuration: %w", err)
-	}
-
-	return nil
-}
-
 func StoreStream(streamObj *stream.Stream, id string) error {
 	if streamObj == nil {
 		return fmt.Errorf("cannot store nil stream")
@@ -527,4 +460,30 @@ func GetStreams(prefix string) []*stream.Stream {
 
 	return streams
 }
+*/
+
+/*
+	func GetLastConfiguration() (*schedule.GclConfiguration, string, error) {
+		const prefix = "configurations.tsn-configuration"
+
+		resp, err := getLastFromStoreWithPrefix(prefix)
+		if err != nil {
+			return nil, "", err
+		}
+		if len(resp.Kvs) == 0 {
+			return nil, "", fmt.Errorf("no configurations found")
+		}
+
+		kv := resp.Kvs[0]
+
+		// Convert the key back to your confId (if needed)
+		confId := path.Base(string(kv.Key)) // e.g. "4d8f7c72-f9e3-4d33-8210-3a5437b8a821"
+
+		var config schedule.GclConfiguration
+		if err := proto.Unmarshal(kv.Value, &config); err != nil {
+			return nil, "", fmt.Errorf("failed to unmarshal last config: %v", err)
+		}
+
+		return &config, confId, nil
+	}
 */

@@ -1,0 +1,152 @@
+syntax = "proto3";
+
+package pcp;
+
+option go_package = "/pcp";
+
+/*
+ * IEEE 802.1Q Priority Code Point (PCP) configuration.
+ *
+ * This package contains the data model for PCP classification,
+ * encoding/decoding , traffic-class mapping and priority regeneration.
+ */
+
+// -----------------------------------------------------------------------------
+// Port PCP Configuration
+// -----------------------------------------------------------------------------
+
+/*
+ * Complete PCP configuration for a bridge port.
+ *
+ * PCP enablement is kept in the topology port configuration.
+ *
+ * This message contains the PCP-specific IEEE tables.
+ */
+message PcpPortConfig {
+  repeated TrafficClassMappingEntry traffic_class_table = 1;
+
+  repeated PcpEncodingTable encoding_tables = 2;
+  repeated PcpDecodingTable decoding_tables = 3;
+
+  optional PriorityRegenerationTable priority_regeneration = 4;
+}
+
+
+
+// -----------------------------------------------------------------------------
+// PCP traffic class
+// -----------------------------------------------------------------------------
+
+
+
+
+
+// IEEE 802.1Q Clause 8.6.6.1
+// Per-port Priority to traffic class (=egress queue id) mapping
+message TrafficClassMappingEntry {
+  uint32 priority = 1;         // Priority Code Point (0–7)
+  uint32 egress_queue_id = 2; // Traffic class index (0–7)
+}
+
+
+// -----------------------------------------------------------------------------
+// PCP mapping type
+// -----------------------------------------------------------------------------
+
+/*
+ * Defines how the eight PCP/DEI combinations are interpreted.
+ *
+ * P = priority levels
+ * D = drop-eligible levels
+ *
+ * IEEE 802.1Q defines the following PCP mapping formats:
+ *
+ *   8P0D - 8 priorities, 0 drop-eligible levels
+ *   7P1D - 7 priorities, 1 drop-eligible level
+ *   6P2D - 6 priorities, 2 drop-eligible levels
+ *   5P3D - 5 priorities, 3 drop-eligible levels
+ */
+enum PcpType {
+  PCP_TYPE_UNSPECIFIED = 0;
+  PCP_TYPE_8P0D = 1;
+  PCP_TYPE_7P1D = 2;
+  PCP_TYPE_6P2D = 3;
+  PCP_TYPE_5P3D = 4;
+}
+
+// -----------------------------------------------------------------------------
+// PCP Encoding
+// -----------------------------------------------------------------------------
+
+/*
+ * A single PCP encoding entry.
+ *
+ * Maps an internal priority and DEI value to a Priority Code Point.
+ *
+ * priority:
+ *   Internal priority value, 0..7.
+ *
+ * dei:
+ *   Drop Eligible Indicator.
+ *
+ * priority_code_point:
+ *   PCP value placed into the transmitted VLAN tag, 0..7.
+ */
+message PcpEncodingEntry {
+  uint32 priority = 1;
+  bool dei = 2;
+  uint32 priority_code_point = 3;
+}
+
+/*
+ * PCP encoding table for a specific PCP mapping type.
+ */
+message PcpEncodingTable {
+  PcpType pcp_type = 1;
+  repeated PcpEncodingEntry entries = 2;
+}
+
+// -----------------------------------------------------------------------------
+// PCP Decoding
+// -----------------------------------------------------------------------------
+
+/*
+ * A single PCP decoding entry.
+ *
+ * Maps an incoming Priority Code Point to an internal priority and DEI value.
+ */
+message PcpDecodingEntry {
+  uint32 priority_code_point = 1;
+  uint32 priority = 2;
+  bool dei = 3;
+}
+
+/*
+ * PCP decoding table for a specific PCP mapping type.
+ */
+message PcpDecodingTable {
+  PcpType pcp_type = 1;
+  repeated PcpDecodingEntry entries = 2;
+}
+
+// -----------------------------------------------------------------------------
+// Priority Regeneration
+// -----------------------------------------------------------------------------
+
+/*
+ * Defines regeneration of an internal priority.
+ *
+ * The priority value represents the input priority and
+ * regenerated_priority represents the resulting priority.
+ */
+message PriorityRegenerationEntry {
+  uint32 priority = 1;
+  uint32 regenerated_priority = 2;
+}
+
+/*
+ * Priority regeneration configuration for a port.
+ */
+message PriorityRegenerationTable {
+  repeated PriorityRegenerationEntry entries = 1;
+}

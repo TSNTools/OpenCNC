@@ -1,0 +1,49 @@
+syntax = "proto3";
+
+package forwarding_plane_model;
+
+option go_package = "OpenCNC/common/structures/forwarding_plane_model;forwarding_plane_model";
+
+import "google/protobuf/timestamp.proto";
+import "common/structures/topology/topology.proto";
+import "common/structures/topology_config/topology_config.proto";
+import "common/structures/stream/stream.proto";
+import "common/structures/stream_config/stream_config.proto";
+
+message ForwardingPlaneModel {
+  ModelMetadata metadata = 1;
+
+  // Logical topology known to the CNC.
+  topology.Topology topology = 2;
+
+  // Logical TSN configuration of the forwarding plane.
+  topology_config.TopologyConfig configuration = 3;
+
+  // Traffic/stream definitions and configurations known to the CNC.
+  repeated StreamModel streams = 4;
+}
+
+message StreamModel {
+  stream.Stream definition = 1;
+  stream.StreamConfiguration configuration = 2;
+}
+
+
+message ModelMetadata {
+  // Unique identifier of this forwarding-plane model.
+  string model_id = 1;
+
+  // Monotonically increasing revision of the model.
+  uint64 revision = 2;
+
+  // Optional human-readable description.
+  string description = 3;
+
+  // Creation time of this model.
+  google.protobuf.Timestamp created_at = 4;
+
+  // Last modification time of this model.
+  google.protobuf.Timestamp modified_at = 5;
+
+
+}

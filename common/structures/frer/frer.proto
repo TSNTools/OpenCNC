@@ -2,93 +2,680 @@ syntax = "proto3";
 
 package tsn.frer;
 
-import "tsn/stream.proto";
+option go_package = "OpenCNC/common/structures/frer;frer";
+
+import "common/structures/stream_identification/stream_identification.proto";
 
 /*
  * Frame Replication and Elimination for Reliability (FRER)
- * Configuration model based on IEEE 802.1CB-2017
+ *
+ * Source of truth:
+ *
+ *   IEEE Std 802.1CB-2017
+ *   IEEE Std 802.1CBcv-2021
+ *   IEEE Std 802.1CBdb-2021
+ *
+ * This model represents the FRER functions defined by IEEE 802.1CB:
+ *
+ *   - Sequence Generation
+ *   - Sequence Recovery
+ *   - Individual Recovery
+ *   - Latent Error Detection
+ *   - Sequence Identification / Encode-Decode
+ *   - Stream Splitting
+ *
+ * Stream identity is based on the canonical stream_handle defined by
+ * stream_identification.proto.
+ *
+ * Important:
+ *
+ *   FRER does not define how network paths are computed.
+ *   Path computation / topology / routing are separate concerns.
+ *
+ * The model therefore configures FRER functions and their placement,
+ * while path computation and forwarding configuration remain outside
+ * this proto.
  *
  * References:
- * - Clause 6: Operation
- * - Clause 8.4: Configuration mechanisms
- * - Clause 8.6: Sequence recovery process
+ *
+ *   IEEE 802.1CB-2017:
+ *       Clause 6   - FRER operation
+ *       Clause 7   - FRER functions
+ *       Clause 10  - FRER managed objects
+ *
+ *   IEEE 802.1CBcv-2021:
+ *       FRER information model, YANG data model and MIB
+ *
+ *   IEEE 802.1CBdb-2021:
+ *       Extended Stream Identification Functions
  */
 
-// === 1. Recovery Algorithm (Clause 8.4.4) ===
 
-message FrerRecoveryAlgorithm {
-  uint32 sequence_history_length = 1;   // Clause 8.6 — number of sequence IDs to track for elimination
-  uint32 reorder_window_size = 2;       // Clause 8.4.4.4 — maximum tolerated reordering range
-  uint64 hold_off_time_ns = 3;          // Clause 8.4.4.4 — time to wait before aging entries
-  bool discard_old_frames = 4;          // Clause 8.4.4.4 — whether to drop frames outside window
+/* ========================================================================= */
+/* Common types                                                              */
+/* ========================================================================= */
+
+/*
+ * Direction of a FRER function relative to a Port.
+ *
+ * IEEE 802.1CB uses:
+ *
+ *   in-facing  = toward the system forwarding function
+ *   out-facing = toward the physical/network side
+ */
+enum FrerDirection {
+  FRER_DIRECTION_UNSPECIFIED = 0;
+
+  IN_FACING = 1;
+  OUT_FACING = 2;
 }
 
-// === 2. Redundancy Group — shared config (Clause 8.4.1) ===
 
-message RedundancyGroup {
-  string group_id = 1;  // Unique Redundancy Group ID, can be referenced by stream configs
+/*
+ * Sequence recovery algorithm.
+ *
+ * IEEE 802.1CB-2017 Table 10-1:
+ *
+ *   Vector Recovery Algorithm
+ *   Match Recovery Algorithm
+ *
+ * The IEEE-defined algorithms use OUI/CID 00-80-C2.
+ */
+enum SequenceRecoveryAlgorithmType {
+  SEQUENCE_RECOVERY_ALGORITHM_UNSPECIFIED = 0;
 
-  repeated tsn.stream.StreamID member_stream_ids = 2;  // Streams participating in this group
-
-  FrerRecoveryAlgorithm recovery_algorithm = 3; // Shared recovery settings
+  VECTOR = 1;
+  MATCH = 2;
 }
 
-// === 3. Per-stream FRER Configuration (Clause 6.6 / 6.7 / 6.8) ===
 
-message FrerStreamConfig {
-  string redundancy_group_id = 1;  // Reference to RedundancyGroup
+/*
+ * Sequence encode/decode encapsulation method.
+ *
+ * IEEE 802.1CB-2017 10.5.1.5.
+ */
+enum SequenceEncapsulationType {
+  SEQUENCE_ENCAPSULATION_UNSPECIFIED = 0;
 
-  bool enable_recovery = 2;                 // Enable duplicate elimination at listener (Clause 6.7)
-  bool enable_transmit_duplication = 3;     // Enable duplication at talker (Clause 6.6)
-  bool enable_receive_combining = 4;        // Enable frame combining at receiver (Clause 6.8)
-
-  repeated FrerPathSelection path_selections = 5;  // Explicit per-path configuration (Clause 6.6.2)
-
-  FrerMode mode = 6;                         // Selection mode for stream identity (Clause 6.4.2)
-  string profile_id = 7;                     // Optional profile alignment (e.g., TSN automotive)
-
-  // Optional sequence generation control for talker (Clause 8.4.4.1)
-  bool enable_sequence_generation = 8;       // Whether this stream should generate sequence IDs
-  uint64 sequence_id_start = 9;              // Starting value (usually 0)
-  uint32 sequence_modulus = 10;              // Sequence wrap-around modulus (e.g., 256, 4096)
+  R_TAG = 1;
+  HSR_SEQUENCE_TAG = 2;
+  PRP_SEQUENCE_TRAILER = 3;
 }
 
-// === 4. Explicit Replication Path (Clause 6.6.2) ===
 
-message FrerPathSelection {
-  string egress_port_id = 1;     // Port used to replicate frame
-  string nexthop_mac = 2;        // Next-hop MAC address for replication
-  uint32 vlan_id = 3;            // VLAN to apply on this path
+/*
+ * Sequence function type.
+ *
+ * Used to distinguish the major FRER sequence-processing functions.
+ */
+enum SequenceFunctionType {
+  SEQUENCE_FUNCTION_UNSPECIFIED = 0;
+
+  SEQUENCE_GENERATION = 1;
+  SEQUENCE_RECOVERY = 2;
+  INDIVIDUAL_RECOVERY = 3;
+  SEQUENCE_IDENTIFICATION = 4;
 }
 
-// === 5. Stream Identity Mode (Clause 6.4.2) ===
 
-enum FrerMode {
-  MODE_UNSPECIFIED = 0;      // Default stream ID selection
-  MAC_DA_SELECTION = 1;      // Use MAC DA + VLAN ID (Clause 6.4.3)
-  VLAN_ID_SELECTION = 2;     // Use VLAN ID only
-  EXPLICIT_PATH = 3;         // Custom CNC-controlled identification (Clause 6.6.2)
+/* ========================================================================= */
+/* Algorithm identifiers                                                     */
+/* ========================================================================= */
+
+/*
+ * Identifies a sequence recovery algorithm.
+ *
+ * IEEE 802.1CB identifies algorithms by OUI/CID + type number.
+ *
+ * IEEE-defined algorithms:
+ *
+ *   OUI/CID = 00-80-C2
+ *   type 0  = Vector Recovery Algorithm
+ *   type 1  = Match Recovery Algorithm
+ *
+ * Organization-specific algorithms use their own OUI/CID and
+ * organization-specific type number.
+ */
+message SequenceRecoveryAlgorithm {
+
+  /*
+   * Organizationally Unique Identifier or Company ID.
+   *
+   * IEEE-defined algorithms use:
+   *
+   *   00-80-C2
+   */
+  string oui_cid = 1;
+
+  /*
+   * IEEE-defined:
+   *
+   *   0 = Vector
+   *   1 = Match
+   *
+   * Organization-specific values use the organization-specific
+   * namespace.
+   */
+  uint32 type_number = 2;
+
+  /*
+   * Well-known IEEE algorithm.
+   *
+   * This is convenient for CNC implementations while retaining
+   * the OUI/CID + type-number representation as the authoritative
+   * identifier.
+   */
+  SequenceRecoveryAlgorithmType algorithm = 3;
 }
 
-// === 6. Profile-level Policy Guidance ===
 
-message FrerProfilePolicy {
-  string profile_id = 1;                   // Matches tsn.Profile.id if profiles exist
+/*
+ * Identifies a Sequence encode/decode method.
+ *
+ * IEEE-defined methods use OUI/CID 00-80-C2.
+ */
+message SequenceEncapsulation {
 
-  bool allow_partial_streams = 2;          // Whether some listeners can skip FRER
-  uint32 max_path_divergence = 3;          // Max hops where paths may differ (Clause 8.3 Note)
-  bool require_disjoint_paths = 4;         // Whether all FRER paths must be disjoint (Clause 6.6 Note)
-  bool allow_mac_multiplexing = 5;         // Allow multiple stream IDs on same MAC path
-  bool allow_stream_fragmentation = 6;     // Permit stream slicing (used in some profiles)
+  /*
+   * Organizationally Unique Identifier or Company ID.
+   */
+  string oui_cid = 1;
+
+  /*
+   * Sequence encode/decode type number.
+   *
+   * IEEE-defined values are represented by the enum below.
+   */
+  uint32 type_number = 2;
+
+  /*
+   * Well-known IEEE encapsulation method.
+   */
+  SequenceEncapsulationType type = 3;
 }
 
-// === 7. Global Config (Clause 8.4.2) ===
 
-message FrerGlobalConfiguration {
-  bool enabled = 1;                                  // Global FRER enable
-  FrerRecoveryAlgorithm default_algorithm = 2;       // Default recovery fallback
+/* ========================================================================= */
+/* Sequence Generation                                                       */
+/* ========================================================================= */
 
-  repeated RedundancyGroup redundancy_groups = 3;    // Configured recovery domains
+/*
+ * Sequence Generation configuration.
+ *
+ * IEEE 802.1CB Clause 10.3.
+ *
+ * A Sequence generation function operates on all packets belonging
+ * to the configured stream handles.
+ *
+ * The same stream_handle may appear in more than one generation
+ * entry, provided the resulting configuration is not conflicting.
+ */
+message SequenceGenerationEntry {
 
-  uint32 version = 4;                                // Schema version for evolution (default: 1)
+  /*
+   * Unique entry identifier.
+   *
+   * This is deliberately separate from stream_handle because IEEE
+   * permits the same stream_handle to occur in multiple entries.
+   */
+  uint32 index = 1;
+
+  /*
+   * Stream handles on which this Sequence Generation function operates.
+   *
+   * These MUST reference stream handles defined by the canonical
+   * Stream Identification table.
+   */
+  repeated uint32 stream_handles = 2;
+
+  /*
+   * Direction in which the function is instantiated.
+   */
+  FrerDirection direction = 3;
+
+  /*
+   * Reset request.
+   *
+   * Writing true requests SequenceGenerationReset.
+   * The operational value should return to false after the reset
+   * operation has been performed.
+   */
+  bool reset = 4;
+
+  /*
+   * Optional association with CNC logical Streams.
+   *
+   * This is not the IEEE stream_handle itself.
+   */
+  repeated stream_identification.StreamIdentificationEntry stream_entries = 5;
+}
+
+
+/* ========================================================================= */
+/* Sequence Recovery                                                        */
+/* ========================================================================= */
+
+/*
+ * Latent Error Detection parameters.
+ *
+ * IEEE 802.1CB-2017 10.4.1.12.
+ */
+message LatentErrorDetectionParameters {
+
+  /*
+   * Maximum allowed difference used by the LatentErrorTest.
+   *
+   * IEEE 802.1CB-2017 10.4.1.12.1.
+   */
+  int32 difference = 1;
+
+  /*
+   * Period between LatentErrorTest executions.
+   *
+   * IEEE default: 2000 ms.
+   */
+  uint32 period_ms = 2;
+
+  /*
+   * Number of paths over which FRER is operating.
+   */
+  uint32 paths = 3;
+
+  /*
+   * Period between LatentErrorReset executions.
+   *
+   * IEEE default: 30000 ms.
+   */
+  uint32 reset_period_ms = 4;
+}
+
+
+/*
+ * Sequence Recovery configuration.
+ *
+ * IEEE 802.1CB-2017 Clause 10.4.
+ *
+ * This entry may describe either:
+ *
+ *   - Sequence Recovery
+ *   - Individual Recovery
+ *
+ * depending on individual_recovery.
+ */
+message SequenceRecoveryEntry {
+
+  /*
+   * Unique entry identifier.
+   */
+  uint32 index = 1;
+
+  /*
+   * Stream handles to which the recovery function applies.
+   *
+   * These MUST reference the canonical stream identification table.
+   */
+  repeated uint32 stream_handles = 2;
+
+  /*
+   * Ports on which the recovery function is instantiated.
+   */
+  repeated string port_ids = 3;
+
+  /*
+   * Direction relative to each port.
+   */
+  FrerDirection direction = 4;
+
+  /*
+   * Reset request.
+   */
+  bool reset = 5;
+
+  /*
+   * Sequence recovery algorithm.
+   *
+   * IEEE default is Vector Recovery Algorithm.
+   */
+  SequenceRecoveryAlgorithm algorithm = 6;
+
+  /*
+   * Number of bits of SequenceHistory used by the recovery
+   * algorithm.
+   *
+   * IEEE minimum/default is 2.
+   */
+  uint32 history_length = 7;
+
+  /*
+   * Timeout for the RECOVERY_TIMEOUT event.
+   *
+   * IEEE managed object is expressed in milliseconds.
+   */
+  uint32 reset_timeout_ms = 8;
+
+  /*
+   * Value that cannot be encoded as a valid sequence number.
+   *
+   * Operational/read-only value.
+   *
+   * This field should normally be populated by the implementation,
+   * not by configuration.
+   */
+  uint32 invalid_sequence_value = 9;
+
+  /*
+   * Whether packets without a sequence number are accepted.
+   *
+   * IEEE default: false.
+   */
+  bool take_no_sequence = 10;
+
+  /*
+   * true  = Individual Recovery
+   * false = Sequence Recovery
+   */
+  bool individual_recovery = 11;
+
+  /*
+   * Whether Latent Error Detection is instantiated together with
+   * the Base Recovery function.
+   *
+   * This must be false for Individual Recovery.
+   */
+  bool latent_error_detection = 12;
+
+  /*
+   * Latent Error Detection parameters.
+   *
+   * Applicable when latent_error_detection is true.
+   */
+  LatentErrorDetectionParameters latent_error_detection_parameters = 13;
+}
+
+
+/* ========================================================================= */
+/* Sequence Identification / Encode-Decode                                   */
+/* ========================================================================= */
+
+/*
+ * Sequence Identification configuration.
+ *
+ * IEEE 802.1CB-2017 Clause 10.5.
+ *
+ * This function recognizes and/or inserts sequence information
+ * according to the selected encapsulation.
+ */
+message SequenceIdentificationEntry {
+
+  /*
+   * Port on which the function is instantiated.
+   */
+  string port_id = 1;
+
+  /*
+   * Direction relative to the port.
+   */
+  FrerDirection direction = 2;
+
+  /*
+   * Stream handles using this same sequence encode/decode method.
+   *
+   * These MUST reference the canonical Stream Identification table.
+   */
+  repeated uint32 stream_handles = 3;
+
+  /*
+   * Active determines whether the function:
+   *
+   *   false = passive / decode only
+   *   true  = active / recognize input and encode output
+   */
+  bool active = 4;
+
+  /*
+   * Sequence encapsulation method.
+   */
+  SequenceEncapsulation encapsulation = 5;
+
+  /*
+   * PathId / LanId used with HSR sequence tags or PRP sequence
+   * trailers.
+   *
+   * IEEE defines this as a 4-bit value.
+   *
+   * -1 means "ignore".
+   *
+   * Valid configured values:
+   *
+   *   -1..15
+   */
+  int32 path_id_lan_id = 6;
+}
+
+
+/* ========================================================================= */
+/* Stream Splitting                                                          */
+/* ========================================================================= */
+
+/*
+ * Stream Splitting configuration.
+ *
+ * IEEE 802.1CB-2017 Clause 10.6.
+ *
+ * A Stream splitting function translates one input stream handle
+ * into one or more output stream handles, creating one copy for
+ * each output ID.
+ */
+message StreamSplitEntry {
+
+  /*
+   * Port on which the Stream splitting function is instantiated.
+   */
+  string port_id = 1;
+
+  /*
+   * Direction relative to the port.
+   */
+  FrerDirection direction = 2;
+
+  /*
+   * Input stream handle(s).
+   *
+   * These MUST reference stream handles defined by the canonical
+   * Stream Identification table.
+   */
+  repeated uint32 input_stream_handles = 3;
+
+  /*
+   * Output stream handles.
+   *
+   * One packet copy is generated for each output stream handle.
+   */
+  repeated uint32 output_stream_handles = 4;
+}
+
+
+/* ========================================================================= */
+/* FRER packet counters                                                      */
+/* ========================================================================= */
+
+/*
+ * Per-port / per-stream FRER counters.
+ *
+ * IEEE 802.1CB Clause 10.8.
+ *
+ * The exact counters exposed by an implementation may depend on
+ * which FRER functions are instantiated.
+ */
+message FrerStreamCounters {
+
+  string port_id = 1;
+
+  FrerDirection direction = 2;
+
+  uint32 stream_handle = 3;
+
+  /*
+   * Packets received by FRER processing.
+   */
+  uint64 received_packets = 4;
+
+  /*
+   * Packets passed by recovery processing.
+   */
+  uint64 passed_packets = 5;
+
+  /*
+   * Packets discarded by recovery processing.
+   */
+  uint64 discarded_packets = 6;
+
+  /*
+   * Packets discarded because they were duplicates.
+   */
+  uint64 duplicate_packets = 7;
+
+  /*
+   * Packets discarded because of an invalid/old sequence number.
+   */
+  uint64 invalid_sequence_packets = 8;
+
+  /*
+   * Packets generated by sequence replication/splitting.
+   */
+  uint64 replicated_packets = 9;
+
+  /*
+   * Packets for which sequence information was successfully
+   * decoded.
+   */
+  uint64 sequence_decoded_packets = 10;
+
+  /*
+   * Packets for which sequence information was encoded.
+   */
+  uint64 sequence_encoded_packets = 11;
+}
+
+
+/*
+ * Per-port FRER counters.
+ *
+ * IEEE 802.1CB Clause 10.9.
+ */
+message FrerPortCounters {
+
+  string port_id = 1;
+
+  uint64 received_packets = 2;
+
+  uint64 passed_packets = 3;
+
+  uint64 discarded_packets = 4;
+
+  uint64 replicated_packets = 5;
+}
+
+
+/*
+ * Complete FRER operational statistics.
+ */
+message FrerStatistics {
+
+  repeated FrerStreamCounters per_stream = 1;
+
+  repeated FrerPortCounters per_port = 2;
+}
+
+
+/* ========================================================================= */
+/* FRER capabilities                                                          */
+/* ========================================================================= */
+
+/*
+ * FRER implementation capabilities.
+ *
+ * These describe what the device supports; they are not FRER
+ * configuration.
+ */
+message FrerCapabilities {
+
+  bool sequence_generation_supported = 1;
+
+  bool sequence_recovery_supported = 2;
+
+  bool individual_recovery_supported = 3;
+
+  bool latent_error_detection_supported = 4;
+
+  bool sequence_identification_supported = 5;
+
+  bool stream_splitting_supported = 6;
+
+  bool auto_configuration_supported = 7;
+
+  repeated SequenceRecoveryAlgorithm supported_recovery_algorithms = 8;
+
+  repeated SequenceEncapsulation supported_encapsulations = 9;
+}
+
+
+/* ========================================================================= */
+/* Complete FRER configuration                                                */
+/* ========================================================================= */
+
+/*
+ * Complete FRER configuration and operational state.
+ *
+ * The canonical stream identity is provided by:
+ *
+ *   stream_identification.proto
+ *
+ * FRER refers to that identity using stream_handle values.
+ */
+message FrerConfiguration {
+
+  /*
+   * Global administrative state.
+   */
+  bool enabled = 1;
+
+  /*
+   * Sequence Generation table.
+   */
+  repeated SequenceGenerationEntry sequence_generation = 2;
+
+  /*
+   * Sequence Recovery / Individual Recovery table.
+   */
+  repeated SequenceRecoveryEntry sequence_recovery = 3;
+
+  /*
+   * Sequence Identification / Encode-Decode table.
+   */
+  repeated SequenceIdentificationEntry sequence_identification = 4;
+
+  /*
+   * Stream Split table.
+   */
+  repeated StreamSplitEntry stream_split = 5;
+
+  /*
+   * Implementation capabilities.
+   *
+   * Normally populated as operational/read-only information.
+   */
+  FrerCapabilities capabilities = 6;
+
+  /*
+   * Operational counters.
+   *
+   * Normally populated as telemetry/status rather than configuration.
+   */
+  FrerStatistics statistics = 7;
+
+  /*
+   * Human-readable description.
+   */
+  string description = 8;
 }

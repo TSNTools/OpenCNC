@@ -60,14 +60,14 @@ message StreamRank {
 
 // Unique identifier for a stream: MAC address + unique stream ID.
 // MAC address should be formatted as standard 6-byte hex string (e.g., "01:23:45:67:89:ab").
-message StreamID {
+message StreamId {
   string mac_address = 1;       // Talker MAC address
   uint32 unique_id = 2;         // Typically 16-bit stream ID (matches AVTP)
 }
 
 // Describes a unicast or multicast stream with talker and listeners, traffic specs, and requirements.
 message Stream {
-  StreamID stream_id = 1;                   // Unique stream identifier
+  StreamId stream_id = 1;                   // Unique stream identifier
   StreamRank stream_rank = 2;               // Stream rank and priority
 
   // Talker endpoint node ID: must correspond to a node defined in topology

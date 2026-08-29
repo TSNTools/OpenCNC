@@ -16,11 +16,12 @@ option go_package = "OpenCNC/common/structures/vlan;vlan";
  */
 
 message BridgeVlanConfig {
-  repeated VlanRegistrationEntry vlan_registration_entries = 1;
-  repeated VidToFidMapping vid_to_fid_mappings = 2;
+  repeated VlanLabel vlan_labels = 1;
+  repeated VlanRegistrationEntry vlan_registration_entries = 2;
+  repeated VidToFidMapping vid_to_fid_mappings = 3;
 
   // Optional advanced protocol-based VLAN grouping.
-  repeated ProtocolGroupDatabaseEntry protocol_group_database = 3;
+  repeated ProtocolGroupDatabaseEntry protocol_group_database = 4;
 }
 
 enum VlanRegistrationEntryType {
@@ -116,4 +117,11 @@ message PortVlanAdvancedConfig {
 
   // Optional mapping from protocol groups to VLAN sets for ingress classification.
   repeated ProtocolGroupVidSet protocol_group_vid_sets = 8;
+}
+
+
+// Human-readable VLAN label; not required for VLAN operation.
+message VlanLabel {
+  uint32 vlan_id = 1;
+  string label = 2; //human readable label of the vlan
 }

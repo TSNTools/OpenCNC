@@ -1,16 +1,23 @@
 package main
 
 import (
+	uni_grpc "OpenCNC/main_service/pkg/structures/uni-grpc"
 	"bytes"
+	"context"
 	"fmt"
+	"log"
 	"net/http"
+	"time"
+
+	"google.golang.org/grpc"
 )
 
 //storewrapper "OpenCNC/common/store-wrapper"
 
 func main() {
 
-	testUNI()
+	testUniAddStream()
+	//testUNI()
 
 	/*
 	   	client, err := clientv3.New(clientv3.Config{
@@ -87,6 +94,54 @@ func main() {
 	   fmt.Println("Done.")
 	   fmt.Println("========================================")
 	*/
+}
+
+func testUniAddStream() {
+	conn, err := grpc.Dial(
+		"localhost:9000",
+		grpc.WithInsecure(),
+	)
+	if err != nil {
+		log.Fatalf("Failed to connect to UNI gRPC server: %v", err)
+	}
+	defer conn.Close()
+
+	fmt.Println("Connected to UNI gRPC server")
+
+	client := uni_grpc.NewUniServiceClient(conn)
+
+	ctx, cancel := context.WithTimeout(
+		context.Background(),
+		5*time.Second,
+	)
+	defer cancel()
+
+	req := &uni_grpc.AddStreamRequest{
+		Id:                   "test-stream-1",
+		Name:                 "Test Stream",
+		TalkerNodeId:         "D",
+		ListenerNodeIds:      []string{"F", "G"},
+		TrafficType:          "isochronous",
+		Rank:                 "1",
+		MaxFrameSize:         500,
+		MaxLatencyNs:         300000,
+		MaxJitterNs:          0,
+		IntervalNs:           100000,
+		MaxFramesPerInterval: 1,
+		MinTransmitOffsetNs:  0,
+		MaxTransmitOffsetNs:  50000,
+		NumSeamlessTrees:     1,
+	}
+
+	resp, err := client.AddStream(ctx, req)
+	if err != nil {
+		log.Fatalf("AddStream failed: %v", err)
+	}
+
+	fmt.Println("Response:")
+	fmt.Printf("  Success: %v\n", resp.Success)
+	fmt.Printf("  Message: %s\n", resp.Message)
+	fmt.Printf("  Configuration ID: %s\n", resp.ConfigurationId)
 }
 
 func testUNI() {

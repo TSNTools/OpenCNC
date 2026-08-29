@@ -3,9 +3,9 @@ package notificationHandler
 import (
 	"fmt"
 
+	store "OpenCNC/common/store-wrapper"
+	"OpenCNC/common/structures/uni"
 	"OpenCNC/tsn_service/pkg/internalOptimizer"
-	store "OpenCNC/tsn_service/pkg/storewrapper"
-	"OpenCNC/tsn_service/pkg/structures/configuration"
 
 	//	"git.cs.kau.se/hamzchah/opencnc_kafka-exporter/logger/pkg/logger"
 
@@ -17,7 +17,7 @@ import (
 // Calculates configuration and stores it as a set request in k/v store, returns ID of configuration set request
 func CalculateConfiguration(ids []string) (string, error) {
 	// Not yet used when calculating configuration
-	var allRequestData []*configuration.Request
+	var allRequestData []*uni.Request
 
 	// Get request from k/v store
 	for _, requestId := range ids {
@@ -52,7 +52,7 @@ func CalculateConfiguration(ids []string) (string, error) {
 			return "", err
 		}*/
 	// Calculate configuration set request
-	newConfig, err := internalOptimizer.CalculateConf(topology, nil)
+	newConfig, err := internalOptimizer.RequestOptimization(topology, nil)
 	if err != nil {
 		//log.Errorf("Failed calculating configuration: %v", err)
 		fmt.Printf("Failed calculating configuration: %v\n", err)
@@ -66,7 +66,7 @@ func CalculateConfiguration(ids []string) (string, error) {
 	confId := fmt.Sprint(uuid.New())
 
 	// Store configuration set request in k/v store
-	if err := store.StoreConfiguration(newConfig, confId); err != nil {
+	if err := store.StoreConfiguration(newConfig); err != nil {
 		//log.Errorf("Failed storing new configuration: %v", err)
 		fmt.Printf("Failed storing configuration: %v\n", err)
 

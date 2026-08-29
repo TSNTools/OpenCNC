@@ -11,7 +11,9 @@ import (
 	eventhandler "OpenCNC/main_service/pkg/event-handler"
 	"OpenCNC/main_service/pkg/nni"
 	monitor "OpenCNC/main_service/pkg/structures/temp-monitor-conf"
-	"OpenCNC/main_service/pkg/uni"
+
+	//"OpenCNC/main_service/pkg/uni"
+	uni_server "OpenCNC/main_service/pkg/structures/uni-server"
 
 	"github.com/openconfig/gnmi/proto/gnmi"
 
@@ -41,7 +43,10 @@ func main() {
 	go nni.StartServer()
 
 	// Start UNI server
-	go uni.StartServer()
+	//go uni.StartServer()
+
+	// Start UNI grpc server
+	go uni_server.StartServer("9000")
 
 	// Not working on local network, needs to be connected to switches
 	//switches := counterConfHandler.GetMonitorConfigDevices()
