@@ -2,9 +2,9 @@
 // versions:
 // 	protoc-gen-go v1.36.12
 // 	protoc        v3.21.12
-// source: tsn_service/pkg/structures/notification/notification.proto
+// source: tsn_service/pkg/notificationServer/notification.proto
 
-package notification
+package notificationServer
 
 import (
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
@@ -61,11 +61,11 @@ func (x EventType) String() string {
 }
 
 func (EventType) Descriptor() protoreflect.EnumDescriptor {
-	return file_tsn_service_pkg_structures_notification_notification_proto_enumTypes[0].Descriptor()
+	return file_tsn_service_pkg_notificationServer_notification_proto_enumTypes[0].Descriptor()
 }
 
 func (EventType) Type() protoreflect.EnumType {
-	return &file_tsn_service_pkg_structures_notification_notification_proto_enumTypes[0]
+	return &file_tsn_service_pkg_notificationServer_notification_proto_enumTypes[0]
 }
 
 func (x EventType) Number() protoreflect.EnumNumber {
@@ -74,7 +74,7 @@ func (x EventType) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use EventType.Descriptor instead.
 func (EventType) EnumDescriptor() ([]byte, []int) {
-	return file_tsn_service_pkg_structures_notification_notification_proto_rawDescGZIP(), []int{0}
+	return file_tsn_service_pkg_notificationServer_notification_proto_rawDescGZIP(), []int{0}
 }
 
 type NetworkTrigger int32
@@ -125,11 +125,11 @@ func (x NetworkTrigger) String() string {
 }
 
 func (NetworkTrigger) Descriptor() protoreflect.EnumDescriptor {
-	return file_tsn_service_pkg_structures_notification_notification_proto_enumTypes[1].Descriptor()
+	return file_tsn_service_pkg_notificationServer_notification_proto_enumTypes[1].Descriptor()
 }
 
 func (NetworkTrigger) Type() protoreflect.EnumType {
-	return &file_tsn_service_pkg_structures_notification_notification_proto_enumTypes[1]
+	return &file_tsn_service_pkg_notificationServer_notification_proto_enumTypes[1]
 }
 
 func (x NetworkTrigger) Number() protoreflect.EnumNumber {
@@ -138,13 +138,13 @@ func (x NetworkTrigger) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use NetworkTrigger.Descriptor instead.
 func (NetworkTrigger) EnumDescriptor() ([]byte, []int) {
-	return file_tsn_service_pkg_structures_notification_notification_proto_rawDescGZIP(), []int{1}
+	return file_tsn_service_pkg_notificationServer_notification_proto_rawDescGZIP(), []int{1}
 }
 
 type Event struct {
 	state      protoimpl.MessageState `protogen:"open.v1"`
 	EventId    string                 `protobuf:"bytes,1,opt,name=event_id,json=eventId,proto3" json:"event_id,omitempty"`
-	Type       EventType              `protobuf:"varint,2,opt,name=type,proto3,enum=notification.EventType" json:"type,omitempty"`
+	Type       EventType              `protobuf:"varint,2,opt,name=type,proto3,enum=notificationServer.EventType" json:"type,omitempty"`
 	OccurredAt *timestamppb.Timestamp `protobuf:"bytes,3,opt,name=occurred_at,json=occurredAt,proto3" json:"occurred_at,omitempty"`
 	// Service that generated the event.
 	//
@@ -165,7 +165,7 @@ type Event struct {
 
 func (x *Event) Reset() {
 	*x = Event{}
-	mi := &file_tsn_service_pkg_structures_notification_notification_proto_msgTypes[0]
+	mi := &file_tsn_service_pkg_notificationServer_notification_proto_msgTypes[0]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -177,7 +177,7 @@ func (x *Event) String() string {
 func (*Event) ProtoMessage() {}
 
 func (x *Event) ProtoReflect() protoreflect.Message {
-	mi := &file_tsn_service_pkg_structures_notification_notification_proto_msgTypes[0]
+	mi := &file_tsn_service_pkg_notificationServer_notification_proto_msgTypes[0]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -190,7 +190,7 @@ func (x *Event) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Event.ProtoReflect.Descriptor instead.
 func (*Event) Descriptor() ([]byte, []int) {
-	return file_tsn_service_pkg_structures_notification_notification_proto_rawDescGZIP(), []int{0}
+	return file_tsn_service_pkg_notificationServer_notification_proto_rawDescGZIP(), []int{0}
 }
 
 func (x *Event) GetEventId() string {
@@ -289,7 +289,7 @@ type StreamAdded struct {
 
 func (x *StreamAdded) Reset() {
 	*x = StreamAdded{}
-	mi := &file_tsn_service_pkg_structures_notification_notification_proto_msgTypes[1]
+	mi := &file_tsn_service_pkg_notificationServer_notification_proto_msgTypes[1]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -301,7 +301,7 @@ func (x *StreamAdded) String() string {
 func (*StreamAdded) ProtoMessage() {}
 
 func (x *StreamAdded) ProtoReflect() protoreflect.Message {
-	mi := &file_tsn_service_pkg_structures_notification_notification_proto_msgTypes[1]
+	mi := &file_tsn_service_pkg_notificationServer_notification_proto_msgTypes[1]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -314,7 +314,7 @@ func (x *StreamAdded) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use StreamAdded.ProtoReflect.Descriptor instead.
 func (*StreamAdded) Descriptor() ([]byte, []int) {
-	return file_tsn_service_pkg_structures_notification_notification_proto_rawDescGZIP(), []int{1}
+	return file_tsn_service_pkg_notificationServer_notification_proto_rawDescGZIP(), []int{1}
 }
 
 func (x *StreamAdded) GetRequestIds() []string {
@@ -344,7 +344,7 @@ type StreamRemoved struct {
 
 func (x *StreamRemoved) Reset() {
 	*x = StreamRemoved{}
-	mi := &file_tsn_service_pkg_structures_notification_notification_proto_msgTypes[2]
+	mi := &file_tsn_service_pkg_notificationServer_notification_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -356,7 +356,7 @@ func (x *StreamRemoved) String() string {
 func (*StreamRemoved) ProtoMessage() {}
 
 func (x *StreamRemoved) ProtoReflect() protoreflect.Message {
-	mi := &file_tsn_service_pkg_structures_notification_notification_proto_msgTypes[2]
+	mi := &file_tsn_service_pkg_notificationServer_notification_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -369,7 +369,7 @@ func (x *StreamRemoved) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use StreamRemoved.ProtoReflect.Descriptor instead.
 func (*StreamRemoved) Descriptor() ([]byte, []int) {
-	return file_tsn_service_pkg_structures_notification_notification_proto_rawDescGZIP(), []int{2}
+	return file_tsn_service_pkg_notificationServer_notification_proto_rawDescGZIP(), []int{2}
 }
 
 func (x *StreamRemoved) GetRequestIds() []string {
@@ -395,7 +395,7 @@ func (x *StreamRemoved) GetReason() string {
 
 type NetworkEvent struct {
 	state   protoimpl.MessageState `protogen:"open.v1"`
-	Trigger NetworkTrigger         `protobuf:"varint,1,opt,name=trigger,proto3,enum=notification.NetworkTrigger" json:"trigger,omitempty"`
+	Trigger NetworkTrigger         `protobuf:"varint,1,opt,name=trigger,proto3,enum=notificationServer.NetworkTrigger" json:"trigger,omitempty"`
 	// Objects known to be affected by the event.
 	AffectedNodeIds []string `protobuf:"bytes,2,rep,name=affected_node_ids,json=affectedNodeIds,proto3" json:"affected_node_ids,omitempty"`
 	AffectedLinkIds []string `protobuf:"bytes,3,rep,name=affected_link_ids,json=affectedLinkIds,proto3" json:"affected_link_ids,omitempty"`
@@ -406,7 +406,7 @@ type NetworkEvent struct {
 
 func (x *NetworkEvent) Reset() {
 	*x = NetworkEvent{}
-	mi := &file_tsn_service_pkg_structures_notification_notification_proto_msgTypes[3]
+	mi := &file_tsn_service_pkg_notificationServer_notification_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -418,7 +418,7 @@ func (x *NetworkEvent) String() string {
 func (*NetworkEvent) ProtoMessage() {}
 
 func (x *NetworkEvent) ProtoReflect() protoreflect.Message {
-	mi := &file_tsn_service_pkg_structures_notification_notification_proto_msgTypes[3]
+	mi := &file_tsn_service_pkg_notificationServer_notification_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -431,7 +431,7 @@ func (x *NetworkEvent) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use NetworkEvent.ProtoReflect.Descriptor instead.
 func (*NetworkEvent) Descriptor() ([]byte, []int) {
-	return file_tsn_service_pkg_structures_notification_notification_proto_rawDescGZIP(), []int{3}
+	return file_tsn_service_pkg_notificationServer_notification_proto_rawDescGZIP(), []int{3}
 }
 
 func (x *NetworkEvent) GetTrigger() NetworkTrigger {
@@ -466,9 +466,9 @@ type NotifyResponse struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// Notification was accepted by the TSN service.
 	Accepted bool `protobuf:"varint,1,opt,name=accepted,proto3" json:"accepted,omitempty"`
-	// Optional identifier for the internal configuration/reconfiguration
+	// Optional identifier for the internal configuration optimization/reoptimization
 	// workflow started by the event.
-	WorkflowId    string `protobuf:"bytes,2,opt,name=workflow_id,json=workflowId,proto3" json:"workflow_id,omitempty"`
+	ConfigId      string `protobuf:"bytes,2,opt,name=config_id,json=configId,proto3" json:"config_id,omitempty"`
 	Message       string `protobuf:"bytes,3,opt,name=message,proto3" json:"message,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -476,7 +476,7 @@ type NotifyResponse struct {
 
 func (x *NotifyResponse) Reset() {
 	*x = NotifyResponse{}
-	mi := &file_tsn_service_pkg_structures_notification_notification_proto_msgTypes[4]
+	mi := &file_tsn_service_pkg_notificationServer_notification_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -488,7 +488,7 @@ func (x *NotifyResponse) String() string {
 func (*NotifyResponse) ProtoMessage() {}
 
 func (x *NotifyResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_tsn_service_pkg_structures_notification_notification_proto_msgTypes[4]
+	mi := &file_tsn_service_pkg_notificationServer_notification_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -501,7 +501,7 @@ func (x *NotifyResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use NotifyResponse.ProtoReflect.Descriptor instead.
 func (*NotifyResponse) Descriptor() ([]byte, []int) {
-	return file_tsn_service_pkg_structures_notification_notification_proto_rawDescGZIP(), []int{4}
+	return file_tsn_service_pkg_notificationServer_notification_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *NotifyResponse) GetAccepted() bool {
@@ -511,9 +511,9 @@ func (x *NotifyResponse) GetAccepted() bool {
 	return false
 }
 
-func (x *NotifyResponse) GetWorkflowId() string {
+func (x *NotifyResponse) GetConfigId() string {
 	if x != nil {
-		return x.WorkflowId
+		return x.ConfigId
 	}
 	return ""
 }
@@ -525,21 +525,21 @@ func (x *NotifyResponse) GetMessage() string {
 	return ""
 }
 
-var File_tsn_service_pkg_structures_notification_notification_proto protoreflect.FileDescriptor
+var File_tsn_service_pkg_notificationServer_notification_proto protoreflect.FileDescriptor
 
-const file_tsn_service_pkg_structures_notification_notification_proto_rawDesc = "" +
+const file_tsn_service_pkg_notificationServer_notification_proto_rawDesc = "" +
 	"\n" +
-	":tsn_service/pkg/structures/notification/notification.proto\x12\fnotification\x1a\x1fgoogle/protobuf/timestamp.proto\"\xf8\x02\n" +
+	"5tsn_service/pkg/notificationServer/notification.proto\x12\x12notificationServer\x1a\x1fgoogle/protobuf/timestamp.proto\"\x90\x03\n" +
 	"\x05Event\x12\x19\n" +
-	"\bevent_id\x18\x01 \x01(\tR\aeventId\x12+\n" +
-	"\x04type\x18\x02 \x01(\x0e2\x17.notification.EventTypeR\x04type\x12;\n" +
+	"\bevent_id\x18\x01 \x01(\tR\aeventId\x121\n" +
+	"\x04type\x18\x02 \x01(\x0e2\x1d.notificationServer.EventTypeR\x04type\x12;\n" +
 	"\voccurred_at\x18\x03 \x01(\v2\x1a.google.protobuf.TimestampR\n" +
 	"occurredAt\x12\x16\n" +
-	"\x06source\x18\x04 \x01(\tR\x06source\x12>\n" +
+	"\x06source\x18\x04 \x01(\tR\x06source\x12D\n" +
 	"\fstream_added\x18\n" +
-	" \x01(\v2\x19.notification.StreamAddedH\x00R\vstreamAdded\x12D\n" +
-	"\x0estream_removed\x18\v \x01(\v2\x1b.notification.StreamRemovedH\x00R\rstreamRemoved\x12A\n" +
-	"\rnetwork_event\x18\f \x01(\v2\x1a.notification.NetworkEventH\x00R\fnetworkEventB\t\n" +
+	" \x01(\v2\x1f.notificationServer.StreamAddedH\x00R\vstreamAdded\x12J\n" +
+	"\x0estream_removed\x18\v \x01(\v2!.notificationServer.StreamRemovedH\x00R\rstreamRemoved\x12G\n" +
+	"\rnetwork_event\x18\f \x01(\v2 .notificationServer.NetworkEventH\x00R\fnetworkEventB\t\n" +
 	"\apayload\"K\n" +
 	"\vStreamAdded\x12\x1f\n" +
 	"\vrequest_ids\x18\x01 \x03(\tR\n" +
@@ -549,16 +549,15 @@ const file_tsn_service_pkg_structures_notification_notification_proto_rawDesc = 
 	"\vrequest_ids\x18\x01 \x03(\tR\n" +
 	"requestIds\x12\x1b\n" +
 	"\tstream_id\x18\x02 \x01(\tR\bstreamId\x12\x16\n" +
-	"\x06reason\x18\x03 \x01(\tR\x06reason\"\xb6\x01\n" +
-	"\fNetworkEvent\x126\n" +
-	"\atrigger\x18\x01 \x01(\x0e2\x1c.notification.NetworkTriggerR\atrigger\x12*\n" +
+	"\x06reason\x18\x03 \x01(\tR\x06reason\"\xbc\x01\n" +
+	"\fNetworkEvent\x12<\n" +
+	"\atrigger\x18\x01 \x01(\x0e2\".notificationServer.NetworkTriggerR\atrigger\x12*\n" +
 	"\x11affected_node_ids\x18\x02 \x03(\tR\x0faffectedNodeIds\x12*\n" +
 	"\x11affected_link_ids\x18\x03 \x03(\tR\x0faffectedLinkIds\x12\x16\n" +
-	"\x06reason\x18\x04 \x01(\tR\x06reason\"g\n" +
+	"\x06reason\x18\x04 \x01(\tR\x06reason\"c\n" +
 	"\x0eNotifyResponse\x12\x1a\n" +
-	"\baccepted\x18\x01 \x01(\bR\baccepted\x12\x1f\n" +
-	"\vworkflow_id\x18\x02 \x01(\tR\n" +
-	"workflowId\x12\x18\n" +
+	"\baccepted\x18\x01 \x01(\bR\baccepted\x12\x1b\n" +
+	"\tconfig_id\x18\x02 \x01(\tR\bconfigId\x12\x18\n" +
 	"\amessage\x18\x03 \x01(\tR\amessage*`\n" +
 	"\tEventType\x12\x1a\n" +
 	"\x16EVENT_TYPE_UNSPECIFIED\x10\x00\x12\x10\n" +
@@ -573,43 +572,43 @@ const file_tsn_service_pkg_structures_notification_notification_proto_rawDesc = 
 	"\aNODE_UP\x10\x04\x12\x14\n" +
 	"\x10TOPOLOGY_CHANGED\x10\x05\x12\x16\n" +
 	"\x12RESOURCE_THRESHOLD\x10\x06\x12\x18\n" +
-	"\x14MANUAL_RECALCULATION\x10\a2M\n" +
-	"\fNotification\x12=\n" +
-	"\x06Notify\x12\x13.notification.Event\x1a\x1c.notification.NotifyResponse\"\x00B>Z<OpenCNC/tsn_service/pkg/structures/notification;notificationb\x06proto3"
+	"\x14MANUAL_RECALCULATION\x10\a2Y\n" +
+	"\fNotification\x12I\n" +
+	"\x06Notify\x12\x19.notificationServer.Event\x1a\".notificationServer.NotifyResponse\"\x00BJZHOpenCNC/tsn_service/pkg/structures/notificationServer;notificationServerb\x06proto3"
 
 var (
-	file_tsn_service_pkg_structures_notification_notification_proto_rawDescOnce sync.Once
-	file_tsn_service_pkg_structures_notification_notification_proto_rawDescData []byte
+	file_tsn_service_pkg_notificationServer_notification_proto_rawDescOnce sync.Once
+	file_tsn_service_pkg_notificationServer_notification_proto_rawDescData []byte
 )
 
-func file_tsn_service_pkg_structures_notification_notification_proto_rawDescGZIP() []byte {
-	file_tsn_service_pkg_structures_notification_notification_proto_rawDescOnce.Do(func() {
-		file_tsn_service_pkg_structures_notification_notification_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_tsn_service_pkg_structures_notification_notification_proto_rawDesc), len(file_tsn_service_pkg_structures_notification_notification_proto_rawDesc)))
+func file_tsn_service_pkg_notificationServer_notification_proto_rawDescGZIP() []byte {
+	file_tsn_service_pkg_notificationServer_notification_proto_rawDescOnce.Do(func() {
+		file_tsn_service_pkg_notificationServer_notification_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_tsn_service_pkg_notificationServer_notification_proto_rawDesc), len(file_tsn_service_pkg_notificationServer_notification_proto_rawDesc)))
 	})
-	return file_tsn_service_pkg_structures_notification_notification_proto_rawDescData
+	return file_tsn_service_pkg_notificationServer_notification_proto_rawDescData
 }
 
-var file_tsn_service_pkg_structures_notification_notification_proto_enumTypes = make([]protoimpl.EnumInfo, 2)
-var file_tsn_service_pkg_structures_notification_notification_proto_msgTypes = make([]protoimpl.MessageInfo, 5)
-var file_tsn_service_pkg_structures_notification_notification_proto_goTypes = []any{
-	(EventType)(0),                // 0: notification.EventType
-	(NetworkTrigger)(0),           // 1: notification.NetworkTrigger
-	(*Event)(nil),                 // 2: notification.Event
-	(*StreamAdded)(nil),           // 3: notification.StreamAdded
-	(*StreamRemoved)(nil),         // 4: notification.StreamRemoved
-	(*NetworkEvent)(nil),          // 5: notification.NetworkEvent
-	(*NotifyResponse)(nil),        // 6: notification.NotifyResponse
+var file_tsn_service_pkg_notificationServer_notification_proto_enumTypes = make([]protoimpl.EnumInfo, 2)
+var file_tsn_service_pkg_notificationServer_notification_proto_msgTypes = make([]protoimpl.MessageInfo, 5)
+var file_tsn_service_pkg_notificationServer_notification_proto_goTypes = []any{
+	(EventType)(0),                // 0: notificationServer.EventType
+	(NetworkTrigger)(0),           // 1: notificationServer.NetworkTrigger
+	(*Event)(nil),                 // 2: notificationServer.Event
+	(*StreamAdded)(nil),           // 3: notificationServer.StreamAdded
+	(*StreamRemoved)(nil),         // 4: notificationServer.StreamRemoved
+	(*NetworkEvent)(nil),          // 5: notificationServer.NetworkEvent
+	(*NotifyResponse)(nil),        // 6: notificationServer.NotifyResponse
 	(*timestamppb.Timestamp)(nil), // 7: google.protobuf.Timestamp
 }
-var file_tsn_service_pkg_structures_notification_notification_proto_depIdxs = []int32{
-	0, // 0: notification.Event.type:type_name -> notification.EventType
-	7, // 1: notification.Event.occurred_at:type_name -> google.protobuf.Timestamp
-	3, // 2: notification.Event.stream_added:type_name -> notification.StreamAdded
-	4, // 3: notification.Event.stream_removed:type_name -> notification.StreamRemoved
-	5, // 4: notification.Event.network_event:type_name -> notification.NetworkEvent
-	1, // 5: notification.NetworkEvent.trigger:type_name -> notification.NetworkTrigger
-	2, // 6: notification.Notification.Notify:input_type -> notification.Event
-	6, // 7: notification.Notification.Notify:output_type -> notification.NotifyResponse
+var file_tsn_service_pkg_notificationServer_notification_proto_depIdxs = []int32{
+	0, // 0: notificationServer.Event.type:type_name -> notificationServer.EventType
+	7, // 1: notificationServer.Event.occurred_at:type_name -> google.protobuf.Timestamp
+	3, // 2: notificationServer.Event.stream_added:type_name -> notificationServer.StreamAdded
+	4, // 3: notificationServer.Event.stream_removed:type_name -> notificationServer.StreamRemoved
+	5, // 4: notificationServer.Event.network_event:type_name -> notificationServer.NetworkEvent
+	1, // 5: notificationServer.NetworkEvent.trigger:type_name -> notificationServer.NetworkTrigger
+	2, // 6: notificationServer.Notification.Notify:input_type -> notificationServer.Event
+	6, // 7: notificationServer.Notification.Notify:output_type -> notificationServer.NotifyResponse
 	7, // [7:8] is the sub-list for method output_type
 	6, // [6:7] is the sub-list for method input_type
 	6, // [6:6] is the sub-list for extension type_name
@@ -617,12 +616,12 @@ var file_tsn_service_pkg_structures_notification_notification_proto_depIdxs = []
 	0, // [0:6] is the sub-list for field type_name
 }
 
-func init() { file_tsn_service_pkg_structures_notification_notification_proto_init() }
-func file_tsn_service_pkg_structures_notification_notification_proto_init() {
-	if File_tsn_service_pkg_structures_notification_notification_proto != nil {
+func init() { file_tsn_service_pkg_notificationServer_notification_proto_init() }
+func file_tsn_service_pkg_notificationServer_notification_proto_init() {
+	if File_tsn_service_pkg_notificationServer_notification_proto != nil {
 		return
 	}
-	file_tsn_service_pkg_structures_notification_notification_proto_msgTypes[0].OneofWrappers = []any{
+	file_tsn_service_pkg_notificationServer_notification_proto_msgTypes[0].OneofWrappers = []any{
 		(*Event_StreamAdded)(nil),
 		(*Event_StreamRemoved)(nil),
 		(*Event_NetworkEvent)(nil),
@@ -631,18 +630,18 @@ func file_tsn_service_pkg_structures_notification_notification_proto_init() {
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
-			RawDescriptor: unsafe.Slice(unsafe.StringData(file_tsn_service_pkg_structures_notification_notification_proto_rawDesc), len(file_tsn_service_pkg_structures_notification_notification_proto_rawDesc)),
+			RawDescriptor: unsafe.Slice(unsafe.StringData(file_tsn_service_pkg_notificationServer_notification_proto_rawDesc), len(file_tsn_service_pkg_notificationServer_notification_proto_rawDesc)),
 			NumEnums:      2,
 			NumMessages:   5,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
-		GoTypes:           file_tsn_service_pkg_structures_notification_notification_proto_goTypes,
-		DependencyIndexes: file_tsn_service_pkg_structures_notification_notification_proto_depIdxs,
-		EnumInfos:         file_tsn_service_pkg_structures_notification_notification_proto_enumTypes,
-		MessageInfos:      file_tsn_service_pkg_structures_notification_notification_proto_msgTypes,
+		GoTypes:           file_tsn_service_pkg_notificationServer_notification_proto_goTypes,
+		DependencyIndexes: file_tsn_service_pkg_notificationServer_notification_proto_depIdxs,
+		EnumInfos:         file_tsn_service_pkg_notificationServer_notification_proto_enumTypes,
+		MessageInfos:      file_tsn_service_pkg_notificationServer_notification_proto_msgTypes,
 	}.Build()
-	File_tsn_service_pkg_structures_notification_notification_proto = out.File
-	file_tsn_service_pkg_structures_notification_notification_proto_goTypes = nil
-	file_tsn_service_pkg_structures_notification_notification_proto_depIdxs = nil
+	File_tsn_service_pkg_notificationServer_notification_proto = out.File
+	file_tsn_service_pkg_notificationServer_notification_proto_goTypes = nil
+	file_tsn_service_pkg_notificationServer_notification_proto_depIdxs = nil
 }

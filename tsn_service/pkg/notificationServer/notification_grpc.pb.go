@@ -2,9 +2,9 @@
 // versions:
 // - protoc-gen-go-grpc v1.6.2
 // - protoc             v3.21.12
-// source: tsn_service/pkg/structures/notification/notification.proto
+// source: tsn_service/pkg/notificationServer/notification.proto
 
-package notification
+package notificationServer
 
 import (
 	context "context"
@@ -19,7 +19,7 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	Notification_Notify_FullMethodName = "/notification.Notification/Notify"
+	Notification_Notify_FullMethodName = "/notificationServer.Notification/Notify"
 )
 
 // NotificationClient is the client API for Notification service.
@@ -110,7 +110,7 @@ func _Notification_Notify_Handler(srv interface{}, ctx context.Context, dec func
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var Notification_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "notification.Notification",
+	ServiceName: "notificationServer.Notification",
 	HandlerType: (*NotificationServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
@@ -119,5 +119,5 @@ var Notification_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "tsn_service/pkg/structures/notification/notification.proto",
+	Metadata: "tsn_service/pkg/notificationServer/notification.proto",
 }

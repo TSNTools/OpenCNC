@@ -3,12 +3,14 @@ package main
 import (
 	"fmt"
 	"log"
+	"net"
 
 	"OpenCNC/tsn_service/pkg/internalOptimizer"
+	"OpenCNC/tsn_service/pkg/notificationServer"
 
 	//	"git.cs.kau.se/hamzchah/opencnc_kafka-exporter/logger/pkg/logger"
 
-	server "OpenCNC/tsn_service/pkg/notificationServer"
+	"google.golang.org/grpc"
 )
 
 //var log = logger.GetLogger()
@@ -25,10 +27,32 @@ func main() {
 	// go test()
 
 	// Start notification-server
-	go server.CreateServer("tcp", ":5150")
+	go CreateNotificationServer("tcp", ":5150")
 	fmt.Println("Created and listening to 5150!")
 
 	select {}
+}
+
+func CreateNotificationServer(protocol string, addr string) {
+	lis, err := net.Listen(protocol, addr)
+	if err != nil {
+		fmt.Printf("Failed to listen: %v\n", err)
+		return
+	}
+
+	fmt.Printf("Listening on %v\n", addr)
+
+	s := notificationServer.Server{}
+
+	grpcServer := grpc.NewServer()
+
+	notificationServer.RegisterNotificationServer(grpcServer, &s)
+
+	fmt.Println("Started to serve...")
+
+	if err := grpcServer.Serve(lis); err != nil {
+		fmt.Printf("Failed to serve: %v\n", err)
+	}
 }
 
 /*

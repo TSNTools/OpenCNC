@@ -6,19 +6,17 @@ import (
 
 	handler "OpenCNC/tsn_service/pkg/notificationHandler"
 
-	"OpenCNC/tsn_service/pkg/structures/notification"
-
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
 
 type Server struct {
-	notification.UnimplementedNotificationServer
+	UnimplementedNotificationServer
 }
 
 // Notify is the single gRPC entry point for notifications received by
 // the TSN service.
-func (s *Server) Notify(ctx context.Context, event *notification.Event) (*notification.NotifyResponse, error) {
+func (s *Server) Notify(ctx context.Context, event *Event) (*NotifyResponse, error) {
 	if event == nil {
 		return nil, status.Error(codes.InvalidArgument, "event is nil")
 	}
@@ -32,16 +30,16 @@ func (s *Server) Notify(ctx context.Context, event *notification.Event) (*notifi
 
 	switch event.GetType() {
 
-	case notification.EventType_STREAM_ADDED:
+	case EventType_STREAM_ADDED:
 		return s.handleStreamAdded(ctx, event)
 
-	case notification.EventType_STREAM_REMOVED:
+	case EventType_STREAM_REMOVED:
 		return s.handleStreamRemoved(ctx, event)
 
-	case notification.EventType_NETWORK_EVENT:
+	case EventType_NETWORK_EVENT:
 		return s.handleNetworkEvent(ctx, event)
 
-	case notification.EventType_EVENT_TYPE_UNSPECIFIED:
+	case EventType_EVENT_TYPE_UNSPECIFIED:
 		return nil, status.Error(
 			codes.InvalidArgument,
 			"event type is unspecified",
@@ -57,8 +55,8 @@ func (s *Server) Notify(ctx context.Context, event *notification.Event) (*notifi
 
 func (s *Server) handleStreamAdded(
 	ctx context.Context,
-	event *notification.Event,
-) (*notification.NotifyResponse, error) {
+	event *Event,
+) (*NotifyResponse, error) {
 
 	payload := event.GetStreamAdded()
 	if payload == nil {
@@ -86,17 +84,17 @@ func (s *Server) handleStreamAdded(
 		)
 	}
 
-	return &notification.NotifyResponse{
-		Accepted:   true,
-		WorkflowId: configID,
-		Message:    "stream addition accepted and configuration calculated",
+	return &NotifyResponse{
+		Accepted: true,
+		ConfigId: configID,
+		Message:  "stream addition accepted and configuration calculated",
 	}, nil
 }
 
 func (s *Server) handleStreamRemoved(
 	ctx context.Context,
-	event *notification.Event,
-) (*notification.NotifyResponse, error) {
+	event *Event,
+) (*NotifyResponse, error) {
 
 	payload := event.GetStreamRemoved()
 	if payload == nil {
@@ -118,7 +116,7 @@ func (s *Server) handleStreamRemoved(
 	//
 	// For now we only acknowledge the event.
 
-	return &notification.NotifyResponse{
+	return &NotifyResponse{
 		Accepted: true,
 		Message:  "stream removal accepted",
 	}, nil
@@ -126,8 +124,8 @@ func (s *Server) handleStreamRemoved(
 
 func (s *Server) handleNetworkEvent(
 	ctx context.Context,
-	event *notification.Event,
-) (*notification.NotifyResponse, error) {
+	event *Event,
+) (*NotifyResponse, error) {
 
 	payload := event.GetNetworkEvent()
 	if payload == nil {
@@ -163,7 +161,7 @@ func (s *Server) handleNetworkEvent(
 	//
 	// For now we acknowledge the event.
 
-	return &notification.NotifyResponse{
+	return &NotifyResponse{
 		Accepted: true,
 		Message:  "network event accepted",
 	}, nil

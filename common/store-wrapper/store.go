@@ -93,11 +93,11 @@ func StoreDeviceModel(model *devicemodelregistry.DeviceModel) error {
 
 	rawResource, err := proto.Marshal(model)
 	if err != nil {
-		return fmt.Errorf("failed to marshal device model: %v", err)
+		return fmt.Errorf("failed to marshal device model %q: %w", model.Name, err)
 	}
 
 	if err := SendToStore(rawResource, urn); err != nil {
-		return fmt.Errorf("failed to store device model %s: %v", model.Name, err)
+		return fmt.Errorf("failed to store device model %q: %w", model.Name, err)
 	}
 
 	return nil

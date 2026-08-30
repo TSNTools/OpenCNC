@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+package uni_server;
+
+option go_package = "OpenCNC/main_service/pkg/structures/uni_server";
+
+import "common/structures/uni/uni.proto";
+
+service UniService {
+    rpc AddStream(uni.ConfigRequest) returns (uni.ConfigResponse);
+}

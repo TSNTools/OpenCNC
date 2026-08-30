@@ -1,22 +1,15 @@
 package main
 
 import (
-	uni_grpc "OpenCNC/main_service/pkg/structures/uni-grpc"
 	"bytes"
-	"context"
 	"fmt"
-	"log"
 	"net/http"
-	"time"
-
-	"google.golang.org/grpc"
 )
 
 //storewrapper "OpenCNC/common/store-wrapper"
 
 func main() {
 
-	testUniAddStream()
 	//testUNI()
 
 	/*
@@ -96,6 +89,7 @@ func main() {
 	*/
 }
 
+/*
 func testUniAddStream() {
 	conn, err := grpc.Dial(
 		"localhost:9000",
@@ -143,6 +137,7 @@ func testUniAddStream() {
 	fmt.Printf("  Message: %s\n", resp.Message)
 	fmt.Printf("  Configuration ID: %s\n", resp.ConfigurationId)
 }
+*/
 
 func testUNI() {
 	url := "http://localhost:8080/add_stream"

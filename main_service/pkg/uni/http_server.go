@@ -1,4 +1,4 @@
-package uni
+package uni_server
 
 import (
 	"encoding/json"
@@ -9,20 +9,21 @@ import (
 	"strings"
 	"time"
 
+	"OpenCNC/common/structures/topology"
+	"OpenCNC/common/structures/uni"
 	handler "OpenCNC/main_service/pkg/event-handler"
-	"OpenCNC/main_service/pkg/structures/configuration"
-	"OpenCNC/main_service/pkg/structures/streamObjects"
 
 	//	"git.cs.kau.se/hamzchah/opencnc_kafka-exporter/logger/pkg/logger"
 	"github.com/go-openapi/runtime/middleware/header"
 	"github.com/gogo/protobuf/jsonpb"
+	"google.golang.org/protobuf/encoding/protojson"
 )
 
 const PORT uint16 = 8080
 
 //var log = logger.GetLogger()
 
-func StartServer() {
+func StartHttpServer() {
 	//log.Infof("Starting UNI server")
 	fmt.Println("Starting UNI server")
 	http.HandleFunc("/add_stream", addStream)
@@ -59,7 +60,7 @@ func addStream(writer http.ResponseWriter, req *http.Request) {
 	//log.Info("Received add_stream request")
 	fmt.Println("Received add_stream request")
 
-	var configRequest configuration.ConfigRequest
+	var configRequest uni.ConfigRequest
 
 	err := jsonpb.Unmarshal(req.Body, &configRequest)
 
@@ -112,10 +113,15 @@ func addStream(writer http.ResponseWriter, req *http.Request) {
 
 	// TODO: Split response into the different status groups and send them to each endstation in the stream
 	// Requires: split the response before it is serialized and instead return a list of byte slices
-	resp, err := createResponse(confId, &configRequest)
+	response, err := createResponse(confId, &configRequest)
 	if err != nil {
 		//log.Errorf("Failed to create UNI response!")
 		fmt.Println("Failed to create UNI response!")
+		return
+	}
+	resp, err := protojson.Marshal(response)
+	if err != nil {
+		fmt.Printf("failed to marshal UNI ConfigResponse: %v\n", err)
 		return
 	}
 
@@ -166,7 +172,7 @@ func registerNode(writer http.ResponseWriter, req *http.Request) {
 	// log.Infof("Requests body looks like: %v", req.Body)
 	fmt.Printf("Requests body looks like: %v", req.Body)
 
-	var nodeObj streamObjects.NodeObject
+	var nodeObj topology.Node
 	err := jsonpb.Unmarshal(req.Body, &nodeObj)
 
 	if err != nil {

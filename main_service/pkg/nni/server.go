@@ -7,9 +7,9 @@ import (
 	"io"
 	"net/http"
 
-	store "OpenCNC/main_service/pkg/store-wrapper"
-	devicemodelregistry "OpenCNC/main_service/pkg/structures/device-model-registry"
-	"OpenCNC/main_service/pkg/structures/topology"
+	store "OpenCNC/common/store-wrapper"
+	"OpenCNC/common/structures/devicemodelregistry"
+	"OpenCNC/common/structures/topology"
 
 	//"git.cs.kau.se/hamzchah/opencnc_kafka-exporter/logger/pkg/logger"
 
@@ -105,10 +105,10 @@ func addDeviceModel(w http.ResponseWriter, r *http.Request) {
 				fmt.Printf("Skipping YangFile with empty name in model %s\n", m.Name)
 				continue
 			}
-			model.YangFiles = append(model.YangFiles, &devicemodelregistry.YangFile{
-				Name:      y.Name,
-				Revision:  y.Revision,
-				Structure: y.Structure,
+			model.YangFiles = append(model.YangFiles, &devicemodelregistry.YangModule{
+				Name:        y.Name,
+				Revision:    y.Revision,
+				Description: y.Structure,
 			})
 		}
 

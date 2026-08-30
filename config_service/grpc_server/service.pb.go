@@ -181,7 +181,7 @@ const file_config_service_structures_service_service_proto_rawDesc = "" +
 	"\x12ApplyConfiguration\x12\x1d.service.ConfigurationRequest\x1a\x1e.service.ConfigurationResponse\x12W\n" +
 	"\x16ApplyConfigurationById\x12\x1d.service.ConfigurationRequest\x1a\x1e.service.ConfigurationResponse\x12D\n" +
 	"\bRollback\x12\x18.service.RollbackRequest\x1a\x1e.service.ConfigurationResponse\x12E\n" +
-	"\x04Ping\x12\x1d.service.ConfigurationRequest\x1a\x1e.service.ConfigurationResponseBBZ@OpenCNC/config_service/structures/service;serviceb\x06proto3"
+	"\x04Ping\x12\x1d.service.ConfigurationRequest\x1a\x1e.service.ConfigurationResponseB3Z1OpenCNC/config_service/structures/service;serviceb\x06proto3"
 
 var (
 	file_config_service_structures_service_service_proto_rawDescOnce sync.Once

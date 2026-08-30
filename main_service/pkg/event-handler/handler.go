@@ -4,10 +4,12 @@ import (
 	"fmt"
 	"time"
 
-	store "OpenCNC/main_service/pkg/store-wrapper"
-	"OpenCNC/main_service/pkg/structures/configuration"
-	"OpenCNC/main_service/pkg/structures/notification"
-	"OpenCNC/main_service/pkg/structures/streamObjects"
+	store "OpenCNC/common/store-wrapper"
+	"OpenCNC/common/structures/topology"
+	uni "OpenCNC/common/structures/uni"
+	"OpenCNC/tsn_service/pkg/notificationServer"
+
+	"google.golang.org/protobuf/types/known/timestamppb"
 	//"git.cs.kau.se/hamzchah/opencnc_kafka-exporter/logger/pkg/logger"
 )
 
@@ -15,34 +17,38 @@ import (
 
 // Take in a configuration request, process it and once a configuration
 // has been calculated, return ID of the new configuration.
-func HandleAddStreamEvent(event *configuration.ConfigRequest, timeOfReq time.Time) (*notification.UUID, error) {
+func HandleAddStreamEvent(configReq *uni.ConfigRequest, timeOfReq time.Time) (string, error) {
 	// Store requests in k/v store and log the events
-	requestIds, err := storeRequestsInStore(event.Requests, timeOfReq)
+	requestIds, err := store.StoreMultipleUniConfRequest(configReq.Requests)
 	if err != nil {
 		//log.Errorf("Failed storing and logging events: %v", err)
 		fmt.Printf("Failed storing and logging events: %v", err)
-		return nil, err
+		return "", err
 	}
 
 	//log.Info("Configuration requests stored successfully!")
 	fmt.Println("Configuration requests stored successfully!")
 
 	// Notify TSN service that it should calculate a new configuration
-	configId, err := notifyTsnService(requestIds)
+	event := &notificationServer.Event{
+		EventId:    "...",
+		Type:       notificationServer.EventType_STREAM_ADDED,
+		OccurredAt: timestamppb.New(timeOfReq),
+		Source:     "some-service",
+		Payload: &notificationServer.Event_StreamAdded{
+			StreamAdded: &notificationServer.StreamAdded{
+				RequestIds: requestIds,
+				StreamId:   "...",
+			},
+		},
+	}
+
+	configId, err := notifyTsnService(event)
 	if err != nil {
 		//log.Errorf("Failed to notify TSN service: %v", err)
 		fmt.Printf("Failed to notify TSN service: %v", err)
-		return nil, err
+		return "", err
 	}
-
-	fmt.Println("Notified TSN service...")
-	//log.Infof("Configuration calculated with ID: %s", configId.GetValue())
-
-	// admissionCheck, err := admissioncontrol.AdmissionCheck("192.168.0.2", configId.GetValue())
-	// if err != nil {
-	// 	//log.Errorf("Admission failed: %v", err)
-	// 	return nil, err
-	// }
 
 	admissionCheck := true
 
@@ -67,8 +73,8 @@ func HandleAddStreamEvent(event *configuration.ConfigRequest, timeOfReq time.Tim
 	return configId, nil
 }
 
-func RegisterNode(node *streamObjects.NodeObject) error {
-	if node.GetNodeType() == "talker" || node.GetNodeType() == "listener" {
+func RegisterNode(node *topology.Node) error {
+	if node.GetType() == topology.NodeRole_END_STATION || node.GetType() == topology.NodeRole_END_STATION {
 		//log.Infof("Registering node with MAC %v of type %v", node.GetStreamMAC(), node.GetNodeType())
 		store.StoreNode(node)
 	} else {

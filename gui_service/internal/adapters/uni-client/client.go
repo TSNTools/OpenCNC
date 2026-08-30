@@ -1,7 +1,7 @@
 package uniclient
 
 import (
-	"OpenCNC/main_service/pkg/structures/configuration"
+	uni "OpenCNC/common/structures/uni"
 	"bytes"
 	"context"
 	"fmt"
@@ -28,7 +28,7 @@ func NewClient(baseURL string) *Client {
 
 func (c *Client) AddStream(
 	ctx context.Context,
-	req *configuration.ConfigRequest,
+	req *uni.ConfigRequest,
 ) error {
 
 	if req == nil {

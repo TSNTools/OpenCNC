@@ -1,8 +1,8 @@
 syntax = "proto3";
 
-package notification;
+package notificationServer;
 
-option go_package = "OpenCNC/tsn_service/pkg/structures/notification;notification";
+option go_package = "OpenCNC/tsn_service/pkg/structures/notificationServer;notificationServer";
 
 import "google/protobuf/timestamp.proto";
 
@@ -128,9 +128,9 @@ message NotifyResponse {
   // Notification was accepted by the TSN service.
   bool accepted = 1;
 
-  // Optional identifier for the internal configuration/reconfiguration
+  // Optional identifier for the internal configuration optimization/reoptimization
   // workflow started by the event.
-  string workflow_id = 2;
+  string config_id = 2;
 
   string message = 3;
 }

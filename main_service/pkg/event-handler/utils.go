@@ -8,74 +8,76 @@ import (
 	"os"
 	"strings"
 
-	store "OpenCNC/main_service/pkg/store-wrapper"
+	configservice "OpenCNC/config_service/grpc_server"
+
 	// "OpenCNC/main_service/pkg/structures/configuration"
-	"OpenCNC/main_service/pkg/structures/notification"
+	"OpenCNC/tsn_service/pkg/notificationServer"
 	"time"
 
 	"github.com/openconfig/gnmi/client"
 	gclient "github.com/openconfig/gnmi/client/gnmi"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
 // Notifies the TSN service through gRPC that it should start calculating
 // a new configuration.
-func notifyTsnService(reqIds *notification.IdList) (*notification.UUID, error) {
-	// Create gRPC client and connect to TSN service
-	// TODO: consider having a constant connection to TSN service
-	conn, err := grpc.Dial("tsn_service:5150", grpc.WithInsecure())
-	if err != nil {
-		//log.Fatalf("Failed dialing tsn_service: %v", err)
-		fmt.Printf("Failed dialing tsn_service: %v", err)
-		return nil, err
-	}
 
+func notifyTsnService(event *notificationServer.Event) (string, error) {
+	// TODO: consider keeping a persistent connection to the TSN service.
+	conn, err := grpc.Dial(
+		"tsn_service:5150",
+		grpc.WithInsecure(),
+	)
+	if err != nil {
+		fmt.Printf("Failed dialing TSN service: %v\n", err)
+		return "", err
+	}
 	defer conn.Close()
-	fmt.Println("Dialed TSN service succesfully.")
-	client := notification.NewNotificationClient(conn)
 
-	confId, err := client.CalcConfig(context.Background(), reqIds)
+	fmt.Println("Dialed TSN service successfully.")
+
+	client := notificationServer.NewNotificationClient(conn)
+
+	resp, err := client.Notify(context.Background(), event)
 	if err != nil {
-		//log.Errorf("Calculating configuration failed: %v", err)
-		fmt.Printf("Calculating configuration failed: %v", err)
-
-		return nil, err
+		fmt.Printf("Failed sending notification to TSN service: %v\n", err)
+		return "", err
 	}
 
-	return confId, nil
+	if !resp.GetAccepted() {
+		return "", fmt.Errorf(
+			"TSN service rejected notification: %s",
+			resp.GetMessage(),
+		)
+	}
+
+	configID := resp.GetConfigId()
+
+	return configID, nil
 }
 
 // Applies configuration (sends network change to config-service)
 // MTODO:
-func applyConfiguration(id *notification.UUID) error {
-	client, err := ConnectToGnmiService("config-service:5150")
+func applyConfiguration(id *string) error {
+	client, conn, err := ConnectToConfigService("config-service:5150")
 	if err != nil {
 		//log.Errorf("Failed connecting to gNMI service: %v", err)
 		fmt.Printf("Failed connecting to gNMI service: %v", err)
 
 		return err
 	}
+	defer conn.Close()
 
 	//log.Info("Connected to config-service!")
 	fmt.Print("Connected to config-service!")
 
-	// confReq := getSetRequestForConfig()
-	confReq, err := store.GetConfigurationRequest(id.Value)
-	if err != nil {
-		//log.Errorf("Failed getting configuration request from store: %v", err)
-		fmt.Printf("Failed getting configuration request from store: %v", err)
-
-		return err
+	req := &configservice.ConfigurationRequest{
+		Id: id,
 	}
 
-	//log.Info("Successfully requested configuration request from k/v store!")
+	_, err = client.ApplyConfigurationById(context.Background(), req)
 
-	fmt.Printf("Successfully requested configuration request from k/v store!")
-
-	// log.Infof("Sending network change request looking like: %v", confReq)
-
-	// response, err := client.(*gclient.Client).Set(context.Background(), confReq)
-	_, err = client.(*gclient.Client).Set(context.Background(), confReq)
 	if err != nil {
 		//log.Errorf("Target returned RPC error for Set: %v", err)
 		fmt.Printf("Target returned RPC error for Set: %v", err)
@@ -275,4 +277,18 @@ func ConnectToGnmiService(addr string) (client.Impl, error) {
 	}
 
 	return client, nil
+}
+
+func ConnectToConfigService(address string) (configservice.ConfigServiceClient, *grpc.ClientConn, error) {
+	conn, err := grpc.NewClient(
+		address,
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+	)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	client := configservice.NewConfigServiceClient(conn)
+
+	return client, conn, nil
 }

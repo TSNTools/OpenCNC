@@ -2,12 +2,14 @@
 // versions:
 // - protoc-gen-go-grpc v1.6.2
 // - protoc             v3.21.12
-// source: main_service/pkg/structures/uni-grpc/uni-grpc.proto
+// source: main_service/pkg/uni/uni-grpc.proto
 
-package uni_grpc
+package uni_server
 
 import (
+	uni "OpenCNC/common/structures/uni"
 	context "context"
+
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
@@ -19,14 +21,14 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	UniService_AddStream_FullMethodName = "/uni_grpc.UniService/AddStream"
+	UniService_AddStream_FullMethodName = "/uni_server.UniService/AddStream"
 )
 
 // UniServiceClient is the client API for UniService service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type UniServiceClient interface {
-	AddStream(ctx context.Context, in *AddStreamRequest, opts ...grpc.CallOption) (*AddStreamResponse, error)
+	AddStream(ctx context.Context, in *uni.ConfigRequest, opts ...grpc.CallOption) (*uni.ConfigResponse, error)
 }
 
 type uniServiceClient struct {
@@ -37,9 +39,9 @@ func NewUniServiceClient(cc grpc.ClientConnInterface) UniServiceClient {
 	return &uniServiceClient{cc}
 }
 
-func (c *uniServiceClient) AddStream(ctx context.Context, in *AddStreamRequest, opts ...grpc.CallOption) (*AddStreamResponse, error) {
+func (c *uniServiceClient) AddStream(ctx context.Context, in *uni.ConfigRequest, opts ...grpc.CallOption) (*uni.ConfigResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(AddStreamResponse)
+	out := new(uni.ConfigResponse)
 	err := c.cc.Invoke(ctx, UniService_AddStream_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
@@ -51,7 +53,7 @@ func (c *uniServiceClient) AddStream(ctx context.Context, in *AddStreamRequest, 
 // All implementations must embed UnimplementedUniServiceServer
 // for forward compatibility.
 type UniServiceServer interface {
-	AddStream(context.Context, *AddStreamRequest) (*AddStreamResponse, error)
+	AddStream(context.Context, *uni.ConfigRequest) (*uni.ConfigResponse, error)
 	mustEmbedUnimplementedUniServiceServer()
 }
 
@@ -62,7 +64,7 @@ type UniServiceServer interface {
 // pointer dereference when methods are called.
 type UnimplementedUniServiceServer struct{}
 
-func (UnimplementedUniServiceServer) AddStream(context.Context, *AddStreamRequest) (*AddStreamResponse, error) {
+func (UnimplementedUniServiceServer) AddStream(context.Context, *uni.ConfigRequest) (*uni.ConfigResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method AddStream not implemented")
 }
 func (UnimplementedUniServiceServer) mustEmbedUnimplementedUniServiceServer() {}
@@ -87,7 +89,7 @@ func RegisterUniServiceServer(s grpc.ServiceRegistrar, srv UniServiceServer) {
 }
 
 func _UniService_AddStream_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(AddStreamRequest)
+	in := new(uni.ConfigRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -99,7 +101,7 @@ func _UniService_AddStream_Handler(srv interface{}, ctx context.Context, dec fun
 		FullMethod: UniService_AddStream_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(UniServiceServer).AddStream(ctx, req.(*AddStreamRequest))
+		return srv.(UniServiceServer).AddStream(ctx, req.(*uni.ConfigRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -108,7 +110,7 @@ func _UniService_AddStream_Handler(srv interface{}, ctx context.Context, dec fun
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var UniService_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "uni_grpc.UniService",
+	ServiceName: "uni_server.UniService",
 	HandlerType: (*UniServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
@@ -117,5 +119,5 @@ var UniService_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "main_service/pkg/structures/uni-grpc/uni-grpc.proto",
+	Metadata: "main_service/pkg/uni/uni-grpc.proto",
 }

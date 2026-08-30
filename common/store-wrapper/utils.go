@@ -455,3 +455,39 @@ func storeLinks(links []*topology.Link) error {
 
 	return nil
 }
+
+// Get raw data from k/v store
+func getRawDataFromStore(urn string) ([]byte, error) {
+	// Connect to ETCD
+	client, err := createEtcdClient()
+	if err != nil {
+		//log.Fatal(err)
+		return nil, err
+	}
+	defer client.Close()
+
+	// Create a context with a timeout
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	// Create a slice of maximum two URN elements
+	urnElems := strings.SplitN(urn, ".", 2)
+	if len(urnElems) < 2 {
+		return nil, fmt.Errorf("invalid URN format")
+	}
+
+	// Get the object from etcd
+	resp, err := client.Get(ctx, urnElems[0]+"/"+urnElems[1])
+	if err != nil {
+		//log.Infof("Failed getting resource \"%s\": %v", urnElems[1], err)
+		return nil, err
+	}
+
+	// If no value is found, return an error
+	if len(resp.Kvs) == 0 {
+		return nil, fmt.Errorf("key not found: %s", urn)
+	}
+
+	// Return the value of the key
+	return resp.Kvs[0].Value, nil
+}

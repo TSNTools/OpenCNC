@@ -1,12 +1,10 @@
 package nni
 
 import (
-	"OpenCNC/main_service/pkg/structures/configuration"
-	monitor "OpenCNC/main_service/pkg/structures/temp-monitor-conf"
-	"OpenCNC/main_service/pkg/structures/topology"
+	"OpenCNC/common/structures/topology"
 	"strings"
 
-	"encoding/json"
+	"OpenCNC/common/structures/uni"
 
 	"github.com/gogo/protobuf/jsonpb"
 	"google.golang.org/protobuf/encoding/protojson"
@@ -41,20 +39,7 @@ func convertNodesToJson(nodes []*topology.Node) (string, error) {
 	return builder.String(), nil
 }
 
-// /////
-func convertSwitchesToJson(switches []monitor.MonitorConfig) (string, error) {
-
-	jsonBytes, err := json.Marshal(switches)
-	if err != nil {
-		//log.Errorf("Failed converting %v to json: %v", switches, err)
-		return "", err
-	}
-	jsonString := string(jsonBytes)
-
-	return jsonString, nil
-}
-
-func convertStreamsToJson(streams *configuration.ConfigResponse) (string, error) {
+func convertStreamsToJson(streams *uni.ConfigResponse) (string, error) {
 	jsonMarshaler := jsonpb.Marshaler{}
 
 	jsonString, err := jsonMarshaler.MarshalToString(streams)

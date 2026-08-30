@@ -1,8 +1,8 @@
 package main
 
 import (
-	"context"
 	"fmt"
+	"net"
 
 	"time"
 
@@ -10,16 +10,12 @@ import (
 
 	eventhandler "OpenCNC/main_service/pkg/event-handler"
 	"OpenCNC/main_service/pkg/nni"
-	monitor "OpenCNC/main_service/pkg/structures/temp-monitor-conf"
 
 	//"OpenCNC/main_service/pkg/uni"
-	uni_server "OpenCNC/main_service/pkg/structures/uni-server"
+	uni_server "OpenCNC/main_service/pkg/uni"
 
-	"github.com/openconfig/gnmi/proto/gnmi"
-
+	"google.golang.org/grpc"
 	//"git.cs.kau.se/hamzchah/opencnc_kafka-exporter/logger/pkg/logger"
-	"github.com/openconfig/gnmi/client"
-	gclient "github.com/openconfig/gnmi/client/gnmi"
 )
 
 //var log = logger.GetLogger()
@@ -46,7 +42,7 @@ func main() {
 	//go uni.StartServer()
 
 	// Start UNI grpc server
-	go uni_server.StartServer("9000")
+	go uni_server.StartHttpServer()
 
 	// Not working on local network, needs to be connected to switches
 	//switches := counterConfHandler.GetMonitorConfigDevices()
@@ -66,6 +62,24 @@ func main() {
 	select {}
 }
 
+func StartUniGrpcServer(port string) error {
+	listener, err := net.Listen("tcp", ":"+port)
+	if err != nil {
+		return fmt.Errorf("failed to listen on port %s: %w", port, err)
+	}
+
+	grpcServer := grpc.NewServer()
+
+	uni_server.RegisterUniServiceServer(
+		grpcServer,
+		&uni_server.Server{},
+	)
+
+	fmt.Printf("UNI gRPC server listening on :%s\n", port)
+
+	return grpcServer.Serve(listener)
+}
+
 func pollConfigSubsystemForAvailability() bool {
 	for {
 		fmt.Println("Trying to connect to config-service...")
@@ -78,35 +92,4 @@ func pollConfigSubsystemForAvailability() bool {
 		fmt.Println("Connected to config-service!")
 		return true
 	}
-}
-
-func startDeviceDataCollection(switches []monitor.MonitorConfig) error {
-	c, err := gclient.New(context.Background(), client.Destination{
-		Addrs:       []string{"monitor-service" + ":" + "11161"},
-		Timeout:     5 * time.Second,
-		Credentials: nil,
-		TLS:         nil,
-	})
-	if err != nil {
-		return err
-	}
-
-	for i := range switches {
-		sw := &switches[i] // ✅ take pointer to avoid copying the struct
-
-		_, err := c.(*gclient.Client).Get(context.Background(), &gnmi.GetRequest{
-			Path: []*gnmi.Path{
-				{
-					Elem:   []*gnmi.PathElem{},
-					Target: sw.DeviceIP,
-				},
-			},
-		})
-		if err != nil {
-			fmt.Printf("Failed getting response: %v\n", err)
-			return err
-		}
-	}
-
-	return nil
 }
