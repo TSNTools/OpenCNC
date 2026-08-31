@@ -15,8 +15,8 @@ const trafficTypeOptions: Array<{ value: TrafficTypeValue; label: string }> = [
 
 const rankOptions: Array<{ value: StreamRankValue; label: string }> = [
   { value: "RANK_UNSPECIFIED", label: "Unspecified" },
-  { value: "RANK_A", label: "Rank A" },
-  { value: "RANK_B", label: "Rank B" },
+  { value: "RANK_EMERGENCY", label: "Emergency" },
+  { value: "RANK_NON_EMERGENCY", label: "Non-Emergency" },
 ];
 
 function defaultForm(nodes: NodeOption[]): StreamFormState {
@@ -28,7 +28,7 @@ function defaultForm(nodes: NodeOption[]): StreamFormState {
     talkerNodeId: firstNode,
     listenerNodeIds: secondNode && secondNode !== firstNode ? [secondNode] : [],
     trafficType: "TRAFFIC_TYPE_ISOCHRONOUS",
-    rank: "RANK_A",
+    rank: "RANK_EMERGENCY",
     destinationMac: "",
     sourceMac: "",
     vlanId: 1,

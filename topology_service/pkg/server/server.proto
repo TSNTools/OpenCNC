@@ -1,0 +1,43 @@
+syntax = "proto3";
+
+package topology.server;
+
+option go_package = "github.com/TSNTools/OpenCNC_config-service/topology_service/pkg/server";
+
+import "common/structures/topology/topology.proto";
+import "common/structures/credentials/credentials.proto";
+
+service TopologyService {
+  // Discover topology starting from a device.
+  rpc Discover(DiscoverRequest) returns (DiscoverResponse);
+
+  // Return a discovered node.
+  rpc GetNode(GetNodeRequest) returns (GetNodeResponse);
+
+  // Return the current topology snapshot.
+  rpc GetTopologySnapshot(GetTopologySnapshotRequest)
+      returns (GetTopologySnapshotResponse);
+}
+
+message DiscoverRequest {
+  topology.Node node = 1; 
+  credentials.ManagementCredentials credentials  = 2;
+}
+
+message DiscoverResponse {
+  topology.Node node = 1; // returns node but updates the topology in store
+}
+
+message GetNodeRequest {
+  string node_id = 1;
+}
+
+message GetNodeResponse {
+  topology.Node node = 1;
+}
+
+message GetTopologySnapshotRequest {}
+
+message GetTopologySnapshotResponse {
+  topology.Topology topology = 1;
+}

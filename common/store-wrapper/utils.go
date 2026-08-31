@@ -306,46 +306,6 @@ func storeNodeWithClient(client *clientv3.Client, node *topology.Node, requireEx
 	return sendToStoreRepeated(client, obj, prefix+"."+node.GetName())
 }
 
-func StoreNode(node *topology.Node) error {
-	client, err := createEtcdClient()
-	if err != nil {
-		return fmt.Errorf("failed to create etcd client: %w", err)
-	}
-	defer client.Close()
-
-	return storeNodeWithClient(client, node, false)
-}
-
-func EditNode(node *topology.Node) error {
-	client, err := createEtcdClient()
-	if err != nil {
-		return fmt.Errorf("failed to create etcd client: %w", err)
-	}
-	defer client.Close()
-
-	return storeNodeWithClient(client, node, true)
-}
-
-func StoreLink(link *topology.Link) error {
-	client, err := createEtcdClient()
-	if err != nil {
-		return fmt.Errorf("failed to create etcd client: %w", err)
-	}
-	defer client.Close()
-
-	return storeLinkWithClient(client, link, false)
-}
-
-func EditLink(link *topology.Link) error {
-	client, err := createEtcdClient()
-	if err != nil {
-		return fmt.Errorf("failed to create etcd client: %w", err)
-	}
-	defer client.Close()
-
-	return storeLinkWithClient(client, link, true)
-}
-
 func storeLinkWithClient(client *clientv3.Client, link *topology.Link, requireExisting bool) error {
 	if link == nil {
 		return fmt.Errorf("link cannot be nil")

@@ -444,6 +444,11 @@ type StreamConfiguration struct {
 	// with this Stream through this configuration.
 	BandwidthReservation *BandwidthReservation `protobuf:"bytes,5,opt,name=bandwidth_reservation,json=bandwidthReservation,proto3,oneof" json:"bandwidth_reservation,omitempty"`
 	//
+	// End-to-end accumulated latency for this Stream.
+	//
+	// Value is in nanoseconds.
+	AccumulatedLatencyNs *uint64 `protobuf:"varint,6,opt,name=accumulated_latency_ns,json=accumulatedLatencyNs,proto3,oneof" json:"accumulated_latency_ns,omitempty"`
+	//
 	// Optional Qbv scheduling offset.
 	//
 	// This field is only meaningful when the Stream is associated with
@@ -451,13 +456,13 @@ type StreamConfiguration struct {
 	//
 	// The actual Gate Control List is modeled by the appropriate
 	// scheduling configuration rather than here.
-	TimeAwareOffsetNs *uint64 `protobuf:"varint,6,opt,name=time_aware_offset_ns,json=timeAwareOffsetNs,proto3,oneof" json:"time_aware_offset_ns,omitempty"`
+	TimeAwareOffsetNs *uint64 `protobuf:"varint,7,opt,name=time_aware_offset_ns,json=timeAwareOffsetNs,proto3,oneof" json:"time_aware_offset_ns,omitempty"`
 	//
 	// Optional CNC-computed path.
 	//
 	// Empty means that this StreamConfiguration does not specify an
 	// explicit path.
-	Path []*StreamHop `protobuf:"bytes,7,rep,name=path,proto3" json:"path,omitempty"`
+	Path []*StreamHop `protobuf:"bytes,8,rep,name=path,proto3" json:"path,omitempty"`
 	//
 	// Optional Stream Identification association.
 	//
@@ -467,7 +472,7 @@ type StreamConfiguration struct {
 	// Multiple identification entries may be required for a Stream,
 	// for example when the Stream is identified differently on
 	// different ports.
-	StreamIdentification []*stream_identification.StreamIdentificationEntry `protobuf:"bytes,8,rep,name=stream_identification,json=streamIdentification,proto3" json:"stream_identification,omitempty"`
+	StreamIdentification []*stream_identification.StreamIdentificationEntry `protobuf:"bytes,9,rep,name=stream_identification,json=streamIdentification,proto3" json:"stream_identification,omitempty"`
 	//
 	// Optional FRER configuration.
 	//
@@ -477,22 +482,22 @@ type StreamConfiguration struct {
 	// FRER configuration references the local stream_handle /
 	// Stream Identification domain rather than duplicating frame
 	// identification criteria here.
-	Frer *frer.FrerConfiguration `protobuf:"bytes,9,opt,name=frer,proto3,oneof" json:"frer,omitempty"`
+	Frer *frer.FrerConfiguration `protobuf:"bytes,10,opt,name=frer,proto3,oneof" json:"frer,omitempty"`
 	//
 	// Optional PSFP configuration.
 	//
 	// PSFP operates on an identified Stream and therefore does not
 	// need to duplicate Stream Identification criteria here.
-	PsfpFilter *psfp.StreamFilterInstance `protobuf:"bytes,10,opt,name=psfp_filter,json=psfpFilter,proto3,oneof" json:"psfp_filter,omitempty"`
+	PsfpFilter *psfp.StreamFilterInstance `protobuf:"bytes,11,opt,name=psfp_filter,json=psfpFilter,proto3,oneof" json:"psfp_filter,omitempty"`
 	//
 	// Optional per-port queue assignments.
-	QueueAssignments []*QueueAssignment `protobuf:"bytes,11,rep,name=queue_assignments,json=queueAssignments,proto3" json:"queue_assignments,omitempty"`
+	QueueAssignments []*QueueAssignment `protobuf:"bytes,12,rep,name=queue_assignments,json=queueAssignments,proto3" json:"queue_assignments,omitempty"`
 	//
 	// CNC administrative state.
-	Enabled bool `protobuf:"varint,12,opt,name=enabled,proto3" json:"enabled,omitempty"`
+	Enabled bool `protobuf:"varint,13,opt,name=enabled,proto3" json:"enabled,omitempty"`
 	//
 	// Human-readable description.
-	Description   string `protobuf:"bytes,13,opt,name=description,proto3" json:"description,omitempty"`
+	Description   string `protobuf:"bytes,14,opt,name=description,proto3" json:"description,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -560,6 +565,13 @@ func (x *StreamConfiguration) GetBandwidthReservation() *BandwidthReservation {
 		return x.BandwidthReservation
 	}
 	return nil
+}
+
+func (x *StreamConfiguration) GetAccumulatedLatencyNs() uint64 {
+	if x != nil && x.AccumulatedLatencyNs != nil {
+		return *x.AccumulatedLatencyNs
+	}
+	return 0
 }
 
 func (x *StreamConfiguration) GetTimeAwareOffsetNs() uint64 {
@@ -643,28 +655,30 @@ const file_common_structures_stream_config_stream_config_proto_rawDesc = "" +
 	"\x14BandwidthReservation\x124\n" +
 	"\x16reserved_bandwidth_bps\x18\x01 \x01(\x04R\x14reservedBandwidthBps\x12&\n" +
 	"\x0fmax_burst_bytes\x18\x02 \x01(\x04R\rmaxBurstBytes\x12.\n" +
-	"\x13shaping_interval_ns\x18\x03 \x01(\x04R\x11shapingIntervalNs\"\xdf\x06\n" +
+	"\x13shaping_interval_ns\x18\x03 \x01(\x04R\x11shapingIntervalNs\"\xb5\a\n" +
 	"\x13StreamConfiguration\x12-\n" +
 	"\tstream_id\x18\x01 \x01(\v2\x10.stream.StreamIdR\bstreamId\x12N\n" +
 	"\x13time_sync_reference\x18\x02 \x01(\v2\x19.stream.TimeSyncReferenceH\x00R\x11timeSyncReference\x88\x01\x01\x12\x1c\n" +
 	"\avlan_id\x18\x03 \x01(\rH\x01R\x06vlanId\x88\x01\x01\x12\x15\n" +
 	"\x03pcp\x18\x04 \x01(\rH\x02R\x03pcp\x88\x01\x01\x12V\n" +
-	"\x15bandwidth_reservation\x18\x05 \x01(\v2\x1c.stream.BandwidthReservationH\x03R\x14bandwidthReservation\x88\x01\x01\x124\n" +
-	"\x14time_aware_offset_ns\x18\x06 \x01(\x04H\x04R\x11timeAwareOffsetNs\x88\x01\x01\x12%\n" +
-	"\x04path\x18\a \x03(\v2\x11.stream.StreamHopR\x04path\x12i\n" +
-	"\x15stream_identification\x18\b \x03(\v24.tsn.stream_identification.StreamIdentificationEntryR\x14streamIdentification\x124\n" +
-	"\x04frer\x18\t \x01(\v2\x1b.tsn.frer.FrerConfigurationH\x05R\x04frer\x88\x01\x01\x12D\n" +
-	"\vpsfp_filter\x18\n" +
-	" \x01(\v2\x1e.tsn.psfp.StreamFilterInstanceH\x06R\n" +
+	"\x15bandwidth_reservation\x18\x05 \x01(\v2\x1c.stream.BandwidthReservationH\x03R\x14bandwidthReservation\x88\x01\x01\x129\n" +
+	"\x16accumulated_latency_ns\x18\x06 \x01(\x04H\x04R\x14accumulatedLatencyNs\x88\x01\x01\x124\n" +
+	"\x14time_aware_offset_ns\x18\a \x01(\x04H\x05R\x11timeAwareOffsetNs\x88\x01\x01\x12%\n" +
+	"\x04path\x18\b \x03(\v2\x11.stream.StreamHopR\x04path\x12i\n" +
+	"\x15stream_identification\x18\t \x03(\v24.tsn.stream_identification.StreamIdentificationEntryR\x14streamIdentification\x124\n" +
+	"\x04frer\x18\n" +
+	" \x01(\v2\x1b.tsn.frer.FrerConfigurationH\x06R\x04frer\x88\x01\x01\x12D\n" +
+	"\vpsfp_filter\x18\v \x01(\v2\x1e.tsn.psfp.StreamFilterInstanceH\aR\n" +
 	"psfpFilter\x88\x01\x01\x12D\n" +
-	"\x11queue_assignments\x18\v \x03(\v2\x17.stream.QueueAssignmentR\x10queueAssignments\x12\x18\n" +
-	"\aenabled\x18\f \x01(\bR\aenabled\x12 \n" +
-	"\vdescription\x18\r \x01(\tR\vdescriptionB\x16\n" +
+	"\x11queue_assignments\x18\f \x03(\v2\x17.stream.QueueAssignmentR\x10queueAssignments\x12\x18\n" +
+	"\aenabled\x18\r \x01(\bR\aenabled\x12 \n" +
+	"\vdescription\x18\x0e \x01(\tR\vdescriptionB\x16\n" +
 	"\x14_time_sync_referenceB\n" +
 	"\n" +
 	"\b_vlan_idB\x06\n" +
 	"\x04_pcpB\x18\n" +
-	"\x16_bandwidth_reservationB\x17\n" +
+	"\x16_bandwidth_reservationB\x19\n" +
+	"\x17_accumulated_latency_nsB\x17\n" +
 	"\x15_time_aware_offset_nsB\a\n" +
 	"\x05_frerB\x0e\n" +
 	"\f_psfp_filter*m\n" +

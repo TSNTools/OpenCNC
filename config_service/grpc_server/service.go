@@ -42,7 +42,7 @@ func (s *ConfigServiceServerImpl) ApplyConfiguration(ctx context.Context, req *C
 		}, err
 	}
 
-	storewrapper.StoreConfiguration(cfg)
+	storewrapper.StoreTopologyConfiguration(cfg)
 
 	return &ConfigurationResponse{
 		Success: true,
@@ -60,7 +60,7 @@ func (s *ConfigServiceServerImpl) ApplyConfigurationById(ctx context.Context, re
 		}, fmt.Errorf("configuration ID is empty")
 	}
 
-	cfg, err := storewrapper.GetConfiguration(configId)
+	cfg, err := storewrapper.GetTopologyConfiguration(configId)
 	if err != nil {
 		return &ConfigurationResponse{
 			Success: false,

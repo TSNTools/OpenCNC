@@ -6,74 +6,42 @@ import (
 	store "OpenCNC/common/store-wrapper"
 	"OpenCNC/common/structures/uni"
 	"OpenCNC/tsn_service/pkg/internalOptimizer"
-
+	"OpenCNC/tsn_service/pkg/structures/forwarding_plane"
+	optimizer "OpenCNC/tsn_service/pkg/structures/optimization_contract"
 	//	"git.cs.kau.se/hamzchah/opencnc_kafka-exporter/logger/pkg/logger"
-
-	"github.com/google/uuid"
 )
 
 //var log = logger.GetLogger()
 
 // Calculates configuration and stores it as a set request in k/v store, returns ID of configuration set request
-func CalculateConfiguration(ids []string) (string, error) {
-	// Not yet used when calculating configuration
-	var allRequestData []*uni.Request
-
-	// Get request from k/v store
-	for _, requestId := range ids {
-		reqData, err := store.GetRequestData(requestId)
-		if err != nil {
-			return "", err
-		}
-		fmt.Printf("Got request from store with id: %s\n", requestId)
-		allRequestData = append(allRequestData, reqData)
-	}
+func CalculateConfiguration(task *optimizer.OptimizationTask, allRequestData []*uni.Request) (*forwarding_plane.ForwardingPlaneModel, error) {
 
 	// TODO: Use requests when creating configuration
 
-	// Get topology
-	topology, err := store.GetTopology()
-	if err != nil {
-		//log.Errorf("Failed getting topology: %v", err)
-		fmt.Printf("Failed getting topology: %v\n", err)
-		return "", err
-	}
-
-	//log.Info("Successfully requested topology from k/v store!")
-	fmt.Println("Successfully requested topology from k/v store!")
-
-	// NOT TESTED???
-	// Get current configuration of the network
-	//oldConfig, err := store.GetConfiguration("old")
-	/*
-		if err != nil {
-			//log.Errorf("Failed getting configuration: %v", err)
-			fmt.Printf("Failed getting configuration: %v\n", err)
-			return "", err
-		}*/
 	// Calculate configuration set request
-	newConfig, err := internalOptimizer.RequestOptimization(topology, nil)
+	new_fpm, err := internalOptimizer.StartOptimization(task, allRequestData)
 	if err != nil {
 		//log.Errorf("Failed calculating configuration: %v", err)
 		fmt.Printf("Failed calculating configuration: %v\n", err)
-		return "", err
+		return nil, err
 	}
 
-	//log.Info("Successfully calculated new configuration!")
-	fmt.Println("Successfully calculated new configuration!")
+	// Validate the new forwarding plane model before storing it
+	admissionCheck := true
+	if admissionCheck {
+		// Store configuration set request in k/v store
+		if err := store.StoreForwardingPlaneConfiguration(new_fpm); err != nil {
+			//log.Errorf("Failed storing new configuration: %v", err)
+			fmt.Printf("Failed storing configuration: %v\n", err)
 
-	// Generate an ID for configuration set request
-	confId := fmt.Sprint(uuid.New())
+			return nil, err
+		}
 
-	// Store configuration set request in k/v store
-	if err := store.StoreConfiguration(newConfig); err != nil {
-		//log.Errorf("Failed storing new configuration: %v", err)
-		fmt.Printf("Failed storing configuration: %v\n", err)
-
-		return "", err
+		return new_fpm, nil
+	} else {
+		//TODO: Handle admission denial appropriately by returning the problem to the optimizer
+		// Admission denied
+		return nil, fmt.Errorf("admission denied")
 	}
 
-	//log.Info("Successfully stored new configuration!")
-	fmt.Println("Successfully stored new configuration!")
-	return confId, nil
 }

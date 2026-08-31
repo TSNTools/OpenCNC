@@ -20,13 +20,18 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 )
 
+const (
+	defaultTsnServiceAddress    = "localhost:5152"
+	defaultConfigServiceAddress = "localhost:5150"
+)
+
 // Notifies the TSN service through gRPC that it should start calculating
 // a new configuration.
 
 func notifyTsnService(event *notificationServer.Event) (string, error) {
 	// TODO: consider keeping a persistent connection to the TSN service.
 	conn, err := grpc.Dial(
-		"tsn_service:5150",
+		defaultTsnServiceAddress,
 		grpc.WithInsecure(),
 	)
 	if err != nil {
@@ -59,21 +64,21 @@ func notifyTsnService(event *notificationServer.Event) (string, error) {
 
 // Applies configuration (sends network change to config-service)
 // MTODO:
-func applyConfiguration(id *string) error {
-	client, conn, err := ConnectToConfigService("config-service:5150")
+func notifyConfigService(id string) error {
+	client, conn, err := ConnectToConfigService(defaultConfigServiceAddress)
 	if err != nil {
 		//log.Errorf("Failed connecting to gNMI service: %v", err)
 		fmt.Printf("Failed connecting to gNMI service: %v", err)
 
-		return err
+		return fmt.Errorf("failed to notify config-service: %w", err)
 	}
 	defer conn.Close()
 
 	//log.Info("Connected to config-service!")
-	fmt.Print("Connected to config-service!")
+	fmt.Println("Connected to config-service!")
 
 	req := &configservice.ConfigurationRequest{
-		Id: id,
+		Id: &id,
 	}
 
 	_, err = client.ApplyConfigurationById(context.Background(), req)
@@ -82,7 +87,7 @@ func applyConfiguration(id *string) error {
 		//log.Errorf("Target returned RPC error for Set: %v", err)
 		fmt.Printf("Target returned RPC error for Set: %v", err)
 
-		return err
+		return fmt.Errorf("failed to notify config-service: %w", err)
 	}
 
 	//log.Info("Successfully sent configuration to config-service!")

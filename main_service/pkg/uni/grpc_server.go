@@ -3,11 +3,15 @@ package uni_server
 import (
 	"context"
 	"fmt"
+	"log"
+	"net"
 	"time"
 
 	handler "OpenCNC/main_service/pkg/event-handler"
 
 	uni "OpenCNC/common/structures/uni"
+
+	grpc "google.golang.org/grpc"
 )
 
 type Server struct {
@@ -40,14 +44,7 @@ func (s *Server) AddStream(ctx context.Context, req *uni.ConfigRequest) (*uni.Co
 		)
 	}
 
-	// createResponse already exists in this package and already:
-	//
-	//   1. Gets the configuration from the store.
-	//   2. Builds the ConfigResponse.
-	//   3. Generates all Response/StatusGroup information.
-	//   4. Serializes it using protojson.
-	//
-	// We reuse it instead of duplicating any of that logic.
+	// createResponse
 	response, err := createResponse(confID, req)
 	if err != nil {
 		fmt.Printf("Failed to create UNI response: %v\n", err)
@@ -59,4 +56,24 @@ func (s *Server) AddStream(ctx context.Context, req *uni.ConfigRequest) (*uni.Co
 	}
 
 	return response, nil
+}
+
+func StartGrpcServer(port uint16) error {
+
+	listener, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
+	if err != nil {
+		return fmt.Errorf("failed to listen on port %d: %w", port, err)
+	}
+
+	grpcServer := grpc.NewServer()
+
+	RegisterUniServiceServer(grpcServer, &Server{})
+
+	log.Println("Starting UNI gRPC server")
+
+	if err := grpcServer.Serve(listener); err != nil {
+		return fmt.Errorf("gRPC server failed: %w", err)
+	}
+
+	return nil
 }

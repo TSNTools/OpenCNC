@@ -1,0 +1,62 @@
+syntax = "proto3";
+
+package optimizer;
+
+option go_package = "OpenCNC/common/structures/optimizer;optimizer";
+
+import "tsn_service/pkg/structures/network_model/forwarding_plane.proto"; 
+
+message OptimizationResult {
+  string task_id = 1;
+
+  Status status = 2;
+
+  // The optimizer's proposed state
+  forwarding_plane.ForwardingPlaneModel desired_model = 3;
+
+  repeated Change changes = 4;
+
+  Metrics metrics = 5;
+
+  string message = 6;
+}
+
+enum Status {
+  STATUS_UNSPECIFIED = 0;
+  OPTIMAL = 1;
+  FEASIBLE = 2;
+  INFEASIBLE = 3;
+  TIMEOUT = 4;
+  FAILED = 5;
+}
+
+message Change {
+  ChangeType type = 1;
+
+  string stream_id = 2;
+  string resource_id = 3;
+
+  string description = 4;
+}
+
+enum ChangeType {
+  CHANGE_TYPE_UNSPECIFIED = 0;
+  PATH_CHANGED = 1;
+  SCHEDULE_CHANGED = 2;
+  QUEUE_CHANGED = 3;
+  VLAN_CHANGED = 4;
+  STREAM_ADDED = 5;
+  STREAM_REMOVED = 6;
+  STREAM_MIGRATED = 7;
+}
+
+message Metrics {
+  double max_latency_ns = 1;
+  double max_jitter_ns = 2;
+
+  uint32 configuration_changes = 3;
+  uint32 stream_migrations = 4;
+
+  double objective_value = 5;
+  uint64 solve_time_ms = 6;
+}

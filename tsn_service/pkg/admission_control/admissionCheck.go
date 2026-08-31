@@ -14,7 +14,7 @@ func AdmissionCheck(ipAddress string, confId string) (bool, error) {
 	fmt.Println("TODO: Implement actual admission check")
 
 	// Get config
-	_, err := store.GetConfiguration(confId)
+	_, err := store.GetTopologyConfiguration(confId)
 	if err != nil {
 		//log.Errorf("Failed getting resources: %v", err)
 		fmt.Println("Failed getting resources: %v", err)

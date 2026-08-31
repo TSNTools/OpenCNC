@@ -301,7 +301,7 @@ func (x *ListenerGroup) GetInterfCap() *InterfaceCapabilities {
 
 type StreamRank struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Rank          uint32                 `protobuf:"varint,1,opt,name=Rank,json=rank,proto3" json:"Rank,omitempty"`
+	Rank          stream.StreamRankValue `protobuf:"varint,1,opt,name=Rank,json=rank,proto3,enum=stream.StreamRankValue" json:"Rank,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -336,11 +336,11 @@ func (*StreamRank) Descriptor() ([]byte, []int) {
 	return file_common_structures_uni_uni_proto_rawDescGZIP(), []int{5}
 }
 
-func (x *StreamRank) GetRank() uint32 {
+func (x *StreamRank) GetRank() stream.StreamRankValue {
 	if x != nil {
 		return x.Rank
 	}
-	return 0
+	return stream.StreamRankValue(0)
 }
 
 type IeeeMacAddress struct {
@@ -1587,10 +1587,10 @@ const file_common_structures_uni_uni_proto_rawDesc = "" +
 	"\x05StrId\x18\x02 \x01(\v2\x10.stream.StreamIdR\tstream-id\x12D\n" +
 	"\x14EndStationInterfaces\x18\x03 \x03(\v2\x0e.uni.InterfaceR\x16end-station-interfaces\x12R\n" +
 	"\fUserToNetReq\x18\x04 \x01(\v2\x1e.uni.UserToNetworkRequirementsR\x1cuser-to-network-requirements\x12E\n" +
-	"\tInterfCap\x18\x05 \x01(\v2\x1a.uni.InterfaceCapabilitiesR\x16interface-capabilities\" \n" +
+	"\tInterfCap\x18\x05 \x01(\v2\x1a.uni.InterfaceCapabilitiesR\x16interface-capabilities\"9\n" +
 	"\n" +
-	"StreamRank\x12\x12\n" +
-	"\x04Rank\x18\x01 \x01(\rR\x04rank\"`\n" +
+	"StreamRank\x12+\n" +
+	"\x04Rank\x18\x01 \x01(\x0e2\x17.stream.StreamRankValueR\x04rank\"`\n" +
 	"\x0eIeeeMacAddress\x12/\n" +
 	"\x0eDestinationMac\x18\x01 \x01(\tR\x17destination-mac-address\x12\x1d\n" +
 	"\tSourceMac\x18\x02 \x01(\tR\n" +
@@ -1728,6 +1728,7 @@ var file_common_structures_uni_uni_proto_goTypes = []any{
 	(*Response)(nil),                  // 23: uni.Response
 	(*ConfigResponse)(nil),            // 24: uni.ConfigResponse
 	(*stream.StreamId)(nil),           // 25: stream.StreamId
+	(stream.StreamRankValue)(0),       // 26: stream.StreamRankValue
 }
 var file_common_structures_uni_uni_proto_depIdxs = []int32{
 	2,  // 0: uni.Interface.InterfaceId:type_name -> uni.InterfaceId
@@ -1735,42 +1736,43 @@ var file_common_structures_uni_uni_proto_depIdxs = []int32{
 	3,  // 2: uni.ListenerGroup.EndStationInterfaces:type_name -> uni.Interface
 	0,  // 3: uni.ListenerGroup.UserToNetReq:type_name -> uni.UserToNetworkRequirements
 	1,  // 4: uni.ListenerGroup.InterfCap:type_name -> uni.InterfaceCapabilities
-	6,  // 5: uni.DataFrameSpecification.MacAddr:type_name -> uni.IeeeMacAddress
-	7,  // 6: uni.DataFrameSpecification.VlanTag:type_name -> uni.IeeeVlanTag
-	8,  // 7: uni.DataFrameSpecification.Ipv4Tup:type_name -> uni.Ipv4Tuple
-	9,  // 8: uni.DataFrameSpecification.Ipv6Tup:type_name -> uni.Ipv6Tuple
-	11, // 9: uni.TrafficSpecification.Interval:type_name -> uni.Interval
-	12, // 10: uni.TrafficSpecification.TimeAware:type_name -> uni.TimeAware
-	25, // 11: uni.TalkerGroup.StrId:type_name -> stream.StreamId
-	5,  // 12: uni.TalkerGroup.StrRank:type_name -> uni.StreamRank
-	3,  // 13: uni.TalkerGroup.EndStationInterfaces:type_name -> uni.Interface
-	10, // 14: uni.TalkerGroup.DataFrameSpecification:type_name -> uni.DataFrameSpecification
-	13, // 15: uni.TalkerGroup.TrafficSpecification:type_name -> uni.TrafficSpecification
-	0,  // 16: uni.TalkerGroup.UserToNetReq:type_name -> uni.UserToNetworkRequirements
-	1,  // 17: uni.TalkerGroup.InterfCap:type_name -> uni.InterfaceCapabilities
-	14, // 18: uni.Request.Talker:type_name -> uni.TalkerGroup
-	4,  // 19: uni.Request.ListenerList:type_name -> uni.ListenerGroup
-	15, // 20: uni.ConfigRequest.Requests:type_name -> uni.Request
-	2,  // 21: uni.InterfaceConfiguration.InterfaceId:type_name -> uni.InterfaceId
-	6,  // 22: uni.InterfaceConfiguration.MacAddr:type_name -> uni.IeeeMacAddress
-	7,  // 23: uni.InterfaceConfiguration.VlanTag:type_name -> uni.IeeeVlanTag
-	8,  // 24: uni.InterfaceConfiguration.Ipv4Tup:type_name -> uni.Ipv4Tuple
-	9,  // 25: uni.InterfaceConfiguration.Ipv6Tup:type_name -> uni.Ipv6Tuple
-	19, // 26: uni.InterfaceConfiguration.TimeAwareOffset:type_name -> uni.TimeAwareOffset
-	18, // 27: uni.TalkerListenerStatus.AccumulatedLatency:type_name -> uni.AccumulatedLatency
-	20, // 28: uni.TalkerListenerStatus.InterfaceConfiguration:type_name -> uni.InterfaceConfiguration
-	25, // 29: uni.StatusGroup.StrId:type_name -> stream.StreamId
-	17, // 30: uni.StatusGroup.StatusInfo:type_name -> uni.StatusInfo
-	2,  // 31: uni.StatusGroup.FailedInterfaces:type_name -> uni.InterfaceId
-	21, // 32: uni.StatusGroup.StatusTalkerListener:type_name -> uni.TalkerListenerStatus
-	3,  // 33: uni.StatusGroup.EndStationInterfaces:type_name -> uni.Interface
-	22, // 34: uni.Response.StatusGroup:type_name -> uni.StatusGroup
-	23, // 35: uni.ConfigResponse.Responses:type_name -> uni.Response
-	36, // [36:36] is the sub-list for method output_type
-	36, // [36:36] is the sub-list for method input_type
-	36, // [36:36] is the sub-list for extension type_name
-	36, // [36:36] is the sub-list for extension extendee
-	0,  // [0:36] is the sub-list for field type_name
+	26, // 5: uni.StreamRank.Rank:type_name -> stream.StreamRankValue
+	6,  // 6: uni.DataFrameSpecification.MacAddr:type_name -> uni.IeeeMacAddress
+	7,  // 7: uni.DataFrameSpecification.VlanTag:type_name -> uni.IeeeVlanTag
+	8,  // 8: uni.DataFrameSpecification.Ipv4Tup:type_name -> uni.Ipv4Tuple
+	9,  // 9: uni.DataFrameSpecification.Ipv6Tup:type_name -> uni.Ipv6Tuple
+	11, // 10: uni.TrafficSpecification.Interval:type_name -> uni.Interval
+	12, // 11: uni.TrafficSpecification.TimeAware:type_name -> uni.TimeAware
+	25, // 12: uni.TalkerGroup.StrId:type_name -> stream.StreamId
+	5,  // 13: uni.TalkerGroup.StrRank:type_name -> uni.StreamRank
+	3,  // 14: uni.TalkerGroup.EndStationInterfaces:type_name -> uni.Interface
+	10, // 15: uni.TalkerGroup.DataFrameSpecification:type_name -> uni.DataFrameSpecification
+	13, // 16: uni.TalkerGroup.TrafficSpecification:type_name -> uni.TrafficSpecification
+	0,  // 17: uni.TalkerGroup.UserToNetReq:type_name -> uni.UserToNetworkRequirements
+	1,  // 18: uni.TalkerGroup.InterfCap:type_name -> uni.InterfaceCapabilities
+	14, // 19: uni.Request.Talker:type_name -> uni.TalkerGroup
+	4,  // 20: uni.Request.ListenerList:type_name -> uni.ListenerGroup
+	15, // 21: uni.ConfigRequest.Requests:type_name -> uni.Request
+	2,  // 22: uni.InterfaceConfiguration.InterfaceId:type_name -> uni.InterfaceId
+	6,  // 23: uni.InterfaceConfiguration.MacAddr:type_name -> uni.IeeeMacAddress
+	7,  // 24: uni.InterfaceConfiguration.VlanTag:type_name -> uni.IeeeVlanTag
+	8,  // 25: uni.InterfaceConfiguration.Ipv4Tup:type_name -> uni.Ipv4Tuple
+	9,  // 26: uni.InterfaceConfiguration.Ipv6Tup:type_name -> uni.Ipv6Tuple
+	19, // 27: uni.InterfaceConfiguration.TimeAwareOffset:type_name -> uni.TimeAwareOffset
+	18, // 28: uni.TalkerListenerStatus.AccumulatedLatency:type_name -> uni.AccumulatedLatency
+	20, // 29: uni.TalkerListenerStatus.InterfaceConfiguration:type_name -> uni.InterfaceConfiguration
+	25, // 30: uni.StatusGroup.StrId:type_name -> stream.StreamId
+	17, // 31: uni.StatusGroup.StatusInfo:type_name -> uni.StatusInfo
+	2,  // 32: uni.StatusGroup.FailedInterfaces:type_name -> uni.InterfaceId
+	21, // 33: uni.StatusGroup.StatusTalkerListener:type_name -> uni.TalkerListenerStatus
+	3,  // 34: uni.StatusGroup.EndStationInterfaces:type_name -> uni.Interface
+	22, // 35: uni.Response.StatusGroup:type_name -> uni.StatusGroup
+	23, // 36: uni.ConfigResponse.Responses:type_name -> uni.Response
+	37, // [37:37] is the sub-list for method output_type
+	37, // [37:37] is the sub-list for method input_type
+	37, // [37:37] is the sub-list for extension type_name
+	37, // [37:37] is the sub-list for extension extendee
+	0,  // [0:37] is the sub-list for field type_name
 }
 
 func init() { file_common_structures_uni_uni_proto_init() }

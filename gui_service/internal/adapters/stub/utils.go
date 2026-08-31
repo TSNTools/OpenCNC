@@ -6,7 +6,9 @@ import (
 	"strings"
 	"time"
 
+	"OpenCNC/common/structures/uni"
 	"OpenCNC/gui_service/internal/domain"
+	uni_server "OpenCNC/main_service/pkg/uni"
 	service "OpenCNC/monitor_service/structures/grpc_server"
 	"OpenCNC/monitor_service/structures/monitoring"
 
@@ -15,6 +17,7 @@ import (
 )
 
 const defaultMonitorServiceAddress = "localhost:5151"
+const defaultMainServiceAddress = "localhost:5153"
 
 func requestGetCapabilities(resource *monitoring.ResourceKey) (*service.CapabilitiesResponse, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
@@ -111,6 +114,43 @@ func requestStartMonitoring(query domain.MonitoringDataQuery) (*service.Monitori
 	if err != nil {
 		return nil, fmt.Errorf(
 			"monitor service StartMonitoring RPC failed: %w",
+			err,
+		)
+	}
+
+	return resp, nil
+}
+
+func requestAddStream(configRequest *uni.ConfigRequest) (*uni.ConfigResponse, error) {
+	if configRequest == nil {
+		return nil, fmt.Errorf("config request is nil")
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	conn, err := grpc.DialContext(
+		ctx,
+		defaultMainServiceAddress,
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+		grpc.WithBlock(),
+	)
+	if err != nil {
+		fmt.Println("Failed to dial UNI server: ", err)
+		return nil, fmt.Errorf(
+			"dial UNI server %s: %w",
+			defaultMainServiceAddress,
+			err,
+		)
+	}
+	defer conn.Close()
+
+	client := uni_server.NewUniServiceClient(conn)
+
+	resp, err := client.AddStream(ctx, configRequest)
+	if err != nil {
+		return nil, fmt.Errorf(
+			"UNI AddStream RPC failed: %w",
 			err,
 		)
 	}

@@ -3,8 +3,10 @@ package internalOptimizer
 import (
 	store "OpenCNC/common/store-wrapper"
 	"OpenCNC/common/structures/qbv"
-	"OpenCNC/common/structures/topology"
 	"OpenCNC/common/structures/topology_config"
+	"OpenCNC/common/structures/uni"
+	forwarding_plane "OpenCNC/tsn_service/pkg/structures/forwarding_plane"
+	optimizer "OpenCNC/tsn_service/pkg/structures/optimization_contract"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -19,20 +21,75 @@ import (
 var defaultSchedID = "default_schedule"
 var defaultSchedulePath = "/home/opencnc/OpenCNC/tsn_service/configs/default-schedule.yaml"
 
-func StartOptimization() {
-	// Implementation for starting the optimization process goes here.
-}
-
 // Calculates configuration set request using optimizer, if that failes build configuration set request from default schedule
-func RequestOptimization(topology *topology.Topology, oldConfig *qbv.GateControlList) (*topology_config.TopologyConfig, error) {
+func StartOptimization(task *optimizer.OptimizationTask, allRequestData []*uni.Request) (*forwarding_plane.ForwardingPlaneModel, error) {
 
-	// Load default schedule from k/v store
-	topoConfig, err := store.GetConfiguration(defaultSchedID)
+	fpm := createForwardingPlaneModel()
+	// TODO: Implement the optimization logic here.
+
+	// If optimization fails, fall back to the default schedule.
+	topoConfig, err := store.GetTopologyConfiguration(defaultSchedID)
 	if err != nil {
-		//log.Errorf("Failed getting default schedule: %v", err)
+		fmt.Printf("Failed getting current configuration: %v\n", err)
 		return nil, err
 	}
-	return topoConfig, nil
+	fpm.Configuration = topoConfig
+	fpm.Metadata.ModelId = defaultSchedID
+
+	return fpm, nil
+}
+
+func createForwardingPlaneModel() *forwarding_plane.ForwardingPlaneModel {
+	//TODO: optimizer is not supposed to directly access the store,
+	// it ask  "PE" and "RAE" for the necessary data as input
+
+	// Get topology
+	topology, err := store.GetTopology()
+	if err != nil {
+		fmt.Printf("Failed getting topology: %v\n", err)
+		return nil
+	}
+
+	// Get current active configuration
+	//TODO: this should be the current active configuration
+	topoConfig, err := store.GetTopologyConfiguration(defaultSchedID)
+	if err != nil {
+		fmt.Printf("Failed getting current configuration: %v\n", err)
+		return nil
+	}
+
+	//Get all streams from k/v store
+	streams, err := store.GetStreams()
+	if err != nil {
+		fmt.Printf("Failed getting streams: %v\n", err)
+		return nil
+	}
+
+	// Get all streamconfigurations from k/v store
+
+	if err != nil {
+		fmt.Printf("Failed getting stream configurations: %v\n", err)
+		return nil
+	}
+
+	streamModels := []*forwarding_plane.StreamModel{}
+	for _, stream := range streams {
+		streamConfig, err := store.GetStreamConfiguration(stream.StreamId.String())
+		if err != nil {
+			fmt.Printf("Failed getting stream configuration for stream %v: %v\n", stream.StreamId.String(), err)
+			continue
+		}
+		streamModels = append(streamModels, &forwarding_plane.StreamModel{
+			Definition:    stream,
+			Configuration: streamConfig,
+		})
+	}
+
+	return &forwarding_plane.ForwardingPlaneModel{
+		Topology:      topology,
+		Configuration: topoConfig,
+		Streams:       streamModels,
+	}
 }
 
 // Reads default schedule config file and stores configuration for schedule in k/v store
@@ -156,7 +213,7 @@ func CreateDefaultSchedule() error {
 	}
 
 	// Store schedule in k/v store
-	err = store.StoreConfiguration(topoConfig)
+	err = store.StoreTopologyConfiguration(topoConfig)
 	if err != nil {
 		//log.Errorf("Failed storing default schedule: %v", err)
 		return err
@@ -166,27 +223,3 @@ func CreateDefaultSchedule() error {
 
 	return nil
 }
-
-// // Creates a connection to the network optimizer and requests a new configuration
-// func CallOptimizer(input *optimizer.Input) (*optimizer.Output, error) {
-// 	// Create gRPC connection
-// 	conn, err := grpc.Dial("network-optimizer:5150", grpc.WithTransportCredentials(insecure.NewCredentials()))
-// 	if err != nil {
-// 		//log.Fatalf("Failed dialing network-optimizer: %v", err)
-// 		return &optimizer.Output{}, err
-// 	}
-
-// 	defer conn.Close()
-
-// 	// Create gRPC client
-// 	client := optimizer.NewOptimizerClient(conn)
-
-// 	// Request config from optimizer
-// 	output, err := client.GenerateConfiguration(context.Background(), input)
-// 	if err != nil {
-// 		//log.Errorf("Optimizer failed generating configuration: %v", err)
-// 		return &optimizer.Output{}, err
-// 	}
-
-// 	return output, nil
-// }

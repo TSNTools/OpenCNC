@@ -5,8 +5,10 @@ import (
 	"time"
 
 	store "OpenCNC/common/store-wrapper"
+	storewrapper "OpenCNC/common/store-wrapper"
 	"OpenCNC/common/structures/topology"
 	uni "OpenCNC/common/structures/uni"
+	configurationHandler "OpenCNC/main_service/pkg/configuration-handler"
 	"OpenCNC/tsn_service/pkg/notificationServer"
 
 	"google.golang.org/protobuf/types/known/timestamppb"
@@ -50,25 +52,27 @@ func HandleAddStreamEvent(configReq *uni.ConfigRequest, timeOfReq time.Time) (st
 		return "", err
 	}
 
-	admissionCheck := true
-
-	if admissionCheck {
-		//log.Info("Admission accepted")
-		fmt.Println("Admission accepted")
-
-		// Send network change to config-service to use new configuration
-		/*if err = applyConfiguration(configId); err != nil {
-			//MTODO:
-			//log.Errorf("Failed notifying config-service of new configuration: %v", err)
-			fmt.Printf("Failed notifying config-service of new configuration: %v", err)
-
-			return nil, err
-		}*/
-	} else {
-		//log.Info("Admission denied")
+	tentativeConfiguration, err := storewrapper.GetTopologyConfiguration(configId)
+	if err != nil {
+		fmt.Printf("Failed getting tentative configuration: %v", err)
+		return "", err
 	}
 
-	// TODO: Finalize configuration and apply it
+	// Finalize the configuration
+	if err = configurationHandler.FinalizeConfiguration(tentativeConfiguration); err != nil {
+		//log.Errorf("Failed finalizing configuration: %v", err)
+		fmt.Printf("Failed finalizing configuration: %v", err)
+		return "", err
+	}
+
+	// Send network change to config-service to use new configuration
+	if err = notifyConfigService(configId); err != nil {
+		//MTODO:
+		//log.Errorf("Failed notifying config-service of new configuration: %v", err)
+		fmt.Printf("Failed notifying config-service of new configuration: %v", err)
+
+		return "", err
+	}
 
 	return configId, nil
 }

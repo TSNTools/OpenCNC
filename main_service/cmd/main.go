@@ -18,6 +18,12 @@ import (
 	//"git.cs.kau.se/hamzchah/opencnc_kafka-exporter/logger/pkg/logger"
 )
 
+const (
+	NNI_SERVER_PORT      uint16 = 8000
+	UNI_GRPC_SERVER_PORT uint16 = 5153
+	UNI_HTTP_SERVER_PORT uint16 = 8081
+)
+
 //var log = logger.GetLogger()
 
 func main() {
@@ -36,13 +42,14 @@ func main() {
 	//store.StoreModuleRegistry()
 
 	// Start NNI server
-	go nni.StartServer()
+	go nni.StartServer(NNI_SERVER_PORT)
 
 	// Start UNI server
 	//go uni.StartServer()
 
 	// Start UNI grpc server
-	go uni_server.StartHttpServer()
+	// go uni_server.StartHttpServer(UNI_HTTP_SERVER_PORT)
+	go uni_server.StartGrpcServer(UNI_GRPC_SERVER_PORT)
 
 	// Not working on local network, needs to be connected to switches
 	//switches := counterConfHandler.GetMonitorConfigDevices()

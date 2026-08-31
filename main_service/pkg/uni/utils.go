@@ -3,6 +3,7 @@ package uni_server
 import (
 	store "OpenCNC/common/store-wrapper"
 	"OpenCNC/common/structures/stream"
+	"OpenCNC/common/structures/stream_config"
 	topology_config "OpenCNC/common/structures/topology_config"
 	uni "OpenCNC/common/structures/uni"
 
@@ -17,19 +18,21 @@ import (
 // These correspond to the values currently documented in uni.proto:
 //
 // Talker:
-//   0 = None
-//   1 = Ready
-//   2 = Failed
+//
+//	0 = None
+//	1 = Ready
+//	2 = Failed
 //
 // Listener:
-//   0 = None
-//   1 = Ready
-//   2 = Partial failed
-//   3 = Failed
+//
+//	0 = None
+//	1 = Ready
+//	2 = Partial failed
+//	3 = Failed
 //
 // FailureCode is currently not an enum in the protobuf, so 0 means success.
 // -----------------------------------------------------------------------------
-
+// TODO: fix nil panic (curently continue)
 const (
 	talkerStatusNone   int32 = 0
 	talkerStatusReady  int32 = 1
@@ -64,13 +67,9 @@ func createResponse(confId string, confReq *uni.ConfigRequest) (*uni.ConfigRespo
 		return nil, errors.New("config request is nil")
 	}
 
-	configuration, err := store.GetConfiguration(confId)
+	configuration, err := store.GetTopologyConfiguration(confId)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get configuration %q: %w", confId, err)
-	}
-
-	if configuration == nil {
-		return nil, fmt.Errorf("configuration %q is nil", confId)
 	}
 
 	response := &uni.ConfigResponse{
@@ -83,7 +82,13 @@ func createResponse(confId string, confReq *uni.ConfigRequest) (*uni.ConfigRespo
 			continue
 		}
 
-		resp := genResponse(request, configuration)
+		streamId := request.Talker.GetStrId()
+		streamsConfig, err := store.GetStreamConfiguration(streamId.String())
+		if err != nil {
+			return nil, fmt.Errorf("failed to get streams configuration for %q: %w", confId, err)
+		}
+
+		resp := genResponse(request, configuration, streamsConfig)
 		response.Responses = append(response.Responses, resp)
 	}
 
@@ -97,6 +102,7 @@ func createResponse(confId string, confReq *uni.ConfigRequest) (*uni.ConfigRespo
 func genResponse(
 	request *uni.Request,
 	configuration *topology_config.TopologyConfig,
+	streamsConfig *stream_config.StreamConfiguration,
 ) *uni.Response {
 	if request == nil {
 		return &uni.Response{}
@@ -104,13 +110,14 @@ func genResponse(
 
 	return &uni.Response{
 		RequestId:   request.GetId(),
-		StatusGroup: genStatusGroup(request, configuration),
+		StatusGroup: genStatusGroup(request, configuration, streamsConfig),
 	}
 }
 
 func genStatusGroup(
 	request *uni.Request,
 	configuration *topology_config.TopologyConfig,
+	streamsConfig *stream_config.StreamConfiguration,
 ) *uni.StatusGroup {
 	statusInfo, failedInterfaces := genStatusInfo(request, configuration)
 
@@ -118,7 +125,7 @@ func genStatusGroup(
 		StrId:                genStreamID(request),
 		StatusInfo:           statusInfo,
 		FailedInterfaces:     failedInterfaces,
-		StatusTalkerListener: genStatusTalkerListener(request, configuration),
+		StatusTalkerListener: genStatusTalkerListener(request, configuration, streamsConfig),
 		EndStationInterfaces: genEndStationInterfaces(request),
 	}
 }
@@ -435,6 +442,7 @@ func cloneInterfaceID(
 func genStatusTalkerListener(
 	request *uni.Request,
 	configuration *topology_config.TopologyConfig,
+	streamsConfig *stream_config.StreamConfiguration,
 ) []*uni.TalkerListenerStatus {
 	if request == nil || request.GetTalker() == nil {
 		return nil
@@ -446,12 +454,13 @@ func genStatusTalkerListener(
 	talker := &uni.TalkerListenerStatus{
 		Index: uint32(0),
 		AccumulatedLatency: &uni.AccumulatedLatency{
-			AccumulatedLatency: getAccumulatedLatency(request),
+			AccumulatedLatency: getAccumulatedLatency(streamsConfig),
 		},
 		InterfaceConfiguration: genInterfaceConfigurationList(
 			request,
 			nil,
 			configuration,
+			streamsConfig,
 		),
 	}
 
@@ -466,12 +475,13 @@ func genStatusTalkerListener(
 		listenerStatus := &uni.TalkerListenerStatus{
 			Index: uint32(index + 1),
 			AccumulatedLatency: &uni.AccumulatedLatency{
-				AccumulatedLatency: getAccumulatedLatency(request),
+				AccumulatedLatency: getAccumulatedLatency(streamsConfig),
 			},
 			InterfaceConfiguration: genInterfaceConfigurationList(
 				request,
 				listener,
 				configuration,
+				streamsConfig,
 			),
 		}
 
@@ -487,8 +497,13 @@ func genStatusTalkerListener(
 //
 // Until the topology model contains the required delay information, zero means
 // "not calculated".
-func getAccumulatedLatency(_ *uni.Request) uint32 {
-	return 0
+func getAccumulatedLatency(streamsConfig *stream_config.StreamConfiguration) uint32 {
+	//TODO: this is the worst case accumulated latency for the entire stream
+	if streamsConfig == nil || streamsConfig.AccumulatedLatencyNs == nil {
+		return 0
+	}
+
+	return uint32(streamsConfig.GetAccumulatedLatencyNs())
 }
 
 // -----------------------------------------------------------------------------
@@ -499,6 +514,7 @@ func genInterfaceConfigurationList(
 	request *uni.Request,
 	listener *uni.ListenerGroup,
 	configuration *topology_config.TopologyConfig,
+	streamsConfig *stream_config.StreamConfiguration,
 ) []*uni.InterfaceConfiguration {
 	if request == nil || request.GetTalker() == nil {
 		return nil
@@ -514,6 +530,17 @@ func genInterfaceConfigurationList(
 		identificationType,
 		talker,
 	)
+
+	//////////////////////////////////////////////////////////////////
+	if streamsConfig != nil {
+		if streamsConfig.VlanId != nil {
+			vlanTag.VlanId = streamsConfig.GetVlanId()
+		}
+		if streamsConfig.Pcp != nil {
+			vlanTag.PriorityCodePoint = streamsConfig.GetPcp()
+		}
+	}
+	//////////////////////////////////////////////////////////////////
 
 	var interfaces []*uni.Interface
 
@@ -554,10 +581,10 @@ func genInterfaceConfigurationList(
 		// TimeAwareOffset is only meaningful for a talker and only when the
 		// request contains TimeAware information.
 		if listener == nil &&
-			talker.GetTrafficSpecification() != nil &&
-			talker.GetTrafficSpecification().GetTimeAware() != nil {
+			streamsConfig != nil &&
+			streamsConfig.TimeAwareOffsetNs != nil {
 			interfaceConfiguration.TimeAwareOffset = &uni.TimeAwareOffset{
-				Offset: 0,
+				Offset: uint32(streamsConfig.GetTimeAwareOffsetNs()),
 			}
 		}
 

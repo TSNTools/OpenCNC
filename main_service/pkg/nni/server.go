@@ -19,8 +19,6 @@ import (
 
 //var log = logger.GetLogger()
 
-const PORT uint16 = 8000
-
 type NodeValidationError struct {
 	Name        string `json:"name"`
 	DeviceModel string `json:"deviceModel,omitempty"`
@@ -38,7 +36,7 @@ type UploadWrapper struct {
 	} `json:"models"`
 }
 
-func StartServer() {
+func StartServer(port uint16) {
 	fmt.Println("Starting NNI server")
 
 	// Serve dashboard.html at root
@@ -57,8 +55,8 @@ func StartServer() {
 	// Serve static files (CSS, JS) correctly
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("web-interface"))))
 
-	if err := http.ListenAndServe(fmt.Sprintf(":%d", PORT), nil); err != nil {
-		fmt.Printf("Failed to listen and serve on %d: %v\n", PORT, err)
+	if err := http.ListenAndServe(fmt.Sprintf(":%d", port), nil); err != nil {
+		fmt.Printf("Failed to listen and serve on %d: %v\n", port, err)
 	}
 }
 

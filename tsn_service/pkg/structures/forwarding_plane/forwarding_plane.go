@@ -1,4 +1,4 @@
-package forwarding_plane_model
+package forwarding_plane
 
 import (
 	"fmt"

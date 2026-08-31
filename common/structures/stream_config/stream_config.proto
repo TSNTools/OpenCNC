@@ -192,7 +192,7 @@ message StreamConfiguration {
 
 
   /* ----------------------------------------------------------------------- */
-  /* Bandwidth / reservation                                                */
+  /* Bandwidth / Latency                                                */
   /* ----------------------------------------------------------------------- */
 
   /*
@@ -202,6 +202,13 @@ message StreamConfiguration {
    * with this Stream through this configuration.
    */
   optional BandwidthReservation bandwidth_reservation = 5;
+
+  /*
+   * End-to-end accumulated latency for this Stream.
+   *
+   * Value is in nanoseconds.
+   */
+  optional uint64 accumulated_latency_ns = 6;
 
 
   /* ----------------------------------------------------------------------- */
@@ -217,7 +224,7 @@ message StreamConfiguration {
    * The actual Gate Control List is modeled by the appropriate
    * scheduling configuration rather than here.
    */
-  optional uint64 time_aware_offset_ns = 6;
+  optional uint64 time_aware_offset_ns = 7;
 
 
   /* ----------------------------------------------------------------------- */
@@ -230,7 +237,7 @@ message StreamConfiguration {
    * Empty means that this StreamConfiguration does not specify an
    * explicit path.
    */
-  repeated StreamHop path = 7;
+  repeated StreamHop path = 8;
 
 
   /* ----------------------------------------------------------------------- */
@@ -248,7 +255,7 @@ message StreamConfiguration {
    * different ports.
    */
   repeated tsn.stream_identification.StreamIdentificationEntry
-      stream_identification = 8;
+      stream_identification = 9;
 
 
   /* ----------------------------------------------------------------------- */
@@ -265,7 +272,7 @@ message StreamConfiguration {
    * Stream Identification domain rather than duplicating frame
    * identification criteria here.
    */
-  optional tsn.frer.FrerConfiguration frer = 9;
+  optional tsn.frer.FrerConfiguration frer = 10;
 
 
   /* ----------------------------------------------------------------------- */
@@ -278,7 +285,7 @@ message StreamConfiguration {
    * PSFP operates on an identified Stream and therefore does not
    * need to duplicate Stream Identification criteria here.
    */
-  optional tsn.psfp.StreamFilterInstance psfp_filter = 10;
+  optional tsn.psfp.StreamFilterInstance psfp_filter = 11;
 
 
   /* ----------------------------------------------------------------------- */
@@ -288,7 +295,7 @@ message StreamConfiguration {
   /*
    * Optional per-port queue assignments.
    */
-  repeated QueueAssignment queue_assignments = 11;
+  repeated QueueAssignment queue_assignments = 12;
 
 
   /* ----------------------------------------------------------------------- */
@@ -298,10 +305,10 @@ message StreamConfiguration {
   /*
    * CNC administrative state.
    */
-  bool enabled = 12;
+  bool enabled = 13;
 
   /*
    * Human-readable description.
    */
-  string description = 13;
+  string description = 14;
 }

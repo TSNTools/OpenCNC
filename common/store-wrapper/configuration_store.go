@@ -1,53 +1,134 @@
 package storewrapper
 
 import (
+	stream "OpenCNC/common/structures/stream_config"
 	"OpenCNC/common/structures/topology_config"
 	"OpenCNC/common/structures/uni"
+	"OpenCNC/tsn_service/pkg/structures/forwarding_plane"
 	"fmt"
 
 	"github.com/google/uuid"
 	"google.golang.org/protobuf/proto"
 )
 
-func GetConfiguration(confId string) (*topology_config.TopologyConfig, error) {
-	// this requires all configurations in the store to be normilized to topology_config.TopologyConfig,
-	//  otherwise it will fail to unmarshal
-	urn := "configurations." + confId
+////////////////////////////////////
+// store forwarding plane models
+//////////////////////////////////////
 
-	rawConf, err := GetFromStore(urn)
-	if err != nil {
-		return nil, fmt.Errorf("failed to retrieve configuration %s: %v", confId, err)
+func StoreForwardingPlaneConfiguration(model *forwarding_plane.ForwardingPlaneModel) error {
+	if model == nil {
+		return fmt.Errorf("cannot store nil forwarding plane model")
 	}
 
-	fmt.Println("Retrieved topology configuration from k/v store")
-
-	var config topology_config.TopologyConfig
-	if err := proto.Unmarshal(rawConf, &config); err != nil {
-		return nil, fmt.Errorf("failed to deserialize topology configuration: %v", err)
+	// Store topology configuration.
+	if model.GetConfiguration() != nil {
+		if err := StoreTopologyConfiguration(model.GetConfiguration()); err != nil {
+			return fmt.Errorf("failed to store topology configuration: %w", err)
+		}
 	}
 
-	return &config, nil
+	// Store each stream definition and configuration separately.
+	for _, streamModel := range model.GetStreams() {
+		if streamModel == nil {
+			continue
+		}
+
+		if streamModel.GetConfiguration() != nil {
+			if err := StoreStreamConfiguration(streamModel.GetConfiguration()); err != nil {
+				return fmt.Errorf("failed to store stream configuration: %w", err)
+			}
+		}
+	}
+
+	return nil
 }
 
-func StoreConfiguration(cfg *topology_config.TopologyConfig) error {
+//////////////////////////////////////
+// Topology Configuration Functions //
+//////////////////////////////////////
+
+func GetTopologyConfiguration(configID string) (*topology_config.TopologyConfig, error) {
+	data, err := GetFromStore("configurations.topology." + configID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get topology configuration: %w", err)
+	}
+
+	cfg := &topology_config.TopologyConfig{}
+	if err := proto.Unmarshal(data, cfg); err != nil {
+		return nil, fmt.Errorf("failed to deserialize topology configuration: %w", err)
+	}
+
+	return cfg, nil
+}
+
+func StoreTopologyConfiguration(cfg *topology_config.TopologyConfig) error {
 	if cfg == nil {
 		return fmt.Errorf("cannot store nil configuration")
 	}
 
-	configBytes, err := proto.Marshal(cfg)
+	data, err := proto.Marshal(cfg)
 	if err != nil {
-		return fmt.Errorf("failed to serialize configuration: %w", err)
+		return fmt.Errorf("failed to serialize topology configuration: %w", err)
 	}
 
-	err = SendToStore(
-		configBytes,
-		"configurations."+cfg.GetConfigId(),
-	)
+	return SendToStore(data, "configurations.topology."+cfg.GetConfigId())
+}
+
+//////////////////////////////////////
+// Stream Configuration Functions 	//
+//////////////////////////////////////
+
+func GetStreamConfiguration(streamID string) (*stream.StreamConfiguration, error) {
+	data, err := GetFromStore("configurations.streams." + streamID)
 	if err != nil {
-		return fmt.Errorf("failed to store configuration: %w", err)
+		return nil, fmt.Errorf("failed to get stream configuration: %w", err)
 	}
 
-	return nil
+	cfg := &stream.StreamConfiguration{}
+	if err := proto.Unmarshal(data, cfg); err != nil {
+		return nil, fmt.Errorf("failed to deserialize stream configuration: %w", err)
+	}
+
+	return cfg, nil
+}
+
+func StoreStreamConfiguration(cfg *stream.StreamConfiguration) error {
+	if cfg == nil {
+		return fmt.Errorf("cannot store nil stream configuration")
+	}
+
+	data, err := proto.Marshal(cfg)
+	if err != nil {
+		return fmt.Errorf("failed to serialize stream configuration: %w", err)
+	}
+
+	return SendToStore(data, "configurations.streams."+cfg.GetStreamId().String())
+}
+
+////////////////////////////
+// UNI Request  Functions //
+////////////////////////////
+
+func GetUniRequestData(configId string) (*uni.Request, error) {
+	// Build the URN for the request data
+	urn := "streams.requests." + configId
+
+	// Send request to specific path in k/v store "streams"
+	rawData, err := GetFromStore(urn)
+	if err != nil {
+		//log.Errorf("Failed getting request data from store: %v", err)
+		return &uni.Request{}, err
+	}
+
+	// Unmarshal the byte slice from the store into request data
+	var req = &uni.Request{}
+	err = proto.Unmarshal(rawData, req)
+	if err != nil {
+		//log.Errorf("Failed to unmarshal request data from store: %v", err)
+		return nil, err
+	}
+
+	return req, nil
 }
 
 // Take in a config request from UNI and store it in the k/v, store "streams" with a specific path for each request

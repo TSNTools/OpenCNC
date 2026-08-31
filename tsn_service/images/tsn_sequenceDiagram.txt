@@ -72,7 +72,7 @@ deactivateafter store.go
 internalOptimizer.go->2-utils.go:configSetReq= createConfigurationFromSchedule(\n sched, topology)
 deactivateafter 2-utils.go
 internalOptimizer.go-->notificationHandler.go:newConfig=configSetReq
-notificationHandler.go->store.go: **store.StoreConfiguration**(newConfig, confId)
+notificationHandler.go->store.go: **store.StoreTopologyConfiguration**(newConfig, confId)
 store.go-->notificationHandler.go: confId
 notificationHandler.go-->server.go:confId
 server.go-->main_service:confId

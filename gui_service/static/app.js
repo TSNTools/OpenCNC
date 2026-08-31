@@ -2699,7 +2699,7 @@ async function gatherPayload(action) {
         type: getValue("node-edit-type"),
         state: getValue("node-edit-state"),
         ports: getValue("node-edit-ports"),
-        links: getValue("node-edit-username"),
+        username: getValue("node-edit-username"), //it was written link before, check if saved correctly
         password: getValue("node-edit-password"),
       };
     case "deleteNode":

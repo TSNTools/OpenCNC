@@ -13,7 +13,7 @@ require (
 	github.com/openshift-telco/go-netconf-client v1.0.7-0.20250622223901-16f0c2204192
 	github.com/segmentio/kafka-go v0.4.47
 	golang.org/x/crypto v0.55.0
-	google.golang.org/protobuf v1.36.6
+	google.golang.org/protobuf v1.36.12
 )
 
 require (
@@ -63,7 +63,7 @@ require (
 	github.com/openconfig/gnmi v0.14.1
 	go.etcd.io/etcd/client/v3 v3.6.4
 	golang.org/x/exp v0.0.0-20250218142911-aa4b98e5adaa // indirect
-	golang.org/x/net v0.58.0
+	golang.org/x/net v0.58.0 // indirect
 	golang.org/x/sys v0.47.0 // indirect
 	golang.org/x/text v0.41.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20250303144028-a0af3efb3deb // indirect

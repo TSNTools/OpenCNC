@@ -16,6 +16,7 @@ import (
 	devicemodelregistry "OpenCNC/common/structures/devicemodelregistry"
 	streamproto "OpenCNC/common/structures/stream"
 	"OpenCNC/common/structures/topology"
+	"OpenCNC/common/structures/uni"
 
 	"OpenCNC/gui_service/internal/domain"
 	"OpenCNC/monitor_service/structures/monitoring"
@@ -106,10 +107,10 @@ func NewBackend(state *MonitoringState) *Backend {
 
 func defaultStreams() []domain.Stream {
 	return []domain.Stream{
-		newStream("str-1", "Str 1", "Nd1", []string{"Nd2", "Nd3"}, "TRAFFIC_TYPE_ISOCHRONOUS", "RANK_A", 10, 1000000, 1500, 1, 5000, 1000, 0, 200, 2),
-		newStream("str-2", "Str 2", "Nd2", []string{"Nd3"}, "TRAFFIC_TYPE_SYNCHRONOUS", "RANK_A", 12, 500000, 1522, 1, 3500, 500, 0, 120, 1),
-		newStream("str-3", "Str 3", "Nd3", []string{"Nd1"}, "TRAFFIC_TYPE_MANAGEMENT", "RANK_B", 14, 2000000, 1500, 1, 8000, 3000, 50, 250, 1),
-		newStream("str-4", "Str 4", "Nd4", []string{"Nd1", "Nd2"}, "TRAFFIC_TYPE_BEST_EFFORT_HIGH", "RANK_B", 16, 1000000, 1518, 1, 10000, 1500, 0, 500, 1),
+		newStream("str-1", "Str 1", "Nd1", []string{"Nd2", "Nd3"}, "TRAFFIC_TYPE_ISOCHRONOUS", "RANK_EMERGENCY", 10, 1000000, 1500, 1, 5000, 1000, 0, 200, 2),
+		newStream("str-2", "Str 2", "Nd2", []string{"Nd3"}, "TRAFFIC_TYPE_SYNCHRONOUS", "RANK_EMERGENCY", 12, 500000, 1522, 1, 3500, 500, 0, 120, 1),
+		newStream("str-3", "Str 3", "Nd3", []string{"Nd1"}, "TRAFFIC_TYPE_MANAGEMENT", "RANK_NON_EMERGENCY", 14, 2000000, 1500, 1, 8000, 3000, 50, 250, 1),
+		newStream("str-4", "Str 4", "Nd4", []string{"Nd1", "Nd2"}, "TRAFFIC_TYPE_BEST_EFFORT_HIGH", "RANK_NON_EMERGENCY", 16, 1000000, 1518, 1, 10000, 1500, 0, 500, 1),
 	}
 }
 
@@ -548,42 +549,39 @@ func (b *Backend) GetLinks(_ context.Context) ([]domain.Link, error) {
 }
 
 func (b *Backend) GetStreams(_ context.Context) ([]domain.Stream, error) {
-	storedStreams, err := storewrapper.GetStreams()
+	streams, err := storewrapper.GetStreams()
 	if err != nil {
 		return nil, err
 	}
 
-	domainStreams := make([]domain.Stream, 0, len(storedStreams))
+	domainStreams := make([]domain.Stream, 0, len(streams))
 
-	for _, stored := range storedStreams {
-		if stored.Stream == nil {
+	for _, stream := range streams {
+		if stream == nil {
 			continue
 		}
 
-		pb := stored.Stream
-
 		var rank string
-
-		if pb.StreamRank != nil {
-			rank = pb.StreamRank.Rank.String()
+		if stream.StreamRank != nil {
+			rank = stream.StreamRank.Rank.String()
 		}
 
 		var destinationMAC string
 		var sourceMAC string
 
-		if pb.FrameSpec != nil {
-			destinationMAC = pb.FrameSpec.DestinationMac
-			sourceMAC = pb.FrameSpec.SourceMac
+		if stream.FrameSpec != nil {
+			destinationMAC = stream.FrameSpec.DestinationMac
+			sourceMAC = stream.FrameSpec.SourceMac
 		}
 
 		var intervalNs int
 		var maxFrameSize int
 		var maxFramesPerInterval int
 
-		if pb.TrafficSpec != nil {
-			intervalNs = int(pb.TrafficSpec.IntervalNs)
-			maxFrameSize = int(pb.TrafficSpec.MaxFrameSize)
-			maxFramesPerInterval = int(pb.TrafficSpec.MaxIntervalFrames)
+		if stream.TrafficSpec != nil {
+			intervalNs = int(stream.TrafficSpec.IntervalNs)
+			maxFrameSize = int(stream.TrafficSpec.MaxFrameSize)
+			maxFramesPerInterval = int(stream.TrafficSpec.MaxIntervalFrames)
 		}
 
 		var maxLatencyNs int
@@ -592,8 +590,8 @@ func (b *Backend) GetStreams(_ context.Context) ([]domain.Stream, error) {
 		var maxTransmitOffsetNs int
 		var numSeamlessTrees int
 
-		if pb.UserToNetworkRequirements != nil {
-			req := pb.UserToNetworkRequirements
+		if stream.UserToNetworkRequirements != nil {
+			req := stream.UserToNetworkRequirements
 
 			maxLatencyNs = int(req.MaxLatencyNs)
 			maxJitterNs = int(req.MaxJitterNs)
@@ -606,10 +604,10 @@ func (b *Backend) GetStreams(_ context.Context) ([]domain.Stream, error) {
 		}
 
 		stream := domain.Stream{
-			ID:                   stored.ID,
-			Name:                 pb.Description,
-			TalkerNodeID:         pb.TalkerNodeId,
-			ListenerNodeIDs:      append([]string(nil), pb.ListenerNodeIds...),
+			ID:                   stream.StreamId.String(),
+			Name:                 stream.Description,
+			TalkerNodeID:         stream.TalkerNodeId,
+			ListenerNodeIDs:      append([]string(nil), stream.ListenerNodeIds...),
 			Rank:                 rank,
 			DestinationMAC:       destinationMAC,
 			SourceMAC:            sourceMAC,
@@ -1129,6 +1127,35 @@ func (b *Backend) EditNode(_ context.Context, node domain.Node) (domain.Operatio
 		current.ManagementInfo.Protocol = parsedProtocol
 	}
 
+	if node.PortIds != nil {
+		existingPorts := make(map[string]*topology.Port)
+
+		for _, port := range current.Ports {
+			if port != nil {
+				existingPorts[port.Id] = port
+			}
+		}
+
+		updatedPorts := make([]*topology.Port, 0, len(node.PortIds))
+
+		for _, portID := range node.PortIds {
+			portID = strings.TrimSpace(portID)
+			if portID == "" {
+				continue
+			}
+
+			if existingPort, ok := existingPorts[portID]; ok {
+				updatedPorts = append(updatedPorts, existingPort)
+			} else {
+				updatedPorts = append(updatedPorts, &topology.Port{
+					Id: portID,
+				})
+			}
+		}
+
+		current.Ports = updatedPorts
+	}
+
 	if previousName != current.GetName() {
 		if err := storewrapper.DeleteNode(node.ID); err != nil {
 			b.recordEvent("error", "editNode", "nodes", fmt.Sprintf("Failed renaming node %s", node.ID), node.ID)
@@ -1513,50 +1540,78 @@ func (b *Backend) DeleteLink(_ context.Context, linkID string) (domain.Operation
 }
 
 func (b *Backend) AddStream(_ context.Context, stream domain.Stream) (domain.OperationResult, error) {
+
 	stream = b.prepareStream(stream)
 
-	if strings.TrimSpace(stream.ID) == "" {
-		stream.ID = fmt.Sprintf("stream-%d", time.Now().UnixNano())
+	// resolve end stations
+	talkerInterface, listenerInterfaces, err := b.resolveEndStations(stream)
+	if err != nil {
+		return domain.OperationResult{
+			Success: false,
+			Name:    "addStream",
+			Message: fmt.Sprintf("failed to resolve end stations for stream %s", stream.ID),
+		}, err
+	}
+	// used talker interface MAC as stream mac
+	stream.SourceMAC = talkerInterface.InterfaceId.MacAddress
+
+	// Build ConfigRequest.
+	//TODO:every stream request needs a unique Stream ID, support multiple at once
+	streamID, err := generateTSNStreamID(stream.SourceMAC)
+	if err != nil {
+		fmt.Println("Failed to generate Stream ID for stream: ", err)
+		return domain.OperationResult{
+			Success: false,
+			Name:    "addStream",
+			Message: fmt.Sprintf("failed to generate Stream ID for stream %s", streamID),
+		}, err
 	}
 
-	pbStream := &streamproto.Stream{
-		TalkerNodeId:    stream.TalkerNodeID,
-		ListenerNodeIds: append([]string(nil), stream.ListenerNodeIDs...),
-		Description:     stream.Name,
+	configReq := &uni.ConfigRequest{
+		Version: 1.0,
+		Requests: []*uni.Request{
+			{
+				Id: streamID.String(),
 
-		StreamRank: &streamproto.StreamRank{
-			Rank: streamRankFromString(stream.Rank),
-		},
+				Talker: &uni.TalkerGroup{
+					StrId: streamID,
 
-		FrameSpec: &streamproto.DataFrameSpecification{
-			DestinationMac: stream.DestinationMAC,
-			SourceMac:      stream.SourceMAC,
-		},
+					StrRank: &uni.StreamRank{
+						Rank: streamRankFromString(stream.Rank),
+					},
 
-		TrafficSpec: &streamproto.TrafficSpecification{
-			IntervalNs:        uint64(stream.IntervalNs),
-			MaxFrameSize:      uint64(stream.MaxFrameSize),
-			MaxIntervalFrames: uint64(stream.MaxFramesPerInterval),
-		},
+					EndStationInterfaces: []*uni.Interface{
+						talkerInterface,
+					},
 
-		UserToNetworkRequirements: &streamproto.UserToNetworkRequirements{
-			MaxLatencyNs:     uint64(stream.MaxLatencyNs),
-			MaxJitterNs:      uint64(stream.MaxJitterNs),
-			NumSeamlessTrees: uint32(stream.NumSeamlessTrees),
+					DataFrameSpecification: []*uni.DataFrameSpecification{
+						{
+							MacAddr: &uni.IeeeMacAddress{
+								DestinationMac: stream.DestinationMAC,
+								SourceMac:      stream.SourceMAC,
+							},
+
+							VlanTag: &uni.IeeeVlanTag{
+								VlanId: uint32(stream.VLANID),
+							},
+						},
+					},
+
+					TrafficSpecification: buildTrafficSpecification(stream),
+
+					UserToNetReq: &uni.UserToNetworkRequirements{
+						NumSeamlessTrees: uint32(stream.NumSeamlessTrees),
+						MaxLatency:       uint32(stream.MaxLatencyNs),
+					},
+				},
+
+				ListenerList: buildListenerGroups(streamID, stream, listenerInterfaces),
+			},
 		},
 	}
 
-	if stream.MinTransmitOffsetNs != 0 ||
-		stream.MaxTransmitOffsetNs != 0 {
-
-		pbStream.UserToNetworkRequirements.TransmitOffsetRange =
-			&streamproto.TransmitOffsetRange{
-				MinNs: uint64(stream.MinTransmitOffsetNs),
-				MaxNs: uint64(stream.MaxTransmitOffsetNs),
-			}
-	}
-
-	if err := storewrapper.StoreStream(pbStream, stream.ID); err != nil {
+	if _, err := requestAddStream(configReq); err != nil {
+		fmt.Println("Failed to add stream: ", err)
 		return domain.OperationResult{
 			Success: false,
 			Name:    "addStream",
@@ -1577,7 +1632,7 @@ func (b *Backend) AddStream(_ context.Context, stream domain.Stream) (domain.Ope
 		Name:    "addStream",
 		Message: fmt.Sprintf("stream %s created", stream.ID),
 		Data: map[string]string{
-			"streamId": stream.ID,
+			"streamId": streamID.String(),
 			"name":     stream.Name,
 		},
 	}, nil
@@ -1585,12 +1640,12 @@ func (b *Backend) AddStream(_ context.Context, stream domain.Stream) (domain.Ope
 
 func streamRankFromString(rank string) streamproto.StreamRankValue {
 	switch rank {
-	case "RANK_A":
-		return streamproto.StreamRankValue_RANK_A
-	case "RANK_B":
-		return streamproto.StreamRankValue_RANK_B
+	case "RANK_EMERGENCY":
+		return streamproto.StreamRankValue_RANK_EMERGENCY
+	case "RANK_NON_EMERGENCY":
+		return streamproto.StreamRankValue_RANK_NON_EMERGENCY
 	default:
-		return streamproto.StreamRankValue_RANK_UNSPECIFIED
+		return streamproto.StreamRankValue_RANK_NON_EMERGENCY
 	}
 }
 

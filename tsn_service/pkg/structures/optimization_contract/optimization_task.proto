@@ -1,0 +1,113 @@
+syntax = "proto3";
+
+package optimizer;
+
+option go_package = "OpenCNC/common/structures/optimizer;optimizer";
+
+message OptimizationTask {
+  string task_id = 1;
+
+  Intent intent = 2;
+  Trigger trigger = 3;
+
+  // Empty scope means the whole forwarding plane.
+  Scope scope = 4;
+
+  repeated Objective objectives = 5;
+  repeated Constraint constraints = 6;
+
+  ChangePolicy change_policy = 7;
+}
+
+enum Intent {
+  INTENT_UNSPECIFIED = 0;
+  INITIAL_CONFIGURATION = 1;
+  ADD_STREAM = 2;
+  REMOVE_STREAM = 3;
+  RECONFIGURE_STREAM = 4;
+  RECOVERY = 5;
+  DEFRAGMENTATION = 6;
+  REOPTIMIZATION = 7;
+}
+
+enum Trigger {
+  TRIGGER_UNSPECIFIED = 0;
+  USER_REQUEST = 1;
+  STREAM_ADDITION = 2;
+  STREAM_REMOVAL = 3;
+  TOPOLOGY_CHANGE = 4;
+  LINK_FAILURE = 5;
+  NODE_FAILURE = 6;
+  RESOURCE_EXHAUSTION = 7;
+  PERIODIC = 8;
+}
+
+message Scope {
+  repeated string stream_ids = 1;
+  repeated string link_ids = 2;
+  repeated string node_ids = 3;
+}
+
+message Objective {
+  Metric metric = 1;
+
+  // Lower priority number = higher priority.
+  int32 priority = 2;
+
+  // Used when objectives have the same priority.
+  double weight = 3;
+}
+
+enum Metric {
+  METRIC_UNSPECIFIED = 0;
+
+  MINIMIZE_LATENCY = 1;
+  MINIMIZE_JITTER = 2;
+  MINIMIZE_PATH_LENGTH = 3;
+  MINIMIZE_LINK_UTILIZATION = 4;
+  MINIMIZE_LOAD_IMBALANCE = 5;
+  MINIMIZE_CONFIGURATION_CHANGES = 6;
+  MINIMIZE_STREAM_MIGRATIONS = 7;
+  MINIMIZE_RECONFIGURATION_COST = 8;
+}
+
+message Constraint {
+  Type type = 1;
+
+  // Generic value for the prototype.
+  // We can make these strongly typed later.
+  double value = 2;
+
+  repeated string ids = 3;
+}
+
+message Type {
+  TypeId id = 1;
+}
+
+enum TypeId {
+  TYPE_UNSPECIFIED = 0;
+
+  MAX_LATENCY = 1;
+  MAX_JITTER = 2;
+  MAX_LINK_UTILIZATION = 3;
+  MAX_STREAM_MIGRATIONS = 4;
+  MAX_CONFIGURATION_CHANGES = 5;
+
+  PRESERVE_EXISTING_STREAMS = 6;
+  AVOID_LINKS = 7;
+  REQUIRE_REDUNDANCY = 8;
+}
+
+message ChangePolicy {
+  bool allow_path_changes = 1;
+  bool allow_schedule_changes = 2;
+  bool allow_queue_changes = 3;
+  bool allow_vlan_changes = 4;
+  bool allow_stream_migration = 5;
+
+  bool preserve_existing_streams = 6;
+
+  uint32 max_changed_streams = 7;
+  uint32 max_configuration_changes = 8;
+}

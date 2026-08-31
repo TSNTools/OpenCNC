@@ -46,16 +46,9 @@ message TransmitOffsetRange {
 }
 
 // Stream rank values aligned with IEEE 802.1Qcc.
-enum StreamRankValue {
-  RANK_UNSPECIFIED = 0;
-  RANK_A = 1;
-  RANK_B = 2;
-}
-
-// Stream rank including rank value and priority.
-message StreamRank {
-  StreamRankValue rank = 1;
-  uint32 priority = 2;
+enum StreamRank {
+  RANK_EMERGENCY = 0;
+  RANK_NON_EMERGENCY = 1;
 }
 
 // Unique identifier for a stream: MAC address + unique stream ID.
@@ -68,7 +61,7 @@ message StreamId {
 // Describes a unicast or multicast stream with talker and listeners, traffic specs, and requirements.
 message Stream {
   StreamId stream_id = 1;                   // Unique stream identifier
-  StreamRank stream_rank = 2;               // Stream rank and priority
+  StreamRank stream_rank = 2;               // Stream rank
 
   // Talker endpoint node ID: must correspond to a node defined in topology
   string talker_node_id = 3;                // Talker node ID (e.g., "switch1")

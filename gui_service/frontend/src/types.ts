@@ -55,8 +55,8 @@ export type TrafficTypeValue =
 
 export type StreamRankValue =
   | "RANK_UNSPECIFIED"
-  | "RANK_A"
-  | "RANK_B";
+  | "RANK_EMERGENCY"
+  | "RANK_NON_EMERGENCY";
 
 export type StreamFormState = {
   name: string;

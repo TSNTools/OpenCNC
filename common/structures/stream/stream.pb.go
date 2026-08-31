@@ -25,22 +25,19 @@ const (
 type StreamRankValue int32
 
 const (
-	StreamRankValue_RANK_UNSPECIFIED StreamRankValue = 0
-	StreamRankValue_RANK_A           StreamRankValue = 1
-	StreamRankValue_RANK_B           StreamRankValue = 2
+	StreamRankValue_RANK_EMERGENCY     StreamRankValue = 0
+	StreamRankValue_RANK_NON_EMERGENCY StreamRankValue = 1
 )
 
 // Enum value maps for StreamRankValue.
 var (
 	StreamRankValue_name = map[int32]string{
-		0: "RANK_UNSPECIFIED",
-		1: "RANK_A",
-		2: "RANK_B",
+		0: "RANK_EMERGENCY",
+		1: "RANK_NON_EMERGENCY",
 	}
 	StreamRankValue_value = map[string]int32{
-		"RANK_UNSPECIFIED": 0,
-		"RANK_A":           1,
-		"RANK_B":           2,
+		"RANK_EMERGENCY":     0,
+		"RANK_NON_EMERGENCY": 1,
 	}
 )
 
@@ -376,7 +373,7 @@ func (x *StreamRank) GetRank() StreamRankValue {
 	if x != nil {
 		return x.Rank
 	}
-	return StreamRankValue_RANK_UNSPECIFIED
+	return StreamRankValue_RANK_EMERGENCY
 }
 
 func (x *StreamRank) GetPriority() uint32 {
@@ -597,13 +594,10 @@ const file_common_structures_stream_stream_proto_rawDesc = "" +
 	"\ftraffic_spec\x18\x06 \x01(\v2\x1c.stream.TrafficSpecificationR\vtrafficSpec\x12b\n" +
 	"\x1cuser_to_network_requirements\x18\a \x01(\v2!.stream.UserToNetworkRequirementsR\x19userToNetworkRequirements\x12 \n" +
 	"\vdescription\x18\b \x01(\tR\vdescription\x12(\n" +
-	"\x10traffic_class_id\x18\t \x01(\tR\x0etrafficClassId*?\n" +
-	"\x0fStreamRankValue\x12\x14\n" +
-	"\x10RANK_UNSPECIFIED\x10\x00\x12\n" +
-	"\n" +
-	"\x06RANK_A\x10\x01\x12\n" +
-	"\n" +
-	"\x06RANK_B\x10\x02B\tZ\a/streamb\x06proto3"
+	"\x10traffic_class_id\x18\t \x01(\tR\x0etrafficClassId*=\n" +
+	"\x0fStreamRankValue\x12\x12\n" +
+	"\x0eRANK_EMERGENCY\x10\x00\x12\x16\n" +
+	"\x12RANK_NON_EMERGENCY\x10\x01B\tZ\a/streamb\x06proto3"
 
 var (
 	file_common_structures_stream_stream_proto_rawDescOnce sync.Once

@@ -19,13 +19,11 @@ import (
 	"google.golang.org/protobuf/encoding/protojson"
 )
 
-const PORT uint16 = 8080
-
 //var log = logger.GetLogger()
 
-func StartHttpServer() {
+func StartHttpServer(port uint16) {
 	//log.Infof("Starting UNI server")
-	fmt.Println("Starting UNI server")
+	fmt.Println("Starting UNI HTTP server")
 	http.HandleFunc("/add_stream", addStream)
 	//	http.HandleFunc("/update_stream", updateStream)
 	//	http.HandleFunc("/remove_stream", removeStream)
@@ -35,16 +33,16 @@ func StartHttpServer() {
 	http.HandleFunc("/register_node", registerNode)
 
 	//log.Info("TODO: Add all endpoints so that a user could see them (check what endpoints AccessTSN expects)")
-	//log.Infof("API endpoint -> http://localhost:%d/add_stream", PORT)
-	// log.Infof("API endpoint -> http://localhost:%d/update_stream", PORT)
-	// log.Infof("API endpoint -> http://localhost:%d/remove_stream", PORT)
-	// log.Infof("API endpoint -> http://localhost:%d/join_stream", PORT)
-	// log.Infof("API endpoint -> http://localhost:%d/leave_stream", PORT)
-	//log.Infof("API endpoint -> http://localhost:%d/register_node", PORT)
+	//log.Infof("API endpoint -> http://localhost:%d/add_stream", port)
+	// log.Infof("API endpoint -> http://localhost:%d/update_stream", port)
+	// log.Infof("API endpoint -> http://localhost:%d/remove_stream", port)
+	// log.Infof("API endpoint -> http://localhost:%d/join_stream", port)
+	// log.Infof("API endpoint -> http://localhost:%d/leave_stream", port)
+	//log.Infof("API endpoint -> http://localhost:%d/register_node", port)
 
-	if err := http.ListenAndServe(fmt.Sprintf(":%d", PORT), nil); err != nil {
-		//log.Errorf("Failed to listen and server on %d, with error: %+v", PORT, err)
-		fmt.Printf("Failed to listen and server on %d, with error: %+v", PORT, err)
+	if err := http.ListenAndServe(fmt.Sprintf(":%d", port), nil); err != nil {
+		//log.Errorf("Failed to listen and server on %d, with error: %+v", port, err)
+		fmt.Printf("Failed to listen and server on %d, with error: %+v", port, err)
 
 	}
 }

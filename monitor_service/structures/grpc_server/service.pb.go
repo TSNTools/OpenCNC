@@ -464,7 +464,7 @@ const file_monitor_service_structures_grpc_server_service_proto_rawDesc = "" +
 	"\x0fGetCapabilities\x12\x1c.service.CapabilitiesRequest\x1a\x1d.service.CapabilitiesResponse\x12O\n" +
 	"\x0fStartMonitoring\x12\x1f.service.StartMonitoringRequest\x1a\x1b.service.MonitoringResponse\x12M\n" +
 	"\x0eStopMonitoring\x12\x1e.service.StopMonitoringRequest\x1a\x1b.service.MonitoringResponse\x12K\n" +
-	"\fTestRollback\x12\x1c.service.TestRollbackRequest\x1a\x1d.service.TestRollbackResponseBHZFOpenCNC/monitor_service/structures/grpc_service;serviceb\x06proto3"
+	"\fTestRollback\x12\x1c.service.TestRollbackRequest\x1a\x1d.service.TestRollbackResponseB9Z7OpenCNC/monitor_service/structures/grpc_service;serviceb\x06proto3"
 
 var (
 	file_monitor_service_structures_grpc_server_service_proto_rawDescOnce sync.Once

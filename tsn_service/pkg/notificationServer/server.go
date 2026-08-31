@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 
+	storewrapper "OpenCNC/common/store-wrapper"
+	"OpenCNC/common/structures/uni"
 	handler "OpenCNC/tsn_service/pkg/notificationHandler"
 
 	"google.golang.org/grpc/codes"
@@ -53,10 +55,7 @@ func (s *Server) Notify(ctx context.Context, event *Event) (*NotifyResponse, err
 	}
 }
 
-func (s *Server) handleStreamAdded(
-	ctx context.Context,
-	event *Event,
-) (*NotifyResponse, error) {
+func (s *Server) handleStreamAdded(ctx context.Context, event *Event) (*NotifyResponse, error) {
 
 	payload := event.GetStreamAdded()
 	if payload == nil {
@@ -66,16 +65,41 @@ func (s *Server) handleStreamAdded(
 		)
 	}
 
-	requestIDs := payload.GetRequestIds()
+	// Get request from k/v store
+	requestIds := payload.GetRequestIds()
 
-	fmt.Printf(
-		"Stream added: stream_id=%s request_ids=%v\n",
-		payload.GetStreamId(),
-		requestIDs,
-	)
+	var allRequestData []*uni.Request
+	for _, requestId := range requestIds {
+		reqData, err := storewrapper.GetUniRequestData(requestId)
+		if err != nil {
+			return nil, status.Errorf(
+				codes.Internal,
+				"failed to get request data for request ID %s: %v",
+				requestId,
+				err,
+			)
+		}
+		fmt.Printf("Got request from store with id: %s\n", requestId)
+		allRequestData = append(allRequestData, reqData)
+	}
+
+	// specify the configuration task
+	// TODO: CreateOptimizationTask looses some of the request data details.
+	// Therefore, allRequestData is passed to CalculateConfiguration
+	// we need to improve CreateOptimizationTask to retain
+	// all necessary request data and not pass it further
+	task, err := CreateOptimizationTask(allRequestData)
+	if err != nil {
+		return nil, status.Errorf(
+			codes.Internal,
+			"failed to identify optimization task: %v",
+			err,
+		)
+	}
 
 	// Existing TSN configuration calculation.
-	configID, err := handler.CalculateConfiguration(requestIDs)
+
+	newFPM, err := handler.CalculateConfiguration(task, allRequestData)
 	if err != nil {
 		return nil, status.Errorf(
 			codes.Internal,
@@ -84,17 +108,16 @@ func (s *Server) handleStreamAdded(
 		)
 	}
 
+	//TODO: returning only the configId, assuming that the client has already
+	// all stream ids and can retreive stream-specific using them.
 	return &NotifyResponse{
 		Accepted: true,
-		ConfigId: configID,
+		ConfigId: newFPM.Configuration.ConfigId,
 		Message:  "stream addition accepted and configuration calculated",
 	}, nil
 }
 
-func (s *Server) handleStreamRemoved(
-	ctx context.Context,
-	event *Event,
-) (*NotifyResponse, error) {
+func (s *Server) handleStreamRemoved(ctx context.Context, event *Event) (*NotifyResponse, error) {
 
 	payload := event.GetStreamRemoved()
 	if payload == nil {
@@ -122,10 +145,7 @@ func (s *Server) handleStreamRemoved(
 	}, nil
 }
 
-func (s *Server) handleNetworkEvent(
-	ctx context.Context,
-	event *Event,
-) (*NotifyResponse, error) {
+func (s *Server) handleNetworkEvent(ctx context.Context, event *Event) (*NotifyResponse, error) {
 
 	payload := event.GetNetworkEvent()
 	if payload == nil {

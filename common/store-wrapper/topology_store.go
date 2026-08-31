@@ -25,8 +25,6 @@ import (
 	"time"
 
 	devicemodelregistry "OpenCNC/common/structures/devicemodelregistry"
-	moduleregistry "OpenCNC/common/structures/module-registry"
-	"OpenCNC/common/structures/stream"
 	"OpenCNC/common/structures/topology"
 
 	"git.cs.kau.se/hamzchah/opencnc_kafka-exporter/logger/pkg/logger"
@@ -122,34 +120,16 @@ func DeleteDeviceModel(name string) error {
 	return nil
 }
 
-func GetTopology() (*topology.Topology, error) {
-	var topo = &topology.Topology{}
+// ////////////
 
-	endnodes := getNodes("endnodes")
-	bridges := getNodes("bridges")
-
-	topo.Nodes = append(endnodes, bridges...)
-
-	links := getLinks("links")
-
-	topo.Links = append(topo.Links, links...)
-
-	return topo, nil
-}
-
-func GetNode(name string) (*topology.Node, string, error) {
+func StoreLink(link *topology.Link) error {
 	client, err := createEtcdClient()
 	if err != nil {
-		return nil, "", fmt.Errorf("failed to create etcd client: %v", err)
+		return fmt.Errorf("failed to create etcd client: %w", err)
 	}
 	defer client.Close()
 
-	node, prefix, err := getNode(client, name)
-	if err != nil {
-		return nil, "", err
-	}
-
-	return node, prefix, nil
+	return storeLinkWithClient(client, link, false)
 }
 
 func GetLink(name string) (*topology.Link, string, error) {
@@ -167,19 +147,78 @@ func GetLink(name string) (*topology.Link, string, error) {
 	return link, prefix, nil
 }
 
-func GetNodes() ([]*topology.Node, error) {
-	endnodes := getNodes("endnodes")
-	bridges := getNodes("bridges")
+func EditLink(link *topology.Link) error {
+	client, err := createEtcdClient()
+	if err != nil {
+		return fmt.Errorf("failed to create etcd client: %w", err)
+	}
+	defer client.Close()
 
-	nodes := append(endnodes, bridges...)
+	return storeLinkWithClient(client, link, true)
+}
 
-	return nodes, nil
+func DeleteLink(name string) error {
+	client, err := createEtcdClient()
+	if err != nil {
+		return fmt.Errorf("failed to create etcd client: %w", err)
+	}
+	defer client.Close()
+
+	_, prefix, err := getLink(client, name)
+	if err != nil {
+		return err
+	}
+
+	key := strings.ReplaceAll(prefix+"."+name, ".", "/")
+
+	if _, err := client.Delete(context.Background(), key); err != nil {
+		return fmt.Errorf("failed to delete link %s: %w", name, err)
+	}
+
+	return nil
 }
 
 func GetLinks() ([]*topology.Link, error) {
 	links := getLinks("links")
 
 	return links, nil
+}
+
+// ////////////
+
+func StoreNode(node *topology.Node) error {
+	client, err := createEtcdClient()
+	if err != nil {
+		return fmt.Errorf("failed to create etcd client: %w", err)
+	}
+	defer client.Close()
+
+	return storeNodeWithClient(client, node, false)
+}
+
+func GetNode(name string) (*topology.Node, string, error) {
+	client, err := createEtcdClient()
+	if err != nil {
+		return nil, "", fmt.Errorf("failed to create etcd client: %v", err)
+	}
+	defer client.Close()
+
+	node, prefix, err := getNode(client, name)
+	if err != nil {
+		return nil, "", err
+	}
+
+	return node, prefix, nil
+}
+
+func EditNode(node *topology.Node) error {
+	client, err := createEtcdClient()
+	if err != nil {
+		return fmt.Errorf("failed to create etcd client: %w", err)
+	}
+	defer client.Close()
+
+	return storeNodeWithClient(client, node, true)
 }
 
 func DeleteNode(name string) error {
@@ -203,25 +242,29 @@ func DeleteNode(name string) error {
 	return nil
 }
 
-func DeleteLink(name string) error {
-	client, err := createEtcdClient()
-	if err != nil {
-		return fmt.Errorf("failed to create etcd client: %w", err)
-	}
-	defer client.Close()
+func GetNodes() ([]*topology.Node, error) {
+	endnodes := getNodes("endnodes")
+	bridges := getNodes("bridges")
 
-	_, prefix, err := getLink(client, name)
-	if err != nil {
-		return err
-	}
+	nodes := append(endnodes, bridges...)
 
-	key := strings.ReplaceAll(prefix+"."+name, ".", "/")
+	return nodes, nil
+}
 
-	if _, err := client.Delete(context.Background(), key); err != nil {
-		return fmt.Errorf("failed to delete link %s: %w", name, err)
-	}
+// /////////////
+func GetTopology() (*topology.Topology, error) {
+	var topo = &topology.Topology{}
 
-	return nil
+	endnodes := getNodes("endnodes")
+	bridges := getNodes("bridges")
+
+	topo.Nodes = append(endnodes, bridges...)
+
+	links := getLinks("links")
+
+	topo.Links = append(topo.Links, links...)
+
+	return topo, nil
 }
 
 func StoreTopology(topo *topology.Topology) error {
@@ -289,152 +332,6 @@ func DeleteTopology() error {
 	log.Infof("DeleteTopology: deleted %d keys", totalDeleted)
 
 	return nil
-}
-
-func GetModuleRegistry() (*moduleregistry.ModuleRegistry, error) {
-	// Build the URN for the request data
-	urn := "yang-modules."
-
-	rawData, err := GetFromStore(urn)
-	if err != nil {
-		log.Errorf("Failed getting request data from store: %v", err)
-		return &moduleregistry.ModuleRegistry{}, err
-	}
-
-	var mregistry = &moduleregistry.ModuleRegistry{}
-	if err = proto.Unmarshal(rawData, mregistry); err != nil {
-		log.Errorf("Failed unmarshaling schedule: %v", err)
-		return &moduleregistry.ModuleRegistry{}, err
-	}
-	return mregistry, nil
-}
-
-func StoreStream(streamObj *stream.Stream, id string) error {
-	if streamObj == nil {
-		return fmt.Errorf("cannot store nil stream")
-	}
-
-	id = strings.TrimSpace(id)
-	if id == "" {
-		return fmt.Errorf("stream ID cannot be empty")
-	}
-
-	obj, err := proto.Marshal(streamObj)
-	if err != nil {
-		return fmt.Errorf(
-			"failed to marshal stream %s: %w",
-			id,
-			err,
-		)
-	}
-
-	urn := "streams." + id
-
-	if err := SendToStore(obj, urn); err != nil {
-		return fmt.Errorf(
-			"failed to store stream %s: %w",
-			id,
-			err,
-		)
-	}
-
-	return nil
-}
-
-func GetStreamByID(id string) (*stream.Stream, error) {
-	if strings.TrimSpace(id) == "" {
-		return nil, fmt.Errorf("stream ID cannot be empty")
-	}
-
-	rawData, err := getFromStoreWithPrefix("streams." + id)
-	if err != nil {
-		return nil, err
-	}
-
-	if len(rawData.Kvs) == 0 {
-		return nil, fmt.Errorf("stream %s not found", id)
-	}
-
-	streamObj := &stream.Stream{}
-
-	if err := proto.Unmarshal(
-		[]byte(rawData.Kvs[0].Value),
-		streamObj,
-	); err != nil {
-		return nil, fmt.Errorf(
-			"failed unmarshaling stream %s: %w",
-			id,
-			err,
-		)
-	}
-
-	return streamObj, nil
-}
-
-func DeleteStream(id string) error {
-	id = strings.TrimSpace(id)
-
-	if id == "" {
-		return fmt.Errorf("stream ID cannot be empty")
-	}
-
-	client, err := createEtcdClient()
-	if err != nil {
-		return err
-	}
-	defer client.Close()
-
-	key := "streams/" + id
-
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
-	_, err = client.Delete(ctx, key)
-	if err != nil {
-		return fmt.Errorf(
-			"failed to delete stream %s: %w",
-			id,
-			err,
-		)
-	}
-
-	return nil
-}
-
-type StoredStream struct {
-	ID     string
-	Stream *stream.Stream
-}
-
-func GetStreams() ([]StoredStream, error) {
-	rawData, err := getFromStoreWithPrefix("streams")
-	if err != nil {
-		return nil, err
-	}
-
-	streams := make([]StoredStream, 0, len(rawData.Kvs))
-
-	for _, rawStream := range rawData.Kvs {
-		streamObj := &stream.Stream{}
-
-		if err := proto.Unmarshal([]byte(rawStream.Value), streamObj); err != nil {
-			log.Errorf("Failed unmarshaling stream: %v", err)
-			continue
-		}
-
-		key := string(rawStream.Key)
-
-		// Expected key:
-		// streams/<stream-id>
-		id := strings.TrimPrefix(key, "streams/")
-
-		streams = append(streams, StoredStream{
-			ID:     id,
-			Stream: streamObj,
-		})
-	}
-
-	return streams, nil
 }
 
 /*

@@ -36,10 +36,6 @@ message ListenerGroup {
 	InterfaceCapabilities InterfCap = 5 [json_name="interface-capabilities"];
 }
 
-message StreamRank {
-	uint32 Rank = 1 [json_name="rank"];
-}
-
 message IeeeMacAddress {
 	string DestinationMac = 1 [json_name="destination-mac-address"];
 	string SourceMac = 2 [json_name="source-mac"];
@@ -97,7 +93,7 @@ message TrafficSpecification {
 
 message TalkerGroup {
 	stream.StreamId StrId = 1 [json_name="stream-id"];
-	StreamRank StrRank = 2 [json_name="stream-rank"];
+	stream.StreamRank StrRank = 2 [json_name="stream-rank"];
 	repeated Interface EndStationInterfaces = 3 [json_name="end-station-interfaces"];
 	repeated DataFrameSpecification DataFrameSpecification = 4 [json_name="data-frame-specification"];
 	TrafficSpecification TrafficSpecification = 5 [json_name="traffic-specification"];

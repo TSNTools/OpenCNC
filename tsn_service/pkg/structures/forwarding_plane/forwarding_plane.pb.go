@@ -2,9 +2,9 @@
 // versions:
 // 	protoc-gen-go v1.36.12
 // 	protoc        v3.21.12
-// source: common/structures/network/forwardingPlaneModel.proto
+// source: tsn_service/pkg/structures/network_model/forwarding_plane.proto
 
-package forwarding_plane_model
+package forwarding_plane
 
 import (
 	stream "OpenCNC/common/structures/stream"
@@ -42,7 +42,7 @@ type ForwardingPlaneModel struct {
 
 func (x *ForwardingPlaneModel) Reset() {
 	*x = ForwardingPlaneModel{}
-	mi := &file_common_structures_network_forwardingPlaneModel_proto_msgTypes[0]
+	mi := &file_tsn_service_pkg_structures_network_model_forwarding_plane_proto_msgTypes[0]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -54,7 +54,7 @@ func (x *ForwardingPlaneModel) String() string {
 func (*ForwardingPlaneModel) ProtoMessage() {}
 
 func (x *ForwardingPlaneModel) ProtoReflect() protoreflect.Message {
-	mi := &file_common_structures_network_forwardingPlaneModel_proto_msgTypes[0]
+	mi := &file_tsn_service_pkg_structures_network_model_forwarding_plane_proto_msgTypes[0]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -67,7 +67,7 @@ func (x *ForwardingPlaneModel) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ForwardingPlaneModel.ProtoReflect.Descriptor instead.
 func (*ForwardingPlaneModel) Descriptor() ([]byte, []int) {
-	return file_common_structures_network_forwardingPlaneModel_proto_rawDescGZIP(), []int{0}
+	return file_tsn_service_pkg_structures_network_model_forwarding_plane_proto_rawDescGZIP(), []int{0}
 }
 
 func (x *ForwardingPlaneModel) GetMetadata() *ModelMetadata {
@@ -108,7 +108,7 @@ type StreamModel struct {
 
 func (x *StreamModel) Reset() {
 	*x = StreamModel{}
-	mi := &file_common_structures_network_forwardingPlaneModel_proto_msgTypes[1]
+	mi := &file_tsn_service_pkg_structures_network_model_forwarding_plane_proto_msgTypes[1]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -120,7 +120,7 @@ func (x *StreamModel) String() string {
 func (*StreamModel) ProtoMessage() {}
 
 func (x *StreamModel) ProtoReflect() protoreflect.Message {
-	mi := &file_common_structures_network_forwardingPlaneModel_proto_msgTypes[1]
+	mi := &file_tsn_service_pkg_structures_network_model_forwarding_plane_proto_msgTypes[1]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -133,7 +133,7 @@ func (x *StreamModel) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use StreamModel.ProtoReflect.Descriptor instead.
 func (*StreamModel) Descriptor() ([]byte, []int) {
-	return file_common_structures_network_forwardingPlaneModel_proto_rawDescGZIP(), []int{1}
+	return file_tsn_service_pkg_structures_network_model_forwarding_plane_proto_rawDescGZIP(), []int{1}
 }
 
 func (x *StreamModel) GetDefinition() *stream.Stream {
@@ -168,7 +168,7 @@ type ModelMetadata struct {
 
 func (x *ModelMetadata) Reset() {
 	*x = ModelMetadata{}
-	mi := &file_common_structures_network_forwardingPlaneModel_proto_msgTypes[2]
+	mi := &file_tsn_service_pkg_structures_network_model_forwarding_plane_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -180,7 +180,7 @@ func (x *ModelMetadata) String() string {
 func (*ModelMetadata) ProtoMessage() {}
 
 func (x *ModelMetadata) ProtoReflect() protoreflect.Message {
-	mi := &file_common_structures_network_forwardingPlaneModel_proto_msgTypes[2]
+	mi := &file_tsn_service_pkg_structures_network_model_forwarding_plane_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -193,7 +193,7 @@ func (x *ModelMetadata) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ModelMetadata.ProtoReflect.Descriptor instead.
 func (*ModelMetadata) Descriptor() ([]byte, []int) {
-	return file_common_structures_network_forwardingPlaneModel_proto_rawDescGZIP(), []int{2}
+	return file_tsn_service_pkg_structures_network_model_forwarding_plane_proto_rawDescGZIP(), []int{2}
 }
 
 func (x *ModelMetadata) GetModelId() string {
@@ -231,16 +231,16 @@ func (x *ModelMetadata) GetModifiedAt() *timestamppb.Timestamp {
 	return nil
 }
 
-var File_common_structures_network_forwardingPlaneModel_proto protoreflect.FileDescriptor
+var File_tsn_service_pkg_structures_network_model_forwarding_plane_proto protoreflect.FileDescriptor
 
-const file_common_structures_network_forwardingPlaneModel_proto_rawDesc = "" +
+const file_tsn_service_pkg_structures_network_model_forwarding_plane_proto_rawDesc = "" +
 	"\n" +
-	"4common/structures/network/forwardingPlaneModel.proto\x12\x16forwarding_plane_model\x1a\x1fgoogle/protobuf/timestamp.proto\x1a)common/structures/topology/topology.proto\x1a7common/structures/topology_config/topology_config.proto\x1a%common/structures/stream/stream.proto\x1a3common/structures/stream_config/stream_config.proto\"\x8f\x02\n" +
-	"\x14ForwardingPlaneModel\x12A\n" +
-	"\bmetadata\x18\x01 \x01(\v2%.forwarding_plane_model.ModelMetadataR\bmetadata\x12.\n" +
+	"?tsn_service/pkg/structures/network_model/forwarding_plane.proto\x12\x10forwarding_plane\x1a\x1fgoogle/protobuf/timestamp.proto\x1a)common/structures/topology/topology.proto\x1a7common/structures/topology_config/topology_config.proto\x1a%common/structures/stream/stream.proto\x1a3common/structures/stream_config/stream_config.proto\"\x83\x02\n" +
+	"\x14ForwardingPlaneModel\x12;\n" +
+	"\bmetadata\x18\x01 \x01(\v2\x1f.forwarding_plane.ModelMetadataR\bmetadata\x12.\n" +
 	"\btopology\x18\x02 \x01(\v2\x12.topology.TopologyR\btopology\x12E\n" +
-	"\rconfiguration\x18\x03 \x01(\v2\x1f.topology_config.TopologyConfigR\rconfiguration\x12=\n" +
-	"\astreams\x18\x04 \x03(\v2#.forwarding_plane_model.StreamModelR\astreams\"\x80\x01\n" +
+	"\rconfiguration\x18\x03 \x01(\v2\x1f.topology_config.TopologyConfigR\rconfiguration\x127\n" +
+	"\astreams\x18\x04 \x03(\v2\x1d.forwarding_plane.StreamModelR\astreams\"\x80\x01\n" +
 	"\vStreamModel\x12.\n" +
 	"\n" +
 	"definition\x18\x01 \x01(\v2\x0e.stream.StreamR\n" +
@@ -253,40 +253,40 @@ const file_common_structures_network_forwardingPlaneModel_proto_rawDesc = "" +
 	"\n" +
 	"created_at\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x12;\n" +
 	"\vmodified_at\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\n" +
-	"modifiedAtBIZGOpenCNC/common/structures/forwarding_plane_model;forwarding_plane_modelb\x06proto3"
+	"modifiedAtB=Z;OpenCNC/common/structures/forwarding_plane;forwarding_planeb\x06proto3"
 
 var (
-	file_common_structures_network_forwardingPlaneModel_proto_rawDescOnce sync.Once
-	file_common_structures_network_forwardingPlaneModel_proto_rawDescData []byte
+	file_tsn_service_pkg_structures_network_model_forwarding_plane_proto_rawDescOnce sync.Once
+	file_tsn_service_pkg_structures_network_model_forwarding_plane_proto_rawDescData []byte
 )
 
-func file_common_structures_network_forwardingPlaneModel_proto_rawDescGZIP() []byte {
-	file_common_structures_network_forwardingPlaneModel_proto_rawDescOnce.Do(func() {
-		file_common_structures_network_forwardingPlaneModel_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_common_structures_network_forwardingPlaneModel_proto_rawDesc), len(file_common_structures_network_forwardingPlaneModel_proto_rawDesc)))
+func file_tsn_service_pkg_structures_network_model_forwarding_plane_proto_rawDescGZIP() []byte {
+	file_tsn_service_pkg_structures_network_model_forwarding_plane_proto_rawDescOnce.Do(func() {
+		file_tsn_service_pkg_structures_network_model_forwarding_plane_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_tsn_service_pkg_structures_network_model_forwarding_plane_proto_rawDesc), len(file_tsn_service_pkg_structures_network_model_forwarding_plane_proto_rawDesc)))
 	})
-	return file_common_structures_network_forwardingPlaneModel_proto_rawDescData
+	return file_tsn_service_pkg_structures_network_model_forwarding_plane_proto_rawDescData
 }
 
-var file_common_structures_network_forwardingPlaneModel_proto_msgTypes = make([]protoimpl.MessageInfo, 3)
-var file_common_structures_network_forwardingPlaneModel_proto_goTypes = []any{
-	(*ForwardingPlaneModel)(nil),              // 0: forwarding_plane_model.ForwardingPlaneModel
-	(*StreamModel)(nil),                       // 1: forwarding_plane_model.StreamModel
-	(*ModelMetadata)(nil),                     // 2: forwarding_plane_model.ModelMetadata
+var file_tsn_service_pkg_structures_network_model_forwarding_plane_proto_msgTypes = make([]protoimpl.MessageInfo, 3)
+var file_tsn_service_pkg_structures_network_model_forwarding_plane_proto_goTypes = []any{
+	(*ForwardingPlaneModel)(nil),              // 0: forwarding_plane.ForwardingPlaneModel
+	(*StreamModel)(nil),                       // 1: forwarding_plane.StreamModel
+	(*ModelMetadata)(nil),                     // 2: forwarding_plane.ModelMetadata
 	(*topology.Topology)(nil),                 // 3: topology.Topology
 	(*topology_config.TopologyConfig)(nil),    // 4: topology_config.TopologyConfig
 	(*stream.Stream)(nil),                     // 5: stream.Stream
 	(*stream_config.StreamConfiguration)(nil), // 6: stream.StreamConfiguration
 	(*timestamppb.Timestamp)(nil),             // 7: google.protobuf.Timestamp
 }
-var file_common_structures_network_forwardingPlaneModel_proto_depIdxs = []int32{
-	2, // 0: forwarding_plane_model.ForwardingPlaneModel.metadata:type_name -> forwarding_plane_model.ModelMetadata
-	3, // 1: forwarding_plane_model.ForwardingPlaneModel.topology:type_name -> topology.Topology
-	4, // 2: forwarding_plane_model.ForwardingPlaneModel.configuration:type_name -> topology_config.TopologyConfig
-	1, // 3: forwarding_plane_model.ForwardingPlaneModel.streams:type_name -> forwarding_plane_model.StreamModel
-	5, // 4: forwarding_plane_model.StreamModel.definition:type_name -> stream.Stream
-	6, // 5: forwarding_plane_model.StreamModel.configuration:type_name -> stream.StreamConfiguration
-	7, // 6: forwarding_plane_model.ModelMetadata.created_at:type_name -> google.protobuf.Timestamp
-	7, // 7: forwarding_plane_model.ModelMetadata.modified_at:type_name -> google.protobuf.Timestamp
+var file_tsn_service_pkg_structures_network_model_forwarding_plane_proto_depIdxs = []int32{
+	2, // 0: forwarding_plane.ForwardingPlaneModel.metadata:type_name -> forwarding_plane.ModelMetadata
+	3, // 1: forwarding_plane.ForwardingPlaneModel.topology:type_name -> topology.Topology
+	4, // 2: forwarding_plane.ForwardingPlaneModel.configuration:type_name -> topology_config.TopologyConfig
+	1, // 3: forwarding_plane.ForwardingPlaneModel.streams:type_name -> forwarding_plane.StreamModel
+	5, // 4: forwarding_plane.StreamModel.definition:type_name -> stream.Stream
+	6, // 5: forwarding_plane.StreamModel.configuration:type_name -> stream.StreamConfiguration
+	7, // 6: forwarding_plane.ModelMetadata.created_at:type_name -> google.protobuf.Timestamp
+	7, // 7: forwarding_plane.ModelMetadata.modified_at:type_name -> google.protobuf.Timestamp
 	8, // [8:8] is the sub-list for method output_type
 	8, // [8:8] is the sub-list for method input_type
 	8, // [8:8] is the sub-list for extension type_name
@@ -294,26 +294,26 @@ var file_common_structures_network_forwardingPlaneModel_proto_depIdxs = []int32{
 	0, // [0:8] is the sub-list for field type_name
 }
 
-func init() { file_common_structures_network_forwardingPlaneModel_proto_init() }
-func file_common_structures_network_forwardingPlaneModel_proto_init() {
-	if File_common_structures_network_forwardingPlaneModel_proto != nil {
+func init() { file_tsn_service_pkg_structures_network_model_forwarding_plane_proto_init() }
+func file_tsn_service_pkg_structures_network_model_forwarding_plane_proto_init() {
+	if File_tsn_service_pkg_structures_network_model_forwarding_plane_proto != nil {
 		return
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
-			RawDescriptor: unsafe.Slice(unsafe.StringData(file_common_structures_network_forwardingPlaneModel_proto_rawDesc), len(file_common_structures_network_forwardingPlaneModel_proto_rawDesc)),
+			RawDescriptor: unsafe.Slice(unsafe.StringData(file_tsn_service_pkg_structures_network_model_forwarding_plane_proto_rawDesc), len(file_tsn_service_pkg_structures_network_model_forwarding_plane_proto_rawDesc)),
 			NumEnums:      0,
 			NumMessages:   3,
 			NumExtensions: 0,
 			NumServices:   0,
 		},
-		GoTypes:           file_common_structures_network_forwardingPlaneModel_proto_goTypes,
-		DependencyIndexes: file_common_structures_network_forwardingPlaneModel_proto_depIdxs,
-		MessageInfos:      file_common_structures_network_forwardingPlaneModel_proto_msgTypes,
+		GoTypes:           file_tsn_service_pkg_structures_network_model_forwarding_plane_proto_goTypes,
+		DependencyIndexes: file_tsn_service_pkg_structures_network_model_forwarding_plane_proto_depIdxs,
+		MessageInfos:      file_tsn_service_pkg_structures_network_model_forwarding_plane_proto_msgTypes,
 	}.Build()
-	File_common_structures_network_forwardingPlaneModel_proto = out.File
-	file_common_structures_network_forwardingPlaneModel_proto_goTypes = nil
-	file_common_structures_network_forwardingPlaneModel_proto_depIdxs = nil
+	File_tsn_service_pkg_structures_network_model_forwarding_plane_proto = out.File
+	file_tsn_service_pkg_structures_network_model_forwarding_plane_proto_goTypes = nil
+	file_tsn_service_pkg_structures_network_model_forwarding_plane_proto_depIdxs = nil
 }

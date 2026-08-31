@@ -1,8 +1,8 @@
 syntax = "proto3";
 
-package forwarding_plane_model;
+package forwarding_plane;
 
-option go_package = "OpenCNC/common/structures/forwarding_plane_model;forwarding_plane_model";
+option go_package = "OpenCNC/common/structures/forwarding_plane;forwarding_plane";
 
 import "google/protobuf/timestamp.proto";
 import "common/structures/topology/topology.proto";

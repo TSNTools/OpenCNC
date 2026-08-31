@@ -5,31 +5,31 @@ import (
 
 	pbstream "OpenCNC/common/structures/stream"
 	pbstreamconfig "OpenCNC/common/structures/stream_config"
-	fwdplanemodel "OpenCNC/tsn_service/pkg/structures/network_model"
+	forwarding_plane "OpenCNC/tsn_service/pkg/structures/forwarding_plane"
 )
 
 // PathEntity manages stream path configuration in the CNC model.
 // It prepares routing input for the optimizer and applies the
 // optimizer's routing results to the forwarding-plane model.
 type PathEntity struct {
-	model *fwdplanemodel.ForwardingPlaneModel
+	model *forwarding_plane.ForwardingPlaneModel
 }
 
 // New creates a Path Entity operating on the given model.
-func New(model *fwdplanemodel.ForwardingPlaneModel) *PathEntity {
+func New(model *forwarding_plane.ForwardingPlaneModel) *PathEntity {
 	return &PathEntity{
 		model: model,
 	}
 }
 
 // Model returns the forwarding-plane model.
-func (pe *PathEntity) Model() *fwdplanemodel.ForwardingPlaneModel {
+func (pe *PathEntity) Model() *forwarding_plane.ForwardingPlaneModel {
 	return pe.model
 }
 
 // SetModel changes the forwarding-plane model.
 func (pe *PathEntity) SetModel(
-	model *fwdplanemodel.ForwardingPlaneModel,
+	model *forwarding_plane.ForwardingPlaneModel,
 ) {
 	pe.model = model
 }
@@ -44,7 +44,7 @@ func (pe *PathEntity) SetModel(
 // Keep this separate from ForwardingPlaneModel: it is an optimizer-facing
 // representation, not persistent model state.
 type RoutingInput struct {
-	Topology *fwdplanemodel.ForwardingPlaneModel
+	Topology *forwarding_plane.ForwardingPlaneModel
 	Streams  []*pbstream.Stream
 }
 
@@ -77,10 +77,7 @@ func (pe *PathEntity) GetRoutingInput() (*RoutingInput, error) {
 
 // ApplyPath applies a path selected by the optimizer to a stream's
 // derived configuration.
-func (pe *PathEntity) ApplyRouting(
-	streamID *pbstream.StreamId,
-	path []*pbstreamconfig.StreamHop,
-) error {
+func (pe *PathEntity) ApplyRouting(streamID *pbstream.StreamId, path []*pbstreamconfig.StreamHop) error {
 	if pe == nil || pe.model == nil {
 		return fmt.Errorf("forwarding-plane model is nil")
 	}
@@ -111,9 +108,7 @@ func (pe *PathEntity) ApplyRouting(
 // Validation
 // -----------------------------------------------------------------------------
 
-func (pe *PathEntity) ValidateRouting(
-	path []*pbstreamconfig.StreamHop,
-) error {
+func (pe *PathEntity) ValidateRouting(path []*pbstreamconfig.StreamHop) error {
 	if len(path) == 0 {
 		return fmt.Errorf("path is empty")
 	}
