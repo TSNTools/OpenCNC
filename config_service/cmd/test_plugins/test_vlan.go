@@ -23,7 +23,7 @@ func TestVlanPlugin_tttech() {
 			Authentication: &credentials.ManagementCredentials_UsernamePassword{
 				UsernamePassword: &credentials.UsernamePassword{
 					Username: "root",
-					Password: "root",
+					Password: "",
 				},
 			},
 		},
@@ -34,7 +34,7 @@ func TestVlanPlugin_tttech() {
 		},
 	}
 
-	pluginVlan := netconf.NewVlanNetconfPlugin(logger)
+	pluginVlan := netconf.NewVlanNetconfPlugin2018(logger)
 
 	mapped, err := pluginVlan.Map(VlanConfig, nil)
 	if err != nil {

@@ -40,11 +40,11 @@
             "program": "${workspaceFolder}/main_service/cmd"
         },
         {
-            "name": "Topology Service",
+            "name": "Test Plugins",
             "type": "go",
             "request": "launch",
             "mode": "debug",
-            "program": "${workspaceFolder}/topology_service/cmd"
+            "program": "${workspaceFolder}/config_service/cmd/test_plugins"
         }
     ],
     "compounds": [

@@ -19,20 +19,14 @@ import (
 	"github.com/openconfig/ygot/ygot"
 )
 
-var _ plugins.Plugin = (*VlanNetconfPlugin)(nil)
+var _ plugins.Plugin = (*VlanNetconfPlugin_2018)(nil)
 
-type VlanNetconfPlugin struct {
+type VlanNetconfPlugin_2018 struct {
 	logger observability.Logger
 }
 
-type bridgeVlanPayload struct {
-	BridgeName    string
-	ComponentName string
-	Config        *vlan.BridgeVlanConfig
-}
-
-func NewVlanNetconfPlugin(logger observability.Logger) *VlanNetconfPlugin {
-	return &VlanNetconfPlugin{logger: observability.NormalizeLogger(logger)}
+func NewVlanNetconfPlugin2018(logger observability.Logger) *VlanNetconfPlugin_2018 {
+	return &VlanNetconfPlugin_2018{logger: observability.NormalizeLogger(logger)}
 }
 
 // plugin registers itself
@@ -40,23 +34,23 @@ func init() {
 	plugins.Register(plugins.PluginFactory{
 		Protocol: topology.ManagementProtocol_NETCONF,
 		New: func(logger observability.Logger) plugins.Plugin {
-			return NewVlanNetconfPlugin(logger)
+			return NewVlanNetconfPlugin2018(logger)
 		},
 	})
 }
 
-func (v *VlanNetconfPlugin) Name() string {
+func (v *VlanNetconfPlugin_2018) Name() string {
 	return "vlan-netconf"
 }
 
-func (v *VlanNetconfPlugin) FeatureName() string {
+func (v *VlanNetconfPlugin_2018) FeatureName() string {
 	return "Vlan"
 }
 
-func (v *VlanNetconfPlugin) SupportedByDevice(model *devicemodelregistry.DeviceModel) bool {
+func (v *VlanNetconfPlugin_2018) SupportedByDevice(model *devicemodelregistry.DeviceModel) bool {
 	requiredYangs := []devicemodelregistry.YangModule{{
 		Name:     "ieee802-dot1q-bridge.yang",
-		Revision: "2021-04-09",
+		Revision: "2018-03-07",
 	}}
 
 	for i := range requiredYangs {
@@ -75,7 +69,7 @@ func (v *VlanNetconfPlugin) SupportedByDevice(model *devicemodelregistry.DeviceM
 	return true
 }
 
-func (v *VlanNetconfPlugin) SupportedFields(msg proto.Message) []string {
+func (v *VlanNetconfPlugin_2018) SupportedFields(msg proto.Message) []string {
 	switch msg.(type) {
 	case *topology_config.PortConfig:
 		return []string{
@@ -98,16 +92,16 @@ func (v *VlanNetconfPlugin) SupportedFields(msg proto.Message) []string {
 	}
 }
 
-func (v *VlanNetconfPlugin) Map(msg proto.Message, node *topology.Node) (any, error) {
+func (v *VlanNetconfPlugin_2018) Map(msg proto.Message, node *topology.Node) (any, error) {
 	switch typed := msg.(type) {
 	case *topology_config.PortConfig:
-		if !hasPortVlanData(typed) {
-			return nil, fmt.Errorf("VlanNetconfPlugin: PortConfig has no VLAN data")
+		if !hasPortVlanData2018(typed) {
+			return nil, fmt.Errorf("VlanNetconfPlugin_2018: PortConfig has no VLAN data")
 		}
-		return mapPortConfigToBridgePort(typed), nil
+		return mapPortConfigToBridgePort2018(typed), nil
 	case *vlan.BridgeVlanConfig:
-		if !hasBridgeVlanData(typed) {
-			return nil, fmt.Errorf("VlanNetconfPlugin: BridgeVlanConfig has no VLAN data")
+		if !hasBridgeVlanData2018(typed) {
+			return nil, fmt.Errorf("VlanNetconfPlugin_2018: BridgeVlanConfig has no VLAN data")
 		}
 		return &bridgeVlanPayload{
 			BridgeName:    node.GetName(),
@@ -115,8 +109,8 @@ func (v *VlanNetconfPlugin) Map(msg proto.Message, node *topology.Node) (any, er
 			Config:        typed,
 		}, nil
 	case *topology_config.BridgeConfig:
-		if typed.GetVlanConfig() == nil || !hasBridgeVlanData(typed.GetVlanConfig()) {
-			return nil, fmt.Errorf("VlanNetconfPlugin: BridgeConfig has no VLAN config data")
+		if typed.GetVlanConfig() == nil || !hasBridgeVlanData2018(typed.GetVlanConfig()) {
+			return nil, fmt.Errorf("VlanNetconfPlugin_2018: BridgeConfig has no VLAN config data")
 		}
 		return &bridgeVlanPayload{
 			BridgeName:    node.GetName(),
@@ -124,7 +118,7 @@ func (v *VlanNetconfPlugin) Map(msg proto.Message, node *topology.Node) (any, er
 			Config:        typed.GetVlanConfig(),
 		}, nil
 	case *topology_config.NodeConfig:
-		if typed.GetBridge() != nil && typed.GetBridge().GetVlanConfig() != nil && hasBridgeVlanData(typed.GetBridge().GetVlanConfig()) {
+		if typed.GetBridge() != nil && typed.GetBridge().GetVlanConfig() != nil && hasBridgeVlanData2018(typed.GetBridge().GetVlanConfig()) {
 			name := typed.GetNodeId()
 			if name == "" {
 				name = node.GetName()
@@ -136,17 +130,17 @@ func (v *VlanNetconfPlugin) Map(msg proto.Message, node *topology.Node) (any, er
 			}, nil
 		}
 
-		if len(typed.GetPortConfigs()) == 1 && hasPortVlanData(typed.GetPortConfigs()[0]) {
-			return mapPortConfigToBridgePort(typed.GetPortConfigs()[0]), nil
+		if len(typed.GetPortConfigs()) == 1 && hasPortVlanData2018(typed.GetPortConfigs()[0]) {
+			return mapPortConfigToBridgePort2018(typed.GetPortConfigs()[0]), nil
 		}
 
-		return nil, fmt.Errorf("VlanNetconfPlugin: NodeConfig has no mappable VLAN data")
+		return nil, fmt.Errorf("VlanNetconfPlugin_2018: NodeConfig has no mappable VLAN data")
 	default:
-		return nil, fmt.Errorf("VlanNetconfPlugin: invalid message type %T", msg)
+		return nil, fmt.Errorf("VlanNetconfPlugin_2018: invalid message type %T", msg)
 	}
 }
 
-func mapPortConfigToBridgePort(portCfg *topology_config.PortConfig) *opencncModel.IETFInterfaces_Interfaces_Interface_BridgePort {
+func mapPortConfigToBridgePort2018(portCfg *topology_config.PortConfig) *opencncModel.IETFInterfaces_Interfaces_Interface_BridgePort {
 	bridgePort := &opencncModel.IETFInterfaces_Interfaces_Interface_BridgePort{}
 	if portCfg.DefaultVlanId != nil {
 		bridgePort.Pvid = portCfg.DefaultVlanId
@@ -167,7 +161,7 @@ func mapPortConfigToBridgePort(portCfg *topology_config.PortConfig) *opencncMode
 
 	if adv := portCfg.GetVlanAdvanced(); adv != nil {
 		if adv.AcceptableFrame != nil {
-			bridgePort.AcceptableFrame = acceptableFrameToYANGModel(*adv.AcceptableFrame)
+			bridgePort.AcceptableFrame = acceptableFrameToYANGModel2018(*adv.AcceptableFrame)
 		}
 		if adv.IngressFilteringEnabled != nil {
 			bridgePort.EnableIngressFiltering = adv.IngressFilteringEnabled
@@ -238,7 +232,7 @@ func mapPortConfigToBridgePort(portCfg *topology_config.PortConfig) *opencncMode
 	return bridgePort
 }
 
-func (v *VlanNetconfPlugin) Push(mapped any, target managementSessions.DeviceTarget) error {
+func (v *VlanNetconfPlugin_2018) Push(mapped any, target managementSessions.DeviceTarget) error {
 	featurexml, err := v.BuildFeatureXML(mapped)
 	if err != nil {
 		return fmt.Errorf("failed to build feature XML: %w", err)
@@ -284,7 +278,7 @@ func (v *VlanNetconfPlugin) Push(mapped any, target managementSessions.DeviceTar
 	return pushXML(xml, label)
 }
 
-func (v *VlanNetconfPlugin) BuildFeatureXML(mapped any) (*plugins.FeatureXML, error) {
+func (v *VlanNetconfPlugin_2018) BuildFeatureXML(mapped any) (*plugins.FeatureXML, error) {
 	switch typed := mapped.(type) {
 	case *opencncModel.IETFInterfaces_Interfaces_Interface_BridgePort:
 		return v.buildBridgePortFeatureXML(typed)
@@ -295,13 +289,13 @@ func (v *VlanNetconfPlugin) BuildFeatureXML(mapped any) (*plugins.FeatureXML, er
 		}
 		return &plugins.FeatureXML{Container: "bridges", XML: xml}, nil
 	default:
-		return nil, fmt.Errorf("VlanNetconfPlugin: invalid mapped type %T", mapped)
+		return nil, fmt.Errorf("VlanNetconfPlugin_2018: invalid mapped type %T", mapped)
 	}
 }
 
-func (v *VlanNetconfPlugin) buildBridgeVlanXML(payload *bridgeVlanPayload) ([]byte, error) {
+func (v *VlanNetconfPlugin_2018) buildBridgeVlanXML(payload *bridgeVlanPayload) ([]byte, error) {
 	if payload == nil || payload.Config == nil {
-		return nil, fmt.Errorf("VlanNetconfPlugin: nil bridge VLAN payload")
+		return nil, fmt.Errorf("VlanNetconfPlugin_2018: nil bridge VLAN payload")
 	}
 
 	bridgeName := payload.BridgeName
@@ -317,9 +311,13 @@ func (v *VlanNetconfPlugin) buildBridgeVlanXML(payload *bridgeVlanPayload) ([]by
 	buf.WriteString(`<bridges xmlns="urn:ieee:std:802.1Q:yang:ieee802-dot1q-bridge">`)
 	buf.WriteString(`<bridge>`)
 	buf.WriteString(fmt.Sprintf(`<name>%s</name>`, bridgeName))
+	//buf.WriteString(`<address>00-80-82-87-d3-0d</address>`)
+	//buf.WriteString(`<bridge-type>customer-vlan-bridge</bridge-type>`)
 	buf.WriteString(`<component>`)
 	buf.WriteString(fmt.Sprintf(`<name>%s</name>`, componentName))
-
+	//buf.WriteString(`<id>1</id>`)
+	//buf.WriteString(`<type>c-vlan-component</type>`)
+	//buf.WriteString(`<address>00-80-82-87-d3-0d</address>`)
 	if len(payload.Config.GetVlanRegistrationEntries()) > 0 {
 		buf.WriteString(`<filtering-database>`)
 		for _, reg := range payload.Config.GetVlanRegistrationEntries() {
@@ -329,8 +327,8 @@ func (v *VlanNetconfPlugin) buildBridgeVlanXML(payload *bridgeVlanPayload) ([]by
 
 			buf.WriteString(`<vlan-registration-entry>`)
 			buf.WriteString(fmt.Sprintf(`<database-id>%d</database-id>`, reg.GetDatabaseId()))
-			buf.WriteString(fmt.Sprintf(`<vids>%s</vids>`, joinUint32CSV(reg.GetVlanIds())))
-			buf.WriteString(fmt.Sprintf(`<entry-type>%s</entry-type>`, vlanRegistrationEntryTypeToXML(reg.GetEntryType())))
+			buf.WriteString(fmt.Sprintf(`<vids>%s</vids>`, joinUint32CSV2018(reg.GetVlanIds())))
+			buf.WriteString(fmt.Sprintf(`<entry-type>%s</entry-type>`, vlanRegistrationEntryTypeToXML2018(reg.GetEntryType())))
 
 			for _, pm := range reg.GetPortMaps() {
 				if pm == nil {
@@ -338,10 +336,10 @@ func (v *VlanNetconfPlugin) buildBridgeVlanXML(payload *bridgeVlanPayload) ([]by
 				}
 
 				buf.WriteString(`<port-map>`)
-				buf.WriteString(fmt.Sprintf(`<port-ref>%d</port-ref>`, portRefFromPortID(pm.GetPortId())))
+				buf.WriteString(fmt.Sprintf(`<port-ref>%d</port-ref>`, portRefFromPortID2018(pm.GetPortId())))
 				buf.WriteString(`<static-vlan-registration-entries>`)
-				buf.WriteString(fmt.Sprintf(`<registrar-admin-control>%s</registrar-admin-control>`, registrarAdminControlToXML(pm.GetRegistrarAdminControl())))
-				buf.WriteString(fmt.Sprintf(`<vlan-transmitted>%s</vlan-transmitted>`, vlanTransmittedToXML(pm.GetVlanTransmitted())))
+				buf.WriteString(fmt.Sprintf(`<registrar-admin-control>%s</registrar-admin-control>`, registrarAdminControlToXML2018(pm.GetRegistrarAdminControl())))
+				buf.WriteString(fmt.Sprintf(`<vlan-transmitted>%s</vlan-transmitted>`, vlanTransmittedToXML2018(pm.GetVlanTransmitted())))
 				buf.WriteString(`</static-vlan-registration-entries>`)
 				buf.WriteString(`</port-map>`)
 			}
@@ -372,7 +370,7 @@ func (v *VlanNetconfPlugin) buildBridgeVlanXML(payload *bridgeVlanPayload) ([]by
 	return buf.Bytes(), nil
 }
 
-func (v *VlanNetconfPlugin) buildBridgePortFeatureXML(root *opencncModel.IETFInterfaces_Interfaces_Interface_BridgePort) (*plugins.FeatureXML, error) {
+func (v *VlanNetconfPlugin_2018) buildBridgePortFeatureXML(root *opencncModel.IETFInterfaces_Interfaces_Interface_BridgePort) (*plugins.FeatureXML, error) {
 	var buf bytes.Buffer
 
 	buf.WriteString(`<bridge-port xmlns="urn:ieee:std:802.1Q:yang:ieee802-dot1q-bridge">`)
@@ -382,7 +380,7 @@ func (v *VlanNetconfPlugin) buildBridgePortFeatureXML(root *opencncModel.IETFInt
 	}
 
 	if root.AcceptableFrame != opencncModel.IETFInterfaces_Interfaces_Interface_BridgePort_AcceptableFrame_UNSET {
-		buf.WriteString(fmt.Sprintf(`<acceptable-frame>%s</acceptable-frame>`, acceptableFrameToXML(root.AcceptableFrame)))
+		buf.WriteString(fmt.Sprintf(`<acceptable-frame>%s</acceptable-frame>`, acceptableFrameToXML2018(root.AcceptableFrame)))
 	}
 
 	if root.EnableIngressFiltering != nil {
@@ -453,7 +451,7 @@ func (v *VlanNetconfPlugin) buildBridgePortFeatureXML(root *opencncModel.IETFInt
 	return &plugins.FeatureXML{Container: "bridge-port", XML: buf.Bytes()}, nil
 }
 
-func (v *VlanNetconfPlugin) wrapXML(featurexml *plugins.FeatureXML, target managementSessions.DeviceTarget) (string, error) {
+func (v *VlanNetconfPlugin_2018) wrapXML(featurexml *plugins.FeatureXML, target managementSessions.DeviceTarget) (string, error) {
 	var buf bytes.Buffer
 
 	buf.WriteString(`<interfaces xmlns="urn:ietf:params:xml:ns:yang:ietf-interfaces">`)
@@ -466,7 +464,7 @@ func (v *VlanNetconfPlugin) wrapXML(featurexml *plugins.FeatureXML, target manag
 	return buf.String(), nil
 }
 
-func acceptableFrameToYANGModel(vf vlan.AcceptableFrameType) opencncModel.E_IETFInterfaces_Interfaces_Interface_BridgePort_AcceptableFrame {
+func acceptableFrameToYANGModel2018(vf vlan.AcceptableFrameType) opencncModel.E_IETFInterfaces_Interfaces_Interface_BridgePort_AcceptableFrame {
 	switch vf {
 	case vlan.AcceptableFrameType_ACCEPTABLE_FRAME_TYPE_ADMIT_ONLY_VLAN_TAGGED:
 		return opencncModel.IETFInterfaces_Interfaces_Interface_BridgePort_AcceptableFrame_admit_only_VLAN_tagged_frames
@@ -479,7 +477,7 @@ func acceptableFrameToYANGModel(vf vlan.AcceptableFrameType) opencncModel.E_IETF
 	}
 }
 
-func acceptableFrameToXML(vf opencncModel.E_IETFInterfaces_Interfaces_Interface_BridgePort_AcceptableFrame) string {
+func acceptableFrameToXML2018(vf opencncModel.E_IETFInterfaces_Interfaces_Interface_BridgePort_AcceptableFrame) string {
 	switch vf {
 	case opencncModel.IETFInterfaces_Interfaces_Interface_BridgePort_AcceptableFrame_admit_only_VLAN_tagged_frames:
 		return "admit_only_VLAN_tagged_frames"
@@ -492,7 +490,7 @@ func acceptableFrameToXML(vf opencncModel.E_IETFInterfaces_Interfaces_Interface_
 	}
 }
 
-func hasPortVlanData(portCfg *topology_config.PortConfig) bool {
+func hasPortVlanData2018(portCfg *topology_config.PortConfig) bool {
 	if portCfg == nil {
 		return false
 	}
@@ -508,7 +506,7 @@ func hasPortVlanData(portCfg *topology_config.PortConfig) bool {
 	return false
 }
 
-func hasBridgeVlanData(cfg *vlan.BridgeVlanConfig) bool {
+func hasBridgeVlanData2018(cfg *vlan.BridgeVlanConfig) bool {
 	if cfg == nil {
 		return false
 	}
@@ -524,7 +522,7 @@ func hasBridgeVlanData(cfg *vlan.BridgeVlanConfig) bool {
 	return false
 }
 
-func joinUint32CSV(values []uint32) string {
+func joinUint32CSV2018(values []uint32) string {
 	if len(values) == 0 {
 		return ""
 	}
@@ -535,7 +533,7 @@ func joinUint32CSV(values []uint32) string {
 	return strings.Join(parts, ",")
 }
 
-func vlanRegistrationEntryTypeToXML(t vlan.VlanRegistrationEntryType) string {
+func vlanRegistrationEntryTypeToXML2018(t vlan.VlanRegistrationEntryType) string {
 	switch t {
 	case vlan.VlanRegistrationEntryType_VLAN_REG_ENTRY_TYPE_STATIC:
 		return "static"
@@ -546,7 +544,7 @@ func vlanRegistrationEntryTypeToXML(t vlan.VlanRegistrationEntryType) string {
 	}
 }
 
-func registrarAdminControlToXML(v vlan.RegistrarAdminControl) string {
+func registrarAdminControlToXML2018(v vlan.RegistrarAdminControl) string {
 	switch v {
 	case vlan.RegistrarAdminControl_REGISTRAR_ADMIN_CONTROL_FIXED_NEW_IGNORED:
 		return "fixed_new_ignored"
@@ -561,7 +559,7 @@ func registrarAdminControlToXML(v vlan.RegistrarAdminControl) string {
 	}
 }
 
-func vlanTransmittedToXML(v vlan.VlanTransmitted) string {
+func vlanTransmittedToXML2018(v vlan.VlanTransmitted) string {
 	switch v {
 	case vlan.VlanTransmitted_VLAN_TRANSMITTED_TAGGED:
 		return "tagged"
@@ -572,7 +570,7 @@ func vlanTransmittedToXML(v vlan.VlanTransmitted) string {
 	}
 }
 
-func portRefFromPortID(portID string) uint32 {
+func portRefFromPortID2018(portID string) uint32 {
 	if portID == "" {
 		return 0
 	}
