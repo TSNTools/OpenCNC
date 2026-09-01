@@ -21,7 +21,7 @@ func (s *NetconfSnapshot) Clone() protocolbackends.Snapshot {
 	}
 }
 
-func (s *NetconfSnapshot) Update(feature *plugins.FeatureXML, node *topology.Node) error {
+func (s *NetconfSnapshot) Update(feature *plugins.FeatureXML, node *topology.Node, portId string) error {
 
 	if feature == nil {
 		return fmt.Errorf("feature XML is nil")
@@ -56,7 +56,7 @@ func (s *NetconfSnapshot) Update(feature *plugins.FeatureXML, node *topology.Nod
 			continue
 		}
 
-		if name.Text() == node.Name {
+		if name.Text() == portId {
 			interfaceElement = intf
 			break
 		}
@@ -65,7 +65,7 @@ func (s *NetconfSnapshot) Update(feature *plugins.FeatureXML, node *topology.Nod
 	if interfaceElement == nil {
 		return fmt.Errorf(
 			"interface %q not found in snapshot",
-			node.Name,
+			portId,
 		)
 	}
 

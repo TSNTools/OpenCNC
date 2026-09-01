@@ -79,7 +79,7 @@ func (p *OldQbvNetconfPlugin) SupportedFields(msg proto.Message) []string {
 	}
 }
 
-func (p *OldQbvNetconfPlugin) Map(msg proto.Message) (any, error) {
+func (p *OldQbvNetconfPlugin) Map(msg proto.Message, node *topology.Node) (any, error) {
 	gcl, ok := msg.(*qbv.GateControlList)
 	if !ok {
 		return nil, fmt.Errorf("invalid message type for OldQbvNetconfPlugin: %T", msg)

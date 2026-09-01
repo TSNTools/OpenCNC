@@ -3,6 +3,7 @@ package internalOptimizer
 import (
 	store "OpenCNC/common/store-wrapper"
 	"OpenCNC/common/structures/qbv"
+	"OpenCNC/common/structures/stream_config"
 	"OpenCNC/common/structures/topology_config"
 	"OpenCNC/common/structures/uni"
 	forwarding_plane "OpenCNC/tsn_service/pkg/structures/forwarding_plane"
@@ -34,7 +35,7 @@ func StartOptimization(task *optimizer.OptimizationTask, allRequestData []*uni.R
 		return nil, err
 	}
 	fpm.Configuration = topoConfig
-	fpm.Metadata.ModelId = defaultSchedID
+	//fpm.Metadata.ModelId = defaultSchedID
 
 	return fpm, nil
 }
@@ -66,18 +67,12 @@ func createForwardingPlaneModel() *forwarding_plane.ForwardingPlaneModel {
 	}
 
 	// Get all streamconfigurations from k/v store
-
-	if err != nil {
-		fmt.Printf("Failed getting stream configurations: %v\n", err)
-		return nil
-	}
-
 	streamModels := []*forwarding_plane.StreamModel{}
 	for _, stream := range streams {
-		streamConfig, err := store.GetStreamConfiguration(stream.StreamId.String())
+		streamConfig, err := store.GetStreamConfiguration(stream.StreamId.AsKey())
 		if err != nil {
-			fmt.Printf("Failed getting stream configuration for stream %v: %v\n", stream.StreamId.String(), err)
-			continue
+			//fmt.Printf("Failed getting stream configuration for stream %v: %v\n", stream.StreamId.AsKey(), err)
+			streamConfig = &stream_config.StreamConfiguration{}
 		}
 		streamModels = append(streamModels, &forwarding_plane.StreamModel{
 			Definition:    stream,

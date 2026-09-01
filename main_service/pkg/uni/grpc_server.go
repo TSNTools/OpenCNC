@@ -24,7 +24,7 @@ func (s *Server) AddStream(ctx context.Context, req *uni.ConfigRequest) (*uni.Co
 		return nil, fmt.Errorf("received nil AddStream request")
 	}
 
-	fmt.Printf("Received AddStream request: %+v\n", req)
+	fmt.Printf("[Main-service] Received AddStream request")
 
 	// Check whether the client cancelled the request.
 	select {

@@ -2,6 +2,7 @@ package plugins
 
 import (
 	devicemodelregistry "OpenCNC/common/structures/devicemodelregistry"
+	"OpenCNC/common/structures/topology"
 	managementSessions "OpenCNC/config_service/pkg/managementSessions"
 
 	"github.com/golang/protobuf/proto"
@@ -12,7 +13,7 @@ type Plugin interface {
 	FeatureName() string
 	SupportedByDevice(model *devicemodelregistry.DeviceModel) bool // returns true if the feature is supported by the device model: check is based on yang files names and revisions. it does not guarantee: leaf availability ,RPC support, full subtree support
 	SupportedFields(msg proto.Message) []string                    // returns supported field names for the provided structure; empty means unsupported
-	Map(msg proto.Message) (any, error)
+	Map(msg proto.Message, node *topology.Node) (any, error)
 	Push(mapped any, target managementSessions.DeviceTarget) error
 	BuildFeatureXML(root any) (*FeatureXML, error)
 }

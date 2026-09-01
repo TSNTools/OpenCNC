@@ -47,7 +47,6 @@ func HandleAddStreamEvent(configReq *uni.ConfigRequest, timeOfReq time.Time) (st
 
 	configId, err := notifyTsnService(event)
 	if err != nil {
-		//log.Errorf("Failed to notify TSN service: %v", err)
 		fmt.Printf("Failed to notify TSN service: %v", err)
 		return "", err
 	}
@@ -57,6 +56,7 @@ func HandleAddStreamEvent(configReq *uni.ConfigRequest, timeOfReq time.Time) (st
 		fmt.Printf("Failed getting tentative configuration: %v", err)
 		return "", err
 	}
+	fmt.Println("[Main-service]  Tentative configuration retrieved...")
 
 	// Finalize the configuration
 	if err = configurationHandler.FinalizeConfiguration(tentativeConfiguration); err != nil {

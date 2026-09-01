@@ -24,10 +24,8 @@ func (s *Server) Notify(ctx context.Context, event *Event) (*NotifyResponse, err
 	}
 
 	fmt.Printf(
-		"Received notification: id=%s type=%s source=%s\n",
-		event.GetEventId(),
+		"[tsn-service] Received notification of type %s\n",
 		event.GetType().String(),
-		event.GetSource(),
 	)
 
 	switch event.GetType() {
@@ -79,7 +77,6 @@ func (s *Server) handleStreamAdded(ctx context.Context, event *Event) (*NotifyRe
 				err,
 			)
 		}
-		fmt.Printf("Got request from store with id: %s\n", requestId)
 		allRequestData = append(allRequestData, reqData)
 	}
 

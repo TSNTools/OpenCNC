@@ -88,7 +88,7 @@ func (p *QbvNetconfPlugin) SupportedByDevice(model *devicemodelregistry.DeviceMo
 	return true
 }
 
-func (p *QbvNetconfPlugin) Map(msg proto.Message) (any, error) {
+func (p *QbvNetconfPlugin) Map(msg proto.Message, node *topology.Node) (any, error) {
 	gcl, ok := msg.(*qbv.GateControlList)
 	if !ok {
 		return nil, fmt.Errorf("invalid message type for QbvNetconfPlugin: %T", msg)

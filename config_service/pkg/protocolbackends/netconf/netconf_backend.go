@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"reflect"
+	"strings"
 
 	"OpenCNC/common/managementSessions"
 	"OpenCNC/common/observability"
@@ -294,7 +295,7 @@ func (b *NetconfBackend) PrepareSnapshot(ctx context.Context, msg *topology_conf
 			if err := ctx.Err(); err != nil {
 				return err
 			}
-			mapped, err := plugin.Map(input)
+			mapped, err := plugin.Map(input, b.target)
 			if err != nil {
 				return fmt.Errorf("%s: %w", plugin.Name(), err)
 			}
@@ -312,6 +313,7 @@ func (b *NetconfBackend) PrepareSnapshot(ctx context.Context, msg *topology_conf
 			if err := b.snapshots.Working.Update(
 				featureXML,
 				b.target,
+				portConfig.PortId,
 			); err != nil {
 				return fmt.Errorf("failed to update snapshot: %w", err)
 			}
@@ -485,6 +487,10 @@ func GetRunningSnapshot(session *netconf.Session) (*NetconfSnapshot, error) {
 	}
 
 	rawXML, err := managementSessions.GetRunningConfig(session)
+	rawXML = stripRPCReply(rawXML)
+
+	//DumpXML(rawXML)
+
 	if err != nil {
 		return nil, fmt.Errorf("failed to get running config: %w", err)
 	}
@@ -492,3 +498,38 @@ func GetRunningSnapshot(session *netconf.Session) (*NetconfSnapshot, error) {
 	xmlBytes := []byte(rawXML)
 	return &NetconfSnapshot{XML: append([]byte(nil), xmlBytes...)}, nil
 }
+
+func stripRPCReply(xml string) string {
+	// Strip <rpc-reply ...>
+	start := strings.Index(xml, ">")
+	end := strings.LastIndex(xml, "</rpc-reply>")
+
+	if start == -1 || end == -1 {
+		return xml
+	}
+
+	xml = xml[start+1 : end]
+
+	// Strip <data ...>
+	start = strings.Index(xml, ">")
+	end = strings.LastIndex(xml, "</data>")
+
+	if start == -1 || end == -1 {
+		return xml
+	}
+
+	// Keep everything inside <data> and wrap it in <config>
+	return "<config>" + xml[start+1:end] + "</config>"
+}
+
+// //////////////////
+/*
+func DumpXML(s string) {
+	f, err := os.Create("/home/opencnc/OpenCNC/debug.xml")
+	if err != nil {
+		return
+	}
+	defer f.Close()
+	f.WriteString(s)
+}
+*/

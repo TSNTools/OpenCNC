@@ -22,11 +22,11 @@ func CreateOptimizationTask(requests []*uni.Request) (*optimizer.OptimizationTas
 			return nil, fmt.Errorf("create stream from request %q: %w", req.GetId(), err)
 		}
 
-		if err := storewrapper.StoreStream(stream, req.Id); err != nil {
-			return nil, fmt.Errorf("store stream from request %q: %w", req.GetId(), err)
+		if err := storewrapper.StoreStream(stream, stream.StreamId.AsKey()); err != nil {
+			return nil, fmt.Errorf("failed to store stream from request %q: %w", req.GetId(), err)
 		}
 
-		streamIDs = append(streamIDs, req.Id)
+		streamIDs = append(streamIDs, stream.StreamId.AsKey())
 	}
 
 	return &optimizer.OptimizationTask{
@@ -71,7 +71,7 @@ func endpointNodeID(interfaces []*uni.Interface) (string, error) {
 	}
 
 	if iface.InterfaceId.InterfaceName == "" {
-		return "", errors.New("missing interface name")
+		return "", errors.New("missing interface name: " + iface.InterfaceId.String())
 	}
 
 	return iface.InterfaceId.InterfaceName, nil

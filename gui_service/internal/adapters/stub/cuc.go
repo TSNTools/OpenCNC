@@ -71,7 +71,7 @@ func generateTSNStreamID(talkerMAC string) (*streamproto.StreamId, error) {
 	used := make(map[uint16]bool)
 
 	for _, s := range streams {
-		streamMAC, uid, err := parseTSNStreamID(s.StreamId.String())
+		streamMAC, uid, err := parseTSNStreamID(s.StreamId.AsKey())
 		if err != nil {
 			continue
 		}
@@ -94,7 +94,7 @@ func generateTSNStreamID(talkerMAC string) (*streamproto.StreamId, error) {
 }
 
 func parseTSNStreamID(id string) (net.HardwareAddr, uint16, error) {
-	parts := strings.Split(id, ":")
+	parts := strings.Split(id, "-")
 	if len(parts) != 2 {
 		return nil, 0, fmt.Errorf("invalid StreamID: %s", id)
 	}
@@ -147,7 +147,7 @@ func nodeToInterface(node *topology.Node) (*uni.Interface, error) {
 		Index: 0,
 		InterfaceId: &uni.InterfaceId{
 			MacAddress:    port.MacAddress,
-			InterfaceName: port.Name,
+			InterfaceName: port.Id,
 		},
 	}, nil
 }

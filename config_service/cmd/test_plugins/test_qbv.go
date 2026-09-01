@@ -44,7 +44,7 @@ func TestQbvPlugin() {
 	}
 
 	// Map the message to YGOT structure
-	mapped, err := plugin.Map(proto.Message(gcl))
+	mapped, err := plugin.Map(proto.Message(gcl), nil)
 	if err != nil {
 		logger.Fatalf("Map failed: %v", err)
 	}
@@ -102,7 +102,7 @@ func TestQbvPlugin_tttech() {
 	}
 
 	// Map the message to YGOT structure
-	mapped, err := plugin.Map(proto.Message(gcl))
+	mapped, err := plugin.Map(proto.Message(gcl), nil)
 	if err != nil {
 		logger.Fatalf("Map failed: %v", err)
 	}

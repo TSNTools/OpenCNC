@@ -98,7 +98,7 @@ func (v *VlanNetconfPlugin) SupportedFields(msg proto.Message) []string {
 	}
 }
 
-func (v *VlanNetconfPlugin) Map(msg proto.Message) (any, error) {
+func (v *VlanNetconfPlugin) Map(msg proto.Message, node *topology.Node) (any, error) {
 	switch typed := msg.(type) {
 	case *topology_config.PortConfig:
 		if !hasPortVlanData(typed) {
@@ -110,8 +110,8 @@ func (v *VlanNetconfPlugin) Map(msg proto.Message) (any, error) {
 			return nil, fmt.Errorf("VlanNetconfPlugin: BridgeVlanConfig has no VLAN data")
 		}
 		return &bridgeVlanPayload{
-			BridgeName:    "br0",
-			ComponentName: "br0",
+			BridgeName:    node.GetName(),
+			ComponentName: node.GetName(),
 			Config:        typed,
 		}, nil
 	case *topology_config.BridgeConfig:
@@ -119,15 +119,15 @@ func (v *VlanNetconfPlugin) Map(msg proto.Message) (any, error) {
 			return nil, fmt.Errorf("VlanNetconfPlugin: BridgeConfig has no VLAN config data")
 		}
 		return &bridgeVlanPayload{
-			BridgeName:    "br0",
-			ComponentName: "br0",
+			BridgeName:    node.GetName(),
+			ComponentName: node.GetName(),
 			Config:        typed.GetVlanConfig(),
 		}, nil
 	case *topology_config.NodeConfig:
 		if typed.GetBridge() != nil && typed.GetBridge().GetVlanConfig() != nil && hasBridgeVlanData(typed.GetBridge().GetVlanConfig()) {
 			name := typed.GetNodeId()
 			if name == "" {
-				name = "br0"
+				name = node.GetName()
 			}
 			return &bridgeVlanPayload{
 				BridgeName:    name,

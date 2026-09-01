@@ -111,7 +111,7 @@ func StoreStreamConfiguration(cfg *stream.StreamConfiguration) error {
 
 func GetUniRequestData(configId string) (*uni.Request, error) {
 	// Build the URN for the request data
-	urn := "streams.requests." + configId
+	urn := "configurations.requests." + configId
 
 	// Send request to specific path in k/v store "streams"
 	rawData, err := GetFromStore(urn)
@@ -141,7 +141,7 @@ func StoreUniConfRequest(req *uni.Request) (string, error) {
 	}
 
 	// Create a URN where the serialized request will be stored
-	urn := "streams.requests."
+	urn := "configurations.requests."
 
 	var requestId = req.GetId()
 	if requestId == "" {

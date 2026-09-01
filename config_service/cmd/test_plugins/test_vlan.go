@@ -36,7 +36,7 @@ func TestVlanPlugin_tttech() {
 
 	pluginVlan := netconf.NewVlanNetconfPlugin(logger)
 
-	mapped, err := pluginVlan.Map(VlanConfig)
+	mapped, err := pluginVlan.Map(VlanConfig, nil)
 	if err != nil {
 		logger.Fatalf("Map failed: %v", err)
 	}

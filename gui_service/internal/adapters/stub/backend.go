@@ -604,7 +604,7 @@ func (b *Backend) GetStreams(_ context.Context) ([]domain.Stream, error) {
 		}
 
 		stream := domain.Stream{
-			ID:                   stream.StreamId.String(),
+			ID:                   stream.StreamId.AsKey(),
 			Name:                 stream.Description,
 			TalkerNodeID:         stream.TalkerNodeId,
 			ListenerNodeIDs:      append([]string(nil), stream.ListenerNodeIds...),
@@ -1563,7 +1563,7 @@ func (b *Backend) AddStream(_ context.Context, stream domain.Stream) (domain.Ope
 		return domain.OperationResult{
 			Success: false,
 			Name:    "addStream",
-			Message: fmt.Sprintf("failed to generate Stream ID for stream %s", streamID),
+			Message: fmt.Sprintf("failed to generate Stream ID for stream %s", streamID.AsKey()),
 		}, err
 	}
 
@@ -1571,7 +1571,7 @@ func (b *Backend) AddStream(_ context.Context, stream domain.Stream) (domain.Ope
 		Version: 1.0,
 		Requests: []*uni.Request{
 			{
-				Id: streamID.String(),
+				Id: streamID.AsKey(),
 
 				Talker: &uni.TalkerGroup{
 					StrId: streamID,
@@ -1632,7 +1632,7 @@ func (b *Backend) AddStream(_ context.Context, stream domain.Stream) (domain.Ope
 		Name:    "addStream",
 		Message: fmt.Sprintf("stream %s created", stream.ID),
 		Data: map[string]string{
-			"streamId": streamID.String(),
+			"streamId": streamID.AsKey(),
 			"name":     stream.Name,
 		},
 	}, nil

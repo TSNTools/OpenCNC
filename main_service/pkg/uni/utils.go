@@ -83,9 +83,9 @@ func createResponse(confId string, confReq *uni.ConfigRequest) (*uni.ConfigRespo
 		}
 
 		streamId := request.Talker.GetStrId()
-		streamsConfig, err := store.GetStreamConfiguration(streamId.String())
+		streamsConfig, err := store.GetStreamConfiguration(streamId.AsKey())
 		if err != nil {
-			return nil, fmt.Errorf("failed to get streams configuration for %q: %w", confId, err)
+			fmt.Printf("failed to get streams configuration for: %q\n", streamId.AsKey())
 		}
 
 		resp := genResponse(request, configuration, streamsConfig)

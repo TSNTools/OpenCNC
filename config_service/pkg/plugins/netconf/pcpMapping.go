@@ -81,7 +81,7 @@ func (p *PcpMappingNetconfPlugin) SupportedByDevice(model *devicemodelregistry.D
 	return true
 }
 
-func (p *PcpMappingNetconfPlugin) Map(msg proto.Message) (any, error) {
+func (p *PcpMappingNetconfPlugin) Map(msg proto.Message, node *topology.Node) (any, error) {
 	portCfg, ok := msg.(*topology_config.PortConfig)
 	if !ok {
 		return nil, fmt.Errorf("PcpMappingNetconfPlugin: invalid message type %T", msg)

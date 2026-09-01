@@ -40,7 +40,7 @@ func notifyTsnService(event *notificationServer.Event) (string, error) {
 	}
 	defer conn.Close()
 
-	fmt.Println("Dialed TSN service successfully.")
+	fmt.Println("[Main-service] Notified TSN service successfully.")
 
 	client := notificationServer.NewNotificationClient(conn)
 
@@ -74,8 +74,9 @@ func notifyConfigService(id string) error {
 	}
 	defer conn.Close()
 
+	fmt.Println("[Main-service] Successfully sent configuration to config-service!")
+
 	//log.Info("Connected to config-service!")
-	fmt.Println("Connected to config-service!")
 
 	req := &configservice.ConfigurationRequest{
 		Id: &id,
@@ -90,146 +91,8 @@ func notifyConfigService(id string) error {
 		return fmt.Errorf("failed to notify config-service: %w", err)
 	}
 
-	//log.Info("Successfully sent configuration to config-service!")
-	fmt.Printf("Successfully sent configuration to config-service!")
-
-	// Logs type of operation for each update, check for invalid operations should be added
-	// for _, resp := range response.Response {
-	// 	log.Infof("Response from config-service is: %v", resp.Op)
-	// }
-
 	return nil
 }
-
-/* Creates a set request for applying a new configuration.
-// TODO: Make automatic, it currently builds a set request statically from predefined values.
-func getSetRequestForConfig() *pb.SetRequest {
-	// TODO: Generate all pb.Update objects for all the values that should be changed... (Let Hamza know
-	// that the current implementation of config-service only takes in config and not a config ID).
-	confSetRequest := pb.SetRequest{
-		Update: []*pb.Update{
-			{
-				Path: &pb.Path{
-					Target: "192.168.0.1",
-					Elem: []*pb.PathElem{
-						{
-							Name: "interfaces",
-							Key:  map[string]string{"namespace": "urn:ietf:params:xml:ns:yang:ietf-interfaces"},
-						},
-						{
-							Name: "interface",
-							Key:  map[string]string{"name": "sw0p1"},
-						},
-						{
-							Name: "max-sdu-table",
-							Key:  map[string]string{"namespace": "urn:ieee:std:802.1Q:yang:ieee802-dot1q-sched", "traffic-class": "0"},
-						},
-						{
-							Name: "queue-max-sdu",
-						},
-					}, // Path to an element that should be updated
-				},
-				Val: &pb.TypedValue{
-					Value: &pb.TypedValue_DecimalVal{
-						DecimalVal: &pb.Decimal64{
-							Digits:    1500,
-							Precision: 6,
-						},
-					},
-				},
-			},
-			{
-				Path: &pb.Path{
-					Target: "192.168.0.1",
-					Elem: []*pb.PathElem{
-						{
-							Name: "interfaces",
-							Key:  map[string]string{"namespace": "urn:ietf:params:xml:ns:yang:ietf-interfaces"},
-						},
-						{
-							Name: "interface",
-							Key:  map[string]string{"name": "sw0p2"},
-						},
-						{
-							Name: "max-sdu-table",
-							Key:  map[string]string{"namespace": "urn:ieee:std:802.1Q:yang:ieee802-dot1q-sched", "traffic-class": "0"},
-						},
-						{
-							Name: "queue-max-sdu",
-						},
-					}, // Path to an element that should be updated
-				},
-				Val: &pb.TypedValue{
-					Value: &pb.TypedValue_DecimalVal{
-						DecimalVal: &pb.Decimal64{
-							Digits:    1504,
-							Precision: 6,
-						},
-					},
-				},
-			},
-			{
-				Path: &pb.Path{
-					Target: "192.168.0.2",
-					Elem: []*pb.PathElem{
-						{
-							Name: "interfaces",
-							Key:  map[string]string{"namespace": "urn:ietf:params:xml:ns:yang:ietf-interfaces"},
-						},
-						{
-							Name: "interface",
-							Key:  map[string]string{"name": "sw0p1"},
-						},
-						{
-							Name: "max-sdu-table",
-							Key:  map[string]string{"namespace": "urn:ieee:std:802.1Q:yang:ieee802-dot1q-sched", "traffic-class": "0"},
-						},
-						{
-							Name: "queue-max-sdu",
-						},
-					}, // Path to an element that should be updated
-				},
-				Val: &pb.TypedValue{
-					Value: &pb.TypedValue_DecimalVal{
-						DecimalVal: &pb.Decimal64{
-							Digits:    1504,
-							Precision: 6,
-						},
-					},
-				},
-			},
-		},
-		Extension: []*gnmi_ext.Extension{
-			{
-				Ext: &gnmi_ext.Extension_RegisteredExt{
-					RegisteredExt: &gnmi_ext.RegisteredExtension{
-						Id:  gnmi_ext.ExtensionID(100),
-						Msg: []byte("my_network_change"),
-					},
-				},
-			},
-			{
-				Ext: &gnmi_ext.Extension_RegisteredExt{
-					RegisteredExt: &gnmi_ext.RegisteredExtension{
-						Id:  gnmi_ext.ExtensionID(101),
-						Msg: []byte("1.0.2"),
-					},
-				},
-			},
-			{
-				Ext: &gnmi_ext.Extension_RegisteredExt{
-					RegisteredExt: &gnmi_ext.RegisteredExtension{
-						Id:  gnmi_ext.ExtensionID(102),
-						Msg: []byte("tsn-model"),
-					},
-				},
-			},
-		},
-	}
-
-	return &confSetRequest
-}
-*/
 
 // Takes in addr such as "config-service:5150" and returns a gNMI-client
 func ConnectToGnmiService(addr string) (client.Impl, error) {

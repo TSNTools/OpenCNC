@@ -13,6 +13,8 @@ import (
 
 	service "OpenCNC/config_service/grpc_server"
 	"OpenCNC/config_service/pkg/engine" // Your wrapper implementing GNMIService
+	_ "OpenCNC/config_service/pkg/plugins/netconf"
+	_ "OpenCNC/config_service/pkg/protocolbackends/netconf"
 	// Official gNMI package
 )
 

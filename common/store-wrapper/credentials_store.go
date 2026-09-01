@@ -187,7 +187,7 @@ func GetCredentialsList() ([]managementSessions.NodeCredentials, error) {
 
 		credentialID := strings.TrimPrefix(
 			string(kv.Key),
-			"credentials.",
+			"credentials/",
 		)
 
 		result = append(result, managementSessions.NodeCredentials{

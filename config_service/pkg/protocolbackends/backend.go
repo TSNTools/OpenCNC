@@ -24,7 +24,7 @@ type ProtocolBackend interface {
 
 type Snapshot interface {
 	Clone() Snapshot
-	Update(featureXML *plugins.FeatureXML, node *topology.Node) error
+	Update(featureXML *plugins.FeatureXML, node *topology.Node, portId string) error
 }
 
 type SnapshotSet[T any] struct {

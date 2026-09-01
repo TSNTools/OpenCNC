@@ -61,7 +61,7 @@ func TestPriorityPlugin_tttech() {
 
 	// Test pluggin_tc
 	//// Map
-	mapped, err := plugin_pcp.Map(portCfg)
+	mapped, err := plugin_pcp.Map(portCfg, nil)
 	if err != nil {
 		logger.Fatalf("Map failed: %v", err)
 	}
