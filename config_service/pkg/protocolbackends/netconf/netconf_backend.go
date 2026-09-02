@@ -3,19 +3,18 @@ package netconf
 import (
 	"context"
 	"fmt"
-	"reflect"
 	"strings"
 
 	"OpenCNC/common/managementSessions"
 	"OpenCNC/common/observability"
 	storewrapper "OpenCNC/common/store-wrapper"
 	credentials "OpenCNC/common/structures/credentials"
+	"OpenCNC/common/structures/devicemodelregistry"
 	"OpenCNC/common/structures/topology"
 	topology_config "OpenCNC/common/structures/topology_config"
 	"OpenCNC/config_service/pkg/plugins"
 	protocolbackends "OpenCNC/config_service/pkg/protocolbackends"
 
-	"github.com/golang/protobuf/proto"
 	"github.com/openshift-telco/go-netconf-client/netconf"
 )
 
@@ -114,213 +113,15 @@ func (b *NetconfBackend) Plugins() []plugins.Plugin {
 	return b.plugins
 }
 
-func (b *NetconfBackend) PrepareSnapshot(ctx context.Context, msg *topology_config.NodeConfig) error {
-	logger := b.logger
+func processUsedFields(nodeconfig *topology_config.NodeConfig, nodeUsed []string, portsUsed map[string][]string) {
+	// Implement the logic to process used fields for the node and its ports.
+	// This is a placeholder function and should be filled with the actual processing logic.
+	// treat used/unused fields
 
-	// Check cancellation before doing any work.
-	if err := ctx.Err(); err != nil {
-		return err
-	}
-
-	if b.target == nil {
-		return fmt.Errorf("PrepareSnapshot: node is nil")
-	}
-
-	nodeConfig := msg
-	if nodeConfig == nil {
-		return fmt.Errorf("PrepareSnapshot: nodeConfig is nil")
-	}
-
-	if b.snapshots == nil || b.snapshots.Current == nil {
-		return fmt.Errorf("no snapshot exists for node %s", b.target.Name)
-	}
-
-	//
-	// Snapshot starts:
-	// Current -> Working snapshot
-	//
-	b.snapshots.Working = b.snapshots.Current.Clone().(*NetconfSnapshot)
-
-	if b.snapshots.Working == nil {
-		return fmt.Errorf("failed creating working snapshot")
-	}
-
-	modelName := b.target.DeviceInfo.GetDeviceModel()
-
-	nodeDeviceModel, err := storewrapper.GetDeviceModel(modelName)
-	if err != nil {
-		return fmt.Errorf(
-			"failed to retrieve device model %q: %w",
-			modelName,
-			err,
-		)
-	}
-
-	for _, portConfig := range nodeConfig.PortConfigs {
-
-		// Cancellation check between ports.
-		if err := ctx.Err(); err != nil {
-			return err
-		}
-
-		if portConfig == nil {
-			continue
-		}
-
-		logger.Printf("======================================================")
-		logger.Printf("Processing port %q", portConfig.PortId)
-
+	/*
 		used := make(map[string]struct{})
-
-		src := reflect.ValueOf(portConfig).Elem()
+		src := reflect.ValueOf(nodeconfig).Elem()
 		srcType := src.Type()
-
-		for _, plugin := range b.plugins {
-			// Cancellation check between plugins.
-			if err := ctx.Err(); err != nil {
-				return err
-			}
-
-			if !plugin.SupportedByDevice(nodeDeviceModel) {
-				logger.Printf(
-					"Skipping plugin %s: unsupported by device model %s",
-					plugin.Name(),
-					modelName,
-				)
-				continue
-			}
-
-			fields := plugin.SupportedFields(portConfig)
-
-			if len(fields) == 0 {
-				logger.Printf(
-					"Plugin %-20s : no supported fields declared",
-					plugin.Name(),
-				)
-				continue
-			}
-
-			logger.Printf(
-				"Plugin %-20s : supports %v",
-				plugin.Name(),
-				fields,
-			)
-
-			var input proto.Message
-
-			if len(fields) == 1 {
-
-				f := src.FieldByName(fields[0])
-
-				if !f.IsValid() || f.IsNil() {
-					logger.Printf(
-						"  -> field %q is not valid, skipping",
-						fields[0],
-					)
-					continue
-				}
-
-				fieldMsg, ok := f.Interface().(proto.Message)
-				if !ok {
-					return fmt.Errorf(
-						"field %q does not implement proto.Message",
-						fields[0],
-					)
-				}
-
-				logger.Printf(
-					"  -> mapping field %q (%T)",
-					fields[0],
-					fieldMsg,
-				)
-
-				input = fieldMsg
-				used[fields[0]] = struct{}{}
-			} else {
-
-				dst := &topology_config.PortConfig{}
-				dstVal := reflect.ValueOf(dst).Elem()
-
-				found := false
-				var mappedFields []string
-
-				for _, name := range fields {
-					// Cancellation check inside the field loop too.
-					if err := ctx.Err(); err != nil {
-						return err
-					}
-
-					sf := src.FieldByName(name)
-
-					if !sf.IsValid() {
-						logger.Printf(
-							"  -> field %q does not exist",
-							name,
-						)
-						continue
-					}
-
-					switch sf.Kind() {
-					case reflect.Pointer, reflect.Slice, reflect.Map:
-						if sf.IsNil() {
-							continue
-						}
-					}
-
-					dstVal.FieldByName(name).Set(sf)
-
-					used[name] = struct{}{}
-					mappedFields = append(mappedFields, name)
-					found = true
-				}
-
-				if !found {
-					logger.Printf(
-						"  -> none of the supported fields are present",
-					)
-					continue
-				}
-
-				logger.Printf(
-					"  -> mapping PortConfig with fields %v",
-					mappedFields,
-				)
-
-				input = dst
-			}
-
-			logger.Printf("  -> calling Map()")
-
-			// Check before calling plugin work.
-			if err := ctx.Err(); err != nil {
-				return err
-			}
-			mapped, err := plugin.Map(input, b.target)
-			if err != nil {
-				return fmt.Errorf("%s: %w", plugin.Name(), err)
-			}
-			logger.Printf("  <- Map() returned %T", mapped)
-			logger.Printf("  -> building feature XML")
-			featureXML, err := plugin.BuildFeatureXML(mapped)
-			if err != nil {
-				return fmt.Errorf("%s: %w", plugin.Name(), err)
-			}
-
-			// Check before modifying the working snapshot.
-			if err := ctx.Err(); err != nil {
-				return err
-			}
-			if err := b.snapshots.Working.Update(
-				featureXML,
-				b.target,
-				portConfig.PortId,
-			); err != nil {
-				return fmt.Errorf("failed to update snapshot: %w", err)
-			}
-
-			logger.Printf("  -> snapshot update successful")
-		}
-
 		var unused []string
 
 		for i := 0; i < src.NumField(); i++ {
@@ -346,26 +147,213 @@ func (b *NetconfBackend) PrepareSnapshot(ctx context.Context, msg *topology_conf
 		if len(unused) == 0 {
 			logger.Printf("All populated fields were handled.")
 		} else {
-			logger.Printf(
-				"Unused populated fields: %v",
-				unused,
-			)
+			logger.Printf("Unused populated fields: %v", unused)
 		}
+	*/
+}
 
-		logger.Printf(
-			"Finished processing port %q",
-			portConfig.PortId,
-		)
-
-		logger.Printf("======================================================")
+func (b *NetconfBackend) PrepareSnapshot(ctx context.Context, msg *topology_config.NodeConfig) error {
+	// Check cancellation before doing any work.
+	if err := ctx.Err(); err != nil {
+		return err
 	}
 
-	logger.Printf(
-		"Snapshot prepared successfully for node %s",
-		b.target.Name,
-	)
+	if b.target == nil {
+		return fmt.Errorf("PrepareSnapshot: node is nil")
+	}
+
+	nodeConfig := msg
+	if nodeConfig == nil {
+		return fmt.Errorf("PrepareSnapshot: nodeConfig is nil")
+	}
+
+	if b.snapshots == nil || b.snapshots.Current == nil {
+		return fmt.Errorf("no snapshot exists for node %s", b.target.Name)
+	}
+
+	//
+	// Snapshot starts:
+	// Current -> Working snapshot
+	//
+	b.snapshots.Working = b.snapshots.Current.Clone().(*NetconfSnapshot)
+	if b.snapshots.Working == nil {
+		return fmt.Errorf("failed creating working snapshot")
+	}
+
+	modelName := b.target.DeviceInfo.GetDeviceModel()
+	nodeDeviceModel, err := storewrapper.GetDeviceModel(modelName)
+	if err != nil {
+		return fmt.Errorf("failed to retrieve device model %q: %w", modelName, err)
+	}
+
+	// apply node-level configuration
+	nodeUsed, err := b.applyNodePlugin(ctx, nodeConfig, nodeDeviceModel, modelName)
+	if err != nil {
+		return err
+	}
+
+	portsUsed := map[string][]string{}
+
+	for _, portConfig := range nodeConfig.PortConfigs {
+		if portConfig == nil {
+			continue
+		}
+		// Cancellation check between ports.
+		if err := ctx.Err(); err != nil {
+			return err
+		}
+		portUsed, err := b.applyPortPlugin(ctx, portConfig, nodeDeviceModel, modelName)
+		if err != nil {
+			return err
+		}
+		portsUsed[portConfig.PortId] = portUsed
+	}
+	processUsedFields(msg, nodeUsed, portsUsed)
 
 	return nil
+}
+
+func (b *NetconfBackend) applyNodePlugin(ctx context.Context, config *topology_config.NodeConfig, nodeDeviceModel *devicemodelregistry.DeviceModel, modelName string) ([]string, error) {
+	logger := b.logger
+
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
+
+	used := []string{}
+
+	for _, plugin := range b.plugins {
+		// Skip this plugin if it is not supported by the device model.
+		if !plugin.SupportedByDevice(nodeDeviceModel) {
+			logger.Printf(
+				"Skipping node plugin %s: unsupported by device model %s",
+				plugin.Name(),
+				modelName,
+			)
+			continue
+		}
+
+		// get supported fields names for this plugin
+		fields := plugin.SupportedFields(config)
+
+		if len(fields) == 0 { //no fields supported, skip plugin
+			logger.Printf(
+				"Node plugin %-20s : no supported fields declared",
+				plugin.Name(),
+			)
+			continue
+		}
+
+		if len(fields) == 1 && fields[0] == "PortConfigs" {
+			// portConfig is treated separately
+			continue
+		}
+		/////////////////////////
+		// plugin application  //
+		/////////////////////////
+		// check for context cancellation before applying plugin
+		if err := ctx.Err(); err != nil {
+			return nil, err
+		}
+
+		// calling Map()
+		mapped, err := plugin.Map(config, b.target)
+		if err != nil { // map failed
+			continue
+		}
+
+		//building feature XML
+		featureXML, err := plugin.BuildFeatureXML(mapped)
+		if err != nil { // build XML failed
+			continue
+		}
+
+		////////////////////////
+		//  snapshot update   //
+		////////////////////////
+		//check for context cancellation before updating snapshot
+		if err := ctx.Err(); err != nil {
+			return nil, err
+		}
+
+		// update snapshot
+		if err := b.snapshots.Working.Update(featureXML, b.target, ""); err != nil { // update snapshot failed
+			continue
+		}
+
+		////////////////////////////////////
+		// register plugin fields as used //
+		////////////////////////////////////
+		for _, field := range fields {
+			if field == "PortConfigs" {
+				//"PortConfigs" are treated separately and not registered as used
+				continue
+			}
+			used = append(used, field)
+		}
+	}
+
+	return used, nil
+}
+
+func (b *NetconfBackend) applyPortPlugin(ctx context.Context, portConfig *topology_config.PortConfig, nodeDeviceModel *devicemodelregistry.DeviceModel, modelName string) ([]string, error) {
+	logger := b.logger
+
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
+
+	used := []string{}
+	for _, plugin := range b.plugins {
+		// Skip this plugin if it is not supported by the device model.
+		if !plugin.SupportedByDevice(nodeDeviceModel) {
+			logger.Printf(
+				"Skipping plugin %s: unsupported by device model %s",
+				plugin.Name(),
+				modelName,
+			)
+			continue
+		}
+		// get supported fields names for this plugin
+		fields := plugin.SupportedFields(portConfig)
+		if len(fields) == 0 {
+			logger.Printf(
+				"Plugin %-20s : no supported fields declared",
+				plugin.Name(),
+			)
+			continue
+		}
+
+		// Check cancellation before calling plugin work.
+		if err := ctx.Err(); err != nil {
+			return nil, err
+		}
+
+		//calling Map
+		mapped, err := plugin.Map(portConfig, b.target)
+		if err != nil {
+			continue
+		}
+		//building feature XML
+		featureXML, err := plugin.BuildFeatureXML(mapped)
+		if err != nil {
+			continue
+		}
+
+		// Check cancellation before modifying the working snapshot.
+		if err := ctx.Err(); err != nil {
+			return nil, err
+		}
+
+		if err := b.snapshots.Working.Update(featureXML, b.target, portConfig.PortId); err != nil {
+			continue
+		}
+		logger.Printf("  -> snapshot update successful")
+
+		// register plugin fields as used
+		used = append(used, fields...)
+	}
+	return used, nil
 }
 
 func (b *NetconfBackend) Commit(ctx context.Context) error {

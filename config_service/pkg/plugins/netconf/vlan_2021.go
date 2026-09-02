@@ -56,7 +56,7 @@ func (v *VlanNetconfPlugin_2021) FeatureName() string {
 func (v *VlanNetconfPlugin_2021) SupportedByDevice(model *devicemodelregistry.DeviceModel) bool {
 	requiredYangs := []devicemodelregistry.YangModule{{
 		Name:     "ieee802-dot1q-bridge.yang",
-		Revision: "2018-03-07",
+		Revision: "2021-04-09",
 	}}
 
 	for i := range requiredYangs {
