@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"OpenCNC/common/observability"
 	storewrapper "OpenCNC/common/store-wrapper"
@@ -28,22 +29,26 @@ func NewConfigServiceServerImpl(obs *observability.Client, engine *engine.Mappin
 func (s *ConfigServiceServerImpl) ApplyConfiguration(ctx context.Context, req *ConfigurationRequest) (*ConfigurationResponse, error) {
 
 	cfg := req.GetConfiguration()
+
 	if cfg == nil {
+
 		return &ConfigurationResponse{
 			Success: false,
 			Message: "Configuration is nil",
 		}, fmt.Errorf("configuration is nil")
+
 	}
 
 	if err := s.deployConfiguration(ctx, cfg); err != nil {
+
 		return &ConfigurationResponse{
 			Success: false,
 			Message: err.Error(),
 		}, err
+
 	}
 
 	storewrapper.StoreTopologyConfiguration(cfg)
-
 	return &ConfigurationResponse{
 		Success: true,
 		Message: "Configuration applied successfully",
@@ -81,6 +86,22 @@ func (s *ConfigServiceServerImpl) ApplyConfigurationById(ctx context.Context, re
 }
 
 func (s *ConfigServiceServerImpl) deployConfiguration(ctx context.Context, cfg *topology_config.TopologyConfig) error {
+	start := time.Now()
+
+	var err error
+	defer func() {
+		if err != nil && s.obs != nil {
+			_ = s.obs.Metric(
+				ctx,
+				observabilityv1.Severity_SEVERITY_ERROR,
+				"configuration_application_failures",
+				observabilityv1.MetricType_METRIC_TYPE_COUNTER,
+				1,
+				"",
+				nil,
+			)
+		}
+	}()
 
 	topo, err := storewrapper.GetTopology()
 	if err != nil {
@@ -92,11 +113,30 @@ func (s *ConfigServiceServerImpl) deployConfiguration(ctx context.Context, cfg *
 		return err
 	}
 
-	return s.engine.ApplyConfiguration(
+	err = s.engine.ApplyConfiguration(
+		ctx,
+		s.obs,
 		topo,
 		cfg,
 		secrets,
 	)
+	if err != nil {
+		return err
+	}
+
+	if s.obs != nil {
+		_ = s.obs.Metric(
+			ctx,
+			observabilityv1.Severity_SEVERITY_INFO,
+			"configuration_application_duration",
+			observabilityv1.MetricType_METRIC_TYPE_GAUGE,
+			float64(time.Since(start).Milliseconds()),
+			"ms",
+			nil,
+		)
+	}
+
+	return nil
 }
 
 // Optional: simple health check RPC.
@@ -166,6 +206,16 @@ func (s *ConfigServiceServerImpl) Rollback(ctx context.Context, req *RollbackReq
 	}
 
 	if s.obs != nil {
+		_ = s.obs.Metric(
+			ctx,
+			observabilityv1.Severity_SEVERITY_INFO,
+			"configuration_rollback_count",
+			observabilityv1.MetricType_METRIC_TYPE_COUNTER,
+			1,
+			"",
+			nil,
+		)
+
 		s.obs.Println("[Config-Service] Configuration rollback completed successfully")
 
 		_ = s.obs.Event(

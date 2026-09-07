@@ -1,59 +1,110 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net"
+	"time"
 
+	"OpenCNC/common/observability"
 	"OpenCNC/tsn_service/pkg/internalOptimizer"
 	"OpenCNC/tsn_service/pkg/notificationServer"
-
-	//	"git.cs.kau.se/hamzchah/opencnc_kafka-exporter/logger/pkg/logger"
 
 	"google.golang.org/grpc"
 )
 
-//var log = logger.GetLogger()
-
 const NotificationServerPort uint16 = 5152
 
 func main() {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	obsClient, err := observability.NewFromEnv("tsn-service")
+	if err != nil {
+		log.Fatalf("Observability init failed: %v", err)
+	}
+
+	if obsClient != nil {
+		defer func() {
+			_ = obsClient.Close()
+		}()
+
+		startupCtx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+		defer cancel()
+
+		_ = obsClient.EmitHealthStarted(
+			startupCtx,
+			"tsn-service-startup",
+			"tsn-service started",
+		)
+	}
 
 	// Create default schedule and store it in k/v store
-	if err := internalOptimizer.CreateDefaultSchedule(); err != nil {
-		log.Fatalf("Failed creating default schedule: %v", err)
+	if err := internalOptimizer.CreateDefaultSchedule(ctx, obsClient); err != nil {
+		if obsClient != nil {
+			_ = obsClient.Error(ctx, fmt.Sprintf(
+				"Failed creating default schedule: %v",
+				err,
+			))
+		}
 		return
 	}
-	fmt.Println("Lets start the server!")
+
+	if obsClient != nil {
+		_ = obsClient.Info(ctx, "Let's start the server!")
+	}
+
 	// Used to get device configuration and config+state data from a device
 	// go test()
 
 	// Start notification-server
-	go CreateNotificationServer("tcp", NotificationServerPort)
-	fmt.Printf("Created and listening to %d!\n", NotificationServerPort)
+	go CreateNotificationServer(ctx, "tcp", NotificationServerPort, obsClient)
 
 	select {}
 }
 
-func CreateNotificationServer(protocol string, port uint16) {
+func CreateNotificationServer(
+	ctx context.Context,
+	protocol string,
+	port uint16,
+	obs *observability.Client,
+) {
 	lis, err := net.Listen(protocol, fmt.Sprintf(":%d", port))
 	if err != nil {
-		fmt.Printf("Failed to listen: %v\n", err)
+		if obs != nil {
+			_ = obs.Error(ctx, fmt.Sprintf(
+				"Failed to listen: %v",
+				err,
+			))
+		}
 		return
 	}
 
-	fmt.Printf("Listening on %d\n", port)
+	if obs != nil {
+		_ = obs.Info(ctx, fmt.Sprintf(
+			"Listening on %d",
+			port,
+		))
+	}
 
-	s := notificationServer.Server{}
+	s := notificationServer.NewServer(obs)
 
 	grpcServer := grpc.NewServer()
 
-	notificationServer.RegisterNotificationServer(grpcServer, &s)
+	notificationServer.RegisterNotificationServer(grpcServer, s)
 
-	fmt.Println("Started to serve...")
+	if obs != nil {
+		_ = obs.Info(ctx, "Started to serve...")
+	}
 
 	if err := grpcServer.Serve(lis); err != nil {
-		fmt.Printf("Failed to serve: %v\n", err)
+		if obs != nil {
+			_ = obs.Error(ctx, fmt.Sprintf(
+				"Failed to serve: %v",
+				err,
+			))
+		}
 	}
 }
 

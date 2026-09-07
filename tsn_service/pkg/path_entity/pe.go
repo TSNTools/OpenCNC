@@ -1,8 +1,11 @@
 package pathentity
 
 import (
+	"context"
 	"fmt"
 
+	"OpenCNC/common/observability"
+	observabilityv1 "OpenCNC/common/structures/logging"
 	pbstream "OpenCNC/common/structures/stream"
 	pbstreamconfig "OpenCNC/common/structures/stream_config"
 	forwarding_plane "OpenCNC/tsn_service/pkg/structures/forwarding_plane"
@@ -13,12 +16,17 @@ import (
 // optimizer's routing results to the forwarding-plane model.
 type PathEntity struct {
 	model *forwarding_plane.ForwardingPlaneModel
+	obs   *observability.Client
 }
 
 // New creates a Path Entity operating on the given model.
-func New(model *forwarding_plane.ForwardingPlaneModel) *PathEntity {
+func New(
+	model *forwarding_plane.ForwardingPlaneModel,
+	obs *observability.Client,
+) *PathEntity {
 	return &PathEntity{
 		model: model,
+		obs:   obs,
 	}
 }
 
@@ -50,8 +58,21 @@ type RoutingInput struct {
 
 // BuildRoutingInput extracts the routing-relevant information from
 // the current forwarding-plane model.
-func (pe *PathEntity) GetRoutingInput() (*RoutingInput, error) {
+func (pe *PathEntity) GetRoutingInput(ctx context.Context) (*RoutingInput, error) {
 	if pe == nil || pe.model == nil {
+		if pe != nil && pe.obs != nil {
+			_ = pe.obs.Event(
+				ctx,
+				observabilityv1.Severity_SEVERITY_ERROR,
+				"path",
+				"build_routing_input",
+				observabilityv1.DomainResult_DOMAIN_RESULT_FAILED,
+				"forwarding_plane_model",
+				"",
+				"Failed building routing input: forwarding-plane model is nil",
+			)
+		}
+
 		return nil, fmt.Errorf("forwarding-plane model is nil")
 	}
 
@@ -77,29 +98,111 @@ func (pe *PathEntity) GetRoutingInput() (*RoutingInput, error) {
 
 // ApplyPath applies a path selected by the optimizer to a stream's
 // derived configuration.
-func (pe *PathEntity) ApplyRouting(streamID *pbstream.StreamId, path []*pbstreamconfig.StreamHop) error {
+func (pe *PathEntity) ApplyRouting(
+	ctx context.Context,
+	streamID *pbstream.StreamId,
+	path []*pbstreamconfig.StreamHop,
+) error {
 	if pe == nil || pe.model == nil {
+		if pe != nil && pe.obs != nil {
+			_ = pe.obs.Event(
+				ctx,
+				observabilityv1.Severity_SEVERITY_ERROR,
+				"path",
+				"apply",
+				observabilityv1.DomainResult_DOMAIN_RESULT_FAILED,
+				"stream",
+				"",
+				"Failed applying routing path: forwarding-plane model is nil",
+			)
+		}
+
 		return fmt.Errorf("forwarding-plane model is nil")
 	}
 
 	if streamID == nil {
+		if pe.obs != nil {
+			_ = pe.obs.Event(
+				ctx,
+				observabilityv1.Severity_SEVERITY_ERROR,
+				"path",
+				"apply",
+				observabilityv1.DomainResult_DOMAIN_RESULT_FAILED,
+				"stream",
+				"",
+				"Failed applying routing path: stream ID is nil",
+			)
+		}
+
 		return fmt.Errorf("stream ID is nil")
 	}
 
 	stream := pe.model.Stream(streamID)
 	if stream == nil {
+		if pe.obs != nil {
+			_ = pe.obs.Event(
+				ctx,
+				observabilityv1.Severity_SEVERITY_ERROR,
+				"path",
+				"apply",
+				observabilityv1.DomainResult_DOMAIN_RESULT_FAILED,
+				"stream",
+				streamID.String(),
+				"Failed applying routing path: stream not found",
+			)
+		}
+
 		return fmt.Errorf("stream not found")
 	}
 
 	if stream.Configuration == nil {
+		if pe.obs != nil {
+			_ = pe.obs.Event(
+				ctx,
+				observabilityv1.Severity_SEVERITY_ERROR,
+				"path",
+				"apply",
+				observabilityv1.DomainResult_DOMAIN_RESULT_FAILED,
+				"stream",
+				streamID.String(),
+				"Failed applying routing path: stream configuration is nil",
+			)
+		}
+
 		return fmt.Errorf("stream configuration is nil")
 	}
 
 	if err := pe.ValidateRouting(path); err != nil {
+		if pe.obs != nil {
+			_ = pe.obs.Event(
+				ctx,
+				observabilityv1.Severity_SEVERITY_ERROR,
+				"path",
+				"apply",
+				observabilityv1.DomainResult_DOMAIN_RESULT_FAILED,
+				"stream",
+				streamID.String(),
+				fmt.Sprintf("Failed applying routing path: %v", err),
+			)
+		}
+
 		return err
 	}
 
 	stream.Configuration.Path = path
+
+	if pe.obs != nil {
+		_ = pe.obs.Event(
+			ctx,
+			observabilityv1.Severity_SEVERITY_INFO,
+			"path",
+			"apply",
+			observabilityv1.DomainResult_DOMAIN_RESULT_SUCCEEDED,
+			"stream",
+			streamID.String(),
+			"Successfully applied routing path",
+		)
+	}
 
 	return nil
 }

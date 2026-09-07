@@ -1,12 +1,13 @@
 package notificationServer
 
 import (
-	"context"
-	"fmt"
-
+	"OpenCNC/common/observability"
 	storewrapper "OpenCNC/common/store-wrapper"
+	observabilityv1 "OpenCNC/common/structures/logging"
 	"OpenCNC/common/structures/uni"
 	handler "OpenCNC/tsn_service/pkg/notificationHandler"
+	"context"
+	"fmt"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -14,6 +15,13 @@ import (
 
 type Server struct {
 	UnimplementedNotificationServer
+	obs *observability.Client
+}
+
+func NewServer(obs *observability.Client) *Server {
+	return &Server{
+		obs: obs,
+	}
 }
 
 // Notify is the single gRPC entry point for notifications received by
@@ -93,15 +101,38 @@ func (s *Server) handleStreamAdded(ctx context.Context, event *Event) (*NotifyRe
 			err,
 		)
 	}
-
 	// Existing TSN configuration calculation.
 
-	newFPM, err := handler.CalculateConfiguration(task, allRequestData)
+	newFPM, err := handler.CalculateConfiguration(ctx, s.obs, task, allRequestData)
 	if err != nil {
+		if s.obs != nil {
+			_ = s.obs.Metric(
+				ctx,
+				observabilityv1.Severity_SEVERITY_ERROR,
+				"configuration_calculation_failures",
+				observabilityv1.MetricType_METRIC_TYPE_COUNTER,
+				1,
+				"",
+				nil,
+			)
+		}
+
 		return nil, status.Errorf(
 			codes.Internal,
 			"failed to calculate configuration: %v",
 			err,
+		)
+	}
+
+	if s.obs != nil {
+		_ = s.obs.Metric(
+			ctx,
+			observabilityv1.Severity_SEVERITY_INFO,
+			"configuration_calculation_count",
+			observabilityv1.MetricType_METRIC_TYPE_COUNTER,
+			1,
+			"",
+			nil,
 		)
 	}
 

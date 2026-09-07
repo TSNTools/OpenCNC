@@ -1,11 +1,14 @@
 package engine
 
 import (
+	"OpenCNC/common/observability"
+	observabilityv1 "OpenCNC/common/structures/logging"
 	"OpenCNC/common/structures/topology_config"
 	protocolbackends "OpenCNC/config_service/pkg/protocolbackends"
 	"context"
 	"fmt"
 	"sync"
+	"time"
 )
 
 type Operation struct {
@@ -57,17 +60,32 @@ func (t *ConfigurationTransaction) Prepare() error {
 	return err
 }
 
-func (t *ConfigurationTransaction) Commit() error {
-
-	err := t.executeConcurrently(func(ctx context.Context, i int) error {
-
+func (t *ConfigurationTransaction) Commit(ctx context.Context, obs *observability.Client) error {
+	err := t.executeConcurrently(func(operationCtx context.Context, i int) error {
 		op := &t.Operations[i]
+
 		// Only commit operations that were successfully prepared.
 		if !op.Prepared {
 			return fmt.Errorf("operation was not prepared!")
 		}
 
-		if err := op.Backend.Commit(ctx); err != nil {
+		start := time.Now()
+
+		if err := op.Backend.Commit(operationCtx); err != nil {
+			if obs != nil {
+				_ = obs.Metric(
+					ctx,
+					observabilityv1.Severity_SEVERITY_ERROR,
+					"device_backend_operation_failures",
+					observabilityv1.MetricType_METRIC_TYPE_COUNTER,
+					1,
+					"",
+					map[string]string{
+						"backend":   op.Backend.Name(),
+						"operation": "commit",
+					},
+				)
+			}
 
 			return fmt.Errorf(
 				"commit failed for node %s: %w",
@@ -76,9 +94,23 @@ func (t *ConfigurationTransaction) Commit() error {
 			)
 		}
 
+		if obs != nil {
+			_ = obs.Metric(
+				ctx,
+				observabilityv1.Severity_SEVERITY_INFO,
+				"device_backend_operation_duration",
+				observabilityv1.MetricType_METRIC_TYPE_GAUGE,
+				float64(time.Since(start).Milliseconds()),
+				"ms",
+				map[string]string{
+					"backend":   op.Backend.Name(),
+					"operation": "commit",
+				},
+			)
+		}
+
 		op.Committed = true
 		op.Prepared = false
-
 		return nil
 	})
 

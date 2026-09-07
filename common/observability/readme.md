@@ -5,7 +5,19 @@ export OBS_FAIL_OPEN=true
 export OBS_BROKERS=localhost:9092
 export OBS_CMD_MIRROR=false
 
+OBS_ENABLED=false
+    → Observability disabled.
 
+OBS_ENABLED=true
+OBS_KAFKA_ENABLED=false
+    → Observability enabled, Kafka output disabled.
+
+OBS_ENABLED=true
+OBS_KAFKA_ENABLED=true
+    → Observability enabled and Kafka output enabled.
+
+OBS_FAIL_OPEN=true
+    → Observability/Kafka failures do not fail the OpenCNC operation.
 
 ## Local Kafka Test Environment
 

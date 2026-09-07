@@ -7,12 +7,11 @@ import (
 	"fmt"
 	"os"
 	"strings"
-
-	configservice "OpenCNC/config_service/grpc_server"
-
-	// "OpenCNC/main_service/pkg/structures/configuration"
-	"OpenCNC/tsn_service/pkg/notificationServer"
 	"time"
+
+	"OpenCNC/common/observability"
+	configservice "OpenCNC/config_service/grpc_server"
+	"OpenCNC/tsn_service/pkg/notificationServer"
 
 	"github.com/openconfig/gnmi/client"
 	gclient "github.com/openconfig/gnmi/client/gnmi"
@@ -27,26 +26,41 @@ const (
 
 // Notifies the TSN service through gRPC that it should start calculating
 // a new configuration.
-
-func notifyTsnService(event *notificationServer.Event) (string, error) {
+func notifyTsnService(
+	ctx context.Context,
+	obs *observability.Client,
+	event *notificationServer.Event,
+) (string, error) {
 	// TODO: consider keeping a persistent connection to the TSN service.
 	conn, err := grpc.Dial(
 		defaultTsnServiceAddress,
 		grpc.WithInsecure(),
 	)
 	if err != nil {
-		fmt.Printf("Failed dialing TSN service: %v\n", err)
+		if obs != nil {
+			_ = obs.Error(ctx, fmt.Sprintf(
+				"Failed dialing TSN service: %v",
+				err,
+			))
+		}
 		return "", err
 	}
 	defer conn.Close()
 
-	fmt.Println("[Main-service] Notified TSN service successfully.")
+	if obs != nil {
+		_ = obs.Info(ctx, "[Main-service] Notified TSN service successfully.")
+	}
 
 	client := notificationServer.NewNotificationClient(conn)
 
-	resp, err := client.Notify(context.Background(), event)
+	resp, err := client.Notify(ctx, event)
 	if err != nil {
-		fmt.Printf("Failed sending notification to TSN service: %v\n", err)
+		if obs != nil {
+			_ = obs.Error(ctx, fmt.Sprintf(
+				"Failed sending notification to TSN service: %v",
+				err,
+			))
+		}
 		return "", err
 	}
 
@@ -64,29 +78,48 @@ func notifyTsnService(event *notificationServer.Event) (string, error) {
 
 // Applies configuration (sends network change to config-service)
 // MTODO:
-func notifyConfigService(id string) error {
-	client, conn, err := ConnectToConfigService(defaultConfigServiceAddress)
+func notifyConfigService(
+	ctx context.Context,
+	obs *observability.Client,
+	id string,
+) error {
+	client, conn, err := ConnectToConfigService(
+		ctx,
+		obs,
+		defaultConfigServiceAddress,
+	)
 	if err != nil {
-		//log.Errorf("Failed connecting to gNMI service: %v", err)
-		fmt.Printf("Failed connecting to gNMI service: %v", err)
+		if obs != nil {
+			_ = obs.Error(ctx, fmt.Sprintf(
+				"Failed connecting to gNMI service: %v",
+				err,
+			))
+		}
 
 		return fmt.Errorf("failed to notify config-service: %w", err)
 	}
 	defer conn.Close()
 
-	fmt.Println("[Main-service] Successfully sent configuration to config-service!")
-
-	//log.Info("Connected to config-service!")
+	if obs != nil {
+		_ = obs.Info(
+			ctx,
+			"[Main-service] Successfully sent configuration to config-service!",
+		)
+	}
 
 	req := &configservice.ConfigurationRequest{
 		Id: &id,
 	}
 
-	_, err = client.ApplyConfigurationById(context.Background(), req)
+	_, err = client.ApplyConfigurationById(ctx, req)
 
 	if err != nil {
-		//log.Errorf("Target returned RPC error for Set: %v", err)
-		fmt.Printf("Target returned RPC error for Set: %v", err)
+		if obs != nil {
+			_ = obs.Error(ctx, fmt.Sprintf(
+				"Target returned RPC error for Set: %v",
+				err,
+			))
+		}
 
 		return fmt.Errorf("failed to notify config-service: %w", err)
 	}
@@ -95,43 +128,72 @@ func notifyConfigService(id string) error {
 }
 
 // Takes in addr such as "config-service:5150" and returns a gNMI-client
-func ConnectToGnmiService(addr string) (client.Impl, error) {
-	fmt.Println("Loading TLS certificates...")
+func ConnectToGnmiService(
+	ctx context.Context,
+	obs *observability.Client,
+	addr string,
+) (client.Impl, error) {
+	if obs != nil {
+		_ = obs.Info(ctx, "Loading TLS certificates...")
+	}
 
 	// Load cert and key files from mounted volume
 	cert, err := tls.LoadX509KeyPair("/certs/tls.crt", "/certs/tls.key")
 	if err != nil {
-		fmt.Printf("Failed to load TLS cert/key: %v\n", err)
+		if obs != nil {
+			_ = obs.Error(ctx, fmt.Sprintf(
+				"Failed to load TLS cert/key: %v",
+				err,
+			))
+		}
 		return nil, fmt.Errorf("failed to load TLS certificate: %w", err)
 	}
 
-	fmt.Printf("Successfully loaded TLS certificates: client.crt and client.key\n")
+	if obs != nil {
+		_ = obs.Info(
+			ctx,
+			"Successfully loaded TLS certificates: client.crt and client.key",
+		)
+	}
 
 	// Optionally load CA cert if you have a custom CA (recommended)
 	caCertPEM, err := os.ReadFile("/certs/ca.crt")
 	if err != nil {
 		// If you don't have a CA cert, you can skip this or handle error differently
-		fmt.Printf("Warning: failed to load CA cert: %v\n", err)
+		if obs != nil {
+			_ = obs.Error(ctx, fmt.Sprintf(
+				"Warning: failed to load CA cert: %v",
+				err,
+			))
+		}
 	}
 
-	fmt.Printf("Successfully loaded the CA certificate.\n")
+	if obs != nil {
+		_ = obs.Info(ctx, "Successfully loaded the CA certificate.")
+	}
 
 	caCertPool := x509.NewCertPool()
 	if ok := caCertPool.AppendCertsFromPEM(caCertPEM); !ok {
-		fmt.Println("Warning: failed to append CA cert to pool")
+		if obs != nil {
+			_ = obs.Error(ctx, "Warning: failed to append CA cert to pool")
+		}
 	}
 
-	fmt.Printf("Successfully appended the CA certificate.\n")
+	if obs != nil {
+		_ = obs.Info(ctx, "Successfully appended the CA certificate.")
+	}
 
 	tlsConfig := &tls.Config{
-		Certificates: []tls.Certificate{cert},
-		RootCAs:      caCertPool,
-		// Set InsecureSkipVerify false if using valid CA certs
+		Certificates:       []tls.Certificate{cert},
+		RootCAs:            caCertPool,
 		InsecureSkipVerify: false,
 	}
-	fmt.Printf("prepared the tls.config\n")
 
-	client, err := gclient.New(context.Background(), client.Destination{
+	if obs != nil {
+		_ = obs.Info(ctx, "Prepared the TLS config.")
+	}
+
+	client, err := gclient.New(ctx, client.Destination{
 		Addrs:       []string{addr},
 		Target:      strings.Split(addr, ":")[0],
 		Timeout:     20 * time.Second,
@@ -140,20 +202,40 @@ func ConnectToGnmiService(addr string) (client.Impl, error) {
 	})
 
 	if err != nil {
-		fmt.Printf("Failed creating gNMI client to %s: %v\n", addr, err)
+		if obs != nil {
+			_ = obs.Error(ctx, fmt.Sprintf(
+				"Failed creating gNMI client to %s: %v",
+				addr,
+				err,
+			))
+		}
 		return nil, err
 	}
 
 	return client, nil
 }
 
-func ConnectToConfigService(address string) (configservice.ConfigServiceClient, *grpc.ClientConn, error) {
+func ConnectToConfigService(
+	ctx context.Context,
+	obs *observability.Client,
+	address string,
+) (configservice.ConfigServiceClient, *grpc.ClientConn, error) {
 	conn, err := grpc.NewClient(
 		address,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 	)
 	if err != nil {
+		if obs != nil {
+			_ = obs.Error(ctx, fmt.Sprintf(
+				"Failed creating gRPC connection to config-service: %v",
+				err,
+			))
+		}
 		return nil, nil, err
+	}
+
+	if obs != nil {
+		_ = obs.Info(ctx, "Successfully connected to config-service")
 	}
 
 	client := configservice.NewConfigServiceClient(conn)

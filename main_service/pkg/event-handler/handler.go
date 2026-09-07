@@ -1,9 +1,11 @@
 package eventhandler
 
 import (
+	"context"
 	"fmt"
 	"time"
 
+	"OpenCNC/common/observability"
 	store "OpenCNC/common/store-wrapper"
 	storewrapper "OpenCNC/common/store-wrapper"
 	"OpenCNC/common/structures/topology"
@@ -12,24 +14,31 @@ import (
 	"OpenCNC/tsn_service/pkg/notificationServer"
 
 	"google.golang.org/protobuf/types/known/timestamppb"
-	//"git.cs.kau.se/hamzchah/opencnc_kafka-exporter/logger/pkg/logger"
 )
-
-//var log = logger.GetLogger()
 
 // Take in a configuration request, process it and once a configuration
 // has been calculated, return ID of the new configuration.
-func HandleAddStreamEvent(configReq *uni.ConfigRequest, timeOfReq time.Time) (string, error) {
+func HandleAddStreamEvent(
+	ctx context.Context,
+	obs *observability.Client,
+	configReq *uni.ConfigRequest,
+	timeOfReq time.Time,
+) (string, error) {
 	// Store requests in k/v store and log the events
 	requestIds, err := store.StoreMultipleUniConfRequest(configReq.Requests)
 	if err != nil {
-		//log.Errorf("Failed storing and logging events: %v", err)
-		fmt.Printf("Failed storing and logging events: %v", err)
+		if obs != nil {
+			_ = obs.Error(ctx, fmt.Sprintf(
+				"Failed storing and logging events: %v",
+				err,
+			))
+		}
 		return "", err
 	}
 
-	//log.Info("Configuration requests stored successfully!")
-	fmt.Println("Configuration requests stored successfully!")
+	if obs != nil {
+		_ = obs.Info(ctx, "Configuration requests stored successfully!")
+	}
 
 	// Notify TSN service that it should calculate a new configuration
 	event := &notificationServer.Event{
@@ -45,31 +54,51 @@ func HandleAddStreamEvent(configReq *uni.ConfigRequest, timeOfReq time.Time) (st
 		},
 	}
 
-	configId, err := notifyTsnService(event)
+	configId, err := notifyTsnService(ctx, obs, event)
 	if err != nil {
-		fmt.Printf("Failed to notify TSN service: %v", err)
+		if obs != nil {
+			_ = obs.Error(ctx, fmt.Sprintf(
+				"Failed to notify TSN service: %v",
+				err,
+			))
+		}
 		return "", err
 	}
 
 	tentativeConfiguration, err := storewrapper.GetTopologyConfiguration(configId)
 	if err != nil {
-		fmt.Printf("Failed getting tentative configuration: %v", err)
+		if obs != nil {
+			_ = obs.Error(ctx, fmt.Sprintf(
+				"Failed getting tentative configuration: %v",
+				err,
+			))
+		}
 		return "", err
 	}
-	fmt.Println("[Main-service]  Tentative configuration retrieved...")
+
+	if obs != nil {
+		_ = obs.Info(ctx, "[Main-service] Tentative configuration retrieved...")
+	}
 
 	// Finalize the configuration
 	if err = configurationHandler.FinalizeConfiguration(tentativeConfiguration); err != nil {
-		//log.Errorf("Failed finalizing configuration: %v", err)
-		fmt.Printf("Failed finalizing configuration: %v", err)
+		if obs != nil {
+			_ = obs.Error(ctx, fmt.Sprintf(
+				"Failed finalizing configuration: %v",
+				err,
+			))
+		}
 		return "", err
 	}
 
 	// Send network change to config-service to use new configuration
-	if err = notifyConfigService(configId); err != nil {
-		//MTODO:
-		//log.Errorf("Failed notifying config-service of new configuration: %v", err)
-		fmt.Printf("Failed notifying config-service of new configuration: %v", err)
+	if err = notifyConfigService(ctx, obs, configId); err != nil {
+		if obs != nil {
+			_ = obs.Error(ctx, fmt.Sprintf(
+				"Failed notifying config-service of new configuration: %v",
+				err,
+			))
+		}
 
 		return "", err
 	}
@@ -77,12 +106,28 @@ func HandleAddStreamEvent(configReq *uni.ConfigRequest, timeOfReq time.Time) (st
 	return configId, nil
 }
 
-func RegisterNode(node *topology.Node) error {
-	if node.GetType() == topology.NodeRole_END_STATION || node.GetType() == topology.NodeRole_END_STATION {
-		//log.Infof("Registering node with MAC %v of type %v", node.GetStreamMAC(), node.GetNodeType())
+func RegisterNode(
+	ctx context.Context,
+	obs *observability.Client,
+	node *topology.Node,
+) error {
+	//HAMZA CHECK!
+	if node.GetType() == topology.NodeRole_END_STATION || node.GetType() == topology.NodeRole_BRIDGED_END_STATION {
+		if obs != nil {
+			_ = obs.Info(ctx, fmt.Sprintf(
+				"Registering node %v of type %v",
+				node.GetName(),
+				node.GetType(),
+			))
+		}
 		store.StoreNode(node)
 	} else {
-		//log.Errorf("Failed identifying type of end node: %v", node.GetNodeType())
+		if obs != nil {
+			_ = obs.Error(ctx, fmt.Sprintf(
+				"Failed identifying type of end node: %v",
+				node.GetType(),
+			))
+		}
 	}
 
 	return nil
