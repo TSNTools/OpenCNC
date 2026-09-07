@@ -1,12 +1,14 @@
 package nni
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
 	"net/http"
 
+	"OpenCNC/common/observability"
 	store "OpenCNC/common/store-wrapper"
 	"OpenCNC/common/structures/devicemodelregistry"
 	"OpenCNC/common/structures/topology"
@@ -36,8 +38,11 @@ type UploadWrapper struct {
 	} `json:"models"`
 }
 
-func StartServer(port uint16) {
-	fmt.Println("Starting NNI server")
+func StartServer(ctx context.Context, port uint16, obs *observability.Client) {
+
+	if obs != nil {
+		obs.Info(ctx, "Starting NNI server")
+	}
 
 	// Serve dashboard.html at root
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
@@ -53,10 +58,19 @@ func StartServer(port uint16) {
 	// ... other endpoints ...
 
 	// Serve static files (CSS, JS) correctly
-	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("web-interface"))))
+	http.Handle("/static/", http.StripPrefix(
+		"/static/",
+		http.FileServer(http.Dir("web-interface")),
+	))
 
 	if err := http.ListenAndServe(fmt.Sprintf(":%d", port), nil); err != nil {
-		fmt.Printf("Failed to listen and serve on %d: %v\n", port, err)
+		if obs != nil {
+			obs.Error(ctx, fmt.Sprintf(
+				"Failed to listen and serve on %d: %v",
+				port,
+				err,
+			))
+		}
 	}
 }
 

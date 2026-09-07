@@ -1,6 +1,12 @@
 package internalOptimizer
 
 import (
+	"context"
+	"encoding/json"
+	"fmt"
+	"os"
+
+	"OpenCNC/common/observability"
 	store "OpenCNC/common/store-wrapper"
 	"OpenCNC/common/structures/qbv"
 	"OpenCNC/common/structures/stream_config"
@@ -8,46 +14,58 @@ import (
 	"OpenCNC/common/structures/uni"
 	forwarding_plane "OpenCNC/tsn_service/pkg/structures/forwarding_plane"
 	optimizer "OpenCNC/tsn_service/pkg/structures/optimization_contract"
-	"encoding/json"
-	"fmt"
-	"os"
-
-	//	"git.cs.kau.se/hamzchah/opencnc_kafka-exporter/logger/pkg/logger"
 
 	"github.com/ghodss/yaml"
 )
-
-//var log = logger.GetLogger()
 
 var defaultSchedID = "default_schedule"
 var defaultSchedulePath = "/home/opencnc/OpenCNC/tsn_service/configs/default-schedule.yaml"
 
 // Calculates configuration set request using optimizer, if that failes build configuration set request from default schedule
-func StartOptimization(task *optimizer.OptimizationTask, allRequestData []*uni.Request) (*forwarding_plane.ForwardingPlaneModel, error) {
+func StartOptimization(
+	ctx context.Context,
+	obs *observability.Client,
+	task *optimizer.OptimizationTask,
+	allRequestData []*uni.Request,
+) (*forwarding_plane.ForwardingPlaneModel, error) {
 
-	fpm := createForwardingPlaneModel()
+	fpm := createForwardingPlaneModel(ctx, obs)
 	// TODO: Implement the optimization logic here.
 
 	// If optimization fails, fall back to the default schedule.
 	topoConfig, err := store.GetTopologyConfiguration(defaultSchedID)
 	if err != nil {
-		fmt.Printf("Failed getting current configuration: %v\n", err)
+		if obs != nil {
+			_ = obs.Error(ctx, fmt.Sprintf(
+				"Failed getting current configuration: %v",
+				err,
+			))
+		}
 		return nil, err
 	}
+
 	fpm.Configuration = topoConfig
 	//fpm.Metadata.ModelId = defaultSchedID
 
 	return fpm, nil
 }
 
-func createForwardingPlaneModel() *forwarding_plane.ForwardingPlaneModel {
+func createForwardingPlaneModel(
+	ctx context.Context,
+	obs *observability.Client,
+) *forwarding_plane.ForwardingPlaneModel {
 	//TODO: optimizer is not supposed to directly access the store,
 	// it ask  "PE" and "RAE" for the necessary data as input
 
 	// Get topology
 	topology, err := store.GetTopology()
 	if err != nil {
-		fmt.Printf("Failed getting topology: %v\n", err)
+		if obs != nil {
+			_ = obs.Error(ctx, fmt.Sprintf(
+				"Failed getting topology: %v",
+				err,
+			))
+		}
 		return nil
 	}
 
@@ -55,14 +73,24 @@ func createForwardingPlaneModel() *forwarding_plane.ForwardingPlaneModel {
 	//TODO: this should be the current active configuration
 	topoConfig, err := store.GetTopologyConfiguration(defaultSchedID)
 	if err != nil {
-		fmt.Printf("Failed getting current configuration: %v\n", err)
+		if obs != nil {
+			_ = obs.Error(ctx, fmt.Sprintf(
+				"Failed getting current configuration: %v",
+				err,
+			))
+		}
 		return nil
 	}
 
 	//Get all streams from k/v store
 	streams, err := store.GetStreams()
 	if err != nil {
-		fmt.Printf("Failed getting streams: %v\n", err)
+		if obs != nil {
+			_ = obs.Error(ctx, fmt.Sprintf(
+				"Failed getting streams: %v",
+				err,
+			))
+		}
 		return nil
 	}
 
@@ -72,8 +100,16 @@ func createForwardingPlaneModel() *forwarding_plane.ForwardingPlaneModel {
 		streamConfig, err := store.GetStreamConfiguration(stream.StreamId.AsKey())
 		if err != nil {
 			//fmt.Printf("Failed getting stream configuration for stream %v: %v\n", stream.StreamId.AsKey(), err)
+			if obs != nil {
+				_ = obs.Error(ctx, fmt.Sprintf(
+					"Failed getting stream configuration for stream %v: %v",
+					stream.StreamId.AsKey(),
+					err,
+				))
+			}
 			streamConfig = &stream_config.StreamConfiguration{}
 		}
+
 		streamModels = append(streamModels, &forwarding_plane.StreamModel{
 			Definition:    stream,
 			Configuration: streamConfig,
@@ -88,19 +124,31 @@ func createForwardingPlaneModel() *forwarding_plane.ForwardingPlaneModel {
 }
 
 // Reads default schedule config file and stores configuration for schedule in k/v store
-func CreateDefaultSchedule() error {
+func CreateDefaultSchedule(
+	ctx context.Context,
+	obs *observability.Client,
+) error {
 	// Read default schedule from file
 	schedBytes, err := os.ReadFile(defaultSchedulePath)
 	if err != nil {
-		fmt.Println("Failed reading default schedule from file")
-		// log.Errorf("Failed reading default schedule from file: %v", err)
+		if obs != nil {
+			_ = obs.Error(ctx, fmt.Sprintf(
+				"Failed reading default schedule from file: %v",
+				err,
+			))
+		}
 		return err
 	}
 
 	// Convert yaml bytes to json bytes
 	jsonBytes, err := yaml.YAMLToJSON(schedBytes)
 	if err != nil {
-		// log.Errorf("Failed converting file content from yaml to json: %v", err)
+		if obs != nil {
+			_ = obs.Error(ctx, fmt.Sprintf(
+				"Failed converting default schedule from YAML to JSON: %v",
+				err,
+			))
+		}
 		return err
 	}
 
@@ -114,13 +162,25 @@ func CreateDefaultSchedule() error {
 	}
 
 	if err := json.Unmarshal(jsonBytes, &config); err != nil {
-		// log.Errorf("Failed parsing schedule JSON: %v", err)
+		if obs != nil {
+			_ = obs.Error(ctx, fmt.Sprintf(
+				"Failed parsing schedule JSON: %v",
+				err,
+			))
+		}
 		return err
 	}
 
 	// Validate the configuration.
 	if config.GatingCycle == 0 {
-		return fmt.Errorf("gating-cycle must be greater than zero")
+		err := fmt.Errorf("gating-cycle must be greater than zero")
+		if obs != nil {
+			_ = obs.Error(ctx, fmt.Sprintf(
+				"Invalid default schedule: %v",
+				err,
+			))
+		}
+		return err
 	}
 
 	var totalPortion uint64
@@ -129,10 +189,17 @@ func CreateDefaultSchedule() error {
 	}
 
 	if totalPortion != 100 {
-		return fmt.Errorf(
+		err := fmt.Errorf(
 			"traffic class assigned portions must add up to 100%%, got %d%%",
 			totalPortion,
 		)
+		if obs != nil {
+			_ = obs.Error(ctx, fmt.Sprintf(
+				"Invalid default schedule: %v",
+				err,
+			))
+		}
+		return err
 	}
 
 	// Map traffic class names to gate bit positions.
@@ -159,7 +226,14 @@ func CreateDefaultSchedule() error {
 	for index, tc := range config.TrafficClasses {
 		bit, ok := trafficClassBits[tc.Name]
 		if !ok {
-			return fmt.Errorf("unknown traffic class %q", tc.Name)
+			err := fmt.Errorf("unknown traffic class %q", tc.Name)
+			if obs != nil {
+				_ = obs.Error(ctx, fmt.Sprintf(
+					"Invalid default schedule: %v",
+					err,
+				))
+			}
+			return err
 		}
 
 		// assigned-portion is a percentage of the gating cycle.
@@ -193,28 +267,49 @@ func CreateDefaultSchedule() error {
 	topoConfig := &topology_config.TopologyConfig{ConfigId: defaultSchedID}
 	topology, err := store.GetTopology()
 	if err != nil {
+		if obs != nil {
+			_ = obs.Error(ctx, fmt.Sprintf(
+				"Failed to retrieve topology for default schedule: %v",
+				err,
+			))
+		}
 		return fmt.Errorf("failed to retrieve topology: %v", err)
 	}
+
 	for _, node := range topology.GetNodes() {
 		nodeConfig := &topology_config.NodeConfig{NodeId: node.Name}
+
 		for _, port := range node.GetPorts() {
 			portConfig := &topology_config.PortConfig{
 				PortId: port.Id,
 				Gcl:    defaultSched,
 			}
+
 			nodeConfig.PortConfigs = append(nodeConfig.PortConfigs, portConfig)
 		}
+
 		topoConfig.NodeConfigs = append(topoConfig.NodeConfigs, nodeConfig)
 	}
 
 	// Store schedule in k/v store
 	err = store.StoreTopologyConfiguration(topoConfig)
 	if err != nil {
-		//log.Errorf("Failed storing default schedule: %v", err)
+		if obs != nil {
+			_ = obs.Error(ctx, fmt.Sprintf(
+				"Failed storing default schedule with ID %s: %v",
+				defaultSchedID,
+				err,
+			))
+		}
 		return err
 	}
-	fmt.Println("Successfully stored default schedule with ID: ", defaultSchedID)
-	//log.Infof("Successfully stored default schedule with ID: %v", defaultSchedID)
+
+	if obs != nil {
+		_ = obs.Info(ctx, fmt.Sprintf(
+			"Successfully stored default schedule with ID: %s",
+			defaultSchedID,
+		))
+	}
 
 	return nil
 }

@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"time"
 
+	"OpenCNC/common/observability"
+
 	pb "github.com/openconfig/gnmi/proto/gnmi"
 
 	"github.com/openconfig/gnmi/client"
@@ -14,16 +16,25 @@ import (
 
 //var log = logger.GetLogger()
 
-func StartMonitor(ipAddress string, index string) {
+func StartMonitor(
+	ctx context.Context,
+	obs *observability.Client,
+	ipAddress string,
+	index string,
+) {
 	//log.Info("Start monitoring")
-	setReq("Start", ipAddress, index)
+	setReq(ctx, obs, "Start", ipAddress, index)
 	//setReq("Stop", "192.168.0.2")
 
 }
 
-func setReq(action string, target string, confIndex ...string) {
-	ctx := context.Background()
-
+func setReq(
+	ctx context.Context,
+	obs *observability.Client,
+	action string,
+	target string,
+	confIndex ...string,
+) {
 	address := []string{"monitor-service:11161"}
 
 	c, err := gclient.New(ctx, client.Destination{
@@ -58,12 +69,15 @@ func setReq(action string, target string, confIndex ...string) {
 	}
 
 	if confIndex != nil {
-		setRequest.Update[0].Path.Elem = append(setRequest.Update[0].Path.Elem, &pb.PathElem{
-			Name: "ConfigIndex",
-			Key: map[string]string{
-				"ConfigIndex": confIndex[0],
+		setRequest.Update[0].Path.Elem = append(
+			setRequest.Update[0].Path.Elem,
+			&pb.PathElem{
+				Name: "ConfigIndex",
+				Key: map[string]string{
+					"ConfigIndex": confIndex[0],
+				},
 			},
-		})
+		)
 	}
 
 	response, err := c.(*gclient.Client).Set(ctx, &setRequest)
@@ -75,8 +89,12 @@ func setReq(action string, target string, confIndex ...string) {
 	} else {
 		for _, resp := range response.Response {
 			//log.Infof("device-monitor started successfully for: %v", resp.Path.Target)
-			fmt.Printf("device-monitor started successfully for: %v", resp.Path.Target)
-
+			if obs != nil {
+				_ = obs.Info(ctx, fmt.Sprintf(
+					"device-monitor started successfully for: %v",
+					resp.Path.Target,
+				))
+			}
 		}
 	}
 }

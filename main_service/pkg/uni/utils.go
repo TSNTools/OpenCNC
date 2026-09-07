@@ -1,11 +1,13 @@
 package uni_server
 
 import (
+	"OpenCNC/common/observability"
 	store "OpenCNC/common/store-wrapper"
 	"OpenCNC/common/structures/stream"
 	"OpenCNC/common/structures/stream_config"
 	topology_config "OpenCNC/common/structures/topology_config"
 	uni "OpenCNC/common/structures/uni"
+	"context"
 
 	"errors"
 	"fmt"
@@ -62,7 +64,12 @@ const (
 // The function signature intentionally remains:
 //
 //	createResponse(confId string, confReq *uni.ConfigRequest) ([]byte, error)
-func createResponse(confId string, confReq *uni.ConfigRequest) (*uni.ConfigResponse, error) {
+func createResponse(
+	ctx context.Context,
+	obs *observability.Client,
+	confId string,
+	confReq *uni.ConfigRequest,
+) (*uni.ConfigResponse, error) {
 	if confReq == nil {
 		return nil, errors.New("config request is nil")
 	}
@@ -85,7 +92,12 @@ func createResponse(confId string, confReq *uni.ConfigRequest) (*uni.ConfigRespo
 		streamId := request.Talker.GetStrId()
 		streamsConfig, err := store.GetStreamConfiguration(streamId.AsKey())
 		if err != nil {
-			fmt.Printf("failed to get streams configuration for: %q\n", streamId.AsKey())
+			if obs != nil {
+				_ = obs.Error(ctx, fmt.Sprintf(
+					"Failed to get streams configuration for: %q",
+					streamId.AsKey(),
+				))
+			}
 		}
 
 		resp := genResponse(request, configuration, streamsConfig)

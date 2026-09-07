@@ -82,7 +82,12 @@ func TestLog_NoPanicWithFallback(t *testing.T) {
 		cmdMirror:     true,
 	}
 
-	err := c.Log(context.Background(), observabilityv1.Severity_SEVERITY_INFO, "config-service", "hello")
+	err := c.Log(
+		context.Background(),
+		observabilityv1.Severity_SEVERITY_INFO,
+		"config-service",
+		"hello",
+	)
 	if err != nil {
 		t.Fatalf("expected no error, got %v", err)
 	}

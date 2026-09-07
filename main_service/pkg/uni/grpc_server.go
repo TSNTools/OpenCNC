@@ -3,19 +3,25 @@ package uni_server
 import (
 	"context"
 	"fmt"
-	"log"
 	"net"
 	"time"
 
-	handler "OpenCNC/main_service/pkg/event-handler"
-
+	"OpenCNC/common/observability"
 	uni "OpenCNC/common/structures/uni"
+	handler "OpenCNC/main_service/pkg/event-handler"
 
 	grpc "google.golang.org/grpc"
 )
 
 type Server struct {
 	UnimplementedUniServiceServer
+	obs *observability.Client
+}
+
+func NewServer(obs *observability.Client) *Server {
+	return &Server{
+		obs: obs,
+	}
 }
 
 func (s *Server) AddStream(ctx context.Context, req *uni.ConfigRequest) (*uni.ConfigResponse, error) {
@@ -24,7 +30,9 @@ func (s *Server) AddStream(ctx context.Context, req *uni.ConfigRequest) (*uni.Co
 		return nil, fmt.Errorf("received nil AddStream request")
 	}
 
-	fmt.Printf("[Main-service] Received AddStream request")
+	if s.obs != nil {
+		_ = s.obs.Info(ctx, "[Main-service] Received AddStream request")
+	}
 
 	// Check whether the client cancelled the request.
 	select {
@@ -34,9 +42,14 @@ func (s *Server) AddStream(ctx context.Context, req *uni.ConfigRequest) (*uni.Co
 	}
 
 	// Use exactly the same event handler as the HTTP server.
-	confID, err := handler.HandleAddStreamEvent(req, time.Now())
+	confID, err := handler.HandleAddStreamEvent(ctx, s.obs, req, time.Now())
 	if err != nil {
-		fmt.Printf("Failed handling AddStream event: %v\n", err)
+		if s.obs != nil {
+			_ = s.obs.Error(ctx, fmt.Sprintf(
+				"Failed handling AddStream event: %v",
+				err,
+			))
+		}
 
 		return nil, fmt.Errorf(
 			"failed handling AddStream event: %w",
@@ -45,9 +58,19 @@ func (s *Server) AddStream(ctx context.Context, req *uni.ConfigRequest) (*uni.Co
 	}
 
 	// createResponse
-	response, err := createResponse(confID, req)
+	response, err := createResponse(
+		ctx,
+		s.obs,
+		confID,
+		req,
+	)
 	if err != nil {
-		fmt.Printf("Failed to create UNI response: %v\n", err)
+		if s.obs != nil {
+			_ = s.obs.Error(ctx, fmt.Sprintf(
+				"Failed to create UNI response: %v",
+				err,
+			))
+		}
 
 		return nil, fmt.Errorf(
 			"failed to create UNI response: %w",
@@ -58,20 +81,48 @@ func (s *Server) AddStream(ctx context.Context, req *uni.ConfigRequest) (*uni.Co
 	return response, nil
 }
 
-func StartGrpcServer(port uint16) error {
+func StartGrpcServer(
+	ctx context.Context,
+	port uint16,
+	obs *observability.Client,
+) error {
 
 	listener, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
 	if err != nil {
-		return fmt.Errorf("failed to listen on port %d: %w", port, err)
+		if obs != nil {
+			_ = obs.Error(ctx, fmt.Sprintf(
+				"Failed to listen on port %d: %v",
+				port,
+				err,
+			))
+		}
+
+		return fmt.Errorf(
+			"failed to listen on port %d: %w",
+			port,
+			err,
+		)
 	}
 
 	grpcServer := grpc.NewServer()
 
-	RegisterUniServiceServer(grpcServer, &Server{})
+	RegisterUniServiceServer(
+		grpcServer,
+		NewServer(obs),
+	)
 
-	log.Println("Starting UNI gRPC server")
+	if obs != nil {
+		_ = obs.Info(ctx, "Starting UNI gRPC server")
+	}
 
 	if err := grpcServer.Serve(listener); err != nil {
+		if obs != nil {
+			_ = obs.Error(ctx, fmt.Sprintf(
+				"gRPC server failed: %v",
+				err,
+			))
+		}
+
 		return fmt.Errorf("gRPC server failed: %w", err)
 	}
 

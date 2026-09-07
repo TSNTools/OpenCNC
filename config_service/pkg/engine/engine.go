@@ -1,14 +1,17 @@
 package engine
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"runtime"
 	"strconv"
 	"sync"
+	"time"
 
 	"OpenCNC/common/observability"
 	"OpenCNC/common/structures/credentials"
+	observabilityv1 "OpenCNC/common/structures/logging"
 	"OpenCNC/common/structures/topology"
 	"OpenCNC/common/structures/topology_config"
 	"OpenCNC/config_service/pkg/managementSessions"
@@ -50,7 +53,7 @@ func (m *MappingEngine) GetLastTransactionId() *string {
 	return &m.lastTransaction.ConfigId
 }
 
-func (m *MappingEngine) ApplyConfiguration(topo *topology.Topology, cfg *topology_config.TopologyConfig, creds []managementSessions.NodeCredentials) error {
+func (m *MappingEngine) ApplyConfiguration(ctx context.Context, obs *observability.Client, topo *topology.Topology, cfg *topology_config.TopologyConfig, creds []managementSessions.NodeCredentials) error {
 	if topo == nil || cfg == nil {
 		return fmt.Errorf("topology and config must not be nil")
 	}
@@ -107,11 +110,36 @@ func (m *MappingEngine) ApplyConfiguration(topo *topology.Topology, cfg *topolog
 	//set concurrency limit based on available workers
 	tx.MAX_CONCURRENT_CONFIGS, _ = getAvailableWorkers()
 
+	preparationStart := time.Now()
+
 	if err := tx.Prepare(); err != nil {
+		if obs != nil {
+			_ = obs.Metric(
+				ctx,
+				observabilityv1.Severity_SEVERITY_ERROR,
+				"configuration_preparation_failures",
+				observabilityv1.MetricType_METRIC_TYPE_COUNTER,
+				1,
+				"",
+				nil,
+			)
+		}
 		return err
 	}
 
-	if err := tx.Commit(); err != nil {
+	if obs != nil {
+		_ = obs.Metric(
+			ctx,
+			observabilityv1.Severity_SEVERITY_INFO,
+			"configuration_preparation_duration",
+			observabilityv1.MetricType_METRIC_TYPE_GAUGE,
+			float64(time.Since(preparationStart).Milliseconds()),
+			"ms",
+			nil,
+		)
+	}
+
+	if err := tx.Commit(ctx, obs); err != nil {
 		return err
 	}
 
