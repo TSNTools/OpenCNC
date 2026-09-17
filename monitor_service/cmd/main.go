@@ -6,6 +6,7 @@ import (
 	"net"
 	"time"
 
+	"OpenCNC/common/configuration"
 	"OpenCNC/common/observability"
 	"OpenCNC/monitor_service/pkg/catalog"
 	"OpenCNC/monitor_service/pkg/engine"
@@ -38,7 +39,10 @@ func main() {
 	monitorEngine := engine.NewEngine(catalog, obsClient)
 	server := service.NewMonitorServer(monitorEngine, obsClient)
 
-	listener, err := net.Listen("tcp", ":5151")
+	addr := configuration.GetEnv("MONITOR_SERVICE_HOST", "0.0.0.0") +
+		":" + configuration.GetEnv("MONITOR_SERVICE_PORT", "5151")
+
+	listener, err := net.Listen("tcp", addr)
 	if err != nil {
 		if obsClient != nil {
 			obsClient.FatalF("Failed to listen on :5151: %v", err)

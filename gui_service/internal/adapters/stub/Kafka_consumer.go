@@ -5,6 +5,7 @@ import (
 	"log"
 	"time"
 
+	"OpenCNC/common/configuration"
 	observabilityv1 "OpenCNC/common/structures/logging"
 
 	"github.com/segmentio/kafka-go"
@@ -12,12 +13,13 @@ import (
 )
 
 const (
-	kafkaBroker   = "localhost:9092"
 	metricsTopic  = "opencnc.metrics"
 	consumerGroup = "opencnc-gui-consumer"
 
 	kafkaRetryDelay = 2 * time.Second
 )
+
+var kafkaBroker = configuration.ParseCSVEnv("OBS_BROKERS", "localhost:9092")[0]
 
 type MetricsConsumer struct {
 	reader *kafka.Reader

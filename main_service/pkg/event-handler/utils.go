@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"OpenCNC/common/configuration"
 	"OpenCNC/common/observability"
 	configservice "OpenCNC/config_service/grpc_server"
 	"OpenCNC/tsn_service/pkg/notificationServer"
@@ -19,9 +20,11 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 )
 
-const (
-	defaultTsnServiceAddress    = "localhost:5152"
-	defaultConfigServiceAddress = "localhost:5150"
+var (
+	defaultTsnServiceAddress = configuration.GetEnv("TSN_SERVICE_HOST", "localhost") +
+		":" + configuration.GetEnv("TSN_SERVICE_PORT", "5152")
+	defaultConfigServiceAddress = configuration.GetEnv("CONFIG_SERVICE_HOST", "localhost") +
+		":" + configuration.GetEnv("CONFIG_SERVICE_PORT", "5150")
 )
 
 // Notifies the TSN service through gRPC that it should start calculating

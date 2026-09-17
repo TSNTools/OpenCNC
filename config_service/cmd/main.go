@@ -6,6 +6,7 @@ import (
 	"net"
 	"time"
 
+	"OpenCNC/common/configuration"
 	"OpenCNC/common/observability"
 
 	"google.golang.org/grpc"
@@ -63,9 +64,12 @@ func main() {
 		creds := credentials.NewTLS(tlsConfig)
 	*/
 	// --- Create TCP listener ---
-	listener, err := net.Listen("tcp", ":5150")
+	port := configuration.GetEnv("CONFIG_SERVICE_PORT", "5150")
+	addr := configuration.GetEnv("CONFIG_SERVICE_HOST", "localhost") + ":" + port
+
+	listener, err := net.Listen("tcp", addr)
 	if err != nil {
-		obsClient.FatalF("Failed to listen on :5150: %v", err)
+		obsClient.FatalF("Failed to listen on %s: %v", port, err)
 	}
 
 	// --- Create gRPC server with TLS credentials ---
