@@ -39,12 +39,12 @@ func main() {
 		log.Fatalf("invalid MAIN_SERVICE_UNI_GRPC_PORT: %v", err)
 	}
 
-	//unihttpPort, err := strconv.ParseUint(
-	//	configuration.GetEnv("MAIN_SERVICE_UNI_HTTP_PORT", "8081"), 10, 16,
-	//)
-	//if err != nil {
-	//	log.Fatalf("invalid MAIN_SERVICE_UNI_HTTP_PORT: %v", err)
-	//}
+	unihttpPort, err := strconv.ParseUint(
+		configuration.GetEnv("MAIN_SERVICE_UNI_HTTP_PORT", "8081"), 10, 16,
+	)
+	if err != nil {
+		log.Fatalf("invalid MAIN_SERVICE_UNI_HTTP_PORT: %v", err)
+	}
 
 	///////////////////////
 
@@ -69,7 +69,7 @@ func main() {
 	go nni.StartServer(ctx, uint16(nniPort), obsClient)
 
 	// Start UNI grpc server
-	// go uni_server.StartHttpServer(ctx, UNI_HTTP_SERVER_PORT, obsClient)
+	go uni_server.StartHttpServer(ctx, uint16(unihttpPort), obsClient)
 	go uni_server.StartGrpcServer(ctx, uint16(unigrpcPort), obsClient)
 
 	// Not working on local network, needs to be connected to switches

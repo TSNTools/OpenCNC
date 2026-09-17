@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gui-service
+  namespace: opencnc
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: gui-service
+  template:
+    metadata:
+      labels:
+        app: gui-service
+    spec:
+      containers:
+        - name: gui-service
+          image: opencnc/gui-service:latest
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: GUI_SERVICE_HOST
+              value: "0.0.0.0"
+            - name: GUI_SERVICE_PORT
+              value: "8080"
+            - name: OBS_BROKERS
+              value: "kafka:9092"
+            - name: OBS_ENABLED
+              value: "true"
+            - name: OBS_KAFKA_ENABLED
+              value: "true"
+            - name: OBS_FAIL_OPEN
+              value: "true"
+          ports:
+            - containerPort: 8080
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: gui-service
+  namespace: opencnc
+spec:
+  type: NodePort
+  selector:
+    app: gui-service
+  ports:
+    - name: http
+      port: 8080
+      targetPort: 8080
+      nodePort: 30080

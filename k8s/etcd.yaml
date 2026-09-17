@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: etcd
+  namespace: opencnc
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: etcd
+  template:
+    metadata:
+      labels:
+        app: etcd
+    spec:
+      containers:
+        - name: etcd
+          image: quay.io/coreos/etcd:v3.5.17
+          command:
+            - /usr/local/bin/etcd
+          args:
+            - --name=etcd
+            - --data-dir=/etcd-data
+            - --advertise-client-urls=http://0.0.0.0:2379
+            - --listen-client-urls=http://0.0.0.0:2379
+            - --initial-advertise-peer-urls=http://etcd:2380
+            - --listen-peer-urls=http://0.0.0.0:2380
+            - --initial-cluster=etcd=http://etcd:2380
+            - --initial-cluster-state=new
+          ports:
+            - containerPort: 2379
+            - containerPort: 2380
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: etcd
+  namespace: opencnc
+spec:
+  selector:
+    app: etcd
+  ports:
+    - name: client
+      port: 2379
+      targetPort: 2379
