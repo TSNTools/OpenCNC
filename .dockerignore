@@ -1,0 +1,7 @@
+.git
+.github
+.vscode
+common/develop/
+.dockerignore
+start_local.sh
+common/obervability/start_kafka_local_testing.sh
