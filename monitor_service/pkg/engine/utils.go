@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"time"
 
+	"OpenCNC/common/observability"
+	observabilityv1 "OpenCNC/common/structures/logging"
 	configservice "OpenCNC/config_service/grpc_server"
 	"OpenCNC/monitor_service/structures/monitoring"
 
@@ -14,9 +16,22 @@ import (
 
 const defaultConfigServiceAddress = "localhost:5150"
 
-func HandleRequestRollback(event *monitoring.MonitoringEvent) error {
+func HandleRequestRollback(event *monitoring.MonitoringEvent, obs *observability.Client) error {
 	if event == nil {
 		return fmt.Errorf("event is nil")
+	}
+
+	if obs != nil {
+		_ = obs.Event(
+			context.Background(),
+			observabilityv1.Severity_SEVERITY_INFO,
+			"monitoring",
+			"rollback_requested",
+			observabilityv1.DomainResult_DOMAIN_RESULT_ACCEPTED,
+			"configuration",
+			"",
+			"monitoring event requested configuration rollback",
+		)
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)

@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"OpenCNC/common/observability"
+	observabilityv1 "OpenCNC/common/structures/logging"
 	uni "OpenCNC/common/structures/uni"
 	handler "OpenCNC/main_service/pkg/event-handler"
 
@@ -25,6 +26,7 @@ func NewServer(obs *observability.Client) *Server {
 }
 
 func (s *Server) AddStream(ctx context.Context, req *uni.ConfigRequest) (*uni.ConfigResponse, error) {
+	start := time.Now()
 
 	if req == nil {
 		return nil, fmt.Errorf("received nil AddStream request")
@@ -43,6 +45,7 @@ func (s *Server) AddStream(ctx context.Context, req *uni.ConfigRequest) (*uni.Co
 
 	// Use exactly the same event handler as the HTTP server.
 	confID, err := handler.HandleAddStreamEvent(ctx, s.obs, req, time.Now())
+
 	if err != nil {
 		if s.obs != nil {
 			_ = s.obs.Error(ctx, fmt.Sprintf(
@@ -64,6 +67,7 @@ func (s *Server) AddStream(ctx context.Context, req *uni.ConfigRequest) (*uni.Co
 		confID,
 		req,
 	)
+
 	if err != nil {
 		if s.obs != nil {
 			_ = s.obs.Error(ctx, fmt.Sprintf(
@@ -75,6 +79,21 @@ func (s *Server) AddStream(ctx context.Context, req *uni.ConfigRequest) (*uni.Co
 		return nil, fmt.Errorf(
 			"failed to create UNI response: %w",
 			err,
+		)
+	}
+
+	if s.obs != nil {
+		_ = s.obs.Metric(
+			ctx,
+			observabilityv1.Severity_SEVERITY_INFO,
+			"uni_request_response_duration",
+			observabilityv1.MetricType_METRIC_TYPE_GAUGE,
+			float64(time.Since(start).Milliseconds()),
+			"ms",
+			map[string]string{
+				"interface": "grpc",
+				"operation": "add_stream",
+			},
 		)
 	}
 
@@ -95,6 +114,17 @@ func StartGrpcServer(
 				port,
 				err,
 			))
+
+			_ = obs.Event(
+				ctx,
+				observabilityv1.Severity_SEVERITY_ERROR,
+				"uni.grpc",
+				"start_failed",
+				observabilityv1.DomainResult_DOMAIN_RESULT_FAILED,
+				"server",
+				"",
+				fmt.Sprintf("Failed to start UNI gRPC server: %v", err),
+			)
 		}
 
 		return fmt.Errorf(
@@ -113,6 +143,17 @@ func StartGrpcServer(
 
 	if obs != nil {
 		_ = obs.Info(ctx, "Starting UNI gRPC server")
+
+		_ = obs.Event(
+			ctx,
+			observabilityv1.Severity_SEVERITY_INFO,
+			"uni.grpc",
+			"started",
+			observabilityv1.DomainResult_DOMAIN_RESULT_SUCCEEDED,
+			"server",
+			"",
+			"UNI gRPC server started successfully",
+		)
 	}
 
 	if err := grpcServer.Serve(listener); err != nil {
@@ -121,6 +162,17 @@ func StartGrpcServer(
 				"gRPC server failed: %v",
 				err,
 			))
+
+			_ = obs.Event(
+				ctx,
+				observabilityv1.Severity_SEVERITY_ERROR,
+				"uni.grpc",
+				"failed",
+				observabilityv1.DomainResult_DOMAIN_RESULT_FAILED,
+				"server",
+				"",
+				fmt.Sprintf("UNI gRPC server failed: %v", err),
+			)
 		}
 
 		return fmt.Errorf("gRPC server failed: %w", err)

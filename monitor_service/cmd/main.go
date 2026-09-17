@@ -36,7 +36,7 @@ func main() {
 	}
 
 	monitorEngine := engine.NewEngine(catalog, obsClient)
-	server := service.NewMonitorServer(monitorEngine)
+	server := service.NewMonitorServer(monitorEngine, obsClient)
 
 	listener, err := net.Listen("tcp", ":5151")
 	if err != nil {

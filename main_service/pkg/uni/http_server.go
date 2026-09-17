@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"OpenCNC/common/observability"
+	observabilityv1 "OpenCNC/common/structures/logging"
 	"OpenCNC/common/structures/topology"
 	"OpenCNC/common/structures/uni"
 	handler "OpenCNC/main_service/pkg/event-handler"
@@ -20,6 +21,7 @@ import (
 	"google.golang.org/protobuf/encoding/protojson"
 )
 
+// StartHttpServer starts the UNI HTTP server.
 // StartHttpServer starts the UNI HTTP server.
 func StartHttpServer(
 	ctx context.Context,
@@ -52,6 +54,19 @@ func StartHttpServer(
 	// API endpoint -> http://localhost:%d/leave_stream
 	// API endpoint -> http://localhost:%d/register_node
 
+	if obs != nil {
+		_ = obs.Event(
+			ctx,
+			observabilityv1.Severity_SEVERITY_INFO,
+			"uni.http",
+			"started",
+			observabilityv1.DomainResult_DOMAIN_RESULT_SUCCEEDED,
+			"server",
+			"",
+			"UNI HTTP server started successfully",
+		)
+	}
+
 	if err := http.ListenAndServe(fmt.Sprintf(":%d", port), nil); err != nil {
 		if obs != nil {
 			_ = obs.Error(ctx, fmt.Sprintf(
@@ -59,6 +74,20 @@ func StartHttpServer(
 				port,
 				err,
 			))
+
+			_ = obs.Event(
+				ctx,
+				observabilityv1.Severity_SEVERITY_ERROR,
+				"uni.http",
+				"start_failed",
+				observabilityv1.DomainResult_DOMAIN_RESULT_FAILED,
+				"server",
+				"",
+				fmt.Sprintf(
+					"UNI HTTP server failed to start: %v",
+					err,
+				),
+			)
 		}
 	}
 }
@@ -69,6 +98,7 @@ func addStream(
 	req *http.Request,
 ) {
 	ctx := req.Context()
+	start := time.Now()
 	timeOfReq := time.Now()
 
 	if err := checkHeader(req); err != nil {
@@ -103,9 +133,9 @@ func addStream(
 
 		case errors.As(err, &unmarshalTypeError):
 			// msg := fmt.Sprintf(
-			//     "Request body contains invalid value for the %q field (at position %d)",
-			//     unmarshalTypeError.Field,
-			//     unmarshalTypeError.Offset,
+			// 	"Request body contains invalid value for the %q field (at position %d)",
+			// 	unmarshalTypeError.Field,
+			// 	unmarshalTypeError.Offset,
 			// )
 			msg := "Request body contains invalid structure"
 			http.Error(writer, msg, http.StatusBadRequest)
@@ -160,6 +190,7 @@ func addStream(
 		&configRequest,
 		timeOfReq,
 	)
+
 	if err != nil {
 		if obs != nil {
 			_ = obs.Error(ctx, fmt.Sprintf(
@@ -167,7 +198,6 @@ func addStream(
 				err,
 			))
 		}
-
 		http.Error(
 			writer,
 			"Failed handling event.",
@@ -182,11 +212,11 @@ func addStream(
 		confId,
 		&configRequest,
 	)
+
 	if err != nil {
 		if obs != nil {
 			_ = obs.Error(ctx, "Failed to create UNI response!")
 		}
-
 		return
 	}
 
@@ -198,7 +228,6 @@ func addStream(
 				err,
 			))
 		}
-
 		return
 	}
 
@@ -208,6 +237,21 @@ func addStream(
 	)
 
 	_, _ = writer.Write(resp)
+
+	if obs != nil {
+		_ = obs.Metric(
+			ctx,
+			observabilityv1.Severity_SEVERITY_INFO,
+			"uni_request_response_duration",
+			observabilityv1.MetricType_METRIC_TYPE_GAUGE,
+			float64(time.Since(start).Milliseconds()),
+			"ms",
+			map[string]string{
+				"interface": "http",
+				"operation": "add_stream",
+			},
+		)
+	}
 }
 
 func updateStream(

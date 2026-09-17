@@ -66,7 +66,7 @@ func CalculateConfiguration(
 					ctx,
 					observabilityv1.Severity_SEVERITY_ERROR,
 					"configuration",
-					"calculate",
+					"store",
 					observabilityv1.DomainResult_DOMAIN_RESULT_FAILED,
 					"forwarding_plane_model",
 					"",
