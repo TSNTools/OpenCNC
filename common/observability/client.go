@@ -169,6 +169,43 @@ func (c *Client) Metric(ctx context.Context, severity observabilityv1.Severity, 
 	return c.publishEvent(ctx, event)
 }
 
+func (c *Client) MetricAt(
+	ctx context.Context,
+	timestamp *timestamppb.Timestamp,
+	severity observabilityv1.Severity,
+	name string,
+	metricType observabilityv1.MetricType,
+	value float64,
+	unit string,
+	attributes map[string]string,
+) error {
+	if c == nil {
+		return nil
+	}
+
+	metricValue := value
+	if math.IsNaN(metricValue) || math.IsInf(metricValue, 0) {
+		metricValue = 0
+	}
+
+	event := c.newBaseEnvelope(observabilityv1.EventKind_EVENT_KIND_METRIC, severity, "")
+	if timestamp != nil {
+		event.OccurredAt = timestamp
+	}
+
+	event.Payload = &observabilityv1.EventEnvelope_Metric{
+		Metric: &observabilityv1.MetricEvent{
+			Name:       name,
+			Type:       metricType,
+			Value:      metricValue,
+			Unit:       unit,
+			Attributes: attributes,
+		},
+	}
+
+	return c.publishEvent(ctx, event)
+}
+
 func (c *Client) EmitHealthStarted(ctx context.Context, check string, message string) error {
 	return c.Health(ctx, check, observabilityv1.HealthStatus_HEALTH_STATUS_HEALTHY, observabilityv1.Severity_SEVERITY_INFO, message)
 }

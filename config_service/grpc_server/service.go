@@ -100,6 +100,17 @@ func (s *ConfigServiceServerImpl) deployConfiguration(ctx context.Context, cfg *
 				"",
 				nil,
 			)
+
+			_ = s.obs.Event(
+				ctx,
+				observabilityv1.Severity_SEVERITY_ERROR,
+				"config.application",
+				"failed",
+				observabilityv1.DomainResult_DOMAIN_RESULT_FAILED,
+				"configuration",
+				"",
+				fmt.Sprintf("configuration application failed: %v", err),
+			)
 		}
 	}()
 
@@ -133,6 +144,17 @@ func (s *ConfigServiceServerImpl) deployConfiguration(ctx context.Context, cfg *
 			float64(time.Since(start).Milliseconds()),
 			"ms",
 			nil,
+		)
+
+		_ = s.obs.Event(
+			ctx,
+			observabilityv1.Severity_SEVERITY_INFO,
+			"config.application",
+			"succeeded",
+			observabilityv1.DomainResult_DOMAIN_RESULT_SUCCEEDED,
+			"configuration",
+			"",
+			"configuration applied successfully",
 		)
 	}
 

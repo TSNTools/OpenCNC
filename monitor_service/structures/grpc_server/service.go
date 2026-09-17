@@ -4,7 +4,9 @@ import (
 	"context"
 	"fmt"
 
+	"OpenCNC/common/observability"
 	storewrapper "OpenCNC/common/store-wrapper"
+	observabilityv1 "OpenCNC/common/structures/logging"
 	"OpenCNC/monitor_service/pkg/engine"
 	monitoring "OpenCNC/monitor_service/structures/monitoring"
 
@@ -14,11 +16,13 @@ import (
 type MonitorServer struct {
 	UnimplementedMonitorServiceServer
 	engine *engine.Engine
+	obs    *observability.Client
 }
 
-func NewMonitorServer(engine *engine.Engine) *MonitorServer {
+func NewMonitorServer(engine *engine.Engine, obs *observability.Client) *MonitorServer {
 	return &MonitorServer{
 		engine: engine,
+		obs:    obs,
 	}
 }
 
@@ -68,10 +72,27 @@ func (s *MonitorServer) StartMonitoring(ctx context.Context, req *StartMonitorin
 		}, nil
 	}
 
+	var err error
+	defer func() {
+		if err != nil && s.obs != nil {
+			_ = s.obs.Event(
+				ctx,
+				observabilityv1.Severity_SEVERITY_ERROR,
+				"monitoring",
+				"start_failed",
+				observabilityv1.DomainResult_DOMAIN_RESULT_FAILED,
+				"monitoring_resource",
+				req.Id,
+				fmt.Sprintf("monitoring start failed: %v", err),
+			)
+		}
+	}()
+
 	if req.Resource == nil {
+		err = fmt.Errorf("monitoring resource is required")
 		return &MonitoringResponse{
 			Success: false,
-			Message: "monitoring resource is required",
+			Message: err.Error(),
 		}, nil
 	}
 
@@ -93,16 +114,18 @@ func (s *MonitorServer) StartMonitoring(ctx context.Context, req *StartMonitorin
 	}
 
 	if !portExist && *req.Resource.PortId != "" {
+		err = fmt.Errorf("target port not found!")
 		return &MonitoringResponse{
 			Success: false,
-			Message: "target port not found!",
+			Message: err.Error(),
 		}, nil
 	}
 
 	if len(req.Settings) == 0 {
+		err = fmt.Errorf("no monitoring items specified")
 		return &MonitoringResponse{
 			Success: false,
-			Message: "no monitoring items specified",
+			Message: err.Error(),
 		}, nil
 	}
 
@@ -122,6 +145,7 @@ func (s *MonitorServer) StartMonitoring(ctx context.Context, req *StartMonitorin
 			Message: "failed to parse monitoring settings: " + err.Error(),
 		}, nil
 	}
+
 	if err := s.engine.StartMonitoring(
 		req.Resource,
 		node,
@@ -133,6 +157,19 @@ func (s *MonitorServer) StartMonitoring(ctx context.Context, req *StartMonitorin
 			Success: false,
 			Message: err.Error(),
 		}, nil
+	}
+
+	if s.obs != nil {
+		_ = s.obs.Event(
+			ctx,
+			observabilityv1.Severity_SEVERITY_INFO,
+			"monitoring",
+			"started",
+			observabilityv1.DomainResult_DOMAIN_RESULT_SUCCEEDED,
+			"monitoring_resource",
+			req.Id,
+			"monitoring started",
+		)
 	}
 
 	return &MonitoringResponse{
@@ -185,11 +222,38 @@ func (s *MonitorServer) StopMonitoring(ctx context.Context, req *StopMonitoringR
 		}, nil
 	}
 
-	if err := s.engine.StopMonitoring(req.Id); err != nil {
+	err := s.engine.StopMonitoring(req.Id)
+	if err != nil {
+		if s.obs != nil {
+			_ = s.obs.Event(
+				ctx,
+				observabilityv1.Severity_SEVERITY_ERROR,
+				"monitoring",
+				"stop_failed",
+				observabilityv1.DomainResult_DOMAIN_RESULT_FAILED,
+				"monitoring_resource",
+				req.Id,
+				fmt.Sprintf("monitoring stop failed: %v", err),
+			)
+		}
+
 		return &MonitoringResponse{
 			Success: false,
 			Message: err.Error(),
 		}, nil
+	}
+
+	if s.obs != nil {
+		_ = s.obs.Event(
+			ctx,
+			observabilityv1.Severity_SEVERITY_INFO,
+			"monitoring",
+			"stopped",
+			observabilityv1.DomainResult_DOMAIN_RESULT_SUCCEEDED,
+			"monitoring_resource",
+			req.Id,
+			"monitoring stopped",
+		)
 	}
 
 	return &MonitoringResponse{
@@ -214,7 +278,7 @@ func (s *MonitorServer) TestRollback(ctx context.Context, req *TestRollbackReque
 		Actions:  []monitoring.EventAction{monitoring.EventAction_REQUEST_ROLLBACK},
 	}
 
-	if err := engine.HandleRequestRollback(event); err != nil {
+	if err := engine.HandleRequestRollback(event, s.obs); err != nil {
 		return &TestRollbackResponse{
 			Success: false,
 			Message: err.Error(),

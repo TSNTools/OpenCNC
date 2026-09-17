@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"OpenCNC/common/observability"
+	observabilityv1 "OpenCNC/common/structures/logging"
 	"OpenCNC/monitor_service/pkg/catalog"
 	"OpenCNC/monitor_service/pkg/collectors"
 	"OpenCNC/monitor_service/pkg/meters"
@@ -409,14 +410,12 @@ func (m *ResourceMonitor) measureAndFeed(metricIDs []string) error {
 }
 
 func (m *ResourceMonitor) measureAndFeedWith(metersSnapshot map[string]meters.Meter, metricIDs []string) error {
-
 	m.mu.Lock()
 	target := m.target
 	m.mu.Unlock()
 
 	// Metrics in this map are due for this measurement cycle.
 	due := make(map[string]bool, len(metricIDs))
-
 	for _, id := range metricIDs {
 		if id != "" {
 			due[id] = true
@@ -425,28 +424,22 @@ func (m *ResourceMonitor) measureAndFeedWith(metersSnapshot map[string]meters.Me
 
 	// Only scheduled metrics are initially pending.
 	pending := make(map[string]meters.Meter, len(metricIDs))
-
 	for _, id := range metricIDs {
 		meter, exists := metersSnapshot[id]
-
 		if !exists {
 			return fmt.Errorf(
 				"scheduled metric %q is not registered",
 				id,
 			)
 		}
-
 		pending[id] = meter
 	}
 
 	// Evaluate scheduled metrics in dependency order.
 	for len(pending) > 0 {
-
 		progress := false
-
 		for name, meter := range pending {
 			metric := meter.Metric()
-
 			if metric == nil {
 				return fmt.Errorf(
 					"meter %q has nil metric definition",
@@ -460,14 +453,12 @@ func (m *ResourceMonitor) measureAndFeedWith(metersSnapshot map[string]meters.Me
 			//
 			// If an input is another metric:
 			//
-			//   - if that metric is due now, wait for it
-			//   - if it is not due, use its latest value already
-			//     stored in this meter
+			// - if that metric is due now, wait for it
+			// - if it is not due, use its latest value already
+			// stored in this meter
 			//
 			// This is what allows different metric intervals.
-
 			ready := true
-
 			for _, inputID := range metric.InputIds {
 				if inputID == "" {
 					continue
@@ -500,10 +491,10 @@ func (m *ResourceMonitor) measureAndFeedWith(metersSnapshot map[string]meters.Me
 			if !meter.Ready() {
 				continue
 			}
+
 			// ------------------------------------------------
 			// Evaluate the metric.
 			// ------------------------------------------------
-
 			result, err := meter.Evaluate(m.ctx)
 			if err != nil {
 				return fmt.Errorf(
@@ -528,10 +519,34 @@ func (m *ResourceMonitor) measureAndFeedWith(metersSnapshot map[string]meters.Me
 				result.Source = target
 			}
 
+			if m.obs != nil {
+				attributes := map[string]string{}
+
+				if result.Source != nil {
+					attributes["node_id"] = result.Source.GetNodeId()
+
+					if portID := result.Source.GetPortId(); portID != "" {
+						attributes["port_id"] = portID
+					}
+				}
+
+				attributes["metric_type"] = metric.GetType().String()
+
+				_ = m.obs.MetricAt(
+					m.ctx,
+					result.Timestamp,
+					observabilityv1.Severity_SEVERITY_INFO,
+					result.Id,
+					observabilityv1.MetricType_METRIC_TYPE_GAUGE,
+					result.Value,
+					"",
+					attributes,
+				)
+			}
+
 			// ------------------------------------------------
 			// Propagate metric result.
 			// ------------------------------------------------
-
 			if err := feedMetricResult(metersSnapshot, result); err != nil {
 				return err
 			}
@@ -539,7 +554,6 @@ func (m *ResourceMonitor) measureAndFeedWith(metersSnapshot map[string]meters.Me
 			// ------------------------------------------------
 			// Evaluate this metric's thresholds immediately.
 			// ------------------------------------------------
-
 			if err := m.evaluateMetricThresholds(metric, result, target); err != nil {
 				return err
 			}
@@ -550,7 +564,7 @@ func (m *ResourceMonitor) measureAndFeedWith(metersSnapshot map[string]meters.Me
 
 		if !progress {
 			//TODO: separate error for dependency cycle vs. meter not ready. not ready should not be an error,
-			//  just skip it until next cycle.
+			// just skip it until next cycle.
 			return fmt.Errorf(
 				"cannot evaluate scheduled metrics: unresolved dependency, dependency cycle, or meter not ready",
 			)

@@ -1,11 +1,13 @@
 package engine
 
 import (
+	"context"
 	"fmt"
 	"sync"
 
 	"OpenCNC/common/observability"
 	"OpenCNC/common/structures/credentials"
+	observabilityv1 "OpenCNC/common/structures/logging"
 	"OpenCNC/common/structures/topology"
 	"OpenCNC/monitor_service/pkg/catalog"
 	"OpenCNC/monitor_service/pkg/managementSessions"
@@ -188,10 +190,23 @@ func (e *Engine) HandleEvent(event *monitoring.MonitoringEvent) error {
 		return fmt.Errorf("event is nil")
 	}
 
+	if e.obs != nil {
+		_ = e.obs.Event(
+			context.Background(),
+			observabilityv1.Severity_SEVERITY_INFO,
+			"monitoring",
+			"event_generated",
+			observabilityv1.DomainResult_DOMAIN_RESULT_ACCEPTED,
+			"monitoring_event",
+			event.GetType().String(),
+			"Monitoring event generated",
+		)
+	}
+
 	for _, action := range event.Actions {
 		switch action {
 		case monitoring.EventAction_REQUEST_ROLLBACK:
-			if err := HandleRequestRollback(event); err != nil {
+			if err := HandleRequestRollback(event, e.obs); err != nil {
 				return fmt.Errorf("handle rollback action: %w", err)
 			}
 		case monitoring.EventAction_REQUEST_RECONFIGURATION:

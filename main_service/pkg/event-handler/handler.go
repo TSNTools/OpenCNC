@@ -8,6 +8,7 @@ import (
 	"OpenCNC/common/observability"
 	store "OpenCNC/common/store-wrapper"
 	storewrapper "OpenCNC/common/store-wrapper"
+	observabilityv1 "OpenCNC/common/structures/logging"
 	"OpenCNC/common/structures/topology"
 	uni "OpenCNC/common/structures/uni"
 	configurationHandler "OpenCNC/main_service/pkg/configuration-handler"
@@ -18,12 +19,29 @@ import (
 
 // Take in a configuration request, process it and once a configuration
 // has been calculated, return ID of the new configuration.
+// Take in a configuration request, process it and once a configuration
+// has been calculated, return ID of the new configuration.
 func HandleAddStreamEvent(
 	ctx context.Context,
 	obs *observability.Client,
 	configReq *uni.ConfigRequest,
 	timeOfReq time.Time,
-) (string, error) {
+) (configId string, err error) {
+	defer func() {
+		if err != nil && obs != nil {
+			_ = obs.Event(
+				ctx,
+				observabilityv1.Severity_SEVERITY_ERROR,
+				"stream",
+				"add",
+				observabilityv1.DomainResult_DOMAIN_RESULT_FAILED,
+				"stream",
+				"",
+				fmt.Sprintf("Failed adding stream: %v", err),
+			)
+		}
+	}()
+
 	// Store requests in k/v store and log the events
 	requestIds, err := store.StoreMultipleUniConfRequest(configReq.Requests)
 	if err != nil {
@@ -54,7 +72,7 @@ func HandleAddStreamEvent(
 		},
 	}
 
-	configId, err := notifyTsnService(ctx, obs, event)
+	configId, err = notifyTsnService(ctx, obs, event)
 	if err != nil {
 		if obs != nil {
 			_ = obs.Error(ctx, fmt.Sprintf(
@@ -103,6 +121,19 @@ func HandleAddStreamEvent(
 		return "", err
 	}
 
+	if obs != nil {
+		_ = obs.Event(
+			ctx,
+			observabilityv1.Severity_SEVERITY_INFO,
+			"stream",
+			"add",
+			observabilityv1.DomainResult_DOMAIN_RESULT_SUCCEEDED,
+			"stream",
+			"",
+			"Stream added successfully",
+		)
+	}
+
 	return configId, nil
 }
 
@@ -120,14 +151,58 @@ func RegisterNode(
 				node.GetType(),
 			))
 		}
-		store.StoreNode(node)
+
+		if err := store.StoreNode(node); err != nil {
+			if obs != nil {
+				_ = obs.Event(
+					ctx,
+					observabilityv1.Severity_SEVERITY_ERROR,
+					"node",
+					"register",
+					observabilityv1.DomainResult_DOMAIN_RESULT_FAILED,
+					"node",
+					node.GetName(),
+					fmt.Sprintf("Failed registering node: %v", err),
+				)
+			}
+			return err
+		}
+
+		if obs != nil {
+			_ = obs.Event(
+				ctx,
+				observabilityv1.Severity_SEVERITY_INFO,
+				"node",
+				"register",
+				observabilityv1.DomainResult_DOMAIN_RESULT_SUCCEEDED,
+				"node",
+				node.GetName(),
+				"Node registered successfully",
+			)
+		}
 	} else {
 		if obs != nil {
 			_ = obs.Error(ctx, fmt.Sprintf(
 				"Failed identifying type of end node: %v",
 				node.GetType(),
 			))
+
+			_ = obs.Event(
+				ctx,
+				observabilityv1.Severity_SEVERITY_WARN,
+				"node",
+				"register",
+				observabilityv1.DomainResult_DOMAIN_RESULT_REJECTED,
+				"node",
+				node.GetName(),
+				fmt.Sprintf(
+					"Node registration rejected: unsupported node type %v",
+					node.GetType(),
+				),
+			)
 		}
+
+		return fmt.Errorf("unsupported node type: %v", node.GetType())
 	}
 
 	return nil
