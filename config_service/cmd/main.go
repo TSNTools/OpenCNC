@@ -65,7 +65,7 @@ func main() {
 	*/
 	// --- Create TCP listener ---
 	port := configuration.GetEnv("CONFIG_SERVICE_PORT", "5150")
-	addr := configuration.GetEnv("CONFIG_SERVICE_HOST", "localhost") + ":" + port
+	addr := configuration.GetEnv("CONFIG_SERVICE_BIND_HOST", "localhost") + ":" + port
 
 	listener, err := net.Listen("tcp", addr)
 	if err != nil {

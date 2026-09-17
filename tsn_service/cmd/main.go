@@ -5,8 +5,10 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"strconv"
 	"time"
 
+	"OpenCNC/common/configuration"
 	"OpenCNC/common/observability"
 	"OpenCNC/tsn_service/pkg/internalOptimizer"
 	"OpenCNC/tsn_service/pkg/notificationServer"
@@ -14,9 +16,15 @@ import (
 	"google.golang.org/grpc"
 )
 
-const NotificationServerPort uint16 = 5152
-
 func main() {
+	///////////////////////
+	NotificationServerPort, err := strconv.ParseUint(
+		configuration.GetEnv("TSN_SERVICE_PORT", "5152"), 10, 16,
+	)
+	if err != nil {
+		log.Fatalf("invalid TSN_SERVICE_PORT: %v", err)
+	}
+	///////////////////////
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
@@ -59,7 +67,7 @@ func main() {
 	// go test()
 
 	// Start notification-server
-	go CreateNotificationServer(ctx, "tcp", NotificationServerPort, obsClient)
+	go CreateNotificationServer(ctx, "tcp", uint16(NotificationServerPort), obsClient)
 
 	select {}
 }
