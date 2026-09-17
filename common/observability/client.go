@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"OpenCNC/common/configuration"
 	observabilityv1 "OpenCNC/common/structures/logging"
 
 	"google.golang.org/protobuf/types/known/timestamppb"
@@ -28,11 +29,11 @@ type Client struct {
 // NewFromEnv builds a simplified observability client from OBS_* environment variables.
 // It supports automatic fallback to stdout when publishing is unavailable or fails.
 func NewFromEnv(service string) (*Client, error) {
-	obsEnabled := parseEnvBool("OBS_ENABLED", true)
-	kafkaEnabled := parseEnvBool("OBS_KAFKA_ENABLED", true)
-	failOpen := parseEnvBool("OBS_FAIL_OPEN", true)
-	brokers := parseCSVEnv("OBS_BROKERS", "localhost:9092")
-	cmdMirror := parseEnvBool("OBS_CMD_MIRROR", true)
+	obsEnabled := configuration.ParseEnvBool("OBS_ENABLED", true)
+	kafkaEnabled := configuration.ParseEnvBool("OBS_KAFKA_ENABLED", true)
+	failOpen := configuration.ParseEnvBool("OBS_FAIL_OPEN", true)
+	brokers := configuration.ParseCSVEnv("OBS_BROKERS", "localhost:9092")
+	cmdMirror := configuration.ParseEnvBool("OBS_CMD_MIRROR", true)
 
 	p, err := NewProducer(Config{
 		Enabled:               obsEnabled,
@@ -327,46 +328,6 @@ func writeToCMD(reason string, event *observabilityv1.EventEnvelope) {
 	}
 
 	fmt.Fprintf(os.Stdout, "[OBS-CMD: %s] %s\n", reason, msg)
-}
-
-func parseEnvBool(key string, defaultValue bool) bool {
-	raw, exists := os.LookupEnv(key)
-	if !exists {
-		return defaultValue
-	}
-
-	raw = strings.TrimSpace(strings.ToLower(raw))
-	switch raw {
-	case "1", "true", "yes", "on":
-		return true
-	case "0", "false", "no", "off":
-		return false
-	default:
-		return defaultValue
-	}
-}
-
-func parseCSVEnv(key string, defaults ...string) []string {
-	raw := strings.TrimSpace(os.Getenv(key))
-	if raw == "" {
-		return defaults
-	}
-
-	parts := strings.Split(raw, ",")
-	items := make([]string, 0, len(parts))
-	for _, part := range parts {
-		trimmed := strings.TrimSpace(part)
-		if trimmed == "" {
-			continue
-		}
-		items = append(items, trimmed)
-	}
-
-	if len(items) == 0 {
-		return defaults
-	}
-
-	return items
 }
 
 func randomHex(size int) string {

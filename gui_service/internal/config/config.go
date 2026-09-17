@@ -1,6 +1,7 @@
 package config
 
 import (
+	"OpenCNC/common/configuration"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -12,10 +13,7 @@ type Config struct {
 }
 
 func Load() (Config, error) {
-	port := os.Getenv("GUI_SERVICE_PORT")
-	if port == "" {
-		port = "8080"
-	}
+	port := configuration.GetEnv("GUI_SERVICE_PORT", "8080")
 
 	staticDir, err := findStaticDir()
 	if err != nil {

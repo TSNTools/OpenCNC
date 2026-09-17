@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"OpenCNC/common/configuration"
 	"OpenCNC/common/observability"
 	observabilityv1 "OpenCNC/common/structures/logging"
 	configservice "OpenCNC/config_service/grpc_server"
@@ -14,7 +15,8 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 )
 
-const defaultConfigServiceAddress = "localhost:5150"
+var defaultConfigServiceAddress = configuration.GetEnv("CONFIG_SERVICE_HOST", "localhost") +
+	":" + configuration.GetEnv("CONFIG_SERVICE_PORT", "5150")
 
 func HandleRequestRollback(event *monitoring.MonitoringEvent, obs *observability.Client) error {
 	if event == nil {
