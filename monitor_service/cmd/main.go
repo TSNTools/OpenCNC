@@ -39,7 +39,7 @@ func main() {
 	monitorEngine := engine.NewEngine(catalog, obsClient)
 	server := service.NewMonitorServer(monitorEngine, obsClient)
 
-	addr := configuration.GetEnv("MONITOR_SERVICE_HOST", "0.0.0.0") +
+	addr := configuration.GetEnv("MONITOR_SERVICE_BIND_HOST", "localhost") +
 		":" + configuration.GetEnv("MONITOR_SERVICE_PORT", "5151")
 
 	listener, err := net.Listen("tcp", addr)

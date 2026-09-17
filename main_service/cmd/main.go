@@ -5,9 +5,11 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"strconv"
 
 	"time"
 
+	"OpenCNC/common/configuration"
 	"OpenCNC/common/observability"
 	eventhandler "OpenCNC/main_service/pkg/event-handler"
 	"OpenCNC/main_service/pkg/nni"
@@ -18,13 +20,34 @@ import (
 	"google.golang.org/grpc"
 )
 
-const (
-	NNI_SERVER_PORT      uint16 = 8000
-	UNI_GRPC_SERVER_PORT uint16 = 5153
-	UNI_HTTP_SERVER_PORT uint16 = 8081
-)
+var UNI_HTTP_SERVER_PORT = configuration.GetEnv("MAIN_SERVICE_UNI_HTTP_PORT", "8081")
 
 func main() {
+
+	///////////////////////
+	nniPort, err := strconv.ParseUint(
+		configuration.GetEnv("MAIN_SERVICE_NNI_PORT", "8000"), 10, 16,
+	)
+	if err != nil {
+		log.Fatalf("invalid MAIN_SERVICE_NNI_PORT: %v", err)
+	}
+
+	unigrpcPort, err := strconv.ParseUint(
+		configuration.GetEnv("MAIN_SERVICE_UNI_GRPC_PORT", "5153"), 10, 16,
+	)
+	if err != nil {
+		log.Fatalf("invalid MAIN_SERVICE_UNI_GRPC_PORT: %v", err)
+	}
+
+	//unihttpPort, err := strconv.ParseUint(
+	//	configuration.GetEnv("MAIN_SERVICE_UNI_HTTP_PORT", "8081"), 10, 16,
+	//)
+	//if err != nil {
+	//	log.Fatalf("invalid MAIN_SERVICE_UNI_HTTP_PORT: %v", err)
+	//}
+
+	///////////////////////
+
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
@@ -43,11 +66,11 @@ func main() {
 	}
 
 	// Start NNI server
-	go nni.StartServer(ctx, NNI_SERVER_PORT, obsClient)
+	go nni.StartServer(ctx, uint16(nniPort), obsClient)
 
 	// Start UNI grpc server
 	// go uni_server.StartHttpServer(ctx, UNI_HTTP_SERVER_PORT, obsClient)
-	go uni_server.StartGrpcServer(ctx, UNI_GRPC_SERVER_PORT, obsClient)
+	go uni_server.StartGrpcServer(ctx, uint16(unigrpcPort), obsClient)
 
 	// Not working on local network, needs to be connected to switches
 	//switches := counterConfHandler.GetMonitorConfigDevices()
@@ -112,7 +135,10 @@ func pollConfigSubsystemForAvailability(ctx context.Context, obs *observability.
 			obs.Info(ctx, "Trying to connect to config-service...")
 		}
 
-		_, err := eventhandler.ConnectToGnmiService(ctx, obs, "config-service:5150")
+		configServiceAddress := configuration.GetEnv("CONFIG_SERVICE_HOST", "localhost") +
+			":" + configuration.GetEnv("CONFIG_SERVICE_PORT", "5150")
+
+		_, err := eventhandler.ConnectToGnmiService(ctx, obs, configServiceAddress)
 		if err != nil {
 			if obs != nil {
 				obs.Error(ctx, fmt.Sprintf(

@@ -1,6 +1,7 @@
 package storewrapper
 
 import (
+	"OpenCNC/common/configuration"
 	"OpenCNC/common/structures/topology"
 	"context"
 	"fmt"
@@ -13,10 +14,13 @@ import (
 
 // createEtcdClient creates and returns an etcd client
 func createEtcdClient() (*clientv3.Client, error) {
+	etcdAddress := configuration.GetEnv("ETCD_HOST", "localhost") +
+		":" + configuration.GetEnv("ETCD_PORT", "2379")
+
 	// Initialize the etcd client with provided configuration
 	client, err := clientv3.New(clientv3.Config{
-		Endpoints:   []string{"http://127.0.0.1:2379"}, // List of etcd endpoints
-		DialTimeout: 10 * time.Second,                  // Timeout for the dial
+		Endpoints:   []string{"http://" + etcdAddress},
+		DialTimeout: 10 * time.Second,
 	})
 
 	if err != nil {
