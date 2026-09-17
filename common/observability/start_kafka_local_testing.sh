@@ -3,7 +3,7 @@
 set -e
 
 CONTAINER_NAME="local-kafka"
-BOOTSTRAP="localhost:9092"
+BOOTSTRAP="${OBS_BROKERS:-localhost:9092}"
 
 TOPICS=(
   "opencnc.logs"
@@ -32,7 +32,7 @@ if ! docker ps --format '{{.Names}}' | grep -q "^${CONTAINER_NAME}$"; then
           -e KAFKA_NODE_ID=1 \
           -e KAFKA_PROCESS_ROLES=broker,controller \
           -e KAFKA_LISTENERS=PLAINTEXT://:9092,CONTROLLER://:9093 \
-          -e KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://localhost:9092 \
+          -e KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://${BOOTSTRAP} \
           -e KAFKA_CONTROLLER_LISTENER_NAMES=CONTROLLER \
           -e KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT \
           -e KAFKA_CONTROLLER_QUORUM_VOTERS=1@localhost:9093 \
