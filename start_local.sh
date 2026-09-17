@@ -2,6 +2,10 @@
 
 set -e
 
+cd /home/opencnc/OpenCNC
+
+source ./.dockerignore/env.local
+
 PIDS=()
 
 cleanup() {
@@ -23,7 +27,7 @@ echo " Starting local testing environment"
 echo "======================================"
 
 echo "[1/6] Starting Kafka..."
-./start_kafka_local_testing.sh &
+./.dockerignore/start_kafka_local_testing.sh &
 PIDS+=($!)
 
 sleep 3
