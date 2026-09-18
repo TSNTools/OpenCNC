@@ -1,3 +1,4 @@
+import React from "react";
 import { useState } from "react";
 import { Sidebar, TopBar } from "./components";
 import { navItems } from "./data";

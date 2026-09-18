@@ -1,5 +1,6 @@
+import React from "react";
 import { Panel, PanelHeader, TopologyCanvas, MetricCard } from "./components";
-import { metrics, topologyLinks, topologyNodes } from "./data";
+import { metrics, topologyLinks, topologyNodes, activities } from "./data";
 
 function topologyStateTag(status: string) {
   return status === "Warn" ? "warning" : "success";

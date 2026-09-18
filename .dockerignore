@@ -2,6 +2,8 @@
 .github
 .vscode
 k8s/
+install.sh
+uninstall.sh
 common/develop/
 .dockerignore
 start_local.sh

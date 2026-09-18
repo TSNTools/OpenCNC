@@ -58,6 +58,7 @@ metadata:
   name: main-service
   namespace: opencnc
 spec:
+  type: NodePort
   selector:
     app: main-service
   ports:
@@ -70,3 +71,4 @@ spec:
     - name: uni-http
       port: 8081
       targetPort: 8081
+      nodePort: 30081

@@ -1,4 +1,3 @@
-```yaml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -46,4 +45,3 @@ spec:
     - name: grpc
       port: 5150
       targetPort: 5150
-```

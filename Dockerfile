@@ -36,6 +36,14 @@ FROM debian:bookworm-slim AS monitor_service
 
 COPY --from=go-builder /out/monitor-service /app/monitor-service
 
+RUN mkdir -p /home/opencnc/OpenCNC/monitor_service/pkg/catalog
+
+COPY monitor_service/pkg/catalog/available_counters.json \
+    /home/opencnc/OpenCNC/monitor_service/pkg/catalog/available_counters.json
+
+COPY monitor_service/pkg/catalog/available_metrics.json \
+    /home/opencnc/OpenCNC/monitor_service/pkg/catalog/available_metrics.json
+
 EXPOSE 5151
 
 ENTRYPOINT ["/app/monitor-service"]
@@ -47,6 +55,12 @@ ENTRYPOINT ["/app/monitor-service"]
 FROM debian:bookworm-slim AS tsn_service
 
 COPY --from=go-builder /out/tsn-service /app/tsn-service
+
+# TSN service expects its default schedule at this absolute path.
+RUN mkdir -p /home/opencnc/OpenCNC/tsn_service/configs
+
+COPY tsn_service/configs/default-schedule.yaml \
+    /home/opencnc/OpenCNC/tsn_service/configs/default-schedule.yaml
 
 EXPOSE 5152
 
