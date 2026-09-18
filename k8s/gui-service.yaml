@@ -15,13 +15,19 @@ spec:
     spec:
       containers:
         - name: gui-service
-          image: opencnc/gui-service:latest
-          imagePullPolicy: IfNotPresent
+          image: opencnc/gui-service:local
+          imagePullPolicy: Never
           env:
             - name: GUI_SERVICE_HOST
               value: "0.0.0.0"
             - name: GUI_SERVICE_PORT
               value: "8080"
+
+            - name: ETCD_HOST
+              value: "etcd"
+            - name: ETCD_PORT
+              value: "2379"
+
             - name: OBS_BROKERS
               value: "kafka:9092"
             - name: OBS_ENABLED
