@@ -7,7 +7,7 @@ import {
   type Edge as FlowEdge,
   type Node as FlowNode,
 } from "@xyflow/react";
-import dagre from "dagre";
+import dagre from "@dagrejs/dagre";
 import "@xyflow/react/dist/style.css";
 import type { PropsWithChildren, ReactNode } from "react";
 import type { NavItem, ScreenKey, TopologyLink, TopologyNode } from "./types";
