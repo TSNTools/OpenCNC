@@ -82,20 +82,6 @@ ENTRYPOINT ["/app/main-service"]
 
 
 # ============================================================
-# GUI frontend build
-# ============================================================
-FROM node:22 AS gui-frontend-builder
-
-WORKDIR /src/gui_service/frontend
-
-COPY gui_service/frontend/package*.json ./
-RUN npm install
-
-COPY gui_service/frontend/ ./
-RUN npm run build
-
-
-# ============================================================
 # GUI Go build
 # ============================================================
 FROM go-builder AS gui-go-builder
@@ -112,13 +98,14 @@ FROM debian:bookworm-slim AS gui_service
 
 WORKDIR /app
 
-COPY --from=gui-go-builder /out/gui-service /app/gui-service
+COPY --from=gui-go-builder \
+    /out/gui-service \
+    /app/gui-service
 
-COPY --from=gui-frontend-builder \
-    /src/gui_service/frontend/dist \
-    /app/gui_service/frontend/dist
-
-COPY gui_service/static /app/gui_service/static
+# Use the exact same static GUI that is served by
+# `go run gui_service/cmd/main.go` locally.
+COPY gui_service/static \
+    /app/gui_service/static
 
 EXPOSE 8080
 
