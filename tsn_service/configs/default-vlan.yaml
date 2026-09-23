@@ -1,0 +1,4 @@
+default-vlan:
+  vid: 100                      # VLAN ID to register
+  fid: 1                        # Filtering database ID (default: 1)
+  tagged: true                  # true -> <vlan-transmitted>tagged</vlan-transmitted>

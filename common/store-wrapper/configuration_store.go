@@ -96,13 +96,16 @@ func StoreStreamConfiguration(cfg *stream.StreamConfiguration) error {
 	if cfg == nil {
 		return fmt.Errorf("cannot store nil stream configuration")
 	}
+	if cfg.GetStreamId() == nil || cfg.GetStreamId().GetMacAddress() == "" {
+		return fmt.Errorf("cannot store stream configuration without a stream ID and MAC address")
+	}
 
 	data, err := proto.Marshal(cfg)
 	if err != nil {
 		return fmt.Errorf("failed to serialize stream configuration: %w", err)
 	}
 
-	return SendToStore(data, "configurations.streams."+cfg.GetStreamId().String())
+	return SendToStore(data, "configurations.streams."+cfg.GetStreamId().AsKey())
 }
 
 ////////////////////////////

@@ -2,14 +2,29 @@
   "model-name": "RELY-TSN4",
   "yang-files": [
     {
-      "file-name": "ieee802-dot1q-sched.yang", 
+      "file-name": "ieee802-dot1q-sched.yang",
       "file-revision": "2021-04-09",
-      "description":"802.1Qbv configuration"
+      "description": "802.1Qbv configuration"
+    },
+    {
+      "file-name": "ieee802-dot1q-sched-bridge.yang",
+      "file-revision": "2021-04-09",
+      "description": "802.1Qbv bridge configuration"
     },
     {
       "file-name": "ieee802-dot1q-bridge.yang",
       "file-revision": "2021-04-09",
       "description": "add or modify filtering entries and vlan entries"
+    },
+    {
+      "file-name": "ieee802-dot1q-types.yang",
+      "file-revision": "2023-08-29",
+      "description": "IEEE 802.1Q types"
+    },
+    {
+      "file-name": "ieee802-types.yang",
+      "file-revision": "2020-10-23",
+      "description": "IEEE 802 types"
     },
     {
       "file-name": "rtaw-cbs.yang",
@@ -39,12 +54,7 @@
     {
       "file-name": "ietf-interfaces.yang",
       "file-revision": "2018-02-20",
-      "description": ""
-    },
-    {
-      "file-name": "ieee802-dot1q-bridge",
-      "file-revision": "",
-      "description": ""
+      "description": "IETF interfaces configuration"
     }
   ]
 }

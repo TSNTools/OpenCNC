@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
+	"strings"
 
 	"github.com/openshift-telco/go-netconf-client/netconf"
 	"github.com/openshift-telco/go-netconf-client/netconf/message"
@@ -131,11 +132,40 @@ func GetWithFilter(session *netconf.Session, filter string) (string, error) {
 
 func checkNetconfOKReply(rawReply string) error {
 	var rpcReply struct {
-		OK *struct{} `xml:"ok"`
+		OK     *struct{} `xml:"ok"`
+		Errors []struct {
+			Type     string `xml:"error-type"`
+			Tag      string `xml:"error-tag"`
+			Severity string `xml:"error-severity"`
+			AppTag   string `xml:"error-app-tag"`
+			Path     string `xml:"error-path"`
+			Message  string `xml:"error-message"`
+			Info     struct {
+				XML string `xml:",innerxml"`
+			} `xml:"error-info"`
+		} `xml:"rpc-error"`
 	}
 
 	if err := xml.Unmarshal([]byte(rawReply), &rpcReply); err != nil {
 		return fmt.Errorf("failed parsing NETCONF reply: %w", err)
+	}
+	if len(rpcReply.Errors) > 0 {
+		details := make([]string, 0, len(rpcReply.Errors))
+		for _, rpcError := range rpcReply.Errors {
+			fields := []string{}
+			for _, field := range []struct{ name, value string }{
+				{"type", rpcError.Type}, {"tag", rpcError.Tag},
+				{"severity", rpcError.Severity}, {"app-tag", rpcError.AppTag},
+				{"path", rpcError.Path}, {"message", rpcError.Message},
+				{"info", rpcError.Info.XML},
+			} {
+				if value := strings.TrimSpace(field.value); value != "" {
+					fields = append(fields, fmt.Sprintf("%s=%q", field.name, value))
+				}
+			}
+			details = append(details, "rpc-error: "+strings.Join(fields, ", "))
+		}
+		return fmt.Errorf("NETCONF %s", strings.Join(details, "; "))
 	}
 
 	if rpcReply.OK == nil {

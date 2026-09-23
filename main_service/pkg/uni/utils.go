@@ -94,8 +94,9 @@ func createResponse(
 		if err != nil {
 			if obs != nil {
 				_ = obs.Error(ctx, fmt.Sprintf(
-					"Failed to get streams configuration for: %q",
+					"Failed to get streams configuration for: %q: %v",
 					streamId.AsKey(),
+					err,
 				))
 			}
 		}
@@ -597,6 +598,11 @@ func genInterfaceConfigurationList(
 			streamsConfig.TimeAwareOffsetNs != nil {
 			interfaceConfiguration.TimeAwareOffset = &uni.TimeAwareOffset{
 				Offset: uint32(streamsConfig.GetTimeAwareOffsetNs()),
+			}
+
+		} else {
+			interfaceConfiguration.TimeAwareOffset = &uni.TimeAwareOffset{
+				Offset: 500000,
 			}
 		}
 

@@ -3,13 +3,14 @@ package service
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"OpenCNC/common/observability"
 	storewrapper "OpenCNC/common/store-wrapper"
 	observabilityv1 "OpenCNC/common/structures/logging"
 	"OpenCNC/common/structures/topology_config"
 	"OpenCNC/config_service/pkg/engine"
+	"OpenCNC/config_service/pkg/metrics"
+	"time"
 )
 
 // ConfigServiceServer implements the generated gRPC interface.
@@ -27,28 +28,33 @@ func NewConfigServiceServerImpl(obs *observability.Client, engine *engine.Mappin
 // ApplyConfiguration receives a config request ID, retrieves it from store,
 // maps it via the plugin, and pushes it to all NETCONF-capable devices.
 func (s *ConfigServiceServerImpl) ApplyConfiguration(ctx context.Context, req *ConfigurationRequest) (*ConfigurationResponse, error) {
+	grpcStart := time.Now()
+	configID := ""
+	if req != nil && req.GetConfiguration() != nil {
+		configID = req.GetConfiguration().GetConfigId()
+	}
+	metrics.RecordGRPCReceive(configID, grpcStart)
 
 	cfg := req.GetConfiguration()
-
 	if cfg == nil {
-
+		metrics.RecordGRPCComplete(configID, grpcStart, time.Now())
 		return &ConfigurationResponse{
 			Success: false,
 			Message: "Configuration is nil",
 		}, fmt.Errorf("configuration is nil")
-
 	}
 
 	if err := s.deployConfiguration(ctx, cfg); err != nil {
-
+		metrics.RecordGRPCComplete(configID, grpcStart, time.Now())
 		return &ConfigurationResponse{
 			Success: false,
 			Message: err.Error(),
 		}, err
-
 	}
 
 	storewrapper.StoreTopologyConfiguration(cfg)
+
+	metrics.RecordGRPCComplete(configID, grpcStart, time.Now())
 	return &ConfigurationResponse{
 		Success: true,
 		Message: "Configuration applied successfully",
@@ -56,9 +62,15 @@ func (s *ConfigServiceServerImpl) ApplyConfiguration(ctx context.Context, req *C
 }
 
 func (s *ConfigServiceServerImpl) ApplyConfigurationById(ctx context.Context, req *ConfigurationRequest) (*ConfigurationResponse, error) {
+	grpcStart := time.Now()
+	configId := ""
+	if req != nil {
+		configId = req.GetId()
+	}
+	metrics.RecordGRPCReceive(configId, grpcStart)
 
-	configId := req.GetId()
 	if configId == "" {
+		metrics.RecordGRPCComplete(configId, grpcStart, time.Now())
 		return &ConfigurationResponse{
 			Success: false,
 			Message: "Configuration ID is empty",
@@ -67,6 +79,7 @@ func (s *ConfigServiceServerImpl) ApplyConfigurationById(ctx context.Context, re
 
 	cfg, err := storewrapper.GetTopologyConfiguration(configId)
 	if err != nil {
+		metrics.RecordGRPCComplete(configId, grpcStart, time.Now())
 		return &ConfigurationResponse{
 			Success: false,
 			Message: err.Error(),
@@ -74,21 +87,23 @@ func (s *ConfigServiceServerImpl) ApplyConfigurationById(ctx context.Context, re
 	}
 
 	if err := s.deployConfiguration(ctx, cfg); err != nil {
+		metrics.RecordGRPCComplete(configId, grpcStart, time.Now())
 		return &ConfigurationResponse{
 			Success: false,
 			Message: err.Error(),
 		}, err
 	}
+
+	metrics.RecordGRPCComplete(configId, grpcStart, time.Now())
 	return &ConfigurationResponse{
 		Success: true,
 		Message: "Configuration applied successfully",
 	}, nil
 }
 
-func (s *ConfigServiceServerImpl) deployConfiguration(ctx context.Context, cfg *topology_config.TopologyConfig) error {
+func (s *ConfigServiceServerImpl) deployConfiguration(ctx context.Context, cfg *topology_config.TopologyConfig) (err error) {
 	start := time.Now()
 
-	var err error
 	defer func() {
 		if err != nil && s.obs != nil {
 			_ = s.obs.Metric(
@@ -99,17 +114,6 @@ func (s *ConfigServiceServerImpl) deployConfiguration(ctx context.Context, cfg *
 				1,
 				"",
 				nil,
-			)
-
-			_ = s.obs.Event(
-				ctx,
-				observabilityv1.Severity_SEVERITY_ERROR,
-				"config.application",
-				"failed",
-				observabilityv1.DomainResult_DOMAIN_RESULT_FAILED,
-				"configuration",
-				"",
-				fmt.Sprintf("configuration application failed: %v", err),
 			)
 		}
 	}()
@@ -145,17 +149,6 @@ func (s *ConfigServiceServerImpl) deployConfiguration(ctx context.Context, cfg *
 			"ms",
 			nil,
 		)
-
-		_ = s.obs.Event(
-			ctx,
-			observabilityv1.Severity_SEVERITY_INFO,
-			"config.application",
-			"succeeded",
-			observabilityv1.DomainResult_DOMAIN_RESULT_SUCCEEDED,
-			"configuration",
-			"",
-			"configuration applied successfully",
-		)
 	}
 
 	return nil
@@ -167,6 +160,7 @@ func (s *ConfigServiceServerImpl) Ping(ctx context.Context, _ *ConfigurationRequ
 }
 
 func (s *ConfigServiceServerImpl) Rollback(ctx context.Context, req *RollbackRequest) (*ConfigurationResponse, error) {
+	rollbackStart := time.Now()
 
 	if s.obs != nil {
 		s.obs.Println("[Config-Service] Received rollback request")
@@ -187,7 +181,7 @@ func (s *ConfigServiceServerImpl) Rollback(ctx context.Context, req *RollbackReq
 		s.obs.Println("[Config-Service] Rolling back last configuration transaction...")
 	}
 
-	err := s.engine.Rollback()
+	err := s.engine.Rollback(ctx, s.obs, rollbackStart)
 	if err != nil {
 
 		msg := fmt.Sprintf(

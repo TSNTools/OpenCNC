@@ -61,14 +61,18 @@ if err := vlan.PopulateDefaultVlanConfig(nodeConfig); err != nil {
 */
 
 const (
-	// IEEE 802.1Q defines VID 1 as the conventional default PVID.
-	defaultVlanID uint32 = 1
+	// Default VLAN ID set to 100 for bridge-only switch setup.
+	defaultVlanID uint32 = 100
 
 	// The baseline VLAN is associated with the first/default Filtering
 	// Database. More elaborate FID assignments are deployment-specific.
 	defaultFID uint32 = 1
 
 	defaultVlanLabel = "default"
+
+	// bridgeOnly controls whether to restrict default configuration to the
+	// bridge-level filtering database without modifying port PVIDs or advanced VLAN settings.
+	bridgeOnly = true
 )
 
 // -----------------------------------------------------------------------------
@@ -220,49 +224,51 @@ func PopulateDefaultVlanConfig(nodeConfig *topologyconfig.NodeConfig) error {
 	// Port-level defaults
 	// -------------------------------------------------------------------------
 
-	for _, portConfig := range nodeConfig.PortConfigs {
-		if portConfig == nil {
-			continue
-		}
+	if !bridgeOnly {
+		for _, portConfig := range nodeConfig.PortConfigs {
+			if portConfig == nil {
+				continue
+			}
 
-		if portConfig.PortId == "" {
-			return fmt.Errorf("port configuration contains empty port ID")
-		}
+			if portConfig.PortId == "" {
+				return fmt.Errorf("port configuration contains empty port ID")
+			}
 
-		// PVID 1 is the conventional default PVID. Do not overwrite an
-		// explicitly configured PVID.
-		if portConfig.DefaultVlanId == nil {
-			vlanID := defaultVlanID
-			portConfig.DefaultVlanId = &vlanID
-		}
+			// PVID 1 is the conventional default PVID. Do not overwrite an
+			// explicitly configured PVID.
+			if portConfig.DefaultVlanId == nil {
+				vlanID := defaultVlanID
+				portConfig.DefaultVlanId = &vlanID
+			}
 
-		// A port using the default PVID must have membership in that VLAN.
-		// The default VLAN is transmitted untagged on an access-style
-		// baseline configuration.
-		if !hasVlanMembership(portConfig, defaultVlanID) {
-			membership, err := NewVlanMembership(
-				defaultVlanID,
-				false,
-			)
-			if err != nil {
-				return fmt.Errorf(
-					"create default VLAN membership for port %q: %w",
-					portConfig.PortId,
-					err,
+			// A port using the default PVID must have membership in that VLAN.
+			// The default VLAN is transmitted untagged on an access-style
+			// baseline configuration.
+			if !hasVlanMembership(portConfig, defaultVlanID) {
+				membership, err := NewVlanMembership(
+					defaultVlanID,
+					false,
+				)
+				if err != nil {
+					return fmt.Errorf(
+						"create default VLAN membership for port %q: %w",
+						portConfig.PortId,
+						err,
+					)
+				}
+
+				portConfig.VlanMemberships = append(
+					portConfig.VlanMemberships,
+					&membership,
 				)
 			}
 
-			portConfig.VlanMemberships = append(
-				portConfig.VlanMemberships,
-				&membership,
-			)
-		}
-
-		// Populate the advanced VLAN controls only when the caller has not
-		// provided them explicitly.
-		if portConfig.VlanAdvanced == nil {
-			advancedConfig := NewDefaultPortVlanAdvancedConfig()
-			portConfig.VlanAdvanced = &advancedConfig
+			// Populate the advanced VLAN controls only when the caller has not
+			// provided them explicitly.
+			if portConfig.VlanAdvanced == nil {
+				advancedConfig := NewDefaultPortVlanAdvancedConfig()
+				portConfig.VlanAdvanced = &advancedConfig
+			}
 		}
 	}
 
@@ -336,7 +342,7 @@ func buildDefaultVlanPortMaps(nodeConfig *topologyconfig.NodeConfig) ([]*vlan.Vl
 		portMap, err := NewVlanPortMap(
 			portConfig.PortId,
 			vlan.RegistrarAdminControl_REGISTRAR_ADMIN_CONTROL_FIXED_NEW_IGNORED,
-			vlan.VlanTransmitted_VLAN_TRANSMITTED_UNTAGGED,
+			vlan.VlanTransmitted_VLAN_TRANSMITTED_TAGGED,
 		)
 		if err != nil {
 			return nil, fmt.Errorf(

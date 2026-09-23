@@ -2,9 +2,7 @@
 
 set -e
 
-cd /home/opencnc/OpenCNC
 
-source ./.dockerignore/env.local
 
 PIDS=()
 

@@ -8,11 +8,12 @@
 # config-diag
 # network-control
 # best-effort
+# Timecritical
 
 gating-cycle: 1 # ms
 traffic-classes:
   - name: isochronous
-    assigned-portion: 30 # in %
+    assigned-portion: 20 # in %
   - name: cyclic-sync
     assigned-portion: 10
   - name: cyclic-async
@@ -25,3 +26,5 @@ traffic-classes:
     assigned-portion: 10
   - name: best-effort
     assigned-portion: 20
+  - name: Timecritical
+    assigned-portion: 10

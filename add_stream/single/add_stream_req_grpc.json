@@ -1,0 +1,149 @@
+{
+  "version": 1,
+  "requests": [
+    {
+      "talker": {
+        "stream-id": {
+          "macAddress": "00-00-00-00-00-01",
+          "uniqueId": 1
+        
+        "stream-rank": 1,
+        
+        "end-station-interfaces": [
+          {
+            "interface-id": {
+              "mac-address": "00-00-00-00-00-01",
+              "interface-name": "enp1s0"
+            }
+          }
+        ],
+        "data-frame-specification": [
+          {
+            "ieee802-mac-addresses": {
+              "destination-mac-address": "00-00-00-00-00-02",
+              "source-mac": "00-00-00-00-00-01"
+            
+            "ieee802-vlan-tag": {
+              "priority-code-point": 7,
+              "vlan-id": 100
+            }
+          }
+        ],
+        "traffic-specification": {
+          "interval": {
+            "numerator": 1,
+            "denominator": 1
+          
+          "max-frames-per-interval": 32,
+          "max-frame-size": 128,
+          "time-aware": {
+            "latest-transmit-offset": 500000
+          }
+        
+        "user-to-network-requirements": {
+          "num-seamless-trees": 1,
+          "max-latency": 1000000000
+        
+        "interface-capabilities": {
+          "vlan-tag-capable": true
+        }
+      
+      "request-id": "req-stream-tsn1-to-tsn2",
+      "listener-list": [
+        {
+          "stream-id": {
+            "macAddress": "00-00-00-00-00-01",
+            "uniqueId": 1
+          
+          "end-station-interfaces": [
+            {
+              "interface-id": {
+                "mac-address": "00-00-00-00-00-02",
+                "interface-name": "ens6"
+              }
+            }
+          ],
+          "user-to-network-requirements": {
+            "num-seamless-trees": 1,
+            "max-latency": 1000000000
+          
+          "interface-capabilities": {
+            "vlan-tag-capable": true
+          }
+        }
+      ]
+    
+    {
+      "talker": {
+        "stream-id": {
+          "macAddress": "00-00-00-00-00-02",
+          "uniqueId": 2
+        
+        "stream-rank": 1,
+        
+        "end-station-interfaces": [
+          {
+            "interface-id": {
+              "mac-address": "00-00-00-00-00-02",
+              "interface-name": "ens6"
+            }
+          }
+        ],
+        "data-frame-specification": [
+          {
+            "ieee802-mac-addresses": {
+              "destination-mac-address": "00-00-00-00-00-01",
+              "source-mac": "00-00-00-00-00-02"
+            
+            "ieee802-vlan-tag": {
+              "priority-code-point": 7,
+              "vlan-id": 100
+            }
+          }
+        ],
+        "traffic-specification": {
+          "interval": {
+            "numerator": 1,
+            "denominator": 1
+          
+          "max-frames-per-interval": 32,
+          "max-frame-size": 128,
+          "time-aware": {
+            "latest-transmit-offset": 500000
+          }
+        
+        "user-to-network-requirements": {
+          "num-seamless-trees": 1,
+          "max-latency": 1000000000
+        
+        "interface-capabilities": {
+          "vlan-tag-capable": true
+        }
+      
+      "request-id": "req-stream-tsn2-to-tsn1",
+      "listener-list": [
+        {
+          "stream-id": {
+            "macAddress": "00-00-00-00-00-02",
+            "uniqueId": 2
+          
+          "end-station-interfaces": [
+            {
+              "interface-id": {
+                "mac-address": "00-00-00-00-00-01",
+                "interface-name": "enp1s0"
+              }
+            }
+          ],
+          "user-to-network-requirements": {
+            "num-seamless-trees": 1,
+            "max-latency": 1000000000
+          
+          "interface-capabilities": {
+            "vlan-tag-capable": true
+          }
+        }
+      ]
+    }
+  ]
+}

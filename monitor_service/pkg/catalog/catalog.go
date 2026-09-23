@@ -8,8 +8,8 @@ import (
 )
 
 const (
-	defaultCountersPath = "/home/opencnc/OpenCNC/monitor_service/pkg/catalog/available_counters.json"
-	defaultMetricsPath  = "/home/opencnc/OpenCNC/monitor_service/pkg/catalog/available_metrics.json"
+	defaultCountersPath = "/home/jittin/config-service/test/OpenCNC/monitor_service/pkg/catalog/available_counters.json"
+	defaultMetricsPath  = "/home/jittin/config-service/test/OpenCNC/monitor_service/pkg/catalog/available_metrics.json"
 )
 
 type Catalog struct {

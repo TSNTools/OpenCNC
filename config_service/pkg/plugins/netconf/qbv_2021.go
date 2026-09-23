@@ -89,9 +89,17 @@ func (p *QbvNetconfPlugin) SupportedByDevice(model *devicemodelregistry.DeviceMo
 }
 
 func (p *QbvNetconfPlugin) Map(msg proto.Message, node *topology.Node) (any, error) {
-	gcl, ok := msg.(*qbv.GateControlList)
-	if !ok {
+	var gcl *qbv.GateControlList
+	switch typed := msg.(type) {
+	case *qbv.GateControlList:
+		gcl = typed
+	case *topology_config.PortConfig:
+		gcl = typed.GetGcl()
+	default:
 		return nil, fmt.Errorf("invalid message type for QbvNetconfPlugin: %T", msg)
+	}
+	if gcl == nil {
+		return nil, fmt.Errorf("QbvNetconfPlugin: GateControlList is nil")
 	}
 
 	p.logger.Printf("[Qbv] Mapping schedule ID: %s", gcl.GetScheduleId())
@@ -202,7 +210,7 @@ func (p *QbvNetconfPlugin) BuildFeatureXML(mapped any) (*plugins.FeatureXML, err
 	}
 
 	buf.WriteString(`</gate-parameter-table>`)
-
+	//fmt.Printf("Generated XML :\n%s\n", buf.String())
 	return &plugins.FeatureXML{Container: "gate-parameter-table", XML: buf.Bytes()}, nil
 }
 

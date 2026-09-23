@@ -17,6 +17,7 @@ type ProtocolBackend interface {
 
 	PrepareSnapshot(ctx context.Context, cmsg *topology_config.NodeConfig) error
 	Commit(ctx context.Context) error
+	PrepareRollback(ctx context.Context) error
 	Rollback(ctx context.Context) error
 
 	UpdateCredentials(cred *credentials.ManagementCredentials)

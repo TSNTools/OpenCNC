@@ -261,9 +261,9 @@ func (v *VlanNetconfPlugin_2018) Push(mapped any, target managementSessions.Devi
 	defer session.Close()
 
 	pushXML := func(xml string, label string) error {
-		if v.logger != nil {
-			v.logger.Printf("[VLAN] XML generated for %s:\n%s", label, xml)
-		}
+		//if v.logger != nil {
+		//v.logger.Printf("[VLAN] XML generated for %s:\n%s", label, xml)
+		//}
 		if err := managementSessions.EditConfig(session, xml); err != nil {
 			return fmt.Errorf("edit-config failed for %s: %w", label, err)
 		}
@@ -547,9 +547,9 @@ func vlanRegistrationEntryTypeToXML2018(t vlan.VlanRegistrationEntryType) string
 func registrarAdminControlToXML2018(v vlan.RegistrarAdminControl) string {
 	switch v {
 	case vlan.RegistrarAdminControl_REGISTRAR_ADMIN_CONTROL_FIXED_NEW_IGNORED:
-		return "fixed_new_ignored"
+		return "fixed-new-ignored"
 	case vlan.RegistrarAdminControl_REGISTRAR_ADMIN_CONTROL_FIXED_NEW_PROPAGATED:
-		return "fixed_new_propagated"
+		return "fixed-new-propagated"
 	case vlan.RegistrarAdminControl_REGISTRAR_ADMIN_CONTROL_FORBIDDEN:
 		return "forbidden"
 	case vlan.RegistrarAdminControl_REGISTRAR_ADMIN_CONTROL_NORMAL:

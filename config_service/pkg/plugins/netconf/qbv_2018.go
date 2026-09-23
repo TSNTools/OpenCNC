@@ -80,9 +80,17 @@ func (p *OldQbvNetconfPlugin) SupportedFields(msg proto.Message) []string {
 }
 
 func (p *OldQbvNetconfPlugin) Map(msg proto.Message, node *topology.Node) (any, error) {
-	gcl, ok := msg.(*qbv.GateControlList)
-	if !ok {
+	var gcl *qbv.GateControlList
+	switch typed := msg.(type) {
+	case *qbv.GateControlList:
+		gcl = typed
+	case *topology_config.PortConfig:
+		gcl = typed.GetGcl()
+	default:
 		return nil, fmt.Errorf("invalid message type for OldQbvNetconfPlugin: %T", msg)
+	}
+	if gcl == nil {
+		return nil, fmt.Errorf("OldQbvNetconfPlugin: GateControlList is nil")
 	}
 
 	p.logger.Printf("[OldQbv] Mapping schedule ID: %s", gcl.GetScheduleId())

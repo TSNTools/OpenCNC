@@ -1,0 +1,144 @@
+{
+  "nodes": [
+    {
+      "name": "SWITCH",
+      "type": "BRIDGE",
+      "deviceInfo": {
+        "device_model": "RELY-TSN4",
+        "supported_protocols": [
+          "IEEE 802.1Qbv",
+          "IEEE 802.1CB"
+        ]
+      },
+      "managementInfo": {
+        "ip_address": "192.168.4.64",
+        "management_port": 830,
+        "protocol": "NETCONF",
+        "transport": "SSH"
+      },
+      "ports": [
+        {
+          "id": "P1",
+          "name": "PORT_0",
+          "capabilities": {
+            "port_speed": 1000,
+            "supports_tas": true
+          },
+          "number_of_queues": 8
+        },
+        {
+          "id": "P2",
+          "name": "PORT_1",
+          "capabilities": {
+            "port_speed": 1000,
+            "supports_tas": true
+          },
+          "number_of_queues": 8
+        },
+        {
+          "id": "P3",
+          "name": "PORT_2",
+          "capabilities": {
+            "port_speed": 1000,
+            "supports_tas": true
+          },
+          "number_of_queues": 8
+        },
+        {
+          "id": "P4",
+          "name": "PORT_3",
+          "capabilities": {
+            "port_speed": 1000,
+            "supports_tas": true
+          },
+          "number_of_queues": 8
+        }
+      ]
+    },
+    {
+      "name": "tsn1",
+      "type": "END_STATION",
+      "deviceInfo": {
+        "device_model": "Intel i226",
+        "supported_protocols": [
+          "IEEE 802.1Qbv",
+          "IEEE 802.1CB"
+        ]
+      },
+      "ports": [
+        {
+          "id": "enp1s0",
+          "name": "enp1s0",
+          "mac_address": "00-00-00-00-00-01",
+          "capabilities": {
+            "port_speed": 1000,
+            "supports_tas": true
+          },
+          "number_of_queues": 8
+        }
+      ]
+    },
+    {
+      "name": "tsn2",
+      "type": "END_STATION",
+      "deviceInfo": {
+        "device_model": "Intel i226",
+        "supported_protocols": [
+          "IEEE 802.1Qbv",
+          "IEEE 802.1CB"
+        ]
+      },
+      "ports": [
+        {
+          "id": "ens6",
+          "name": "ens6",
+          "mac_address": "00-00-00-00-00-02",
+          "capabilities": {
+            "port_speed": 1000,
+            "supports_tas": true
+          },
+          "number_of_queues": 8
+        }
+      ]
+    }
+  ],
+  "links": [
+    {
+      "id": "link-tsn1-to-switch",
+      "source_node": "tsn1",
+      "source_port": "enp1s0",
+      "destination_node": "SWITCH",
+      "destination_port": "P1",
+      "bandwidth_mbps": 1000,
+      "propagation_delay_ns": 100
+    },
+    {
+      "id": "link-switch-to-tsn1",
+      "source_node": "SWITCH",
+      "source_port": "P1",
+      "destination_node": "tsn1",
+      "destination_port": "enp1s0",
+      "bandwidth_mbps": 1000,
+      "propagation_delay_ns": 100
+    },
+    {
+      "id": "link-switch-to-tsn2",
+      "source_node": "SWITCH",
+      "source_port": "P2",
+      "destination_node": "tsn2",
+      "destination_port": "ens6",
+      "bandwidth_mbps": 1000,
+      "propagation_delay_ns": 100
+    },
+    {
+      "id": "link-tsn2-to-switch",
+      "source_node": "tsn2",
+      "source_port": "ens6",
+      "destination_node": "SWITCH",
+      "destination_port": "P2",
+      "bandwidth_mbps": 1000,
+      "propagation_delay_ns": 100
+    }
+  ],
+  "version": 1
+}

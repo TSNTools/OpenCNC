@@ -20,7 +20,7 @@ import (
 	"google.golang.org/grpc"
 )
 
-var UNI_HTTP_SERVER_PORT = configuration.GetEnv("MAIN_SERVICE_UNI_HTTP_PORT", "8081")
+var UNI_HTTP_SERVER_PORT = configuration.GetEnv("MAIN_SERVICE_UNI_HTTP_PORT", "8082")
 
 func main() {
 
@@ -40,7 +40,7 @@ func main() {
 	}
 
 	unihttpPort, err := strconv.ParseUint(
-		configuration.GetEnv("MAIN_SERVICE_UNI_HTTP_PORT", "8081"), 10, 16,
+		configuration.GetEnv("MAIN_SERVICE_UNI_HTTP_PORT", "8082"), 10, 16,
 	)
 	if err != nil {
 		log.Fatalf("invalid MAIN_SERVICE_UNI_HTTP_PORT: %v", err)

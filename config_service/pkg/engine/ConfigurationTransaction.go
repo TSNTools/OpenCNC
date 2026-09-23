@@ -4,6 +4,7 @@ import (
 	"OpenCNC/common/observability"
 	observabilityv1 "OpenCNC/common/structures/logging"
 	"OpenCNC/common/structures/topology_config"
+	"OpenCNC/config_service/pkg/metrics"
 	protocolbackends "OpenCNC/config_service/pkg/protocolbackends"
 	"context"
 	"fmt"
@@ -32,6 +33,7 @@ func NewConfigurationTransaction(configId string) *ConfigurationTransaction {
 }
 
 func (t *ConfigurationTransaction) Prepare() error {
+	prepStart := time.Now()
 
 	err := t.executeConcurrently(func(ctx context.Context, i int) error {
 
@@ -57,13 +59,20 @@ func (t *ConfigurationTransaction) Prepare() error {
 		return nil
 	})
 
+	prepEnd := time.Now()
+	if err == nil {
+		metrics.RecordPreparation(t.ConfigId, prepStart, prepEnd)
+	}
+
 	return err
 }
 
 func (t *ConfigurationTransaction) Commit(ctx context.Context, obs *observability.Client) error {
-	err := t.executeConcurrently(func(operationCtx context.Context, i int) error {
-		op := &t.Operations[i]
+	commitStart := time.Now()
 
+	err := t.executeConcurrently(func(operationCtx context.Context, i int) error {
+
+		op := &t.Operations[i]
 		// Only commit operations that were successfully prepared.
 		if !op.Prepared {
 			return fmt.Errorf("operation was not prepared!")
@@ -111,8 +120,14 @@ func (t *ConfigurationTransaction) Commit(ctx context.Context, obs *observabilit
 
 		op.Committed = true
 		op.Prepared = false
+
 		return nil
 	})
+
+	commitEnd := time.Now()
+	if err == nil {
+		metrics.RecordConcurrentCommit(t.ConfigId, commitStart, commitEnd)
+	}
 
 	// if there was an error during commit, attempt to rollback everything that was already committed.
 	if err != nil {
@@ -126,22 +141,79 @@ func (t *ConfigurationTransaction) Commit(ctx context.Context, obs *observabilit
 	return nil
 }
 
-func (t *ConfigurationTransaction) Rollback() error {
+func (t *ConfigurationTransaction) PrepareRollback(ctx context.Context) error {
+	prepStart := time.Now()
 
-	return t.executeConcurrently(func(ctx context.Context, i int) error {
+	err := t.executeConcurrently(func(c context.Context, i int) error {
+		op := &t.Operations[i]
+		if !op.Committed {
+			return nil
+		}
 
+		if err := op.Backend.PrepareRollback(c); err != nil {
+			return fmt.Errorf("prepare rollback failed for node %s: %w", op.Backend.Name(), err)
+		}
+
+		return nil
+	})
+
+	prepEnd := time.Now()
+	if err == nil {
+		metrics.RecordRollbackPreparation(t.ConfigId, prepStart, prepEnd)
+	}
+
+	return err
+}
+
+func (t *ConfigurationTransaction) CommitRollback(ctx context.Context, obs *observability.Client) error {
+	return t.executeConcurrently(func(operationCtx context.Context, i int) error {
 		op := &t.Operations[i]
 		if !op.Committed {
 			return nil // nothing to rollback
 		}
 
-		if err := op.Backend.Rollback(ctx); err != nil {
+		start := time.Now()
+
+		if err := op.Backend.Rollback(operationCtx); err != nil {
+			if obs != nil {
+				_ = obs.Metric(
+					ctx,
+					observabilityv1.Severity_SEVERITY_ERROR,
+					"device_backend_operation_failures",
+					observabilityv1.MetricType_METRIC_TYPE_COUNTER,
+					1,
+					"",
+					map[string]string{
+						"backend":   op.Backend.Name(),
+						"operation": "rollback",
+					},
+				)
+			}
 			return fmt.Errorf("rollback failed for node %s: %w", op.Backend.Name(), err)
+		}
+
+		if obs != nil {
+			_ = obs.Metric(
+				ctx,
+				observabilityv1.Severity_SEVERITY_INFO,
+				"device_backend_operation_duration",
+				observabilityv1.MetricType_METRIC_TYPE_GAUGE,
+				float64(time.Since(start).Milliseconds()),
+				"ms",
+				map[string]string{
+					"backend":   op.Backend.Name(),
+					"operation": "rollback",
+				},
+			)
 		}
 
 		op.Committed = false
 		return nil
 	})
+}
+
+func (t *ConfigurationTransaction) Rollback() error {
+	return t.CommitRollback(context.Background(), nil)
 }
 
 func (t *ConfigurationTransaction) executeConcurrently(fn func(ctx context.Context, index int) error) error {

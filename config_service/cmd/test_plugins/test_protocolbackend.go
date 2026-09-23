@@ -4,7 +4,6 @@ import (
 	"context"
 	"log"
 
-	"OpenCNC/common/observability"
 	"OpenCNC/common/structures/credentials"
 	"OpenCNC/common/structures/pcp"
 	"OpenCNC/common/structures/qbv"
@@ -20,7 +19,7 @@ import (
 
 var logger = log.New(log.Writer(), "[TEST-tttech-TRAFFIC-CLASSES] ", log.LstdFlags)
 
-func TestNetconfProtocol(ctx context.Context, obs *observability.Client) {
+func TestNetconfProtocol() {
 	target := target
 	nodecfg := nodecfg
 	cred := cred
@@ -44,7 +43,7 @@ func TestNetconfProtocol(ctx context.Context, obs *observability.Client) {
 		Operations: []engine.Operation{*operation},
 	}
 
-	tx.Commit(ctx, obs)
+	tx.Commit(context.Background(), nil)
 }
 
 var cred = &credentials.ManagementCredentials{

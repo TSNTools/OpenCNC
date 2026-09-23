@@ -358,7 +358,8 @@ func (v *VlanNetconfPlugin_2021) buildBridgeVlanXML(payload *bridgeVlanPayload) 
 		buf.WriteString(`<bridge-vlan>`)
 
 		// Write the <vlan> names to instantiate them
-		for vid := range vlanIDs {
+		for _, vid := range vlanIDs {
+			fmt.Printf("VLAN_ID FOUND:%d\n", vid)
 			buf.WriteString(`<vlan>`)
 			buf.WriteString(fmt.Sprintf(`<vid>%d</vid>`, vid))
 			buf.WriteString(fmt.Sprintf(`<name>VLAN_%d</name>`, vid))
@@ -381,6 +382,8 @@ func (v *VlanNetconfPlugin_2021) buildBridgeVlanXML(payload *bridgeVlanPayload) 
 	buf.WriteString(`</component>`)
 	buf.WriteString(`</bridge>`)
 	buf.WriteString(`</bridges>`)
+	//fmt.Println("==========================Generated NETCONF XML==========================")
+	fmt.Println(buf.String())
 
 	return buf.Bytes(), nil
 }
@@ -562,9 +565,9 @@ func vlanRegistrationEntryTypeToXML2021(t vlan.VlanRegistrationEntryType) string
 func registrarAdminControlToXML2021(v vlan.RegistrarAdminControl) string {
 	switch v {
 	case vlan.RegistrarAdminControl_REGISTRAR_ADMIN_CONTROL_FIXED_NEW_IGNORED:
-		return "fixed_new_ignored"
+		return "fixed-new-ignored"
 	case vlan.RegistrarAdminControl_REGISTRAR_ADMIN_CONTROL_FIXED_NEW_PROPAGATED:
-		return "fixed_new_propagated"
+		return "fixed-new-propagated"
 	case vlan.RegistrarAdminControl_REGISTRAR_ADMIN_CONTROL_FORBIDDEN:
 		return "forbidden"
 	case vlan.RegistrarAdminControl_REGISTRAR_ADMIN_CONTROL_NORMAL:

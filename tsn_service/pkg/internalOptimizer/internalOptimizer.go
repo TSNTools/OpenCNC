@@ -10,8 +10,10 @@ import (
 	store "OpenCNC/common/store-wrapper"
 	"OpenCNC/common/structures/qbv"
 	"OpenCNC/common/structures/stream_config"
+	"OpenCNC/common/structures/topology"
 	"OpenCNC/common/structures/topology_config"
 	"OpenCNC/common/structures/uni"
+	vlanDefaults "OpenCNC/tsn_service/pkg/resource_allocation_entity/VLAN"
 	forwarding_plane "OpenCNC/tsn_service/pkg/structures/forwarding_plane"
 	optimizer "OpenCNC/tsn_service/pkg/structures/optimization_contract"
 
@@ -19,7 +21,7 @@ import (
 )
 
 var defaultSchedID = "default_schedule"
-var defaultSchedulePath = "/home/opencnc/OpenCNC/tsn_service/configs/default-schedule.yaml"
+var defaultSchedulePath = "/home/jittin/config-service/test/OpenCNC/tsn_service/configs/default-schedule.yaml"
 
 // Calculates configuration set request using optimizer, if that failes build configuration set request from default schedule
 func StartOptimization(
@@ -107,7 +109,7 @@ func createForwardingPlaneModel(
 					err,
 				))
 			}
-			streamConfig = &stream_config.StreamConfiguration{}
+			streamConfig = &stream_config.StreamConfiguration{StreamId: stream.GetStreamId()}
 		}
 
 		streamModels = append(streamModels, &forwarding_plane.StreamModel{
@@ -211,6 +213,7 @@ func CreateDefaultSchedule(
 		"config-diag":     4,
 		"network-control": 5,
 		"best-effort":     6,
+		"Timecritical":    7,
 	}
 
 	defaultSched := &qbv.GateControlList{
@@ -248,6 +251,7 @@ func CreateDefaultSchedule(
 		// Bit 1 = cyclic-sync
 		// ...
 		// Bit 6 = best-effort
+		// Bit 7 = Timecritical
 		gateStates := []byte{
 			1 << bit,
 		}
@@ -265,7 +269,7 @@ func CreateDefaultSchedule(
 
 	//write schedule to all configuration ports
 	topoConfig := &topology_config.TopologyConfig{ConfigId: defaultSchedID}
-	topology, err := store.GetTopology()
+	topo, err := store.GetTopology()
 	if err != nil {
 		if obs != nil {
 			_ = obs.Error(ctx, fmt.Sprintf(
@@ -276,7 +280,7 @@ func CreateDefaultSchedule(
 		return fmt.Errorf("failed to retrieve topology: %v", err)
 	}
 
-	for _, node := range topology.GetNodes() {
+	for _, node := range topo.GetNodes() {
 		nodeConfig := &topology_config.NodeConfig{NodeId: node.Name}
 
 		for _, port := range node.GetPorts() {
@@ -286,6 +290,20 @@ func CreateDefaultSchedule(
 			}
 
 			nodeConfig.PortConfigs = append(nodeConfig.PortConfigs, portConfig)
+		}
+
+		// If node is a bridge, initialize BridgeConfig and apply VLAN defaults
+		if node.Type == topology.NodeRole_BRIDGE {
+			nodeConfig.Bridge = &topology_config.BridgeConfig{}
+			if err := vlanDefaults.PopulateDefaultVlanConfig(nodeConfig); err != nil {
+				if obs != nil {
+					_ = obs.Error(ctx, fmt.Sprintf(
+						"Failed populating default VLAN for %s: %v",
+						node.Name,
+						err,
+					))
+				}
+			}
 		}
 
 		topoConfig.NodeConfigs = append(topoConfig.NodeConfigs, nodeConfig)

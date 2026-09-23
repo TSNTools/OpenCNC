@@ -12,8 +12,10 @@ import (
 	"OpenCNC/common/structures/devicemodelregistry"
 	"OpenCNC/common/structures/topology"
 	topology_config "OpenCNC/common/structures/topology_config"
+	"OpenCNC/config_service/pkg/metrics"
 	"OpenCNC/config_service/pkg/plugins"
 	protocolbackends "OpenCNC/config_service/pkg/protocolbackends"
+	"time"
 
 	"github.com/openshift-telco/go-netconf-client/netconf"
 )
@@ -257,6 +259,7 @@ func (b *NetconfBackend) applyNodePlugin(ctx context.Context, config *topology_c
 		}
 
 		// calling Map()
+		transStart := time.Now()
 		mapped, err := plugin.Map(config, b.target)
 		if err != nil { // map failed
 			continue
@@ -264,9 +267,11 @@ func (b *NetconfBackend) applyNodePlugin(ctx context.Context, config *topology_c
 
 		//building feature XML
 		featureXML, err := plugin.BuildFeatureXML(mapped)
+		transEnd := time.Now()
 		if err != nil { // build XML failed
 			continue
 		}
+		metrics.RecordTranslation(b.target.Name, plugin.Name(), transStart, transEnd)
 
 		////////////////////////
 		//  snapshot update   //
@@ -330,15 +335,20 @@ func (b *NetconfBackend) applyPortPlugin(ctx context.Context, portConfig *topolo
 		}
 
 		//calling Map
+		transStart := time.Now()
 		mapped, err := plugin.Map(portConfig, b.target)
 		if err != nil {
+			logger.Printf("Plugin %s Map failed for node %s (port %s): %v", plugin.Name(), b.target.Name, portConfig.PortId, err)
 			continue
 		}
 		//building feature XML
 		featureXML, err := plugin.BuildFeatureXML(mapped)
+		transEnd := time.Now()
 		if err != nil {
+			logger.Printf("Plugin %s BuildFeatureXML failed for node %s (port %s): %v", plugin.Name(), b.target.Name, portConfig.PortId, err)
 			continue
 		}
+		metrics.RecordTranslation(b.target.Name, plugin.Name(), transStart, transEnd)
 
 		// Check cancellation before modifying the working snapshot.
 		if err := ctx.Err(); err != nil {
@@ -346,9 +356,10 @@ func (b *NetconfBackend) applyPortPlugin(ctx context.Context, portConfig *topolo
 		}
 
 		if err := b.snapshots.Working.Update(featureXML, b.target, portConfig.PortId); err != nil {
+			logger.Printf("Plugin %s snapshot Update failed for node %s (port %s): %v", plugin.Name(), b.target.Name, portConfig.PortId, err)
 			continue
 		}
-		logger.Printf("  -> snapshot update successful")
+		logger.Printf("  -> snapshot update successful for node %s (port %s, plugin %s)", b.target.Name, portConfig.PortId, plugin.Name())
 
 		// register plugin fields as used
 		used = append(used, fields...)
@@ -381,6 +392,7 @@ func (b *NetconfBackend) Commit(ctx context.Context) error {
 	// Push working configuration
 	//
 	if err := b.pushSnapshot(b.snapshots.Working); err != nil {
+		b.logger.Printf("Commit failed for node %s: %v", b.target.Name, err)
 		return fmt.Errorf(
 			"commit failed: %w",
 			err,
@@ -396,6 +408,34 @@ func (b *NetconfBackend) Commit(ctx context.Context) error {
 
 	b.logger.Printf(
 		"Commit successful for node %s",
+		b.target.Name,
+	)
+
+	return nil
+}
+
+func (b *NetconfBackend) PrepareRollback(ctx context.Context) error {
+	if b.snapshots == nil {
+		return fmt.Errorf(
+			"no snapshot exists for node %s",
+			b.target.Name,
+		)
+	}
+
+	if b.snapshots.LastStable == nil {
+		return fmt.Errorf(
+			"no last stable snapshot for node %s, need to commit before rollback",
+			b.target.Name,
+		)
+	}
+
+	// Validate and prepare rollback payload XML so it is ready before pushing to switch
+	if _, err := b.snapshots.LastStable.PayloadXML(); err != nil {
+		return fmt.Errorf("failed preparing rollback payload for node %s: %w", b.target.Name, err)
+	}
+
+	b.logger.Printf(
+		"Rollback payload prepared and ready for node %s",
 		b.target.Name,
 	)
 
@@ -452,19 +492,32 @@ func (b *NetconfBackend) pushSnapshot(snapshot *NetconfSnapshot) error {
 		return fmt.Errorf("snapshot XML is empty")
 	}
 
+	sessionStart := time.Now()
 	session, err := b.sessionFactory.NewSession()
 	if err != nil {
 		return fmt.Errorf("NETCONF session failed: %w", err)
 	}
-
 	defer session.Close()
+	sessionEnd := time.Now()
+	metrics.RecordSessionConnect(b.target.Name, sessionStart, sessionEnd)
 
-	if err := managementSessions.EditConfig(
-		session,
-		string(snapshot.XML),
-	); err != nil {
+	payload, err := snapshot.PayloadXML()
+	if err != nil {
+		return fmt.Errorf("failed extracting snapshot payload: %w", err)
+	}
+
+	// Exact point: NETCONF client pushes the config, waits for switch success response (<ok/>)
+	pushStart := time.Now()
+	metrics.RecordPushStart(b.target.Name, pushStart)
+
+	if err := managementSessions.EditConfig(session, payload); err != nil {
 		return fmt.Errorf("failed pushing snapshot: %w", err)
 	}
+
+	pushEnd := time.Now()
+	metrics.RecordPushComplete(b.target.Name, pushStart, pushEnd)
+	pushNs := pushEnd.Sub(pushStart).Nanoseconds()
+	b.logger.Printf("Switch %s configuration completed in %d ns (%.3f ms, <ok/> received)", b.target.Name, pushNs, float64(pushNs)/1e6)
 
 	return nil
 }
@@ -508,6 +561,7 @@ func stripRPCReply(xml string) string {
 
 	// Keep everything inside <data> and wrap it in <config>
 	return "<config>" + xml[start+1:end] + "</config>"
+	//return xml[start+1 : end]
 }
 
 // //////////////////

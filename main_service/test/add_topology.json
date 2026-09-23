@@ -1,43 +1,58 @@
 {
-    "nodes": [
-      {
-        "type": "BRIDGE",
-        "name": "Relyum-switch",
-        "address": "70-F8-E7-D0-00-01",
-        "management": {
-          "address": "192.168.64.4",
-          "user" :"sys-admin",
-	        "passsword" :"sys-admin",
-          "model-name": "RELY-TSN4"
-        },
-        "ports": [
-          {
-            "id": "P0",
-            "name": "PORT_0",
-            "portSpeed": 1000,
-            "numberOfQueues": 8
-          },
-          {
-            "id": "P1",
-            "name": "PORT_1",
-            "portSpeed": 1000,
-            "numberOfQueues": 8
-          },
-          {
-            "id": "P2",
-            "name": "PORT_2",
-            "portSpeed": 1000,
-            "numberOfQueues": 8
-          },
-          {
-            "id": "P3",
-            "name": "PORT_3",
-            "portSpeed": 1000,
-            "numberOfQueues": 8
-          }
+  "nodes": [
+    {
+      "type": "BRIDGE",
+      "name": "Relyum-switch",
+      "address": "70-F8-E7-D0-00-01",
+      "deviceInfo": {
+        "device_model": "RELY-TSN4",
+        "supported_protocols": [
+          "IEEE 802.1Qbv",
+          "IEEE 802.1CB"
         ]
-      }
-    ],
-    "links": [],
-    "index": 0
-  }
+      },
+      "managementInfo": {
+        "ip_address": "192.168.4.64",
+        "management_port": 830,
+        "protocol": "NETCONF",
+        "transport": "SSH"
+      },
+      "ports": [
+        {
+          "id": "P0",
+          "name": "PORT_0",
+          "capabilities": {
+            "port_speed": 1000
+          },
+          "number_of_queues": 8
+        },
+        {
+          "id": "P1",
+          "name": "PORT_1",
+          "capabilities": {
+            "port_speed": 1000
+          },
+          "number_of_queues": 8
+        },
+        {
+          "id": "P2",
+          "name": "PORT_2",
+          "capabilities": {
+            "port_speed": 1000
+          },
+          "number_of_queues": 8
+        },
+        {
+          "id": "P3",
+          "name": "PORT_3",
+          "capabilities": {
+            "port_speed": 1000
+          },
+          "number_of_queues": 8
+        }
+      ]
+    }
+  ],
+  "links": [],
+  "version": 0
+}

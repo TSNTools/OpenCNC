@@ -6,27 +6,37 @@
     {
       "file-name": "ietf-yang-metadata.yang",
       "file-revision": "2016-08-05",
-      "description": ""
+      "description": "YANG metadata annotations"
     },
     {
       "file-name": "yang.yang",
       "file-revision": "2021-04-07",
-      "description": ""
+      "description": "Core YANG language definitions"
     },
     {
       "file-name": "ietf-inet-types.yang",
       "file-revision": "2013-07-15",
-      "description": ""
+      "description": "Common Internet data types"
     },
     {
       "file-name": "ietf-yang-types.yang",
       "file-revision": "2013-07-15",
-      "description": ""
+      "description": "Common YANG data types"
     },
     {
       "file-name": "sysrepo-plugind.yang",
       "file-revision": "2020-12-10",
-      "description": ""
+      "description": "Sysrepo plugin daemon definitions"
+    },
+    {
+      "file-name": "sysrepo.yang",
+      "file-revision": "2021-09-07",
+      "description": "Sysrepo datastore definitions"
+    },
+    {
+      "file-name": "sysrepo-monitoring.yang",
+      "file-revision": "2021-07-29",
+      "description": "Sysrepo monitoring"
     },
     {
       "file-name": "ietf-netconf.yang",
@@ -99,6 +109,11 @@
       "description": "IEEE 802.1Q scheduled traffic (802.1Qbv) configuration"
     },
     {
+      "file-name": "ieee802-dot1q-sched-bridge.yang",
+      "file-revision": "2021-04-09",
+      "description": "IEEE 802.1Q scheduled traffic bridge configuration"
+    },
+    {
       "file-name": "ieee802-dot1q-preemption.yang",
       "file-revision": "2020-07-07",
       "description": "IEEE 802.1Q frame preemption configuration"
@@ -109,9 +124,119 @@
       "description": "IEEE 802.1Q credit-based shaper (CBS) configuration"
     },
     {
+      "file-name": "rtaw-interfaces.yang",
+      "file-revision": "2021-10-12",
+      "description": "RTAW interfaces configuration"
+    },
+    {
+      "file-name": "ieee802-dot1q-stream-filters-gates.yang",
+      "file-revision": "2020-11-06",
+      "description": "PSFP stream filters and stream gates configuration"
+    },
+    {
       "file-name": "ieee802-dot1q-psfp.yang",
       "file-revision": "2020-07-07",
       "description": "IEEE 802.1Q per-stream filtering and policing (PSFP) configuration"
+    },
+    {
+      "file-name": "ieee802-dot1cb-stream-identification.yang",
+      "file-revision": "2021-05-06",
+      "description": "IEEE 802.1CB stream identification configuration"
+    },
+    {
+      "file-name": "ieee802-dot1cb-stream-identification-types.yang",
+      "file-revision": "2021-06-14",
+      "description": "IEEE 802.1CB stream identification types"
+    },
+    {
+      "file-name": "ieee802-dot1cb-frer.yang",
+      "file-revision": "2021-05-06",
+      "description": "IEEE 802.1CB frame replication and elimination configuration"
+    },
+    {
+      "file-name": "ieee802-dot1cb-frer-types.yang",
+      "file-revision": "2021-05-06",
+      "description": "IEEE 802.1CB FRER types"
+    },
+    {
+      "file-name": "ietf-interfaces.yang",
+      "file-revision": "2018-02-20",
+      "description": "IETF network interfaces"
+    },
+    {
+      "file-name": "ietf-ip.yang",
+      "file-revision": "2018-02-22",
+      "description": "IETF IP"
+    },
+    {
+      "file-name": "ietf-network-instance.yang",
+      "file-revision": "2019-01-21",
+      "description": "IETF network instances"
+    },
+    {
+      "file-name": "ietf-datastores.yang",
+      "file-revision": "2018-02-14",
+      "description": "IETF datastores"
+    },
+    {
+      "file-name": "ietf-origin.yang",
+      "file-revision": "2018-02-14",
+      "description": "IETF origin metadata"
+    },
+    {
+      "file-name": "ietf-yang-library.yang",
+      "file-revision": "2019-01-04",
+      "description": "IETF YANG library"
+    },
+    {
+      "file-name": "ietf-netconf-server.yang",
+      "file-revision": "2019-07-02",
+      "description": "IETF NETCONF server"
+    },
+    {
+      "file-name": "ietf-keystore.yang",
+      "file-revision": "2019-07-02",
+      "description": "IETF keystore"
+    },
+    {
+      "file-name": "ietf-truststore.yang",
+      "file-revision": "2019-07-02",
+      "description": "IETF truststore"
+    },
+    {
+      "file-name": "ietf-tcp-common.yang",
+      "file-revision": "2019-07-02",
+      "description": "IETF TCP common"
+    },
+    {
+      "file-name": "ietf-ssh-server.yang",
+      "file-revision": "2019-07-02",
+      "description": "IETF SSH server"
+    },
+    {
+      "file-name": "ietf-tls-server.yang",
+      "file-revision": "2019-07-02",
+      "description": "IETF TLS server"
+    },
+    {
+      "file-name": "ietf-subscribed-notifications.yang",
+      "file-revision": "2019-09-09",
+      "description": "IETF subscribed notifications"
+    },
+    {
+      "file-name": "ietf-yang-push.yang",
+      "file-revision": "2019-09-09",
+      "description": "IETF YANG push"
+    },
+    {
+      "file-name": "ietf-network.yang",
+      "file-revision": "2018-02-26",
+      "description": "IETF network topology"
+    },
+    {
+      "file-name": "ietf-network-topology.yang",
+      "file-revision": "2018-02-26",
+      "description": "IETF network topology definitions"
     }
   ]
 }

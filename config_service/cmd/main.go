@@ -2,11 +2,17 @@ package main
 
 import (
 	"context"
+	"encoding/csv"
+	"fmt"
 	"log"
 	"net"
+	"os"
+	"runtime"
+	"strconv"
+	"strings"
+	"syscall"
 	"time"
 
-	"OpenCNC/common/configuration"
 	"OpenCNC/common/observability"
 
 	"google.golang.org/grpc"
@@ -20,6 +26,8 @@ import (
 )
 
 func main() {
+	startResourceMonitor()
+
 	obsClient, err := observability.NewFromEnv("config-service")
 	if err != nil {
 		log.Fatalf("Observability init failed: %v", err)
@@ -64,12 +72,9 @@ func main() {
 		creds := credentials.NewTLS(tlsConfig)
 	*/
 	// --- Create TCP listener ---
-	port := configuration.GetEnv("CONFIG_SERVICE_PORT", "5150")
-	addr := configuration.GetEnv("CONFIG_SERVICE_BIND_HOST", "localhost") + ":" + port
-
-	listener, err := net.Listen("tcp", addr)
+	listener, err := net.Listen("tcp", ":5150")
 	if err != nil {
-		obsClient.FatalF("Failed to listen on %s: %v", port, err)
+		obsClient.FatalF("Failed to listen on :5150: %v", err)
 	}
 
 	// --- Create gRPC server with TLS credentials ---
@@ -102,5 +107,137 @@ func main() {
 		}
 		obsClient.FatalF("gRPC server failed: %v", err)
 	}
-
 }
+
+// startResourceMonitor periodically samples goroutines, CPU %, and memory every 100ms and writes to CSV.
+func startResourceMonitor() {
+	csvPath := os.Getenv("CONFIG_SERVICE_RESOURCE_CSV")
+	if csvPath == "" {
+		csvPath = "config_service_resources.csv"
+	}
+
+	interval := 100 * time.Millisecond
+	if envInterval := os.Getenv("CONFIG_SERVICE_RESOURCE_INTERVAL_MS"); envInterval != "" {
+		if ms, err := strconv.Atoi(envInterval); err == nil && ms > 0 {
+			interval = time.Duration(ms) * time.Millisecond
+		}
+	}
+
+	fileExisted := false
+	if fi, err := os.Stat(csvPath); err == nil && fi.Size() > 0 {
+		fileExisted = true
+	}
+
+	f, err := os.OpenFile(csvPath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
+	if err != nil {
+		log.Printf("[METRICS WARN] Failed to open resource CSV %s: %v", csvPath, err)
+		return
+	}
+
+	writer := csv.NewWriter(f)
+	if !fileExisted {
+		headers := []string{
+			"timestamp",
+			"goroutines",
+			"cpu_pct",
+			"rss_mem_mb",
+			"vms_mem_mb",
+			"heap_alloc_mb",
+			"heap_sys_mb",
+			"num_gc",
+		}
+		_ = writer.Write(headers)
+		writer.Flush()
+	}
+
+	log.Printf("[METRICS] Resource monitor started (interval: %v, output: %s)", interval, csvPath)
+
+	go func() {
+		defer f.Close()
+		defer writer.Flush()
+
+		var prevRusage syscall.Rusage
+		_ = syscall.Getrusage(syscall.RUSAGE_SELF, &prevRusage)
+		prevCPUTime := time.Duration(prevRusage.Utime.Sec)*time.Second + time.Duration(prevRusage.Utime.Usec)*time.Microsecond +
+			time.Duration(prevRusage.Stime.Sec)*time.Second + time.Duration(prevRusage.Stime.Usec)*time.Microsecond
+		prevTime := time.Now()
+
+		ticker := time.NewTicker(interval)
+		defer ticker.Stop()
+
+		var m runtime.MemStats
+
+		for range ticker.C {
+			now := time.Now()
+			dt := now.Sub(prevTime)
+
+			// CPU % from process CPU time
+			var ru syscall.Rusage
+			cpuPct := 0.0
+			if err := syscall.Getrusage(syscall.RUSAGE_SELF, &ru); err == nil {
+				currCPUTime := time.Duration(ru.Utime.Sec)*time.Second + time.Duration(ru.Utime.Usec)*time.Microsecond +
+					time.Duration(ru.Stime.Sec)*time.Second + time.Duration(ru.Stime.Usec)*time.Microsecond
+				if dt > 0 {
+					dCPU := currCPUTime - prevCPUTime
+					cpuPct = (float64(dCPU) / float64(dt)) * 100.0
+				}
+				prevCPUTime = currCPUTime
+			}
+			prevTime = now
+
+			// Goroutines
+			numGoroutines := runtime.NumGoroutine()
+
+			// Go Runtime Memory (Heap & GC)
+			runtime.ReadMemStats(&m)
+			heapAllocMB := float64(m.Alloc) / (1024 * 1024)
+			heapSysMB := float64(m.Sys) / (1024 * 1024)
+			numGC := m.NumGC
+
+			// OS Resident & Virtual Memory
+			rssMB, vmsMB := readProcSelfMemory()
+
+			record := []string{
+				now.Format(time.RFC3339Nano),
+				strconv.Itoa(numGoroutines),
+				fmt.Sprintf("%.2f", cpuPct),
+				fmt.Sprintf("%.2f", rssMB),
+				fmt.Sprintf("%.2f", vmsMB),
+				fmt.Sprintf("%.2f", heapAllocMB),
+				fmt.Sprintf("%.2f", heapSysMB),
+				strconv.FormatUint(uint64(numGC), 10),
+			}
+
+			_ = writer.Write(record)
+			writer.Flush()
+		}
+	}()
+}
+
+func readProcSelfMemory() (float64, float64) {
+	data, err := os.ReadFile("/proc/self/status")
+	if err != nil {
+		return 0, 0
+	}
+	var rssMB, vmsMB float64
+	lines := strings.Split(string(data), "\n")
+	for _, line := range lines {
+		if strings.HasPrefix(line, "VmRSS:") {
+			fields := strings.Fields(line)
+			if len(fields) >= 2 {
+				if kb, err := strconv.ParseFloat(fields[1], 64); err == nil {
+					rssMB = kb / 1024.0
+				}
+			}
+		} else if strings.HasPrefix(line, "VmSize:") {
+			fields := strings.Fields(line)
+			if len(fields) >= 2 {
+				if kb, err := strconv.ParseFloat(fields[1], 64); err == nil {
+					vmsMB = kb / 1024.0
+				}
+			}
+		}
+	}
+	return rssMB, vmsMB
+}
+

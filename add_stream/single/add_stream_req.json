@@ -1,0 +1,165 @@
+{
+  "version": 1.0,
+  "requests": [
+    {
+      "request-id": "req-stream-tsn1-to-tsn2",
+      "talker": {
+        "stream-id": {
+          "mac-address": "00-00-00-00-00-01",
+          "unique-id": 1
+        },
+        "stream-rank": {
+          "rank": 1
+        },
+        "end-station-interfaces": [
+          {
+            "index": 0,
+            "interface-id": {
+              "mac-address": "00-00-00-00-00-01",
+              "interface-name": "enp1s0"
+            }
+          }
+        ],
+        "data-frame-specification": [
+          {
+            "index": 0,
+            "ieee802-mac-addresses": {
+              "destination-mac-address": "00-00-00-00-00-02",
+              "source-mac": "00-00-00-00-00-01"
+            },
+            "ieee802-vlan-tag": {
+              "priority-code-point": 7,
+              "vlan-id": 100
+            }
+          }
+        ],
+        "traffic-specification": {
+          "interval": {
+            "numerator": 1,
+            "denominator": 1
+          },
+          "max-frames-per-interval": 1,
+          "max-frame-size": 128,
+          "transmission-selection": 0,
+          "time-aware": {
+            "earliest-transmit-offset": 0,
+            "latest-transmit-offset": 500000,
+            "jitter": 0
+          }
+        },
+        "user-to-network-requirements": {
+          "num-seamless-trees": 1,
+          "max-latency": 1000000000
+        },
+        "interface-capabilities": {
+          "vlan-tag-capable": true
+        }
+      },
+      "listener-list": [
+        {
+          "index": 0,
+          "stream-id": {
+            "mac-address": "00-00-00-00-00-01",
+            "unique-id": 1
+          },
+          "end-station-interfaces": [
+            {
+              "index": 0,
+              "interface-id": {
+                "mac-address": "00-00-00-00-00-02",
+                "interface-name": "ens6"
+              }
+            }
+          ],
+          "user-to-network-requirements": {
+            "num-seamless-trees": 1,
+            "max-latency": 1000000000
+          },
+          "interface-capabilities": {
+            "vlan-tag-capable": true
+          }
+        }
+      ]
+    },
+    {
+      "request-id": "req-stream-tsn2-to-tsn1",
+      "talker": {
+        "stream-id": {
+          "mac-address": "00-00-00-00-00-02",
+          "unique-id": 2
+        },
+        "stream-rank": {
+          "rank": 1
+        },
+        "end-station-interfaces": [
+          {
+            "index": 0,
+            "interface-id": {
+              "mac-address": "00-00-00-00-00-02",
+              "interface-name": "ens6"
+            }
+          }
+        ],
+        "data-frame-specification": [
+          {
+            "index": 0,
+            "ieee802-mac-addresses": {
+              "destination-mac-address": "00-00-00-00-00-01",
+              "source-mac": "00-00-00-00-00-02"
+            },
+            "ieee802-vlan-tag": {
+              "priority-code-point": 7,
+              "vlan-id": 100
+            }
+          }
+        ],
+        "traffic-specification": {
+          "interval": {
+            "numerator": 1,
+            "denominator": 1
+          },
+          "max-frames-per-interval": 32,
+          "max-frame-size": 128,
+          "transmission-selection": 0,
+          "time-aware": {
+            "earliest-transmit-offset": 0,
+            "latest-transmit-offset": 500000,
+            "jitter": 0
+          }
+        },
+        "user-to-network-requirements": {
+          "num-seamless-trees": 1,
+          "max-latency": 1000000000
+        },
+        "interface-capabilities": {
+          "vlan-tag-capable": true
+        }
+      },
+      "listener-list": [
+        {
+          "index": 0,
+          "stream-id": {
+            "mac-address": "00-00-00-00-00-02",
+            "unique-id": 2
+          },
+          "end-station-interfaces": [
+            {
+              "index": 0,
+              "interface-id": {
+                "mac-address": "00-00-00-00-00-01",
+                "interface-name": "enp1s0"
+              }
+            }
+          ],
+          "user-to-network-requirements": {
+            "num-seamless-trees": 1,
+            "max-latency": 1000000000
+          },
+          "interface-capabilities": {
+            "vlan-tag-capable": true
+          }
+        }
+      ]
+    }
+  ]
+}
