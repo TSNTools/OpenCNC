@@ -2,6 +2,7 @@ package internalOptimizer
 
 import (
 	"OpenCNC/common/structures/topology"
+	"fmt"
 	"os"
 	"strings"
 	"testing"
@@ -44,8 +45,8 @@ switches:
 		t.Fatalf("got %d node configs", len(cfg.NodeConfigs))
 	}
 	a, b, fallback := cfg.NodeConfigs[0], cfg.NodeConfigs[1], cfg.NodeConfigs[2]
-	if len(a.PortConfigs) != 1 {
-		t.Fatal("switch override must not inherit unspecified ports")
+	if len(a.PortConfigs) != 2 || a.PortConfigs[1].Gcl != nil {
+		t.Fatal("unscheduled ports need VLAN membership but no inherited Qbv schedule")
 	}
 	if a.PortConfigs[0].Gcl.CycleTime != 1_000_000 || a.PortConfigs[0].Gcl.Entries[0].TimeInterval != 600_000 || a.PortConfigs[0].Gcl.Entries[0].GateStates[0] != 1 {
 		t.Fatal("incorrect SWITCH schedule")
@@ -75,7 +76,7 @@ func TestLegacyPortSchedule(t *testing.T) {
 		t.Fatal(err)
 	}
 	for _, node := range cfg.NodeConfigs {
-		if len(node.PortConfigs) != 1 || node.PortConfigs[0].Gcl.CycleTime != 3_000_000 {
+		if len(node.PortConfigs) != 2 || node.PortConfigs[1].Gcl != nil || node.PortConfigs[0].Gcl.CycleTime != 3_000_000 {
 			t.Fatalf("legacy schedule changed: %v", node)
 		}
 	}
@@ -173,10 +174,10 @@ func TestPerIPPerPortDefaultSchedules(t *testing.T) {
 			{4, []byte{1, 32, 4, 8, 16, 32, 64, 128}, []uint64{20, 10, 10, 10, 10, 10, 20, 10}},
 		},
 		{
-			{2, []byte{128, 32, 64}, []uint64{60, 10, 30}},
-			{3, []byte{2, 8, 64}, []uint64{50, 20, 30}},
-			{4, []byte{4, 64}, []uint64{30, 70}},
-			{5, []byte{32, 16, 64}, []uint64{40, 40, 20}},
+			{1, []byte{128, 32, 1}, []uint64{40, 40, 20}},
+			{1, []byte{2, 8, 1}, []uint64{40, 40, 20}},
+			{1, []byte{4, 1, 128}, []uint64{40, 40, 20}},
+			{1, []byte{32, 16, 1}, []uint64{40, 20, 40}},
 		},
 	}
 	if len(cfg.NodeConfigs) != len(expected) {
@@ -201,6 +202,34 @@ func TestPerIPPerPortDefaultSchedules(t *testing.T) {
 			}
 			if total != gcl.CycleTime {
 				t.Fatalf("%s/%s: intervals do not fill cycle", node.NodeId, port.PortId)
+			}
+		}
+	}
+}
+
+func TestTaggedVLANAcrossAllTopologyPorts(t *testing.T) {
+	topo := scheduleTopology("SWITCH")
+	topo.Nodes[0].Ports[1].Id = "arbitrary-port-id"
+	topo.Nodes[0].Ports[1].Name = "unrelated-name"
+	cfg, err := buildDefaultSchedule([]byte("ports: [{port-id: P1, gating-cycle: 1, traffic-classes: [{name: best-effort, assigned-portion: 100}]}]"), topo)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := applyDefaultVLAN([]byte("default-vlan: {vid: 100}"), topo, cfg); err != nil {
+		t.Fatal(err)
+	}
+	node := cfg.NodeConfigs[0]
+	for _, vid := range []uint32{100, 101, 234} {
+		if err := applyDefaultVLAN([]byte(fmt.Sprintf("default-vlan: {vid: %d}", vid)), topo, cfg); err != nil {
+			t.Fatal(err)
+		}
+		reg := node.Bridge.VlanConfig.VlanRegistrationEntries[0]
+		if len(reg.PortMaps) != 2 || reg.VlanIds[0] != vid {
+			t.Fatalf("incomplete VLAN registration: %v", reg)
+		}
+		for i, pm := range reg.PortMaps {
+			if pm.PortId != topo.Nodes[0].Ports[i].Id || pm.VlanTransmitted.String() != "VLAN_TRANSMITTED_TAGGED" {
+				t.Fatalf("incorrect port membership: %v", pm)
 			}
 		}
 	}

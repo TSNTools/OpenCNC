@@ -11,7 +11,6 @@ import (
 	store "OpenCNC/common/store-wrapper"
 	"OpenCNC/common/structures/stream_config"
 	"OpenCNC/common/structures/uni"
-	"OpenCNC/common/structures/vlan"
 	forwarding_plane "OpenCNC/tsn_service/pkg/structures/forwarding_plane"
 	optimizer "OpenCNC/tsn_service/pkg/structures/optimization_contract"
 )
@@ -48,36 +47,7 @@ func StartOptimization(
 		return nil, err
 	}
 
-	// If incoming stream requests specify a VLAN, ensure the port configs use that VLAN ID
-	var reqVlanId uint32
-	for _, req := range allRequestData {
-		if req.GetTalker() != nil {
-			for _, df := range req.GetTalker().GetDataFrameSpecification() {
-				if df.GetVlanTag() != nil && df.GetVlanTag().GetVlanId() > 0 {
-					reqVlanId = df.GetVlanTag().GetVlanId()
-					break
-				}
-			}
-		}
-		if reqVlanId > 0 {
-			break
-		}
-	}
-
-	if reqVlanId > 0 && reqVlanId != 100 {
-		for _, nc := range topoConfig.GetNodeConfigs() {
-			for _, pc := range nc.GetPortConfigs() {
-				pc.DefaultVlanId = &reqVlanId
-				pc.VlanMemberships = []*vlan.VlanMembership{
-					{
-						VlanId: reqVlanId,
-						Tagged: true,
-					},
-				}
-			}
-		}
-		_ = store.StoreTopologyConfiguration(topoConfig)
-	}
+	// Use both YAML defaults unchanged for the fallback configuration.
 
 	fpm.Configuration = topoConfig
 	//fpm.Metadata.ModelId = defaultSchedID
@@ -159,25 +129,33 @@ func createForwardingPlaneModel(
 }
 
 func readDefaultSchedule() ([]byte, error) {
-	if env := os.Getenv("DEFAULT_SCHEDULE_PATH"); env != "" {
+	return readDefaultConfig("DEFAULT_SCHEDULE_PATH", defaultSchedulePath)
+}
+
+func readDefaultVLAN() ([]byte, error) {
+	return readDefaultConfig("DEFAULT_VLAN_PATH", "tsn_service/configs/default-vlan.yaml")
+}
+
+func readDefaultConfig(envName, configPath string) ([]byte, error) {
+	if env := os.Getenv(envName); env != "" {
 		return os.ReadFile(env)
 	}
 	candidates := []string{
-		defaultSchedulePath,
-		"configs/default-schedule.yaml",
-		"../configs/default-schedule.yaml",
-		"../../configs/default-schedule.yaml",
-		"/home/opencnc/OpenCNC/tsn_service/configs/default-schedule.yaml",
+		configPath,
+		filepath.Join("configs", filepath.Base(configPath)),
+		filepath.Join("../configs", filepath.Base(configPath)),
+		filepath.Join("../../configs", filepath.Base(configPath)),
+		filepath.Join("/home/opencnc/OpenCNC/tsn_service/configs", filepath.Base(configPath)),
 	}
 	if _, filename, _, ok := runtime.Caller(0); ok {
-		candidates = append(candidates, filepath.Join(filepath.Dir(filename), "../../configs/default-schedule.yaml"))
+		candidates = append(candidates, filepath.Join(filepath.Dir(filename), filepath.Join("../../configs", filepath.Base(configPath))))
 	}
 	for _, p := range candidates {
 		if b, err := os.ReadFile(p); err == nil {
 			return b, nil
 		}
 	}
-	return os.ReadFile(defaultSchedulePath)
+	return os.ReadFile(configPath)
 }
 
 // CreateDefaultSchedule builds a schedule for the current topology and stores it.
@@ -192,6 +170,13 @@ func CreateDefaultSchedule(ctx context.Context, obs *observability.Client) error
 	}
 	cfg, err := buildDefaultSchedule(schedBytes, topo)
 	if err != nil {
+		return err
+	}
+	vlanBytes, err := readDefaultVLAN()
+	if err != nil {
+		return fmt.Errorf("failed reading default VLAN: %w", err)
+	}
+	if err := applyDefaultVLAN(vlanBytes, topo, cfg); err != nil {
 		return err
 	}
 	if err := store.StoreTopologyConfiguration(cfg); err != nil {

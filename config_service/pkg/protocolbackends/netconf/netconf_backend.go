@@ -269,7 +269,7 @@ func (b *NetconfBackend) applyNodePlugin(ctx context.Context, config *topology_c
 		featureXML, err := plugin.BuildFeatureXML(mapped)
 		transEnd := time.Now()
 		if err != nil { // build XML failed
-			continue
+			return nil, fmt.Errorf("node %s plugin %s BuildFeatureXML: %w", b.target.Name, plugin.Name(), err)
 		}
 		metrics.RecordTranslation(b.target.Name, plugin.Name(), transStart, transEnd)
 
@@ -283,7 +283,7 @@ func (b *NetconfBackend) applyNodePlugin(ctx context.Context, config *topology_c
 
 		// update snapshot
 		if err := b.snapshots.Working.Update(featureXML, b.target, ""); err != nil { // update snapshot failed
-			continue
+			return nil, fmt.Errorf("node %s plugin %s snapshot Update: %w", b.target.Name, plugin.Name(), err)
 		}
 
 		////////////////////////////////////

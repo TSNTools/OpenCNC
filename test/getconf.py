@@ -4,10 +4,10 @@ import sys
 
 # Connection details
 DEVICE = {
-    'host': '192.168.4.65',
+    'host': '192.168.4.64',
     'port': 830,
-    'username': 'admin',
-    'password': 'admin',
+    'username': 'sys-admin',
+    'password': 'sys-admin',
     'hostkey_verify': False
 }
 

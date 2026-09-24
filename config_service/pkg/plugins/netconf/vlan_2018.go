@@ -119,6 +119,7 @@ func (v *VlanNetconfPlugin_2018) Map(msg proto.Message, node *topology.Node) (an
 		bName := resolveBridgeName(node)
 		return &bridgeVlanPayload{
 			BridgeName:    bName,
+			Node:          node,
 			ComponentName: bName,
 			Config:        typed,
 		}, nil
@@ -129,6 +130,7 @@ func (v *VlanNetconfPlugin_2018) Map(msg proto.Message, node *topology.Node) (an
 		bName := resolveBridgeName(node)
 		return &bridgeVlanPayload{
 			BridgeName:    bName,
+			Node:          node,
 			ComponentName: bName,
 			Config:        typed.GetVlanConfig(),
 		}, nil
@@ -137,6 +139,7 @@ func (v *VlanNetconfPlugin_2018) Map(msg proto.Message, node *topology.Node) (an
 			bName := resolveBridgeName(node)
 			return &bridgeVlanPayload{
 				BridgeName:    bName,
+				Node:          node,
 				ComponentName: bName,
 				Config:        typed.GetBridge().GetVlanConfig(),
 			}, nil
@@ -156,19 +159,6 @@ func mapPortConfigToBridgePort2018(portCfg *topology_config.PortConfig) *opencnc
 	bridgePort := &opencncModel.IETFInterfaces_Interfaces_Interface_BridgePort{}
 	if portCfg.DefaultVlanId != nil {
 		bridgePort.Pvid = portCfg.DefaultVlanId
-	}
-
-	if len(portCfg.GetVlanMemberships()) > 0 {
-		bridgePort.VidTranslations = make(map[uint16]*opencncModel.IETFInterfaces_Interfaces_Interface_BridgePort_VidTranslations)
-		for _, membership := range portCfg.GetVlanMemberships() {
-			if membership == nil {
-				continue
-			}
-			localVid := uint16(membership.GetVlanId())
-			bridgePort.VidTranslations[localVid] = &opencncModel.IETFInterfaces_Interfaces_Interface_BridgePort_VidTranslations{
-				LocalVid: &localVid,
-			}
-		}
 	}
 
 	if adv := portCfg.GetVlanAdvanced(); adv != nil {
@@ -347,8 +337,13 @@ func (v *VlanNetconfPlugin_2018) buildBridgeVlanXML(payload *bridgeVlanPayload) 
 					continue
 				}
 
+				// Topology P1 becomes numeric VLAN port-ref 1.
+				portRef, err := strconv.ParseUint(strings.TrimPrefix(pm.GetPortId(), "P"), 10, 32)
+				if err != nil || portRef == 0 {
+					return nil, fmt.Errorf("invalid VLAN port ID %q: expected P followed by a positive number, or a numeric ID", pm.GetPortId())
+				}
 				buf.WriteString(`<port-map>`)
-				buf.WriteString(fmt.Sprintf(`<port-ref>%d</port-ref>`, portRefFromPortID2018(pm.GetPortId())))
+				buf.WriteString(fmt.Sprintf(`<port-ref>%d</port-ref>`, portRef))
 				buf.WriteString(`<static-vlan-registration-entries>`)
 				buf.WriteString(fmt.Sprintf(`<registrar-admin-control>%s</registrar-admin-control>`, registrarAdminControlToXML2018(pm.GetRegistrarAdminControl())))
 				buf.WriteString(fmt.Sprintf(`<vlan-transmitted>%s</vlan-transmitted>`, vlanTransmittedToXML2018(pm.GetVlanTransmitted())))
@@ -580,28 +575,4 @@ func vlanTransmittedToXML2018(v vlan.VlanTransmitted) string {
 	default:
 		return "tagged"
 	}
-}
-
-func portRefFromPortID2018(portID string) uint32 {
-	if portID == "" {
-		return 0
-	}
-
-	last := -1
-	for i := len(portID) - 1; i >= 0; i-- {
-		if portID[i] < '0' || portID[i] > '9' {
-			break
-		}
-		last = i
-	}
-	if last == -1 {
-		return 0
-	}
-
-	value, err := strconv.ParseUint(portID[last:], 10, 32)
-	if err != nil {
-		return 0
-	}
-
-	return uint32(value)
 }

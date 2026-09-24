@@ -10,7 +10,6 @@ import (
 	"OpenCNC/common/structures/qbv"
 	"OpenCNC/common/structures/topology"
 	"OpenCNC/common/structures/topology_config"
-	"OpenCNC/common/structures/vlan"
 
 	"github.com/ghodss/yaml"
 	"google.golang.org/protobuf/proto"
@@ -44,7 +43,7 @@ type defaultScheduleConfig struct {
 }
 
 // A management-IP switch schedule replaces the shared schedule in full. Only ports
-// listed in that override are configured, unless it defines a global schedule.
+// listed in that override receive Qbv. VLAN membership is configured separately.
 func buildDefaultSchedule(data []byte, topo *topology.Topology) (*topology_config.TopologyConfig, error) {
 	if topo == nil {
 		return nil, fmt.Errorf("topology is nil")
@@ -109,22 +108,16 @@ func buildDefaultSchedule(data []byte, topo *topology.Topology) (*topology_confi
 			if gcl == nil {
 				gcl = schedules["*"]
 			}
-			if gcl == nil {
-				continue
+			var portGCL *qbv.GateControlList
+			if gcl != nil {
+				portGCL = proto.Clone(gcl).(*qbv.GateControlList)
 			}
-			defaultVlan := uint32(100)
 			nodeCfg.PortConfigs = append(nodeCfg.PortConfigs, &topology_config.PortConfig{
-				PortId:          port.Id,
-				Gcl:             proto.Clone(gcl).(*qbv.GateControlList),
-				DefaultVlanId:   &defaultVlan,
-				VlanMemberships: []*vlan.VlanMembership{
-					{
-						VlanId: defaultVlan,
-						Tagged: true,
-					},
-				},
+				PortId: port.Id,
+				Gcl:    portGCL,
 			})
 		}
+
 		if len(nodeCfg.PortConfigs) > 0 {
 			cfg.NodeConfigs = append(cfg.NodeConfigs, nodeCfg)
 		}

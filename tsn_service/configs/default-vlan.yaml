@@ -1,4 +1,14 @@
-default-vlan:
-  vid: 100                      # VLAN ID to register
-  fid: 1                        # Filtering database ID (default: 1)
-  tagged: true                  # true -> <vlan-transmitted>tagged</vlan-transmitted>
+# Matches the VLAN 10 registration example for bridge SWITCH.
+# port-id selects the unchanged topology ID; NETCONF converts P1 to numeric port-ref 1.
+# No shared fallback: unlisted switches receive no VLAN defaults.
+switches:
+  - management-ip: "192.168.4.64"
+    default-vlan:
+      vid: 101
+      fid: 1
+      registrar-admin-control: normal
+      ports:
+        - port-id: P1 # XML port-ref: 1
+          tagged: true
+        - port-id: P2 # XML port-ref: 2
+          tagged: true

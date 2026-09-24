@@ -1,7 +1,7 @@
 {
   "nodes": [
     {
-      "name": "SWITCH",
+      "name": "RELY-TSN4",
       "type": "BRIDGE",
       "bridge_name": "SWITCH",
       "deviceInfo": {
@@ -50,6 +50,64 @@
         {
           "id": "P4",
           "name": "PORT_3",
+          "capabilities": {
+            "port_speed": 1000,
+            "supports_tas": true
+          },
+          "number_of_queues": 8
+        }
+      ]
+    },
+    {
+      "name": "B&R",
+      "type": "BRIDGE",
+      "bridge_name": "br0",
+      "deviceInfo": {
+        "device_model": "B&R",
+        "supported_protocols": [
+          "IEEE 802.1Qbv",
+          "IEEE 802.1CB"
+        ]
+      },
+      "managementInfo": {
+        "ip_address": "192.168.4.65",
+        "management_port": 830,
+        "protocol": "NETCONF",
+        "transport": "SSH"
+      },
+      "username": "admin",
+      "password": "admin",
+      "ports": [
+        {
+          "id": "P2",
+          "name": "sw0p2",
+          "capabilities": {
+            "port_speed": 1000,
+            "supports_tas": true
+          },
+          "number_of_queues": 8
+        },
+        {
+          "id": "P3",
+          "name": "sw0p3",
+          "capabilities": {
+            "port_speed": 1000,
+            "supports_tas": true
+          },
+          "number_of_queues": 8
+        },
+        {
+          "id": "P4",
+          "name": "sw0p4",
+          "capabilities": {
+            "port_speed": 1000,
+            "supports_tas": true
+          },
+          "number_of_queues": 8
+        },
+        {
+          "id": "P5",
+          "name": "sw0p5",
           "capabilities": {
             "port_speed": 1000,
             "supports_tas": true
