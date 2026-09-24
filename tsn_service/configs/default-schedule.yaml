@@ -9,95 +9,134 @@
 # network-control
 # best-effort
 # Timecritical
+# Mapping: managementInfo.ip_address -> port.id -> gating cycle and gate list.
+# Each port below is independent, even when another switch uses the same port ID.
+# Other management IPs use the shared per-port defaults above.
+switches:
+  # Relyum: preserve the tested allocation, with independently editable ports.
+  - management-ip: "192.168.4.64"
+    ports:
+      # Port 1: Critical Real-Time / Isochronous Control (1 ms cycle)
+      - port-id: P1
+        gating-cycle: 1 # ms
+        traffic-classes:
+            - name: isochronous
+              assigned-portion: 20 # in %
+            - name: cyclic-sync
+              assigned-portion: 10
+            - name: cyclic-async
+              assigned-portion: 10
+            - name: network-control
+              assigned-portion: 10
+            - name: config-diag
+              assigned-portion: 10
+            - name: alarms-events
+              assigned-portion: 10
+            - name: best-effort
+              assigned-portion: 20
+            - name: Timecritical
+              assigned-portion: 10
 
-gating-cycle: 1 # ms
-traffic-classes:
+      # Port 2: Sensor / Event Data (2 ms cycle)
+      - port-id: P2
+        gating-cycle: 2 # ms
+        traffic-classes:
+            - name: isochronous
+              assigned-portion: 20 # in %
+            - name: cyclic-sync
+              assigned-portion: 10
+            - name: cyclic-async
+              assigned-portion: 10
+            - name: alarms-events
+              assigned-portion: 10
+            - name: config-diag
+              assigned-portion: 10
+            - name: network-control
+              assigned-portion: 10
+            - name: best-effort
+              assigned-portion: 20
+            - name: Timecritical
+              assigned-portion: 10
 
-# Per-port default Qbv schedule configuration
-# Each port defines its own gating cycle and traffic class slot allocation.
-# Only the ports listed here will have configuration generated and sent to the switch.
+      # Port 3: Bulk / High-Bandwidth Stream (1 ms cycle)
+      - port-id: P3
+        gating-cycle: 1 # ms
+        traffic-classes:
+            - name: isochronous
+              assigned-portion: 20 # in %
+            - name: cyclic-sync
+              assigned-portion: 10
+            - name: cyclic-async
+              assigned-portion: 10
+            - name: isochronous
+              assigned-portion: 10
+            - name: config-diag
+              assigned-portion: 10
+            - name: network-control
+              assigned-portion: 10
+            - name: best-effort
+              assigned-portion: 20
+            - name: Timecritical
+              assigned-portion: 10
 
-ports:
-  # Port 1: Critical Real-Time / Isochronous Control (1 ms cycle)
-  - port-id: P1
-    gating-cycle: 1 # ms
-    traffic-classes:
-        - name: isochronous
-          assigned-portion: 20 # in %
-        - name: cyclic-sync
-          assigned-portion: 10
-        - name: cyclic-async
-          assigned-portion: 10
-        - name: network-control
-          assigned-portion: 10
-        - name: config-diag
-          assigned-portion: 10
-        - name: alarms-events
-          assigned-portion: 10
-        - name: best-effort
-          assigned-portion: 20
-        - name: Timecritical
-          assigned-portion: 10
+      # Port 4: Management & Network Diagnostics (4 ms cycle)
+      - port-id: P4
+        gating-cycle: 4 # ms
+        traffic-classes:
+            - name: isochronous
+              assigned-portion: 20 # in %
+            - name: network-control
+              assigned-portion: 10
+            - name: cyclic-async
+              assigned-portion: 10
+            - name: alarms-events
+              assigned-portion: 10
+            - name: config-diag
+              assigned-portion: 10
+            - name: network-control
+              assigned-portion: 10
+            - name: best-effort
+              assigned-portion: 20
+            - name: Timecritical
+              assigned-portion: 10
 
-  # Port 2: Sensor / Event Data (2 ms cycle)
-  - port-id: P2
-    gating-cycle: 2 # ms
-    traffic-classes:
-        - name: isochronous
-          assigned-portion: 20 # in %
-        - name: cyclic-sync
-          assigned-portion: 10
-        - name: cyclic-async
-          assigned-portion: 10
-        - name: alarms-events
-          assigned-portion: 10
-        - name: config-diag
-          assigned-portion: 10
-        - name: network-control
-          assigned-portion: 10
-        - name: best-effort
-          assigned-portion: 20
-        - name: Timecritical
-          assigned-portion: 10
+  # B&R: example independent cycles and allocations for each port.
+  - management-ip: "192.168.4.65"
+    ports:
+      - port-id: P1
+        gating-cycle: 1 # ms
+        traffic-classes:
+          - name: Timecritical
+            assigned-portion: 40
+          - name: network-control
+            assigned-portion: 40
+          - name: isochronous
+            assigned-portion: 20
+      - port-id: P2
+        gating-cycle: 1 # ms
+        traffic-classes:
+          - name: cyclic-sync
+            assigned-portion: 40
+          - name: alarms-events
+            assigned-portion: 40
+          - name: isochronous
+            assigned-portion: 20
+      - port-id: P3
+        gating-cycle: 1 # ms
+        traffic-classes:
+          - name: cyclic-async
+            assigned-portion: 40
+          - name: isochronous
+            assigned-portion: 40
+          - name: Timecritical
+            assigned-portion: 20
 
-  # Port 3: Bulk / High-Bandwidth Stream (1 ms cycle)
-  - port-id: P3
-    gating-cycle: 1 # ms
-    traffic-classes:
-        - name: isochronous
-          assigned-portion: 20 # in %
-        - name: cyclic-sync
-          assigned-portion: 10
-        - name: cyclic-async
-          assigned-portion: 10
-        - name: isochronous
-          assigned-portion: 10
-        - name: config-diag
-          assigned-portion: 10
-        - name: network-control
-          assigned-portion: 10
-        - name: best-effort
-          assigned-portion: 20
-        - name: Timecritical
-          assigned-portion: 10
-
-  # Port 4: Management & Network Diagnostics (4 ms cycle)
-  - port-id: P4
-    gating-cycle: 4 # ms
-    traffic-classes:
-        - name: isochronous
-          assigned-portion: 20 # in %
-        - name: network-control
-          assigned-portion: 10
-        - name: cyclic-async
-          assigned-portion: 10
-        - name: alarms-events
-          assigned-portion: 10
-        - name: config-diag
-          assigned-portion: 10
-        - name: network-control
-          assigned-portion: 10
-        - name: best-effort
-          assigned-portion: 20
-        - name: Timecritical
-          assigned-portion: 10
+      - port-id: P4
+        gating-cycle: 1 # ms
+        traffic-classes:
+          - name: network-control
+            assigned-portion: 40
+          - name: config-diag
+            assigned-portion: 20
+          - name: isochronous
+            assigned-portion: 40

@@ -30,7 +30,7 @@
     },
     {
       "file-name": "ieee802-dot1q-bridge.yang",
-      "file-revision": "2018-03-07",
+      "file-revision": "2020-11-07",
       "description": "This YANG module describes the bridge configuration model for the\nfollowing IEEE 802.1Q Bridges:\n       1) Two Port MAC Relays\n       2) Customer VLAN Bridges\n       3) Provider Bridges."
     },
     {

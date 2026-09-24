@@ -50,7 +50,7 @@ func (p *OldQbvNetconfPlugin) FeatureName() string {
 func (p *OldQbvNetconfPlugin) SupportedByDevice(model *devicemodelregistry.DeviceModel) bool {
 	requiredYangs := []devicemodelregistry.YangModule{
 		{Name: "ieee802-dot1q-sched.yang", Revision: "2018-09-10"},
-		{Name: "ieee802-dot1q-bridge.yang", Revision: "2018-03-07"},
+		//{Name: "ieee802-dot1q-bridge.yang", Revision: "2018-03-07"},
 	}
 
 	for i := range requiredYangs {
@@ -112,7 +112,7 @@ func (p *OldQbvNetconfPlugin) Map(msg proto.Message, node *topology.Node) (any, 
 		},
 		AdminCycleTime: &opencncModel.IETFInterfaces_Interfaces_Interface_BridgePort_GateParameterTable_AdminCycleTime{
 			Numerator:   ygot.Uint32(uint32(gcl.GetCycleTime())),
-			Denominator: ygot.Uint32(1000),
+			Denominator: ygot.Uint32(1000000000),
 		},
 		AdminControlList: &opencncModel.IETFInterfaces_Interfaces_Interface_BridgePort_GateParameterTable_AdminControlList{
 			GateControlEntry: make(map[uint32]*opencncModel.IETFInterfaces_Interfaces_Interface_BridgePort_GateParameterTable_AdminControlList_GateControlEntry),

@@ -228,7 +228,7 @@ func main() {
 	fmt.Println(" Service             : uni_server.UniService/AddStream")
 	fmt.Println(" Stream 1            : Talker tsn1 (enp1s0) -> Listener tsn2 (ens6)")
 	fmt.Println(" Stream 2            : Talker tsn2 (ens6)   -> Listener tsn1 (enp1s0)")
-	fmt.Println(" VLAN ID             : 100")
+	fmt.Println(" VLAN ID             : 100 enabled ")
 	fmt.Println(" PCP / Priority      : 7 (Gate 7)")
 	fmt.Println(" Cycle Time          : 1s (1000ms)")
 	fmt.Println(" Frames / Cycle      : 32")

@@ -2,23 +2,18 @@ package internalOptimizer
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
 	"runtime"
-	"strings"
 
 	"OpenCNC/common/observability"
 	store "OpenCNC/common/store-wrapper"
-	"OpenCNC/common/structures/qbv"
 	"OpenCNC/common/structures/stream_config"
-	"OpenCNC/common/structures/topology_config"
 	"OpenCNC/common/structures/uni"
+	"OpenCNC/common/structures/vlan"
 	forwarding_plane "OpenCNC/tsn_service/pkg/structures/forwarding_plane"
 	optimizer "OpenCNC/tsn_service/pkg/structures/optimization_contract"
-
-	"github.com/ghodss/yaml"
 )
 
 var defaultSchedID = "default_schedule"
@@ -51,6 +46,37 @@ func StartOptimization(
 			))
 		}
 		return nil, err
+	}
+
+	// If incoming stream requests specify a VLAN, ensure the port configs use that VLAN ID
+	var reqVlanId uint32
+	for _, req := range allRequestData {
+		if req.GetTalker() != nil {
+			for _, df := range req.GetTalker().GetDataFrameSpecification() {
+				if df.GetVlanTag() != nil && df.GetVlanTag().GetVlanId() > 0 {
+					reqVlanId = df.GetVlanTag().GetVlanId()
+					break
+				}
+			}
+		}
+		if reqVlanId > 0 {
+			break
+		}
+	}
+
+	if reqVlanId > 0 && reqVlanId != 100 {
+		for _, nc := range topoConfig.GetNodeConfigs() {
+			for _, pc := range nc.GetPortConfigs() {
+				pc.DefaultVlanId = &reqVlanId
+				pc.VlanMemberships = []*vlan.VlanMembership{
+					{
+						VlanId: reqVlanId,
+						Tagged: true,
+					},
+				}
+			}
+		}
+		_ = store.StoreTopologyConfiguration(topoConfig)
 	}
 
 	fpm.Configuration = topoConfig
@@ -134,9 +160,7 @@ func createForwardingPlaneModel(
 
 func readDefaultSchedule() ([]byte, error) {
 	if env := os.Getenv("DEFAULT_SCHEDULE_PATH"); env != "" {
-		if b, err := os.ReadFile(env); err == nil {
-			return b, nil
-		}
+		return os.ReadFile(env)
 	}
 	candidates := []string{
 		defaultSchedulePath,
@@ -156,225 +180,25 @@ func readDefaultSchedule() ([]byte, error) {
 	return os.ReadFile(defaultSchedulePath)
 }
 
-// Reads default schedule config file and stores configuration for schedule in k/v store
-// Reads default schedule config file and stores configuration for schedule in k/v store
-func CreateDefaultSchedule(
-	ctx context.Context,
-	obs *observability.Client,
-) error {
-	// Read default schedule from file
-	schedBytes, err := os.ReadFile(defaultSchedulePath)
+// CreateDefaultSchedule builds a schedule for the current topology and stores it.
+func CreateDefaultSchedule(ctx context.Context, obs *observability.Client) error {
+	schedBytes, err := readDefaultSchedule()
 	if err != nil {
-		if obs != nil {
-			_ = obs.Error(ctx, fmt.Sprintf(
-				"Failed reading default schedule from file: %v",
-				err,
-			))
-		}
-		return err
+		return fmt.Errorf("failed reading default schedule: %w", err)
 	}
-
-	// Convert yaml bytes to json bytes
-	jsonBytes, err := yaml.YAMLToJSON(schedBytes)
+	topo, err := store.GetTopology()
 	if err != nil {
-		if obs != nil {
-			_ = obs.Error(ctx, fmt.Sprintf(
-				"Failed converting default schedule from YAML to JSON: %v",
-				err,
-			))
-		}
-		return err
+		return fmt.Errorf("failed retrieving topology: %w", err)
 	}
-
-	type trafficClassConfig struct {
-		Name            string `json:"name"`
-		AssignedPortion uint64 `json:"assigned-portion"`
-	}
-
-	type portScheduleConfig struct {
-		PortId         string               `json:"port-id"`
-		GatingCycle    uint64               `json:"gating-cycle"`
-		TrafficClasses []trafficClassConfig `json:"traffic-classes"`
-	}
-
-	// Intermediate representation of the YAML file supporting per-port or global schedule.
-	var config struct {
-		Ports          []portScheduleConfig `json:"ports"`
-		GatingCycle    uint64               `json:"gating-cycle"`
-		TrafficClasses []trafficClassConfig `json:"traffic-classes"`
-	}
-
-	if err := json.Unmarshal(jsonBytes, &config); err != nil {
-		if obs != nil {
-			_ = obs.Error(ctx, fmt.Sprintf(
-				"Failed parsing schedule JSON: %v",
-				err,
-			))
-		}
-		return err
-	}
-
-	// Map traffic class names to gate bit positions (0 to 7).
-	trafficClassBits := map[string]uint{
-		"isochronous":      0,
-		"cyclic-sync":      1,
-		"cyclic-async":     2,
-		"alarms-events":    3,
-		"config-diag":      4,
-		"network-control":  5,
-		"best-effort":      6,
-		"timecritical":     7,
-		"time-critical":    7,
-		"background":       7,
-		"critical-control": 7,
-	}
-
-	buildGCL := func(schedID string, cycleTime uint64, tcs []trafficClassConfig) (*qbv.GateControlList, error) {
-		if cycleTime == 0 {
-			return nil, fmt.Errorf("gating-cycle must be greater than zero for %s", schedID)
-		}
-
-		var totalPortion uint64
-		for _, tc := range tcs {
-			totalPortion += tc.AssignedPortion
-		}
-
-		if totalPortion != 100 {
-			return nil, fmt.Errorf(
-				"traffic class assigned portions must add up to 100%% for %s, got %d%%",
-				schedID,
-				totalPortion,
-			)
-		}
-
-		gcl := &qbv.GateControlList{
-			ScheduleId:  schedID,
-			BaseTime:    0,
-			BaseTimeRef: qbv.TimestampReference_DEVICE_BOOT_TIME,
-			CycleTime:   cycleTime * 1_000_000, // ms -> ns
-			AdminState:  qbv.AdminState_ENABLED,
-			Description: fmt.Sprintf("Qbv schedule for %s", schedID),
-			Entries:     make([]*qbv.GateControlEntry, 0, len(tcs)),
-		}
-
-		for index, tc := range tcs {
-			bit, ok := trafficClassBits[strings.ToLower(tc.Name)]
-			if !ok {
-				return nil, fmt.Errorf("unknown traffic class %q in schedule %s", tc.Name, schedID)
-			}
-
-			timeInterval := (cycleTime * 1_000_000 * tc.AssignedPortion) / 100
-			gateStates := []byte{
-				1 << bit,
-			}
-
-			gcl.Entries = append(
-				gcl.Entries,
-				&qbv.GateControlEntry{
-					Index:        uint32(index),
-					TimeInterval: timeInterval,
-					GateStates:   gateStates,
-					Description:  tc.Name,
-				},
-			)
-		}
-
-		return gcl, nil
-	}
-
-	portSchedules := make(map[string]*qbv.GateControlList)
-	if len(config.Ports) > 0 {
-		for _, p := range config.Ports {
-			sched, err := buildGCL(p.PortId, p.GatingCycle, p.TrafficClasses)
-			if err != nil {
-				if obs != nil {
-					_ = obs.Error(ctx, fmt.Sprintf(
-						"Invalid schedule for port %s: %v",
-						p.PortId,
-						err,
-					))
-				}
-				return err
-			}
-			portSchedules[p.PortId] = sched
-		}
-	} else if len(config.TrafficClasses) > 0 {
-		sched, err := buildGCL("default", config.GatingCycle, config.TrafficClasses)
-		if err != nil {
-			if obs != nil {
-				_ = obs.Error(ctx, fmt.Sprintf(
-					"Invalid default schedule: %v",
-					err,
-				))
-			}
-			return err
-		}
-		portSchedules["*"] = sched
-	} else {
-		err := fmt.Errorf("no ports or traffic-classes defined in schedule file")
-		if obs != nil {
-			_ = obs.Error(ctx, err.Error())
-		}
-		return err
-	}
-
-	// Write schedule to configuration ports
-	topoConfig := &topology_config.TopologyConfig{ConfigId: defaultSchedID}
-	topology, err := store.GetTopology()
+	cfg, err := buildDefaultSchedule(schedBytes, topo)
 	if err != nil {
-		if obs != nil {
-			_ = obs.Error(ctx, fmt.Sprintf(
-				"Failed to retrieve topology for default schedule: %v",
-				err,
-			))
-		}
-		return fmt.Errorf("failed to retrieve topology: %v", err)
-	}
-
-	for _, node := range topology.GetNodes() {
-		nodeConfig := &topology_config.NodeConfig{NodeId: node.Name}
-
-		for _, port := range node.GetPorts() {
-			sched, ok := portSchedules[port.Id]
-			if !ok {
-				sched, ok = portSchedules["*"]
-				if !ok {
-					continue // Skip port if not defined in YAML
-				}
-			}
-
-			portConfig := &topology_config.PortConfig{
-				PortId: port.Id,
-				Gcl:    sched,
-			}
-
-			nodeConfig.PortConfigs = append(nodeConfig.PortConfigs, portConfig)
-		}
-
-		if len(nodeConfig.PortConfigs) > 0 {
-			topoConfig.NodeConfigs = append(topoConfig.NodeConfigs, nodeConfig)
-		}
-	}
-
-	// Store schedule in k/v store
-	err = store.StoreTopologyConfiguration(topoConfig)
-	if err != nil {
-		if obs != nil {
-			_ = obs.Error(ctx, fmt.Sprintf(
-				"Failed storing default schedule with ID %s: %v",
-				defaultSchedID,
-				err,
-			))
-		}
 		return err
 	}
-
+	if err := store.StoreTopologyConfiguration(cfg); err != nil {
+		return fmt.Errorf("failed storing default schedule: %w", err)
+	}
 	if obs != nil {
-		_ = obs.Info(ctx, fmt.Sprintf(
-			"Successfully stored default schedule with ID: %s",
-			defaultSchedID,
-		))
+		_ = obs.Info(ctx, fmt.Sprintf("Successfully stored default schedule with ID: %s", defaultSchedID))
 	}
-
 	return nil
 }
