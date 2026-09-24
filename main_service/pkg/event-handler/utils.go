@@ -199,7 +199,7 @@ func ConnectToGnmiService(
 	client, err := gclient.New(ctx, client.Destination{
 		Addrs:       []string{addr},
 		Target:      strings.Split(addr, ":")[0],
-		Timeout:     20 * time.Second,
+		Timeout:     1 * time.Second,
 		Credentials: nil,
 		TLS:         tlsConfig,
 	})

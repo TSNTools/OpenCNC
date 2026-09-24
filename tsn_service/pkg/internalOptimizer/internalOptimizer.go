@@ -5,15 +5,16 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"path/filepath"
+	"runtime"
+	"strings"
 
 	"OpenCNC/common/observability"
 	store "OpenCNC/common/store-wrapper"
 	"OpenCNC/common/structures/qbv"
 	"OpenCNC/common/structures/stream_config"
-	"OpenCNC/common/structures/topology"
 	"OpenCNC/common/structures/topology_config"
 	"OpenCNC/common/structures/uni"
-	vlanDefaults "OpenCNC/tsn_service/pkg/resource_allocation_entity/VLAN"
 	forwarding_plane "OpenCNC/tsn_service/pkg/structures/forwarding_plane"
 	optimizer "OpenCNC/tsn_service/pkg/structures/optimization_contract"
 
@@ -21,7 +22,7 @@ import (
 )
 
 var defaultSchedID = "default_schedule"
-var defaultSchedulePath = "/home/jittin/config-service/test/OpenCNC/tsn_service/configs/default-schedule.yaml"
+var defaultSchedulePath = "tsn_service/configs/default-schedule.yaml"
 
 // Calculates configuration set request using optimizer, if that failes build configuration set request from default schedule
 func StartOptimization(
@@ -30,6 +31,12 @@ func StartOptimization(
 	task *optimizer.OptimizationTask,
 	allRequestData []*uni.Request,
 ) (*forwarding_plane.ForwardingPlaneModel, error) {
+
+	// The GUI can replace the topology after startup. Rebuild the default
+	// schedule so its node and port IDs reflect the topology used for this run.
+	if err := CreateDefaultSchedule(ctx, obs); err != nil {
+		return nil, fmt.Errorf("failed to refresh default schedule: %w", err)
+	}
 
 	fpm := createForwardingPlaneModel(ctx, obs)
 	// TODO: Implement the optimization logic here.
@@ -125,6 +132,31 @@ func createForwardingPlaneModel(
 	}
 }
 
+func readDefaultSchedule() ([]byte, error) {
+	if env := os.Getenv("DEFAULT_SCHEDULE_PATH"); env != "" {
+		if b, err := os.ReadFile(env); err == nil {
+			return b, nil
+		}
+	}
+	candidates := []string{
+		defaultSchedulePath,
+		"configs/default-schedule.yaml",
+		"../configs/default-schedule.yaml",
+		"../../configs/default-schedule.yaml",
+		"/home/opencnc/OpenCNC/tsn_service/configs/default-schedule.yaml",
+	}
+	if _, filename, _, ok := runtime.Caller(0); ok {
+		candidates = append(candidates, filepath.Join(filepath.Dir(filename), "../../configs/default-schedule.yaml"))
+	}
+	for _, p := range candidates {
+		if b, err := os.ReadFile(p); err == nil {
+			return b, nil
+		}
+	}
+	return os.ReadFile(defaultSchedulePath)
+}
+
+// Reads default schedule config file and stores configuration for schedule in k/v store
 // Reads default schedule config file and stores configuration for schedule in k/v store
 func CreateDefaultSchedule(
 	ctx context.Context,
@@ -154,13 +186,22 @@ func CreateDefaultSchedule(
 		return err
 	}
 
-	// Intermediate representation of the YAML file.
+	type trafficClassConfig struct {
+		Name            string `json:"name"`
+		AssignedPortion uint64 `json:"assigned-portion"`
+	}
+
+	type portScheduleConfig struct {
+		PortId         string               `json:"port-id"`
+		GatingCycle    uint64               `json:"gating-cycle"`
+		TrafficClasses []trafficClassConfig `json:"traffic-classes"`
+	}
+
+	// Intermediate representation of the YAML file supporting per-port or global schedule.
 	var config struct {
-		GatingCycle    uint64 `json:"gating-cycle"`
-		TrafficClasses []struct {
-			Name            string `json:"name"`
-			AssignedPortion uint64 `json:"assigned-portion"`
-		} `json:"traffic-classes"`
+		Ports          []portScheduleConfig `json:"ports"`
+		GatingCycle    uint64               `json:"gating-cycle"`
+		TrafficClasses []trafficClassConfig `json:"traffic-classes"`
 	}
 
 	if err := json.Unmarshal(jsonBytes, &config); err != nil {
@@ -173,63 +214,93 @@ func CreateDefaultSchedule(
 		return err
 	}
 
-	// Validate the configuration.
-	if config.GatingCycle == 0 {
-		err := fmt.Errorf("gating-cycle must be greater than zero")
-		if obs != nil {
-			_ = obs.Error(ctx, fmt.Sprintf(
-				"Invalid default schedule: %v",
-				err,
-			))
-		}
-		return err
-	}
-
-	var totalPortion uint64
-	for _, tc := range config.TrafficClasses {
-		totalPortion += tc.AssignedPortion
-	}
-
-	if totalPortion != 100 {
-		err := fmt.Errorf(
-			"traffic class assigned portions must add up to 100%%, got %d%%",
-			totalPortion,
-		)
-		if obs != nil {
-			_ = obs.Error(ctx, fmt.Sprintf(
-				"Invalid default schedule: %v",
-				err,
-			))
-		}
-		return err
-	}
-
-	// Map traffic class names to gate bit positions.
+	// Map traffic class names to gate bit positions (0 to 7).
 	trafficClassBits := map[string]uint{
-		"isochronous":     0,
-		"cyclic-sync":     1,
-		"cyclic-async":    2,
-		"alarms-events":   3,
-		"config-diag":     4,
-		"network-control": 5,
-		"best-effort":     6,
-		"Timecritical":    7,
+		"isochronous":      0,
+		"cyclic-sync":      1,
+		"cyclic-async":     2,
+		"alarms-events":    3,
+		"config-diag":      4,
+		"network-control":  5,
+		"best-effort":      6,
+		"timecritical":     7,
+		"time-critical":    7,
+		"background":       7,
+		"critical-control": 7,
 	}
 
-	defaultSched := &qbv.GateControlList{
-		ScheduleId:  "default",
-		BaseTime:    0,
-		BaseTimeRef: qbv.TimestampReference_DEVICE_BOOT_TIME,
-		CycleTime:   config.GatingCycle * 1_000_000, // ms -> ns
-		AdminState:  qbv.AdminState_ENABLED,
-		Description: "Default Qbv schedule",
-		Entries:     make([]*qbv.GateControlEntry, 0, len(config.TrafficClasses)),
+	buildGCL := func(schedID string, cycleTime uint64, tcs []trafficClassConfig) (*qbv.GateControlList, error) {
+		if cycleTime == 0 {
+			return nil, fmt.Errorf("gating-cycle must be greater than zero for %s", schedID)
+		}
+
+		var totalPortion uint64
+		for _, tc := range tcs {
+			totalPortion += tc.AssignedPortion
+		}
+
+		if totalPortion != 100 {
+			return nil, fmt.Errorf(
+				"traffic class assigned portions must add up to 100%% for %s, got %d%%",
+				schedID,
+				totalPortion,
+			)
+		}
+
+		gcl := &qbv.GateControlList{
+			ScheduleId:  schedID,
+			BaseTime:    0,
+			BaseTimeRef: qbv.TimestampReference_DEVICE_BOOT_TIME,
+			CycleTime:   cycleTime * 1_000_000, // ms -> ns
+			AdminState:  qbv.AdminState_ENABLED,
+			Description: fmt.Sprintf("Qbv schedule for %s", schedID),
+			Entries:     make([]*qbv.GateControlEntry, 0, len(tcs)),
+		}
+
+		for index, tc := range tcs {
+			bit, ok := trafficClassBits[strings.ToLower(tc.Name)]
+			if !ok {
+				return nil, fmt.Errorf("unknown traffic class %q in schedule %s", tc.Name, schedID)
+			}
+
+			timeInterval := (cycleTime * 1_000_000 * tc.AssignedPortion) / 100
+			gateStates := []byte{
+				1 << bit,
+			}
+
+			gcl.Entries = append(
+				gcl.Entries,
+				&qbv.GateControlEntry{
+					Index:        uint32(index),
+					TimeInterval: timeInterval,
+					GateStates:   gateStates,
+					Description:  tc.Name,
+				},
+			)
+		}
+
+		return gcl, nil
 	}
 
-	for index, tc := range config.TrafficClasses {
-		bit, ok := trafficClassBits[tc.Name]
-		if !ok {
-			err := fmt.Errorf("unknown traffic class %q", tc.Name)
+	portSchedules := make(map[string]*qbv.GateControlList)
+	if len(config.Ports) > 0 {
+		for _, p := range config.Ports {
+			sched, err := buildGCL(p.PortId, p.GatingCycle, p.TrafficClasses)
+			if err != nil {
+				if obs != nil {
+					_ = obs.Error(ctx, fmt.Sprintf(
+						"Invalid schedule for port %s: %v",
+						p.PortId,
+						err,
+					))
+				}
+				return err
+			}
+			portSchedules[p.PortId] = sched
+		}
+	} else if len(config.TrafficClasses) > 0 {
+		sched, err := buildGCL("default", config.GatingCycle, config.TrafficClasses)
+		if err != nil {
 			if obs != nil {
 				_ = obs.Error(ctx, fmt.Sprintf(
 					"Invalid default schedule: %v",
@@ -238,38 +309,18 @@ func CreateDefaultSchedule(
 			}
 			return err
 		}
-
-		// assigned-portion is a percentage of the gating cycle.
-		//
-		// Example:
-		//   1 ms cycle * 30% = 300 us = 300,000 ns
-		timeInterval := (config.GatingCycle * 1_000_000 * tc.AssignedPortion) / 100
-
-		// Open only the gate belonging to this traffic class.
-		//
-		// Bit 0 = isochronous
-		// Bit 1 = cyclic-sync
-		// ...
-		// Bit 6 = best-effort
-		// Bit 7 = Timecritical
-		gateStates := []byte{
-			1 << bit,
+		portSchedules["*"] = sched
+	} else {
+		err := fmt.Errorf("no ports or traffic-classes defined in schedule file")
+		if obs != nil {
+			_ = obs.Error(ctx, err.Error())
 		}
-
-		defaultSched.Entries = append(
-			defaultSched.Entries,
-			&qbv.GateControlEntry{
-				Index:        uint32(index),
-				TimeInterval: timeInterval,
-				GateStates:   gateStates,
-				Description:  tc.Name,
-			},
-		)
+		return err
 	}
 
-	//write schedule to all configuration ports
+	// Write schedule to configuration ports
 	topoConfig := &topology_config.TopologyConfig{ConfigId: defaultSchedID}
-	topo, err := store.GetTopology()
+	topology, err := store.GetTopology()
 	if err != nil {
 		if obs != nil {
 			_ = obs.Error(ctx, fmt.Sprintf(
@@ -280,33 +331,29 @@ func CreateDefaultSchedule(
 		return fmt.Errorf("failed to retrieve topology: %v", err)
 	}
 
-	for _, node := range topo.GetNodes() {
+	for _, node := range topology.GetNodes() {
 		nodeConfig := &topology_config.NodeConfig{NodeId: node.Name}
 
 		for _, port := range node.GetPorts() {
+			sched, ok := portSchedules[port.Id]
+			if !ok {
+				sched, ok = portSchedules["*"]
+				if !ok {
+					continue // Skip port if not defined in YAML
+				}
+			}
+
 			portConfig := &topology_config.PortConfig{
 				PortId: port.Id,
-				Gcl:    defaultSched,
+				Gcl:    sched,
 			}
 
 			nodeConfig.PortConfigs = append(nodeConfig.PortConfigs, portConfig)
 		}
 
-		// If node is a bridge, initialize BridgeConfig and apply VLAN defaults
-		if node.Type == topology.NodeRole_BRIDGE {
-			nodeConfig.Bridge = &topology_config.BridgeConfig{}
-			if err := vlanDefaults.PopulateDefaultVlanConfig(nodeConfig); err != nil {
-				if obs != nil {
-					_ = obs.Error(ctx, fmt.Sprintf(
-						"Failed populating default VLAN for %s: %v",
-						node.Name,
-						err,
-					))
-				}
-			}
+		if len(nodeConfig.PortConfigs) > 0 {
+			topoConfig.NodeConfigs = append(topoConfig.NodeConfigs, nodeConfig)
 		}
-
-		topoConfig.NodeConfigs = append(topoConfig.NodeConfigs, nodeConfig)
 	}
 
 	// Store schedule in k/v store

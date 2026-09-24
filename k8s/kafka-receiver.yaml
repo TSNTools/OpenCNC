@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kafka-receiver
+  namespace: opencnc
+  labels:
+    app: kafka-receiver
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kafka-receiver
+  template:
+    metadata:
+      labels:
+        app: kafka-receiver
+      annotations:
+        sidecar.istio.io/inject: "false"
+    spec:
+      containers:
+        - name: kafka-receiver
+          image: opencnc/kafka-receiver:latest
+          imagePullPolicy: IfNotPresent
+          args:
+            - "-brokers=kafka.opencnc.svc.cluster.local:9092"
+            - "-topics=opencnc.metrics,opencnc.events"
+            - "-json-topic=opencnc.latencies.json"
+            - "-output-dir=/data"
+            - "-from-beginning=false"
+          volumeMounts:
+            - name: data-dir
+              mountPath: /data
+      volumes:
+        - name: data-dir
+          emptyDir: {}

@@ -166,6 +166,7 @@ Supported contexts:
             --agents 1 \
             --port "8080:30080@loadbalancer" \
             --port "8081:30081@loadbalancer" \
+            --port "5153:30153@loadbalancer" \
             --wait
 
         cluster_created_by_us="true"
@@ -201,6 +202,9 @@ build_images() {
 
     docker build --target gui_service \
         -t opencnc/gui-service:latest .
+
+    docker build --target kafka_receiver \
+        -t opencnc/kafka-receiver:latest .
 }
 
 load_images() {
@@ -212,11 +216,14 @@ load_images() {
             log "Loading images into k3d..."
 
             k3d image import \
+                quay.io/coreos/etcd:v3.5.17 \
+                apache/kafka:3.9.1 \
                 opencnc/config-service:latest \
                 opencnc/monitor-service:latest \
                 opencnc/tsn-service:latest \
                 opencnc/main-service:latest \
                 opencnc/gui-service:latest \
+                opencnc/kafka-receiver:latest \
                 -c "${context#k3d-}"
             ;;
 
@@ -227,17 +234,28 @@ load_images() {
         minikube)
             log "Loading images into minikube..."
 
+            minikube image load quay.io/coreos/etcd:v3.5.17
+            minikube image load apache/kafka:3.9.1
             minikube image load opencnc/config-service:latest
             minikube image load opencnc/monitor-service:latest
             minikube image load opencnc/tsn-service:latest
             minikube image load opencnc/main-service:latest
             minikube image load opencnc/gui-service:latest
+            minikube image load opencnc/kafka-receiver:latest
             ;;
 
         kind-*)
             log "Loading images into kind..."
 
             local kind_name="${context#kind-}"
+
+            kind load docker-image \
+                quay.io/coreos/etcd:v3.5.17 \
+                --name "$kind_name"
+
+            kind load docker-image \
+                apache/kafka:3.9.1 \
+                --name "$kind_name"
 
             kind load docker-image \
                 opencnc/config-service:latest \
@@ -257,6 +275,10 @@ load_images() {
 
             kind load docker-image \
                 opencnc/gui-service:latest \
+                --name "$kind_name"
+
+            kind load docker-image \
+                opencnc/kafka-receiver:latest \
                 --name "$kind_name"
             ;;
 
@@ -282,47 +304,71 @@ deploy() {
         -f k8s/tsn-service.yaml \
         -f k8s/main-service.yaml \
         -f k8s/gui-service.yaml \
+        -f k8s/kafka-receiver.yaml \
         >/dev/null
 
-    log "Deploying OpenCNC..."
+    log "Deploying infrastructure (etcd and kafka)..."
 
     kubectl apply -f k8s/etcd.yaml
     kubectl apply -f k8s/kafka.yaml
+
+    log "Waiting for etcd to be ready..."
+    kubectl rollout status deployment/etcd -n "$NAMESPACE" --timeout=300s
+
+    log "Waiting for kafka to be ready..."
+    kubectl rollout status deployment/kafka -n "$NAMESPACE" --timeout=300s
+
+    log "Waiting for kafka topics initialization..."
+    kubectl wait \
+        --for=condition=complete \
+        job/kafka-topics \
+        -n "$NAMESPACE" \
+        --timeout=300s
+
+    log "Deploying OpenCNC microservices..."
 
     kubectl apply -f k8s/config-service.yaml
     kubectl apply -f k8s/monitor-service.yaml
     kubectl apply -f k8s/tsn-service.yaml
     kubectl apply -f k8s/main-service.yaml
     kubectl apply -f k8s/gui-service.yaml
+    kubectl apply -f k8s/kafka-receiver.yaml
 }
 
 wait_for_services() {
-    log "Waiting for services..."
+    log "Waiting for microservices to be ready..."
 
     for deployment in \
-        etcd \
-        kafka \
         config-service \
         monitor-service \
         tsn-service \
         main-service \
-        gui-service
+        gui-service \
+        kafka-receiver
     do
         kubectl rollout status \
             "deployment/$deployment" \
             -n "$NAMESPACE" \
             --timeout=300s
     done
-
-    kubectl wait \
-        --for=condition=complete \
-        job/kafka-topics \
-        -n "$NAMESPACE" \
-        --timeout=300s
 }
 
 main() {
     require_linux
+
+    local with_mesh="false"
+    for arg in "$@"; do
+        case "$arg" in
+            --with-mesh)
+                with_mesh="true"
+                ;;
+            -h|--help)
+                echo "Usage: $0 [--with-mesh]"
+                echo "  --with-mesh  Install Istio Service Mesh with Prometheus, Grafana, and Kiali"
+                exit 0
+                ;;
+        esac
+    done
 
     log "Installing OpenCNC..."
 
@@ -335,6 +381,11 @@ main() {
 
     save_state
 
+    if [[ "$with_mesh" == "true" ]]; then
+        log "Installing Istio Service Mesh & Observability Stack..."
+        "$ROOT_DIR/scripts/install_mesh.sh"
+    fi
+
     echo
     echo "========================================"
     echo " OpenCNC is running"
@@ -346,21 +397,34 @@ main() {
 
     case "$cluster_context" in
         k3d-*)
-            echo "GUI:"
+            echo "GUI Web:"
             echo "  http://localhost:8080/"
             echo
             echo "UNI HTTP:"
             echo "  http://localhost:8081/"
+            echo
+            echo "UNI gRPC:"
+            echo "  localhost:5153"
             ;;
         *)
-            echo "GUI:"
-            echo "  http://<KUBERNETES-NODE-IP>:30080/"
+            echo "GUI Web:"
+            echo "  http://<NODE-IP>:30080/  (or run: ./scripts/forward_opencnc.sh)"
             echo
             echo "UNI HTTP:"
-            echo "  http://<KUBERNETES-NODE-IP>:30081/"
+            echo "  http://<NODE-IP>:30081/  (or run: ./scripts/forward_opencnc.sh)"
+            echo
+            echo "UNI gRPC:"
+            echo "  <NODE-IP>:30153         (or run: ./scripts/forward_opencnc.sh)"
             ;;
     esac
 
+    echo
+    echo "Endpoint Forwarding Helper:"
+    echo "  ./scripts/forward_opencnc.sh"
+    echo
+    echo "Service Mesh & Observability (Istio, Kiali, Grafana, Prometheus):"
+    echo "  Install:  ./scripts/install_mesh.sh"
+    echo "  Dashboards: ./scripts/open_dashboards.sh"
     echo
     echo "Status:"
     echo "  kubectl get pods -n $NAMESPACE"

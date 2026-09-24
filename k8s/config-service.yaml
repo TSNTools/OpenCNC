@@ -22,6 +22,10 @@ spec:
               value: "0.0.0.0"
             - name: CONFIG_SERVICE_PORT
               value: "5150"
+            - name: ETCD_HOST
+              value: "etcd"
+            - name: ETCD_PORT
+              value: "2379"
             - name: OBS_BROKERS
               value: "kafka:9092"
             - name: OBS_ENABLED

@@ -92,6 +92,19 @@ func (v *VlanNetconfPlugin_2018) SupportedFields(msg proto.Message) []string {
 	}
 }
 
+func resolveBridgeName(node *topology.Node) string {
+	if node != nil && node.GetBridgeName() != "" {
+		return node.GetBridgeName()
+	}
+	if node != nil && node.GetDeviceInfo() != nil {
+		model := strings.ToUpper(node.GetDeviceInfo().GetDeviceModel())
+		if strings.Contains(model, "RELY") {
+			return "switch"
+		}
+	}
+	return "br0"
+}
+
 func (v *VlanNetconfPlugin_2018) Map(msg proto.Message, node *topology.Node) (any, error) {
 	switch typed := msg.(type) {
 	case *topology_config.PortConfig:
@@ -103,29 +116,28 @@ func (v *VlanNetconfPlugin_2018) Map(msg proto.Message, node *topology.Node) (an
 		if !hasBridgeVlanData2018(typed) {
 			return nil, fmt.Errorf("VlanNetconfPlugin_2018: BridgeVlanConfig has no VLAN data")
 		}
+		bName := resolveBridgeName(node)
 		return &bridgeVlanPayload{
-			BridgeName:    node.GetName(),
-			ComponentName: node.GetName(),
+			BridgeName:    bName,
+			ComponentName: bName,
 			Config:        typed,
 		}, nil
 	case *topology_config.BridgeConfig:
 		if typed.GetVlanConfig() == nil || !hasBridgeVlanData2018(typed.GetVlanConfig()) {
 			return nil, fmt.Errorf("VlanNetconfPlugin_2018: BridgeConfig has no VLAN config data")
 		}
+		bName := resolveBridgeName(node)
 		return &bridgeVlanPayload{
-			BridgeName:    node.GetName(),
-			ComponentName: node.GetName(),
+			BridgeName:    bName,
+			ComponentName: bName,
 			Config:        typed.GetVlanConfig(),
 		}, nil
 	case *topology_config.NodeConfig:
 		if typed.GetBridge() != nil && typed.GetBridge().GetVlanConfig() != nil && hasBridgeVlanData2018(typed.GetBridge().GetVlanConfig()) {
-			name := typed.GetNodeId()
-			if name == "" {
-				name = node.GetName()
-			}
+			bName := resolveBridgeName(node)
 			return &bridgeVlanPayload{
-				BridgeName:    name,
-				ComponentName: name,
+				BridgeName:    bName,
+				ComponentName: bName,
 				Config:        typed.GetBridge().GetVlanConfig(),
 			}, nil
 		}

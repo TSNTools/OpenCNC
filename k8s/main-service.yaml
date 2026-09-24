@@ -45,11 +45,11 @@ spec:
             - name: OBS_FAIL_OPEN
               value: "true"
           ports:
-            - name: uni-grpc
+            - name: grpc-uni
               containerPort: 5153
-            - name: nni-http
+            - name: http-nni
               containerPort: 8000
-            - name: uni-http
+            - name: http-uni
               containerPort: 8081
 ---
 apiVersion: v1
@@ -62,13 +62,14 @@ spec:
   selector:
     app: main-service
   ports:
-    - name: uni-grpc
+    - name: grpc-uni
       port: 5153
       targetPort: 5153
-    - name: nni-http
+      nodePort: 30153
+    - name: http-nni
       port: 8000
       targetPort: 8000
-    - name: uni-http
+    - name: http-uni
       port: 8081
       targetPort: 8081
       nodePort: 30081

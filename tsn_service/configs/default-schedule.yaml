@@ -12,19 +12,92 @@
 
 gating-cycle: 1 # ms
 traffic-classes:
-  - name: isochronous
-    assigned-portion: 20 # in %
-  - name: cyclic-sync
-    assigned-portion: 10
-  - name: cyclic-async
-    assigned-portion: 10
-  - name: alarms-events
-    assigned-portion: 10
-  - name: config-diag
-    assigned-portion: 10
-  - name: network-control
-    assigned-portion: 10
-  - name: best-effort
-    assigned-portion: 20
-  - name: Timecritical
-    assigned-portion: 10
+
+# Per-port default Qbv schedule configuration
+# Each port defines its own gating cycle and traffic class slot allocation.
+# Only the ports listed here will have configuration generated and sent to the switch.
+
+ports:
+  # Port 1: Critical Real-Time / Isochronous Control (1 ms cycle)
+  - port-id: P1
+    gating-cycle: 1 # ms
+    traffic-classes:
+        - name: isochronous
+          assigned-portion: 20 # in %
+        - name: cyclic-sync
+          assigned-portion: 10
+        - name: cyclic-async
+          assigned-portion: 10
+        - name: network-control
+          assigned-portion: 10
+        - name: config-diag
+          assigned-portion: 10
+        - name: alarms-events
+          assigned-portion: 10
+        - name: best-effort
+          assigned-portion: 20
+        - name: Timecritical
+          assigned-portion: 10
+
+  # Port 2: Sensor / Event Data (2 ms cycle)
+  - port-id: P2
+    gating-cycle: 2 # ms
+    traffic-classes:
+        - name: isochronous
+          assigned-portion: 20 # in %
+        - name: cyclic-sync
+          assigned-portion: 10
+        - name: cyclic-async
+          assigned-portion: 10
+        - name: alarms-events
+          assigned-portion: 10
+        - name: config-diag
+          assigned-portion: 10
+        - name: network-control
+          assigned-portion: 10
+        - name: best-effort
+          assigned-portion: 20
+        - name: Timecritical
+          assigned-portion: 10
+
+  # Port 3: Bulk / High-Bandwidth Stream (1 ms cycle)
+  - port-id: P3
+    gating-cycle: 1 # ms
+    traffic-classes:
+        - name: isochronous
+          assigned-portion: 20 # in %
+        - name: cyclic-sync
+          assigned-portion: 10
+        - name: cyclic-async
+          assigned-portion: 10
+        - name: isochronous
+          assigned-portion: 10
+        - name: config-diag
+          assigned-portion: 10
+        - name: network-control
+          assigned-portion: 10
+        - name: best-effort
+          assigned-portion: 20
+        - name: Timecritical
+          assigned-portion: 10
+
+  # Port 4: Management & Network Diagnostics (4 ms cycle)
+  - port-id: P4
+    gating-cycle: 4 # ms
+    traffic-classes:
+        - name: isochronous
+          assigned-portion: 20 # in %
+        - name: network-control
+          assigned-portion: 10
+        - name: cyclic-async
+          assigned-portion: 10
+        - name: alarms-events
+          assigned-portion: 10
+        - name: config-diag
+          assigned-portion: 10
+        - name: network-control
+          assigned-portion: 10
+        - name: best-effort
+          assigned-portion: 20
+        - name: Timecritical
+          assigned-portion: 10

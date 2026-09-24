@@ -6,6 +6,7 @@ import (
 	"os"
 	"runtime"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -61,6 +62,7 @@ func (m *MappingEngine) ApplyConfiguration(ctx context.Context, obs *observabili
 
 	// create a new configuration transaction
 	tx := NewConfigurationTransaction(cfg.GetConfigId())
+	var skipped []string
 
 	for _, node := range topo.Nodes {
 		if node == nil {
@@ -69,12 +71,14 @@ func (m *MappingEngine) ApplyConfiguration(ctx context.Context, obs *observabili
 		if node.ManagementInfo == nil {
 			if node.GetType() != topology.NodeRole_END_STATION {
 				m.logger.Printf("Skipping node %q: managementInfo is missing", node.Name)
+				skipped = append(skipped, fmt.Sprintf("node %q: managementInfo is missing", node.Name))
 			}
 			continue
 		}
 
 		nodeCfg := findNodeConfig(cfg, node.Name)
 		if nodeCfg == nil {
+			skipped = append(skipped, fmt.Sprintf("node %q: no matching node configuration", node.Name))
 			m.logger.Printf("Skipping node %q: no matching node configuration in %q", node.Name, cfg.GetConfigId())
 			continue
 		}
@@ -102,6 +106,7 @@ func (m *MappingEngine) ApplyConfiguration(ctx context.Context, obs *observabili
 				m.logger,
 			)
 			if err != nil {
+				skipped = append(skipped, fmt.Sprintf("node %q: %v", node.Name, err))
 				m.logger.Printf(
 					"failed to create backend for %s: %v",
 					key,
@@ -115,7 +120,10 @@ func (m *MappingEngine) ApplyConfiguration(ctx context.Context, obs *observabili
 		tx.Operations = append(tx.Operations, Operation{Config: nodeCfg, Backend: backend})
 	}
 	if len(tx.Operations) == 0 {
-		return fmt.Errorf("configuration %q has no eligible device operations: check topology managementInfo, matching node IDs, and registered backends", cfg.GetConfigId())
+		if len(skipped) == 0 {
+			skipped = append(skipped, "topology has no managed nodes")
+		}
+		return fmt.Errorf("configuration %q has no eligible device operations: %s", cfg.GetConfigId(), strings.Join(skipped, "; "))
 	}
 	m.logger.Printf("Applying configuration %q to %d device(s)", cfg.GetConfigId(), len(tx.Operations))
 

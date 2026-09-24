@@ -25,14 +25,15 @@ import (
 
 // Config holds command-line and environment settings.
 type Config struct {
-	Brokers       []string
-	Topics        []string
-	GroupID       string
-	FromBeginning bool
-	OutputDir     string
-	RawCSVFile    string
+	Brokers        []string
+	Topics         []string
+	GroupID        string
+	FromBeginning  bool
+	OutputDir      string
+	RawCSVFile     string
 	SummaryCSVFile string
-	FlushInterval time.Duration
+	FlushInterval  time.Duration
+	JSONTopic      string
 }
 
 // LatencySummary aggregates individual subsystem latencies for a given request.
@@ -54,6 +55,21 @@ type LatencySummary struct {
 	HasConfigPrep    bool
 	HasConfigCommit  bool
 	WrittenToSummary bool
+	flushTimer       *time.Timer
+}
+
+type LatencySummaryJSON struct {
+	TimestampUTC          string  `json:"timestamp"`
+	CorrelationID         string  `json:"correlation_id"`
+	StreamID              string  `json:"stream_id,omitempty"`
+	RequestID             string  `json:"request_id,omitempty"`
+	Interface             string  `json:"interface"`
+	TotalUNILatencyMs     float64 `json:"total_uni_latency_ms"`
+	TSNCalcLatencyMs      float64 `json:"tsn_calc_latency_ms"`
+	ConfigAppLatencyMs    float64 `json:"config_app_latency_ms"`
+	ConfigPrepLatencyMs   float64 `json:"config_prep_latency_ms"`
+	ConfigCommitLatencyMs float64 `json:"config_commit_latency_ms"`
+	MainServiceOverheadMs float64 `json:"main_service_overhead_ms"`
 }
 
 type MetricSample struct {
@@ -68,11 +84,13 @@ type Receiver struct {
 	rawWriter     *csv.Writer
 	summaryFile   *os.File
 	summaryWriter *csv.Writer
+	jsonWriter    *kafka.Writer
 
 	mu        sync.Mutex
 	summaries map[string]*LatencySummary
 
-	// Buffer for correlating subsystem metrics when CorrelationID is not shared across services
+	// Track recent TotalUNI summary awaiting late-arriving subsystem metrics
+	recentTotalUNI     *LatencySummary
 	recentTSNCalc      *MetricSample
 	recentConfigApp    *MetricSample
 	recentConfigPrep   *MetricSample
@@ -82,13 +100,14 @@ type Receiver struct {
 func main() {
 	var (
 		brokersFlag       = flag.String("brokers", getEnv("OBS_BROKERS", "localhost:9092"), "Comma-separated Kafka broker addresses")
-		topicsFlag        = flag.String("topics", getEnv("KAFKA_TOPICS", "opencnc.metrics,opencnc.events"), "Comma-separated Kafka topics to consume")
+		topicsFlag        = flag.String("topics", getEnv("KAFKA_TOPICS", "opencnc.metrics,opencnc.events,opencnc.logs"), "Comma-separated Kafka topics to consume")
 		groupFlag         = flag.String("group", getEnv("KAFKA_GROUP", ""), "Kafka consumer group ID (leave empty for fresh ephemeral consumer)")
 		fromBeginningFlag = flag.Bool("from-beginning", false, "Consume from the beginning of topic (default false: only current run)")
 		outputDirFlag     = flag.String("output-dir", getEnv("OUTPUT_DIR", "."), "Directory where CSV files will be stored")
 		rawCSVFlag        = flag.String("raw-csv", "metrics_raw.csv", "Filename for raw metric records CSV")
 		summaryCSVFlag    = flag.String("summary-csv", "stream_latencies_summary.csv", "Filename for aggregated stream latency summary CSV")
-		flushSecFlag      = flag.Int("flush-seconds", 2, "Interval in seconds to flush CSV writers to disk")
+		jsonTopicFlag     = flag.String("json-topic", getEnv("KAFKA_JSON_TOPIC", "opencnc.latencies.json"), "Kafka topic to publish correlated latency summaries in JSON")
+		flushSecFlag      = flag.Int("flush-seconds", 1, "Interval in seconds to flush CSV writers to disk")
 	)
 	flag.Parse()
 
@@ -104,6 +123,7 @@ func main() {
 		RawCSVFile:     *rawCSVFlag,
 		SummaryCSVFile: *summaryCSVFlag,
 		FlushInterval:  time.Duration(*flushSecFlag) * time.Second,
+		JSONTopic:      strings.TrimSpace(*jsonTopicFlag),
 	}
 
 	receiver, err := NewReceiver(cfg)
@@ -121,6 +141,7 @@ func main() {
 	log.Printf(" Brokers        : %s", strings.Join(cfg.Brokers, ", "))
 	log.Printf(" Topics         : %s", strings.Join(cfg.Topics, ", "))
 	log.Printf(" Consumer Group : %s", cfg.GroupID)
+	log.Printf(" Output Dir     : %s", cfg.OutputDir)
 	log.Printf(" Raw CSV        : %s", filepath.Join(cfg.OutputDir, cfg.RawCSVFile))
 	log.Printf(" Summary CSV    : %s", filepath.Join(cfg.OutputDir, cfg.SummaryCSVFile))
 	log.Printf("==================================================================")
@@ -196,12 +217,24 @@ func NewReceiver(cfg Config) (*Receiver, error) {
 		summaryWriter.Flush()
 	}
 
+	var jsonWriter *kafka.Writer
+	if cfg.JSONTopic != "" && len(cfg.Brokers) > 0 {
+		jsonWriter = &kafka.Writer{
+			Addr:         kafka.TCP(cfg.Brokers...),
+			Topic:        cfg.JSONTopic,
+			Balancer:     &kafka.Hash{},
+			BatchTimeout: 10 * time.Millisecond,
+			RequiredAcks: kafka.RequireOne,
+		}
+	}
+
 	return &Receiver{
 		cfg:           cfg,
 		rawFile:       rawFile,
 		rawWriter:     rawWriter,
 		summaryFile:   summaryFile,
 		summaryWriter: summaryWriter,
+		jsonWriter:    jsonWriter,
 		summaries:     make(map[string]*LatencySummary),
 	}, nil
 }
@@ -277,14 +310,20 @@ func (r *Receiver) processMessage(msg kafka.Message) {
 	// First try unmarshaling as Protobuf binary
 	err := proto.Unmarshal(msg.Value, &event)
 	if err != nil {
-		// Fallback to JSON unmarshaling
+		// Fallback to Protobuf JSON unmarshaling
 		err = protojson.Unmarshal(msg.Value, &event)
-		if err != nil {
-			log.Printf("[DEBUG] Non-protobuf message on topic %s (len=%d): %v", msg.Topic, len(msg.Value), err)
-			return
-		}
 	}
 
+	if err == nil && (event.GetKind() != observabilityv1.EventKind_EVENT_KIND_UNSPECIFIED || event.Payload != nil) {
+		r.processEnvelope(msg, &event)
+		return
+	}
+
+	// Fallback: Message might be a generic JSON document or raw text
+	r.processGenericPayload(msg)
+}
+
+func (r *Receiver) processEnvelope(msg kafka.Message, event *observabilityv1.EventEnvelope) {
 	occurredAt := time.Now().UTC()
 	if event.GetOccurredAt() != nil {
 		occurredAt = event.GetOccurredAt().AsTime().UTC()
@@ -304,7 +343,6 @@ func (r *Receiver) processMessage(msg kafka.Message) {
 
 		attrJSON, _ := json.Marshal(metric.GetAttributes())
 
-		// Console feedback for key latency metrics
 		log.Printf(
 			"[METRIC] Topic: %-15s | Service: %-14s | Metric: %-34s | Value: %8.2f %-4s | CorrID: %s",
 			msg.Topic,
@@ -315,7 +353,6 @@ func (r *Receiver) processMessage(msg kafka.Message) {
 			truncate(correlationID, 12),
 		)
 
-		// Record in raw CSV
 		record := []string{
 			occurredAt.Format(time.RFC3339Nano),
 			service,
@@ -331,6 +368,7 @@ func (r *Receiver) processMessage(msg kafka.Message) {
 
 		r.mu.Lock()
 		_ = r.rawWriter.Write(record)
+		r.rawWriter.Flush()
 		r.updateSummaryLocked(occurredAt, service, correlationID, metric)
 		r.mu.Unlock()
 
@@ -362,8 +400,163 @@ func (r *Receiver) processMessage(msg kafka.Message) {
 
 		r.mu.Lock()
 		_ = r.rawWriter.Write(record)
+		r.rawWriter.Flush()
+		r.mu.Unlock()
+
+	case *observabilityv1.EventEnvelope_Log:
+		logEvent := payload.Log
+		if logEvent == nil {
+			return
+		}
+
+		fieldsJSON, _ := json.Marshal(logEvent.GetFields())
+		log.Printf("[LOG EVENT] Service: %-14s | Severity: %-5s | Msg: %s", service, event.GetSeverity().String(), logEvent.GetMessage())
+
+		record := []string{
+			occurredAt.Format(time.RFC3339Nano),
+			service,
+			eventKind,
+			"log." + event.GetSeverity().String(),
+			"",
+			"",
+			correlationID,
+			eventID,
+			string(fieldsJSON),
+			logEvent.GetMessage(),
+		}
+
+		r.mu.Lock()
+		_ = r.rawWriter.Write(record)
+		r.rawWriter.Flush()
+		r.mu.Unlock()
+
+	case *observabilityv1.EventEnvelope_Audit:
+		audit := payload.Audit
+		if audit == nil {
+			return
+		}
+
+		details := fmt.Sprintf("action=%s actor=%s target=%s:%s result=%s reason=%s",
+			audit.GetAction(), audit.GetActor(), audit.GetTargetType(), audit.GetTargetId(), audit.GetResult().String(), audit.GetReason())
+		log.Printf("[AUDIT EVENT] Service: %-14s | %s", service, details)
+
+		record := []string{
+			occurredAt.Format(time.RFC3339Nano),
+			service,
+			eventKind,
+			"audit." + audit.GetAction(),
+			"",
+			"",
+			correlationID,
+			eventID,
+			"",
+			details,
+		}
+
+		r.mu.Lock()
+		_ = r.rawWriter.Write(record)
+		r.rawWriter.Flush()
+		r.mu.Unlock()
+
+	case *observabilityv1.EventEnvelope_Health:
+		health := payload.Health
+		if health == nil {
+			return
+		}
+
+		details := fmt.Sprintf("check=%s status=%s message=%s", health.GetCheck(), health.GetStatus().String(), health.GetMessage())
+		log.Printf("[HEALTH EVENT] Service: %-14s | %s", service, details)
+
+		record := []string{
+			occurredAt.Format(time.RFC3339Nano),
+			service,
+			eventKind,
+			"health." + health.GetCheck(),
+			"",
+			"",
+			correlationID,
+			eventID,
+			"",
+			details,
+		}
+
+		r.mu.Lock()
+		_ = r.rawWriter.Write(record)
+		r.rawWriter.Flush()
 		r.mu.Unlock()
 	}
+}
+
+// processGenericPayload handles non-protobuf JSON or raw payloads and writes them to the CSV.
+func (r *Receiver) processGenericPayload(msg kafka.Message) {
+	occurredAt := msg.Time.UTC()
+	if occurredAt.IsZero() {
+		occurredAt = time.Now().UTC()
+	}
+
+	var jsonMap map[string]interface{}
+	if err := json.Unmarshal(msg.Value, &jsonMap); err == nil {
+		service := "unknown"
+		if s, ok := jsonMap["service"].(string); ok {
+			service = s
+		}
+		metricName := msg.Topic
+		if m, ok := jsonMap["metric"].(string); ok {
+			metricName = m
+		} else if m, ok := jsonMap["metric_name"].(string); ok {
+			metricName = m
+		}
+		valStr := ""
+		if v, ok := jsonMap["value"].(float64); ok {
+			valStr = strconv.FormatFloat(v, 'f', 4, 64)
+		}
+		unitStr := ""
+		if u, ok := jsonMap["unit"].(string); ok {
+			unitStr = u
+		}
+		corrID := string(msg.Key)
+		if c, ok := jsonMap["correlation_id"].(string); ok {
+			corrID = c
+		}
+
+		record := []string{
+			occurredAt.Format(time.RFC3339Nano),
+			service,
+			"JSON",
+			metricName,
+			valStr,
+			unitStr,
+			corrID,
+			"",
+			string(msg.Value),
+			"",
+		}
+
+		r.mu.Lock()
+		_ = r.rawWriter.Write(record)
+		r.rawWriter.Flush()
+		r.mu.Unlock()
+		return
+	}
+
+	// Plain text fallback
+	record := []string{
+		occurredAt.Format(time.RFC3339Nano),
+		"raw",
+		"TEXT",
+		msg.Topic,
+		"",
+		"",
+		string(msg.Key),
+		"",
+		"",
+		string(msg.Value),
+	}
+
+	r.mu.Lock()
+	_ = r.rawWriter.Write(record)
+	r.rawWriter.Flush()
+	r.mu.Unlock()
 }
 
 func (r *Receiver) updateSummaryLocked(
@@ -407,9 +600,8 @@ func (r *Receiver) updateSummaryLocked(
 			summary.Interface = metric.Attributes["interface"]
 		}
 
-		// Since OpenCNC generates a distinct random CorrelationID for each metric event,
-		// correlate with the most recent subsystem metrics that completed within this request window:
-		windowDuration := time.Duration(summary.TotalUNIMs*1.2)*time.Millisecond + 10*time.Second
+		// Correlate with recent subsystem metrics that completed within this request window
+		windowDuration := time.Duration(summary.TotalUNIMs*1.2)*time.Millisecond + 15*time.Second
 		windowStart := occurredAt.Add(-windowDuration)
 
 		if !summary.HasTSNCalc && r.recentTSNCalc != nil && !r.recentTSNCalc.Used && r.recentTSNCalc.Timestamp.After(windowStart) {
@@ -436,34 +628,87 @@ func (r *Receiver) updateSummaryLocked(
 			r.recentConfigCommit.Used = true
 		}
 
+		r.recentTotalUNI = summary
+
+		// If all primary subsystems are correlated, write immediately;
+		// otherwise give late-arriving subsystem metrics up to 800ms to arrive.
+		if summary.HasTSNCalc && summary.HasConfigApp {
+			r.writeSummaryRowLocked(summary)
+		} else {
+			if summary.flushTimer != nil {
+				summary.flushTimer.Stop()
+			}
+			summary.flushTimer = time.AfterFunc(800*time.Millisecond, func() {
+				r.mu.Lock()
+				defer r.mu.Unlock()
+				if !summary.WrittenToSummary {
+					r.writeSummaryRowLocked(summary)
+				}
+			})
+		}
+
 	case "configuration_calculation_duration":
 		summary.TSNCalcMs = metric.GetValue()
 		summary.HasTSNCalc = true
 		r.recentTSNCalc = &MetricSample{Timestamp: occurredAt, Value: metric.GetValue()}
+		// Symmetrical correlation: if TotalUNI is waiting, update it
+		if r.recentTotalUNI != nil && !r.recentTotalUNI.HasTSNCalc && occurredAt.Sub(r.recentTotalUNI.LastSeenAt) < 15*time.Second {
+			r.recentTotalUNI.TSNCalcMs = metric.GetValue()
+			r.recentTotalUNI.HasTSNCalc = true
+			r.recentTSNCalc.Used = true
+			if r.recentTotalUNI.HasConfigApp && !r.recentTotalUNI.WrittenToSummary {
+				if r.recentTotalUNI.flushTimer != nil {
+					r.recentTotalUNI.flushTimer.Stop()
+				}
+				r.writeSummaryRowLocked(r.recentTotalUNI)
+			}
+		}
 
 	case "configuration_application_duration":
 		summary.ConfigAppMs = metric.GetValue()
 		summary.HasConfigApp = true
 		r.recentConfigApp = &MetricSample{Timestamp: occurredAt, Value: metric.GetValue()}
+		// Symmetrical correlation: if TotalUNI is waiting, update it
+		if r.recentTotalUNI != nil && !r.recentTotalUNI.HasConfigApp && occurredAt.Sub(r.recentTotalUNI.LastSeenAt) < 15*time.Second {
+			r.recentTotalUNI.ConfigAppMs = metric.GetValue()
+			r.recentTotalUNI.HasConfigApp = true
+			r.recentConfigApp.Used = true
+			if r.recentTotalUNI.HasTSNCalc && !r.recentTotalUNI.WrittenToSummary {
+				if r.recentTotalUNI.flushTimer != nil {
+					r.recentTotalUNI.flushTimer.Stop()
+				}
+				r.writeSummaryRowLocked(r.recentTotalUNI)
+			}
+		}
 
 	case "configuration_preparation_duration":
 		summary.ConfigPrepMs = metric.GetValue()
 		summary.HasConfigPrep = true
 		r.recentConfigPrep = &MetricSample{Timestamp: occurredAt, Value: metric.GetValue()}
+		if r.recentTotalUNI != nil && !r.recentTotalUNI.HasConfigPrep && occurredAt.Sub(r.recentTotalUNI.LastSeenAt) < 15*time.Second {
+			r.recentTotalUNI.ConfigPrepMs = metric.GetValue()
+			r.recentTotalUNI.HasConfigPrep = true
+			r.recentConfigPrep.Used = true
+		}
 
 	case "configuration_commit_duration":
 		summary.ConfigCommitMs = metric.GetValue()
 		summary.HasConfigCommit = true
 		r.recentConfigCommit = &MetricSample{Timestamp: occurredAt, Value: metric.GetValue()}
-	}
-
-	// If we received the total UNI response duration, record the summary row
-	if summary.HasTotalUNI {
-		r.writeSummaryRowLocked(summary)
+		if r.recentTotalUNI != nil && !r.recentTotalUNI.HasConfigCommit && occurredAt.Sub(r.recentTotalUNI.LastSeenAt) < 15*time.Second {
+			r.recentTotalUNI.ConfigCommitMs = metric.GetValue()
+			r.recentTotalUNI.HasConfigCommit = true
+			r.recentConfigCommit.Used = true
+		}
 	}
 }
 
 func (r *Receiver) writeSummaryRowLocked(s *LatencySummary) {
+	if s.WrittenToSummary {
+		return
+	}
+	s.WrittenToSummary = true
+
 	mainOverhead := 0.0
 	if s.HasTotalUNI && (s.HasTSNCalc || s.HasConfigApp) {
 		mainOverhead = s.TotalUNIMs - (s.TSNCalcMs + s.ConfigAppMs)
@@ -488,7 +733,6 @@ func (r *Receiver) writeSummaryRowLocked(s *LatencySummary) {
 
 	_ = r.summaryWriter.Write(record)
 	r.summaryWriter.Flush()
-	s.WrittenToSummary = true
 
 	log.Printf("==================================================================")
 	log.Printf(" [SUMMARY RECORDED] Stream Latency Breakdown")
@@ -502,6 +746,42 @@ func (r *Receiver) writeSummaryRowLocked(s *LatencySummary) {
 	)
 	log.Printf(" Main Overhead   : %.2f ms", mainOverhead)
 	log.Printf("==================================================================")
+
+	// Publish JSON event to Kafka topic for real-time Grafana ingestion
+	if r.jsonWriter != nil {
+		jsonPayload := LatencySummaryJSON{
+			TimestampUTC:          s.LastSeenAt.Format(time.RFC3339Nano),
+			CorrelationID:         s.CorrelationID,
+			StreamID:              s.StreamID,
+			RequestID:             s.RequestID,
+			Interface:             s.Interface,
+			TotalUNILatencyMs:     s.TotalUNIMs,
+			TSNCalcLatencyMs:      s.TSNCalcMs,
+			ConfigAppLatencyMs:    s.ConfigAppMs,
+			ConfigPrepLatencyMs:   s.ConfigPrepMs,
+			ConfigCommitLatencyMs: s.ConfigCommitMs,
+			MainServiceOverheadMs: mainOverhead,
+		}
+
+		if data, err := json.Marshal(jsonPayload); err == nil {
+			msg := kafka.Message{
+				Key:   []byte(s.CorrelationID),
+				Value: data,
+				Time:  s.LastSeenAt,
+			}
+			go func(m kafka.Message) {
+				ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+				defer cancel()
+				if err := r.jsonWriter.WriteMessages(ctx, m); err != nil {
+					log.Printf("[WARN] Failed publishing JSON latency to topic %s: %v", r.cfg.JSONTopic, err)
+				} else {
+					log.Printf("[INFO] Published JSON latency summary to Kafka topic: %s", r.cfg.JSONTopic)
+				}
+			}(msg)
+		} else {
+			log.Printf("[WARN] Failed marshaling JSON latency summary: %v", err)
+		}
+	}
 }
 
 func (r *Receiver) periodicFlusher(ctx context.Context) {
@@ -530,6 +810,9 @@ func (r *Receiver) Close() {
 	}
 	if r.summaryWriter != nil {
 		r.summaryWriter.Flush()
+	}
+	if r.jsonWriter != nil {
+		_ = r.jsonWriter.Close()
 	}
 	if r.rawFile != nil {
 		_ = r.rawFile.Sync()

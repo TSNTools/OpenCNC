@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: gui-service
-          image: opencnc/gui-service:local
+          image: opencnc/gui-service:latest
           imagePullPolicy: Never
           env:
             - name: GUI_SERVICE_HOST

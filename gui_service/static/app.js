@@ -261,6 +261,7 @@ function initializeActionButtons() {
         managementIp: getValue("node-edit-management-ip"),
         managementProtocol: getValue("node-edit-management-protocol"),
         managementPort: managementPort,
+        bridgeName: getValue("node-edit-bridge-name").trim(),
       };
 
       const result = await callAction("editNode", payload);
@@ -598,6 +599,7 @@ function initializeListSelection() {
     setText("node-management-ip", item.dataset.managementIp || "-");
     setText("node-management-protocol", item.dataset.managementProtocol || "-");
     setText("node-management-port", item.dataset.managementPort || "-");
+    setText("node-bridge-name", item.dataset.bridgeName || "-");
     setNodeEditFields();
   });
 
@@ -826,6 +828,7 @@ async function loadNodes() {
     li.dataset.managementIp = String(node.managementIp || "");
     li.dataset.managementProtocol = String(node.managementProtocol || "");
     li.dataset.managementPort = String(node.managementPort ?? "");
+    li.dataset.bridgeName = String(node.bridgeName || "");
     return li;
   }, "No nodes available");
   populateLinkNodeOptions(nodes);
@@ -1601,6 +1604,7 @@ function clearNodeDetails() {
   setText("node-management-ip", "-");
   setText("node-management-protocol", "-");
   setText("node-management-port", "-");
+  setText("node-bridge-name", "-");
   hideNodeEditForm();
 }
 
@@ -1729,6 +1733,8 @@ function buildNodeCreatePayload() {
   const protocol = getValue("node-create-protocol").trim();
   const managementPortRaw = getValue("node-create-port").trim();
   const userName = getValue("node-create-username").trim();
+  const password = getValue("node-create-password");
+  const bridgeName = getValue("node-create-bridge-name").trim();
 
   if (!name) {
     showToast("Node name is required.");
@@ -1757,6 +1763,10 @@ function buildNodeCreatePayload() {
     };
   }
 
+  if (bridgeName) {
+    payload.bridge_name = bridgeName;
+  }
+
   const hasManagementInfo = ipAddress || protocol || managementPortRaw || userName;
   if (hasManagementInfo) {
     payload.managementInfo = {};
@@ -1765,6 +1775,9 @@ function buildNodeCreatePayload() {
     }
     if (protocol) {
       payload.managementInfo.protocol = protocol;
+      if (protocol === "NETCONF") {
+        payload.managementInfo.transport = "SSH";
+      }
     }
     if (userName) {
       payload.managementInfo.userName = userName;
@@ -1779,6 +1792,13 @@ function buildNodeCreatePayload() {
     }
   }
 
+  if (userName) {
+    payload.username = userName;
+  }
+  if (password) {
+    payload.password = password;
+  }
+
   return payload;
 }
 
@@ -1789,6 +1809,7 @@ function resetNodeCreateForm() {
   setInputValue("node-create-ip", "");
   setInputValue("node-create-protocol", "");
   setInputValue("node-create-port", "");
+  setInputValue("node-create-bridge-name", "");
   setInputValue("node-create-username", "");
   setInputValue("node-create-password", "");
 }
@@ -2121,6 +2142,8 @@ function setNodeEditFields() {
   const editManagementIp = document.getElementById("node-edit-management-ip");
   const editManagementProtocol = document.getElementById("node-edit-management-protocol");
   const editManagementPort = document.getElementById("node-edit-management-port");
+  const editBridgeName = document.getElementById("node-edit-bridge-name");
+  const bridgeName = document.getElementById("node-bridge-name");
 
   if (editName) {
     editName.value = name && name.textContent && name.textContent !== "-" ? name.textContent.trim() : "";
@@ -2130,6 +2153,9 @@ function setNodeEditFields() {
   }
   if (editPorts) {
     editPorts.value = ports && ports.textContent && ports.textContent !== "-" ? ports.textContent.trim() : "";
+  }
+  if (editBridgeName) {
+    editBridgeName.value = bridgeName && bridgeName.textContent && bridgeName.textContent !== "-" ? bridgeName.textContent.trim() : "";
   }
   if (editUsername) {
   editUsername.value = "";
@@ -2701,6 +2727,7 @@ async function gatherPayload(action) {
         ports: getValue("node-edit-ports"),
         username: getValue("node-edit-username"), //it was written link before, check if saved correctly
         password: getValue("node-edit-password"),
+        bridgeName: getValue("node-edit-bridge-name").trim(),
       };
     case "deleteNode":
       return { id: state.selectedNodeID };

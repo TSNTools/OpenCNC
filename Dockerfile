@@ -15,6 +15,7 @@ RUN CGO_ENABLED=0 GOOS=linux go build -o /out/config-service ./config_service/cm
 RUN CGO_ENABLED=0 GOOS=linux go build -o /out/monitor-service ./monitor_service/cmd
 RUN CGO_ENABLED=0 GOOS=linux go build -o /out/tsn-service ./tsn_service/cmd
 RUN CGO_ENABLED=0 GOOS=linux go build -o /out/main-service ./main_service/cmd
+RUN CGO_ENABLED=0 GOOS=linux go build -o /out/kafka-receiver ./add_stream/kafka_receiver
 
 
 # ============================================================
@@ -34,13 +35,24 @@ ENTRYPOINT ["/app/config-service"]
 # ============================================================
 FROM debian:bookworm-slim AS monitor_service
 
+WORKDIR /app
+
 COPY --from=go-builder /out/monitor-service /app/monitor-service
 
-RUN mkdir -p /home/opencnc/OpenCNC/monitor_service/pkg/catalog
+# Monitor service loads catalog from relative paths
+RUN mkdir -p /app/monitor_service/pkg/catalog /app/pkg/catalog /home/opencnc/OpenCNC/monitor_service/pkg/catalog
 
+COPY monitor_service/pkg/catalog/available_counters.json \
+    /app/monitor_service/pkg/catalog/available_counters.json
+COPY monitor_service/pkg/catalog/available_counters.json \
+    /app/pkg/catalog/available_counters.json
 COPY monitor_service/pkg/catalog/available_counters.json \
     /home/opencnc/OpenCNC/monitor_service/pkg/catalog/available_counters.json
 
+COPY monitor_service/pkg/catalog/available_metrics.json \
+    /app/monitor_service/pkg/catalog/available_metrics.json
+COPY monitor_service/pkg/catalog/available_metrics.json \
+    /app/pkg/catalog/available_metrics.json
 COPY monitor_service/pkg/catalog/available_metrics.json \
     /home/opencnc/OpenCNC/monitor_service/pkg/catalog/available_metrics.json
 
@@ -54,13 +66,18 @@ ENTRYPOINT ["/app/monitor-service"]
 # ============================================================
 FROM debian:bookworm-slim AS tsn_service
 
+WORKDIR /app
+
 COPY --from=go-builder /out/tsn-service /app/tsn-service
 
-# TSN service expects its default schedule at this absolute path.
-RUN mkdir -p /home/opencnc/OpenCNC/tsn_service/configs
+# TSN service loads default schedule from relative path
+RUN mkdir -p /app/tsn_service/configs /app/configs
 
 COPY tsn_service/configs/default-schedule.yaml \
-    /home/opencnc/OpenCNC/tsn_service/configs/default-schedule.yaml
+    /app/tsn_service/configs/default-schedule.yaml
+
+COPY tsn_service/configs/default-schedule.yaml \
+    /app/configs/default-schedule.yaml
 
 EXPOSE 5152
 
@@ -110,3 +127,15 @@ COPY gui_service/static \
 EXPOSE 8080
 
 ENTRYPOINT ["/app/gui-service"]
+
+
+# ============================================================
+# Kafka Receiver / Latency Collector
+# ============================================================
+FROM debian:bookworm-slim AS kafka_receiver
+
+WORKDIR /app
+
+COPY --from=go-builder /out/kafka-receiver /app/kafka-receiver
+
+ENTRYPOINT ["/app/kafka-receiver"]

@@ -33,6 +33,7 @@ message Node {
     NodeProperties properties = 7 [json_name = "properties"];
 
     optional string active_config_id = 8; // refernce to the configuration applied to this node
+    optional string bridge_name = 9 [json_name = "bridge_name"];
 }
 
 enum NodeRole {

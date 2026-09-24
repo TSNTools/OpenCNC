@@ -33,6 +33,7 @@ type simpleInput struct {
 	Password           string `json:"password"`
 	Ports              string `json:"ports"`
 	Links              string `json:"links"`
+	BridgeName         string `json:"bridgeName"`
 
 	// Device model fields
 	Version string `json:"version"`
@@ -293,6 +294,7 @@ func (h *Handler) NodeByID(w http.ResponseWriter, r *http.Request) {
 			PortIds:            strings.Split(input.Ports, ","),
 			Username:           input.Username,
 			Password:           input.Password,
+			BridgeName:         input.BridgeName,
 		}
 
 		result, err := h.service.EditNode(r.Context(), node)

@@ -109,29 +109,28 @@ func (v *VlanNetconfPlugin_2021) Map(msg proto.Message, node *topology.Node) (an
 		if !hasBridgeVlanData2021(typed) {
 			return nil, fmt.Errorf("VlanNetconfPlugin_2021: BridgeVlanConfig has no VLAN data")
 		}
+		bName := resolveBridgeName(node)
 		return &bridgeVlanPayload{
-			BridgeName:    node.GetName(),
-			ComponentName: node.GetName(),
+			BridgeName:    bName,
+			ComponentName: bName,
 			Config:        typed,
 		}, nil
 	case *topology_config.BridgeConfig:
 		if typed.GetVlanConfig() == nil || !hasBridgeVlanData2021(typed.GetVlanConfig()) {
 			return nil, fmt.Errorf("VlanNetconfPlugin_2021: BridgeConfig has no VLAN config data")
 		}
+		bName := resolveBridgeName(node)
 		return &bridgeVlanPayload{
-			BridgeName:    node.GetName(),
-			ComponentName: node.GetName(),
+			BridgeName:    bName,
+			ComponentName: bName,
 			Config:        typed.GetVlanConfig(),
 		}, nil
 	case *topology_config.NodeConfig:
 		if typed.GetBridge() != nil && typed.GetBridge().GetVlanConfig() != nil && hasBridgeVlanData2021(typed.GetBridge().GetVlanConfig()) {
-			name := typed.GetNodeId()
-			if name == "" {
-				name = node.GetName()
-			}
+			bName := resolveBridgeName(node)
 			return &bridgeVlanPayload{
-				BridgeName:    name,
-				ComponentName: name,
+				BridgeName:    bName,
+				ComponentName: bName,
 				Config:        typed.GetBridge().GetVlanConfig(),
 			}, nil
 		}

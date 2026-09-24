@@ -5,7 +5,9 @@ import (
 	"encoding/xml"
 	"fmt"
 	"log/slog"
+	"net"
 	"os"
+	"strconv"
 	"strings"
 
 	"github.com/openshift-telco/go-netconf-client/netconf"
@@ -48,6 +50,10 @@ func CreateSession(host, user, pass string) (*netconf.Session, error) {
 
 // CreateSessionWithPassword connects using UsernamePassword credentials.
 func CreateSessionWithPassword(host string, creds *credentials.UsernamePassword) (*netconf.Session, error) {
+	return createSessionWithPasswordOnPort(host, 830, creds)
+}
+
+func createSessionWithPasswordOnPort(host string, port uint32, creds *credentials.UsernamePassword) (*netconf.Session, error) {
 	if creds == nil {
 		return nil, fmt.Errorf("username/password credentials are required")
 	}
@@ -58,7 +64,7 @@ func CreateSessionWithPassword(host string, creds *credentials.UsernamePassword)
 		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
 	}
 
-	address := fmt.Sprintf("%s:830", host)
+	address := net.JoinHostPort(host, strconv.FormatUint(uint64(port), 10))
 
 	session, err := netconf.NewSessionFromSSHConfig(address, sshConfig, netconf.WithSessionLogger(logger))
 	if err != nil {

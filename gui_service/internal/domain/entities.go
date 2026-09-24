@@ -62,6 +62,7 @@ type Node struct {
 	ManagementIp       string   `json:"managementIp"`
 	ManagementProtocol string   `json:"managementProtocol"`
 	ManagementPort     uint32   `json:"managementPort"`
+	BridgeName         string   `json:"bridgeName,omitempty"`
 }
 
 type Link struct {

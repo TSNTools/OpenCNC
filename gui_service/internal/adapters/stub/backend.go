@@ -527,6 +527,8 @@ func (b *Backend) GetNodes(_ context.Context) ([]domain.Node, error) {
 			domainNodes[i].ManagementProtocol = n.ManagementInfo.Protocol.String()
 			domainNodes[i].ManagementPort = n.ManagementInfo.ManagementPort
 		}
+
+		domainNodes[i].BridgeName = n.GetBridgeName()
 	}
 	return domainNodes, nil
 }
@@ -903,6 +905,13 @@ func (b *Backend) UploadTopology(_ context.Context, query string) (domain.Operat
 		}, nil
 	}
 
+	for _, node := range topologyObj.GetNodes() {
+		if node.ManagementInfo != nil && node.ManagementInfo.Protocol == topology.ManagementProtocol_NETCONF &&
+			node.ManagementInfo.Transport == topology.ManagementTransport_MANAGEMENT_TRANSPORT_UNSPECIFIED {
+			node.ManagementInfo.Transport = topology.ManagementTransport_SSH
+		}
+	}
+
 	if err := storewrapper.DeleteTopology(); err != nil {
 		fmt.Printf("Failed to delete topology: %v\n", err)
 	}
@@ -922,6 +931,42 @@ func (b *Backend) UploadTopology(_ context.Context, query string) (domain.Operat
 			Message: fmt.Sprintf("failed to store topology: %v", err),
 			Data:    map[string]string{},
 		}, nil
+	}
+
+	// Extract and store credentials if provided for any node in the topology
+	var rawWrapper struct {
+		Nodes []struct {
+			Name           string `json:"name"`
+			Username       string `json:"username"`
+			Password       string `json:"password"`
+			ManagementInfo struct {
+				Username string `json:"username"`
+				Password string `json:"password"`
+			} `json:"managementInfo"`
+		} `json:"nodes"`
+	}
+	if err := json.Unmarshal([]byte(query), &rawWrapper); err == nil {
+		for _, n := range rawWrapper.Nodes {
+			u := n.Username
+			p := n.Password
+			if u == "" && n.ManagementInfo.Username != "" {
+				u = n.ManagementInfo.Username
+				p = n.ManagementInfo.Password
+			}
+			if n.Name != "" && u != "" {
+				creds := &credentials.ManagementCredentials{
+					Authentication: &credentials.ManagementCredentials_UsernamePassword{
+						UsernamePassword: &credentials.UsernamePassword{
+							Username: u,
+							Password: p,
+						},
+					},
+				}
+				if err := storewrapper.StoreCredentials(n.Name, creds); err != nil {
+					log.Printf("[GUI] failed storing credentials for node %s: %v", n.Name, err)
+				}
+			}
+		}
 	}
 
 	b.recordEvent(
@@ -953,7 +998,10 @@ func (b *Backend) AddNode(_ context.Context, query string) (domain.OperationResu
 	}
 
 	var node topology.Node
-	if err := protojson.Unmarshal([]byte(query), &node); err != nil {
+	unmarshaler := protojson.UnmarshalOptions{
+		DiscardUnknown: true,
+	}
+	if err := unmarshaler.Unmarshal([]byte(query), &node); err != nil {
 		return domain.OperationResult{
 			Success: false,
 			Name:    "addNode",
@@ -971,6 +1019,11 @@ func (b *Backend) AddNode(_ context.Context, query string) (domain.OperationResu
 		}, nil
 	}
 
+	if node.ManagementInfo != nil && node.ManagementInfo.Protocol == topology.ManagementProtocol_NETCONF &&
+		node.ManagementInfo.Transport == topology.ManagementTransport_MANAGEMENT_TRANSPORT_UNSPECIFIED {
+		node.ManagementInfo.Transport = topology.ManagementTransport_SSH
+	}
+
 	if err := storewrapper.StoreNode(&node); err != nil {
 		return domain.OperationResult{
 			Success: false,
@@ -978,6 +1031,33 @@ func (b *Backend) AddNode(_ context.Context, query string) (domain.OperationResu
 			Message: fmt.Sprintf("failed to store node %s: %v", node.GetName(), err),
 			Data:    map[string]string{"nodeId": node.GetName()},
 		}, nil
+	}
+
+	// Extract and store credentials if username was provided
+	var rawInput struct {
+		Username string `json:"username"`
+		Password string `json:"password"`
+	}
+	_ = json.Unmarshal([]byte(query), &rawInput)
+
+	if rawInput.Username != "" {
+		creds := &credentials.ManagementCredentials{
+			Authentication: &credentials.ManagementCredentials_UsernamePassword{
+				UsernamePassword: &credentials.UsernamePassword{
+					Username: rawInput.Username,
+					Password: rawInput.Password,
+				},
+			},
+		}
+		if err := storewrapper.StoreCredentials(node.GetName(), creds); err != nil {
+			b.recordEvent("error", "addNode", "credentials", fmt.Sprintf("Failed storing credentials for node %s: %v", node.GetName(), err), node.GetName())
+			return domain.OperationResult{
+				Success: false,
+				Name:    "addNode",
+				Message: fmt.Sprintf("stored node %s but failed to store credentials: %v", node.GetName(), err),
+				Data:    map[string]string{"nodeId": node.GetName()},
+			}, nil
+		}
 	}
 
 	b.recordEvent("info", "addNode", "topology", fmt.Sprintf("Stored node %s", node.GetName()), node.GetName())
@@ -1125,6 +1205,15 @@ func (b *Backend) EditNode(_ context.Context, node domain.Node) (domain.Operatio
 		}
 
 		current.ManagementInfo.Protocol = parsedProtocol
+	}
+
+	if node.BridgeName != "" {
+		current.BridgeName = &node.BridgeName
+	}
+
+	if current.ManagementInfo != nil && current.ManagementInfo.Protocol == topology.ManagementProtocol_NETCONF &&
+		current.ManagementInfo.Transport == topology.ManagementTransport_MANAGEMENT_TRANSPORT_UNSPECIFIED {
+		current.ManagementInfo.Transport = topology.ManagementTransport_SSH
 	}
 
 	if node.PortIds != nil {

@@ -12,10 +12,13 @@ spec:
     metadata:
       labels:
         app: kafka
+      annotations:
+        sidecar.istio.io/inject: "false"
     spec:
       containers:
         - name: kafka
           image: apache/kafka:3.9.1
+          imagePullPolicy: IfNotPresent
           env:
             - name: KAFKA_NODE_ID
               value: "1"
@@ -24,7 +27,7 @@ spec:
             - name: KAFKA_LISTENERS
               value: "PLAINTEXT://:9092,CONTROLLER://:9093"
             - name: KAFKA_ADVERTISED_LISTENERS
-              value: "PLAINTEXT://kafka:9092"
+              value: "PLAINTEXT://kafka.opencnc.svc.cluster.local:9092"
             - name: KAFKA_CONTROLLER_LISTENER_NAMES
               value: "CONTROLLER"
             - name: KAFKA_LISTENER_SECURITY_PROTOCOL_MAP
@@ -61,6 +64,9 @@ metadata:
 spec:
   backoffLimit: 10
   template:
+    metadata:
+      annotations:
+        sidecar.istio.io/inject: "false"
     spec:
       restartPolicy: OnFailure
       containers:
@@ -71,7 +77,7 @@ spec:
             - -c
             - |
               until /opt/kafka/bin/kafka-topics.sh \
-                --bootstrap-server kafka:9092 \
+                --bootstrap-server kafka.opencnc.svc.cluster.local:9092 \
                 --list >/dev/null 2>&1
               do
                 sleep 2
@@ -82,10 +88,11 @@ spec:
                 opencnc.events \
                 opencnc.metrics \
                 opencnc.audit \
-                opencnc.health
+                opencnc.health \
+                opencnc.latencies.json
               do
                 /opt/kafka/bin/kafka-topics.sh \
-                  --bootstrap-server kafka:9092 \
+                  --bootstrap-server kafka.opencnc.svc.cluster.local:9092 \
                   --create \
                   --if-not-exists \
                   --topic "$topic" \

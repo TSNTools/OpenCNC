@@ -3,6 +3,7 @@
     {
       "name": "SWITCH",
       "type": "BRIDGE",
+      "bridge_name": "SWITCH",
       "deviceInfo": {
         "device_model": "RELY-TSN4",
         "supported_protocols": [
@@ -16,6 +17,8 @@
         "protocol": "NETCONF",
         "transport": "SSH"
       },
+      "username": "sys-admin",
+      "password": "sys-admin",
       "ports": [
         {
           "id": "P1",

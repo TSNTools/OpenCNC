@@ -3,13 +3,15 @@ package catalog
 import (
 	"encoding/json"
 	"os"
+	"path/filepath"
+	"runtime"
 
 	"OpenCNC/monitor_service/structures/monitoring"
 )
 
-const (
-	defaultCountersPath = "/home/jittin/config-service/test/OpenCNC/monitor_service/pkg/catalog/available_counters.json"
-	defaultMetricsPath  = "/home/jittin/config-service/test/OpenCNC/monitor_service/pkg/catalog/available_metrics.json"
+var (
+	defaultCountersPath = "monitor_service/pkg/catalog/available_counters.json"
+	defaultMetricsPath  = "monitor_service/pkg/catalog/available_metrics.json"
 )
 
 type Catalog struct {
@@ -18,13 +20,45 @@ type Catalog struct {
 	Metrics  []*monitoring.Metric    `json:"metrics"`
 }
 
+func readConfigFile(envVar, defaultRelPath string, fallbacks ...string) ([]byte, error) {
+	if env := os.Getenv(envVar); env != "" {
+		if b, err := os.ReadFile(env); err == nil {
+			return b, nil
+		}
+	}
+	candidates := append([]string{defaultRelPath}, fallbacks...)
+	if _, filename, _, ok := runtime.Caller(0); ok {
+		candidates = append(candidates, filepath.Join(filepath.Dir(filename), filepath.Base(defaultRelPath)))
+	}
+	for _, p := range candidates {
+		if b, err := os.ReadFile(p); err == nil {
+			return b, nil
+		}
+	}
+	return os.ReadFile(defaultRelPath)
+}
+
 func LoadCatalog() (*Catalog, error) {
-	countersData, err := os.ReadFile(defaultCountersPath)
+	countersData, err := readConfigFile(
+		"COUNTERS_PATH",
+		defaultCountersPath,
+		"pkg/catalog/available_counters.json",
+		"../pkg/catalog/available_counters.json",
+		"available_counters.json",
+		"/home/opencnc/OpenCNC/monitor_service/pkg/catalog/available_counters.json",
+	)
 	if err != nil {
 		return nil, err
 	}
 
-	metricsData, err := os.ReadFile(defaultMetricsPath)
+	metricsData, err := readConfigFile(
+		"METRICS_PATH",
+		defaultMetricsPath,
+		"pkg/catalog/available_metrics.json",
+		"../pkg/catalog/available_metrics.json",
+		"available_metrics.json",
+		"/home/opencnc/OpenCNC/monitor_service/pkg/catalog/available_metrics.json",
+	)
 	if err != nil {
 		return nil, err
 	}
