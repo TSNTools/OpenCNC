@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# Script: add_stream.sh
+# Script: send_add_stream.sh
 # Description: Sends an Add Stream request to OpenCNC UNI gRPC endpoint containing
 #              two TSN stream requests:
 #              - Stream 1: Talker on tsn1 (enp1s0) -> Listener on tsn2 (ens6)
@@ -18,7 +18,7 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-REPO_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
+REPO_DIR="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 
 DEFAULT_ENDPOINT="localhost:5153"
 ENDPOINT="${1:-${CNC_GRPC_ENDPOINT:-$DEFAULT_ENDPOINT}}"
@@ -40,6 +40,35 @@ show_help() {
 if [[ "${1:-}" == "-h" || "${1:-}" == "--help" ]]; then
     show_help
     exit 0
+fi
+
+PF_PID=""
+cleanup() {
+    if [[ -n "${PF_PID}" ]]; then
+        kill "${PF_PID}" 2>/dev/null || true
+    fi
+}
+trap cleanup EXIT INT TERM
+
+# If targeting local endpoint and port 5153 is not currently reachable,
+# check if Kubernetes main-service is available and auto port-forward.
+if [[ "${ENDPOINT}" == "localhost:5153" || "${ENDPOINT}" == "127.0.0.1:5153" ]]; then
+    if ! (exec 3<>/dev/tcp/127.0.0.1/5153) 2>/dev/null; then
+        if command -v kubectl >/dev/null 2>&1 && kubectl get svc main-service -n opencnc >/dev/null 2>&1; then
+            echo "[i] Port 5153 is not open locally. Auto port-forwarding svc/main-service..."
+            kubectl port-forward -n opencnc svc/main-service 5153:5153 >/dev/null 2>&1 &
+            PF_PID=$!
+            for _ in {1..25}; do
+                if (exec 3<>/dev/tcp/127.0.0.1/5153) 2>/dev/null; then
+                    exec 3>&-
+                    break
+                fi
+                sleep 0.2
+            done
+        fi
+    else
+        exec 3>&-
+    fi
 fi
 
 cd "${REPO_DIR}"
