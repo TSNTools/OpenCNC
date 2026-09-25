@@ -38,6 +38,8 @@ if kubectl get svc grafana -n istio-system >/dev/null 2>&1; then
     PIDS+=($!)
     echo "✔ Grafana (Pod resource usage & Istio dashboards):"
     echo "    http://localhost:3000"
+    echo "    OpenCNC Logs & Latencies Dashboard:"
+    echo "    http://localhost:3000/d/8ec5168c-3dd8-4dce-b5bb-b89826b63f1f/opencnc-logs-and-latency-monitor"
 fi
 
 # 3. Prometheus (Metrics backend & raw PromQL queries)

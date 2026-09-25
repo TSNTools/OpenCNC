@@ -1,0 +1,1186 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "links": [],
+  "liveNow": true,
+  "panels": [
+    {
+      "id": 1,
+      "title": "OpenCNC Pods CPU Usage (mCPU)",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PBFA97CFB590B2093"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 0
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisLabel": "mCPU",
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "showPoints": "never"
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "editorMode": "code",
+          "expr": "sum(rate(container_cpu_usage_seconds_total{namespace=\"opencnc\", container!=\"POD\", container!=\"istio-proxy\", container!=\"\"}[1m])) by (pod) * 1000",
+          "legendFormat": "{{pod}}",
+          "range": true,
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "OpenCNC Pods Memory Usage (MB)",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PBFA97CFB590B2093"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 0
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisLabel": "MB",
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "showPoints": "never"
+          },
+          "unit": "mbytes"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "editorMode": "code",
+          "expr": "sum(container_memory_working_set_bytes{namespace=\"opencnc\", container!=\"POD\", container!=\"istio-proxy\", container!=\"\"}) by (pod) / (1024 * 1024)",
+          "legendFormat": "{{pod}}",
+          "range": true,
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "Config Service Logs (config-service)",
+      "type": "logs",
+      "datasource": {
+        "type": "hamedkarbasi93-kafka-datasource",
+        "uid": "cfz4vv44j5v5sf"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 8
+      },
+      "options": {
+        "showLabels": true,
+        "wrapLogMessage": true,
+        "enableLogDetails": true,
+        "sortOrder": "Descending",
+        "dedupStrategy": "none",
+        "showTime": true
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "hamedkarbasi93-kafka-datasource",
+            "uid": "cfz4vv44j5v5sf"
+          },
+          "topicName": "opencnc.logs.config-service",
+          "messageFormat": "plaintext",
+          "autoOffsetReset": "earliest",
+          "partition": 0,
+          "lastN": 200,
+          "timestampMode": "message"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "Monitoring Service Logs (monitor-service)",
+      "type": "logs",
+      "datasource": {
+        "type": "hamedkarbasi93-kafka-datasource",
+        "uid": "cfz4vv44j5v5sf"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 8
+      },
+      "options": {
+        "showLabels": true,
+        "wrapLogMessage": true,
+        "enableLogDetails": true,
+        "sortOrder": "Descending",
+        "dedupStrategy": "none",
+        "showTime": true
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "hamedkarbasi93-kafka-datasource",
+            "uid": "cfz4vv44j5v5sf"
+          },
+          "topicName": "opencnc.logs.monitor-service",
+          "messageFormat": "plaintext",
+          "autoOffsetReset": "earliest",
+          "partition": 0,
+          "lastN": 200,
+          "timestampMode": "message"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "title": "Main Service Logs (main-service)",
+      "type": "logs",
+      "datasource": {
+        "type": "hamedkarbasi93-kafka-datasource",
+        "uid": "cfz4vv44j5v5sf"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 16
+      },
+      "options": {
+        "showLabels": true,
+        "wrapLogMessage": true,
+        "enableLogDetails": true,
+        "sortOrder": "Descending",
+        "dedupStrategy": "none",
+        "showTime": true
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "hamedkarbasi93-kafka-datasource",
+            "uid": "cfz4vv44j5v5sf"
+          },
+          "topicName": "opencnc.logs.main-service",
+          "messageFormat": "plaintext",
+          "autoOffsetReset": "earliest",
+          "partition": 0,
+          "lastN": 200,
+          "timestampMode": "message"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "title": "TSN Service Logs (tsn-service)",
+      "type": "logs",
+      "datasource": {
+        "type": "hamedkarbasi93-kafka-datasource",
+        "uid": "cfz4vv44j5v5sf"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 16
+      },
+      "options": {
+        "showLabels": true,
+        "wrapLogMessage": true,
+        "enableLogDetails": true,
+        "sortOrder": "Descending",
+        "dedupStrategy": "none",
+        "showTime": true
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "hamedkarbasi93-kafka-datasource",
+            "uid": "cfz4vv44j5v5sf"
+          },
+          "topicName": "opencnc.logs.tsn-service",
+          "messageFormat": "plaintext",
+          "autoOffsetReset": "earliest",
+          "partition": 0,
+          "lastN": 200,
+          "timestampMode": "message"
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "title": "GUI Service Logs (gui-service)",
+      "type": "logs",
+      "datasource": {
+        "type": "hamedkarbasi93-kafka-datasource",
+        "uid": "cfz4vv44j5v5sf"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 24
+      },
+      "options": {
+        "showLabels": true,
+        "wrapLogMessage": true,
+        "enableLogDetails": true,
+        "sortOrder": "Descending",
+        "dedupStrategy": "none",
+        "showTime": true
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "hamedkarbasi93-kafka-datasource",
+            "uid": "cfz4vv44j5v5sf"
+          },
+          "topicName": "opencnc.logs.gui-service",
+          "messageFormat": "plaintext",
+          "autoOffsetReset": "earliest",
+          "partition": 0,
+          "lastN": 200,
+          "timestampMode": "message"
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "title": "Unified Logs Stream (All Services)",
+      "type": "logs",
+      "datasource": {
+        "type": "hamedkarbasi93-kafka-datasource",
+        "uid": "cfz4vv44j5v5sf"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 24
+      },
+      "options": {
+        "showLabels": true,
+        "wrapLogMessage": true,
+        "enableLogDetails": true,
+        "sortOrder": "Descending",
+        "dedupStrategy": "none",
+        "showTime": true
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "hamedkarbasi93-kafka-datasource",
+            "uid": "cfz4vv44j5v5sf"
+          },
+          "topicName": "opencnc.logs.clean",
+          "messageFormat": "plaintext",
+          "autoOffsetReset": "earliest",
+          "partition": 0,
+          "lastN": 200,
+          "timestampMode": "message"
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "title": "Stream Latency Breakdown (Kafka JSON: opencnc.latencies.json)",
+      "type": "timeseries",
+      "datasource": {
+        "type": "hamedkarbasi93-kafka-datasource",
+        "uid": "cfz4vv44j5v5sf"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 32
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "Latency (ms)",
+            "axisPlacement": "auto",
+            "drawStyle": "bars",
+            "fillOpacity": 80,
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "normal"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1000
+              }
+            ]
+          },
+          "unit": "ms"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean",
+            "max",
+            "last"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "hamedkarbasi93-kafka-datasource",
+            "uid": "cfz4vv44j5v5sf"
+          },
+          "topicName": "opencnc.latencies.json",
+          "messageFormat": "json",
+          "autoOffsetReset": "earliest",
+          "partition": 0,
+          "lastN": 100,
+          "timestampMode": "message"
+        }
+      ]
+    },
+    {
+      "id": 10,
+      "title": "Recent Stream Latencies Summary Table",
+      "type": "table",
+      "datasource": {
+        "type": "hamedkarbasi93-kafka-datasource",
+        "uid": "cfz4vv44j5v5sf"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 32
+      },
+      "options": {
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "hamedkarbasi93-kafka-datasource",
+            "uid": "cfz4vv44j5v5sf"
+          },
+          "topicName": "opencnc.latencies.json",
+          "messageFormat": "json",
+          "autoOffsetReset": "earliest",
+          "partition": 0,
+          "lastN": 50,
+          "timestampMode": "message"
+        }
+      ]
+    },
+    {
+      "id": 11,
+      "title": "B&R Switch Telemetry (node: B&R)",
+      "description": "Monitored interface counters across ports for B&R switch",
+      "type": "table",
+      "datasource": {
+        "type": "hamedkarbasi93-kafka-datasource",
+        "uid": "cfz4vv44j5v5sf"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 40
+      },
+      "options": {
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "displayName": "Timestamp",
+            "desc": true
+          }
+        ]
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": true
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "timestamp"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Timestamp"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "port_id"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Port"
+              },
+              {
+                "id": "custom.width",
+                "value": 90
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "metric"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Counter Name"
+              },
+              {
+                "id": "custom.width",
+                "value": 200
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "value"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Value"
+              },
+              {
+                "id": "custom.width",
+                "value": 120
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "unit"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Unit"
+              },
+              {
+                "id": "custom.width",
+                "value": 70
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "node_id"
+            },
+            "properties": [
+              {
+                "id": "custom.hidden",
+                "value": true
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "service"
+            },
+            "properties": [
+              {
+                "id": "custom.hidden",
+                "value": true
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "series_id"
+            },
+            "properties": [
+              {
+                "id": "custom.hidden",
+                "value": true
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "event_id"
+            },
+            "properties": [
+              {
+                "id": "custom.hidden",
+                "value": true
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "attributes"
+            },
+            "properties": [
+              {
+                "id": "custom.hidden",
+                "value": true
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "schema_version"
+            },
+            "properties": [
+              {
+                "id": "custom.hidden",
+                "value": true
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "correlation_id"
+            },
+            "properties": [
+              {
+                "id": "custom.hidden",
+                "value": true
+              }
+            ]
+          }
+        ]
+      },
+      "transformations": [
+        {
+          "id": "filterByValue",
+          "options": {
+            "filters": [
+              {
+                "config": {
+                  "id": "regex",
+                  "options": {
+                    "value": ".*B&R.*"
+                  }
+                },
+                "fieldName": "node_id"
+              }
+            ],
+            "match": "any",
+            "type": "include"
+          }
+        }
+      ],
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "hamedkarbasi93-kafka-datasource",
+            "uid": "cfz4vv44j5v5sf"
+          },
+          "topicName": "opencnc.monitoring.json",
+          "messageFormat": "json",
+          "autoOffsetReset": "earliest",
+          "partition": 0,
+          "lastN": 200,
+          "timestampMode": "message"
+        }
+      ]
+    },
+    {
+      "id": 12,
+      "title": "Relyum Switch Telemetry (node: RELY-TSN4)",
+      "description": "Monitored interface counters across ports for Relyum switch",
+      "type": "table",
+      "datasource": {
+        "type": "hamedkarbasi93-kafka-datasource",
+        "uid": "cfz4vv44j5v5sf"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 40
+      },
+      "options": {
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "displayName": "Timestamp",
+            "desc": true
+          }
+        ]
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": true
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "timestamp"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Timestamp"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "port_id"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Port"
+              },
+              {
+                "id": "custom.width",
+                "value": 90
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "metric"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Counter Name"
+              },
+              {
+                "id": "custom.width",
+                "value": 200
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "value"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Value"
+              },
+              {
+                "id": "custom.width",
+                "value": 120
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "unit"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Unit"
+              },
+              {
+                "id": "custom.width",
+                "value": 70
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "node_id"
+            },
+            "properties": [
+              {
+                "id": "custom.hidden",
+                "value": true
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "service"
+            },
+            "properties": [
+              {
+                "id": "custom.hidden",
+                "value": true
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "series_id"
+            },
+            "properties": [
+              {
+                "id": "custom.hidden",
+                "value": true
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "event_id"
+            },
+            "properties": [
+              {
+                "id": "custom.hidden",
+                "value": true
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "attributes"
+            },
+            "properties": [
+              {
+                "id": "custom.hidden",
+                "value": true
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "schema_version"
+            },
+            "properties": [
+              {
+                "id": "custom.hidden",
+                "value": true
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "correlation_id"
+            },
+            "properties": [
+              {
+                "id": "custom.hidden",
+                "value": true
+              }
+            ]
+          }
+        ]
+      },
+      "transformations": [
+        {
+          "id": "filterByValue",
+          "options": {
+            "filters": [
+              {
+                "config": {
+                  "id": "regex",
+                  "options": {
+                    "value": ".*(RELY|SWITCH).*"
+                  }
+                },
+                "fieldName": "node_id"
+              }
+            ],
+            "match": "any",
+            "type": "include"
+          }
+        }
+      ],
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "hamedkarbasi93-kafka-datasource",
+            "uid": "cfz4vv44j5v5sf"
+          },
+          "topicName": "opencnc.monitoring.json",
+          "messageFormat": "json",
+          "autoOffsetReset": "earliest",
+          "partition": 0,
+          "lastN": 200,
+          "timestampMode": "message"
+        }
+      ]
+    },
+    {
+      "id": 13,
+      "title": "B&R Switch Metrics Trend",
+      "description": "Counter values over time for B&R switch ports",
+      "type": "timeseries",
+      "datasource": {
+        "type": "hamedkarbasi93-kafka-datasource",
+        "uid": "cfz4vv44j5v5sf"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 48
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "Value",
+            "axisPlacement": "auto",
+            "drawStyle": "line",
+            "fillOpacity": 15,
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "calcs": [
+            "last",
+            "max",
+            "mean"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "transformations": [
+        {
+          "id": "filterByValue",
+          "options": {
+            "filters": [
+              {
+                "config": {
+                  "id": "regex",
+                  "options": {
+                    "value": ".*B&R.*"
+                  }
+                },
+                "fieldName": "node_id"
+              }
+            ],
+            "match": "any",
+            "type": "include"
+          }
+        }
+      ],
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "hamedkarbasi93-kafka-datasource",
+            "uid": "cfz4vv44j5v5sf"
+          },
+          "topicName": "opencnc.monitoring.json",
+          "messageFormat": "json",
+          "autoOffsetReset": "earliest",
+          "partition": 0,
+          "lastN": 200,
+          "timestampMode": "message"
+        }
+      ]
+    },
+    {
+      "id": 14,
+      "title": "Relyum Switch Metrics Trend",
+      "description": "Counter values over time for Relyum switch ports",
+      "type": "timeseries",
+      "datasource": {
+        "type": "hamedkarbasi93-kafka-datasource",
+        "uid": "cfz4vv44j5v5sf"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 48
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "Value",
+            "axisPlacement": "auto",
+            "drawStyle": "line",
+            "fillOpacity": 15,
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "calcs": [
+            "last",
+            "max",
+            "mean"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "transformations": [
+        {
+          "id": "filterByValue",
+          "options": {
+            "filters": [
+              {
+                "config": {
+                  "id": "regex",
+                  "options": {
+                    "value": ".*(RELY|SWITCH).*"
+                  }
+                },
+                "fieldName": "node_id"
+              }
+            ],
+            "match": "any",
+            "type": "include"
+          }
+        }
+      ],
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "hamedkarbasi93-kafka-datasource",
+            "uid": "cfz4vv44j5v5sf"
+          },
+          "topicName": "opencnc.monitoring.json",
+          "messageFormat": "json",
+          "autoOffsetReset": "earliest",
+          "partition": 0,
+          "lastN": 200,
+          "timestampMode": "message"
+        }
+      ]
+    }
+  ],
+  "refresh": "5s",
+  "schemaVersion": 41,
+  "tags": [
+    "opencnc",
+    "kafka",
+    "logs",
+    "metrics"
+  ],
+  "time": {
+    "from": "now-15m",
+    "to": "now"
+  },
+  "timepicker": {
+    "refresh_intervals": [
+      "5s",
+      "10s",
+      "30s",
+      "1m",
+      "5m"
+    ]
+  },
+  "timezone": "browser",
+  "title": "OpenCNC - Logs & Latency Monitor",
+  "uid": "8ec5168c-3dd8-4dce-b5bb-b89826b63f1f",
+  "version": 7
+}

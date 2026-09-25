@@ -15,7 +15,7 @@ RUN CGO_ENABLED=0 GOOS=linux go build -o /out/config-service ./config_service/cm
 RUN CGO_ENABLED=0 GOOS=linux go build -o /out/monitor-service ./monitor_service/cmd
 RUN CGO_ENABLED=0 GOOS=linux go build -o /out/tsn-service ./tsn_service/cmd
 RUN CGO_ENABLED=0 GOOS=linux go build -o /out/main-service ./main_service/cmd
-RUN CGO_ENABLED=0 GOOS=linux go build -o /out/kafka-receiver ./add_stream/kafka_receiver
+RUN CGO_ENABLED=0 GOOS=linux go build -o /out/kafka-receiver ./common/kafka_receiver
 
 
 # ============================================================
@@ -70,7 +70,7 @@ WORKDIR /app
 
 COPY --from=go-builder /out/tsn-service /app/tsn-service
 
-# TSN service loads default schedule from relative path
+# Include both YAML defaults and select explicit runtime paths.
 RUN mkdir -p /app/tsn_service/configs /app/configs
 
 COPY tsn_service/configs/default-schedule.yaml \
@@ -78,6 +78,15 @@ COPY tsn_service/configs/default-schedule.yaml \
 
 COPY tsn_service/configs/default-schedule.yaml \
     /app/configs/default-schedule.yaml
+
+COPY tsn_service/configs/default-vlan.yaml \
+    /app/tsn_service/configs/default-vlan.yaml
+
+COPY tsn_service/configs/default-vlan.yaml \
+    /app/configs/default-vlan.yaml
+
+ENV DEFAULT_SCHEDULE_PATH=/app/tsn_service/configs/default-schedule.yaml \
+    DEFAULT_VLAN_PATH=/app/tsn_service/configs/default-vlan.yaml
 
 EXPOSE 5152
 

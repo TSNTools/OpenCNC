@@ -23,6 +23,12 @@ spec:
             - name: GUI_SERVICE_PORT
               value: "8080"
 
+            # Explicit values override Kubernetes service-link variables.
+            - name: MONITOR_SERVICE_HOST
+              value: "monitor-service"
+            - name: MONITOR_SERVICE_PORT
+              value: "5151"
+
             - name: ETCD_HOST
               value: "etcd"
             - name: ETCD_PORT

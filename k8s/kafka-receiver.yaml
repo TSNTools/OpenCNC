@@ -23,10 +23,12 @@ spec:
           imagePullPolicy: IfNotPresent
           args:
             - "-brokers=kafka.opencnc.svc.cluster.local:9092"
-            - "-topics=opencnc.metrics,opencnc.events"
+            - "-topics=opencnc.metrics,opencnc.events,opencnc.logs"
             - "-json-topic=opencnc.latencies.json"
+            - "-monitoring-json-topic=opencnc.monitoring.json"
+            - "-group=opencnc-receiver-v1"
             - "-output-dir=/data"
-            - "-from-beginning=false"
+            - "-from-beginning=true"
           volumeMounts:
             - name: data-dir
               mountPath: /data

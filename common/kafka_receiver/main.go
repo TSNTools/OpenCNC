@@ -25,15 +25,16 @@ import (
 
 // Config holds command-line and environment settings.
 type Config struct {
-	Brokers        []string
-	Topics         []string
-	GroupID        string
-	FromBeginning  bool
-	OutputDir      string
-	RawCSVFile     string
-	SummaryCSVFile string
-	FlushInterval  time.Duration
-	JSONTopic      string
+	Brokers             []string
+	Topics              []string
+	GroupID             string
+	FromBeginning       bool
+	OutputDir           string
+	RawCSVFile          string
+	SummaryCSVFile      string
+	FlushInterval       time.Duration
+	JSONTopic           string
+	MonitoringJSONTopic string
 }
 
 // LatencySummary aggregates individual subsystem latencies for a given request.
@@ -79,12 +80,14 @@ type MetricSample struct {
 }
 
 type Receiver struct {
-	cfg           Config
-	rawFile       *os.File
-	rawWriter     *csv.Writer
-	summaryFile   *os.File
-	summaryWriter *csv.Writer
-	jsonWriter    *kafka.Writer
+	cfg              Config
+	rawFile          *os.File
+	rawWriter        *csv.Writer
+	summaryFile      *os.File
+	summaryWriter    *csv.Writer
+	monitoringWriter messageWriter
+	jsonWriter       *kafka.Writer
+	logWriter        *kafka.Writer
 
 	mu        sync.Mutex
 	summaries map[string]*LatencySummary
@@ -109,21 +112,23 @@ func main() {
 		jsonTopicFlag     = flag.String("json-topic", getEnv("KAFKA_JSON_TOPIC", "opencnc.latencies.json"), "Kafka topic to publish correlated latency summaries in JSON")
 		flushSecFlag      = flag.Int("flush-seconds", 1, "Interval in seconds to flush CSV writers to disk")
 	)
+	monitoringTopicFlag := flag.String("monitoring-json-topic", getEnv("KAFKA_MONITORING_JSON_TOPIC", "opencnc.monitoring.json"), "JSON output topic for device metrics (empty disables)")
 	flag.Parse()
 
 	brokers := splitAndTrim(*brokersFlag)
 	topics := splitAndTrim(*topicsFlag)
 
 	cfg := Config{
-		Brokers:        brokers,
-		Topics:         topics,
-		GroupID:        strings.TrimSpace(*groupFlag),
-		FromBeginning:  *fromBeginningFlag,
-		OutputDir:      *outputDirFlag,
-		RawCSVFile:     *rawCSVFlag,
-		SummaryCSVFile: *summaryCSVFlag,
-		FlushInterval:  time.Duration(*flushSecFlag) * time.Second,
-		JSONTopic:      strings.TrimSpace(*jsonTopicFlag),
+		Brokers:             brokers,
+		Topics:              topics,
+		GroupID:             strings.TrimSpace(*groupFlag),
+		FromBeginning:       *fromBeginningFlag,
+		OutputDir:           *outputDirFlag,
+		RawCSVFile:          *rawCSVFlag,
+		SummaryCSVFile:      *summaryCSVFlag,
+		FlushInterval:       time.Duration(*flushSecFlag) * time.Second,
+		JSONTopic:           strings.TrimSpace(*jsonTopicFlag),
+		MonitoringJSONTopic: strings.TrimSpace(*monitoringTopicFlag),
 	}
 
 	receiver, err := NewReceiver(cfg)
@@ -154,6 +159,11 @@ func main() {
 }
 
 func NewReceiver(cfg Config) (*Receiver, error) {
+	for _, topic := range cfg.Topics {
+		if cfg.MonitoringJSONTopic != "" && topic == cfg.MonitoringJSONTopic {
+			return nil, fmt.Errorf("monitoring output topic must not be an input topic")
+		}
+	}
 	if err := os.MkdirAll(cfg.OutputDir, 0755); err != nil {
 		return nil, fmt.Errorf("failed to create output directory %s: %w", cfg.OutputDir, err)
 	}
@@ -228,14 +238,30 @@ func NewReceiver(cfg Config) (*Receiver, error) {
 		}
 	}
 
+	var logWriter *kafka.Writer
+	if len(cfg.Brokers) > 0 {
+		logWriter = &kafka.Writer{
+			Addr:         kafka.TCP(cfg.Brokers...),
+			Balancer:     &kafka.Hash{},
+			BatchTimeout: 10 * time.Millisecond,
+			RequiredAcks: kafka.RequireOne,
+		}
+	}
+
+	var monitoringWriter messageWriter
+	if cfg.MonitoringJSONTopic != "" && len(cfg.Brokers) > 0 {
+		monitoringWriter = &kafka.Writer{Addr: kafka.TCP(cfg.Brokers...), Topic: cfg.MonitoringJSONTopic, Balancer: &kafka.Hash{}, RequiredAcks: kafka.RequireAll, BatchTimeout: 10 * time.Millisecond, WriteTimeout: 10 * time.Second}
+	}
 	return &Receiver{
-		cfg:           cfg,
-		rawFile:       rawFile,
-		rawWriter:     rawWriter,
-		summaryFile:   summaryFile,
-		summaryWriter: summaryWriter,
-		jsonWriter:    jsonWriter,
-		summaries:     make(map[string]*LatencySummary),
+		monitoringWriter: monitoringWriter,
+		cfg:              cfg,
+		rawFile:          rawFile,
+		rawWriter:        rawWriter,
+		summaryFile:      summaryFile,
+		summaryWriter:    summaryWriter,
+		jsonWriter:       jsonWriter,
+		logWriter:        logWriter,
+		summaries:        make(map[string]*LatencySummary),
 	}, nil
 }
 
@@ -243,7 +269,8 @@ func (r *Receiver) Start(ctx context.Context) error {
 	var wg sync.WaitGroup
 
 	// Periodic flusher for CSV buffers
-	go r.periodicFlusher(ctx)
+	wg.Add(1)
+	go func() { defer wg.Done(); r.periodicFlusher(ctx) }()
 
 	// Launch consumer goroutine for each topic
 	for _, topic := range r.cfg.Topics {
@@ -268,7 +295,7 @@ func (r *Receiver) consumeTopic(ctx context.Context, topic string) {
 	}
 
 	if r.cfg.GroupID != "" {
-		readerConfig.GroupID = r.cfg.GroupID
+		readerConfig.GroupID = r.cfg.GroupID + "." + topic
 	} else {
 		// Use a unique ephemeral group ID for this run to avoid replaying previous runs
 		readerConfig.GroupID = fmt.Sprintf("opencnc-run-%d", time.Now().UnixNano())
@@ -286,7 +313,7 @@ func (r *Receiver) consumeTopic(ctx context.Context, topic string) {
 	log.Printf("[INFO] Consumer started for topic: %s", topic)
 
 	for {
-		msg, err := reader.ReadMessage(ctx)
+		msg, err := reader.FetchMessage(ctx)
 		if err != nil {
 			if ctx.Err() != nil {
 				return
@@ -300,7 +327,20 @@ func (r *Receiver) consumeTopic(ctx context.Context, topic string) {
 			}
 		}
 
+		if err := r.forwardMonitoring(ctx, msg); err != nil {
+			return
+		}
 		r.processMessage(msg)
+		for {
+			if err := reader.CommitMessages(ctx, msg); err == nil {
+				break
+			} else {
+				log.Printf("[WARN] Commit failed for %s/%d/%d: %v", msg.Topic, msg.Partition, msg.Offset, err)
+			}
+			if !waitRetry(ctx) {
+				return
+			}
+		}
 	}
 }
 
@@ -369,7 +409,9 @@ func (r *Receiver) processEnvelope(msg kafka.Message, event *observabilityv1.Eve
 		r.mu.Lock()
 		_ = r.rawWriter.Write(record)
 		r.rawWriter.Flush()
-		r.updateSummaryLocked(occurredAt, service, correlationID, metric)
+		if normalizeServiceName(service) != "monitor-service" {
+			r.updateSummaryLocked(occurredAt, service, correlationID, metric)
+		}
 		r.mu.Unlock()
 
 	case *observabilityv1.EventEnvelope_Domain:
@@ -430,6 +472,8 @@ func (r *Receiver) processEnvelope(msg kafka.Message, event *observabilityv1.Eve
 		r.rawWriter.Flush()
 		r.mu.Unlock()
 
+		r.forwardCleanLog(occurredAt, service, event.GetSeverity().String(), logEvent.GetMessage(), correlationID)
+
 	case *observabilityv1.EventEnvelope_Audit:
 		audit := payload.Audit
 		if audit == nil {
@@ -458,6 +502,8 @@ func (r *Receiver) processEnvelope(msg kafka.Message, event *observabilityv1.Eve
 		r.rawWriter.Flush()
 		r.mu.Unlock()
 
+		r.forwardCleanLog(occurredAt, service, event.GetSeverity().String(), details, correlationID)
+
 	case *observabilityv1.EventEnvelope_Health:
 		health := payload.Health
 		if health == nil {
@@ -484,6 +530,8 @@ func (r *Receiver) processEnvelope(msg kafka.Message, event *observabilityv1.Eve
 		_ = r.rawWriter.Write(record)
 		r.rawWriter.Flush()
 		r.mu.Unlock()
+
+		r.forwardCleanLog(occurredAt, service, event.GetSeverity().String(), details, correlationID)
 	}
 }
 
@@ -536,6 +584,12 @@ func (r *Receiver) processGenericPayload(msg kafka.Message) {
 		_ = r.rawWriter.Write(record)
 		r.rawWriter.Flush()
 		r.mu.Unlock()
+
+		if msg.Topic == "opencnc.logs" {
+			if msgText, ok := jsonMap["message"].(string); ok {
+				r.forwardCleanLog(occurredAt, service, "INFO", msgText, corrID)
+			}
+		}
 		return
 	}
 
@@ -557,6 +611,10 @@ func (r *Receiver) processGenericPayload(msg kafka.Message) {
 	_ = r.rawWriter.Write(record)
 	r.rawWriter.Flush()
 	r.mu.Unlock()
+
+	if msg.Topic == "opencnc.logs" {
+		r.forwardCleanLog(occurredAt, "unknown", "INFO", string(msg.Value), string(msg.Key))
+	}
 }
 
 func (r *Receiver) updateSummaryLocked(
@@ -811,8 +869,14 @@ func (r *Receiver) Close() {
 	if r.summaryWriter != nil {
 		r.summaryWriter.Flush()
 	}
+	if r.monitoringWriter != nil {
+		_ = r.monitoringWriter.Close()
+	}
 	if r.jsonWriter != nil {
 		_ = r.jsonWriter.Close()
+	}
+	if r.logWriter != nil {
+		_ = r.logWriter.Close()
 	}
 	if r.rawFile != nil {
 		_ = r.rawFile.Sync()
@@ -822,6 +886,74 @@ func (r *Receiver) Close() {
 		_ = r.summaryFile.Sync()
 		_ = r.summaryFile.Close()
 	}
+}
+
+func normalizeServiceName(service string) string {
+	s := strings.ToLower(strings.TrimSpace(service))
+	if strings.Contains(s, "main") {
+		return "main-service"
+	}
+	if strings.Contains(s, "tsn") {
+		return "tsn-service"
+	}
+	if strings.Contains(s, "config") {
+		return "config-service"
+	}
+	if strings.Contains(s, "gui") {
+		return "gui-service"
+	}
+	if strings.Contains(s, "monitor") {
+		return "monitor-service"
+	}
+	if s == "" {
+		return "unknown"
+	}
+	return s
+}
+
+func (r *Receiver) forwardCleanLog(occurredAt time.Time, rawService string, severity string, msgText string, corrID string) {
+	if r.logWriter == nil || strings.TrimSpace(msgText) == "" {
+		return
+	}
+	service := normalizeServiceName(rawService)
+	if severity == "" {
+		severity = "INFO"
+	}
+	severity = strings.TrimPrefix(severity, "SEVERITY_")
+
+	// Standard log line format that Grafana parses cleanly without any unknown symbols:
+	// Example: 2026-09-24 23:55:00.123 [INFO] [main-service] Tentative configuration retrieved...
+	timeStr := occurredAt.UTC().Format("2006-01-02 15:04:05.000")
+	cleanLine := fmt.Sprintf("%s [%s] [%s] %s", timeStr, severity, service, strings.TrimSpace(msgText))
+	if corrID != "" {
+		cleanLine += fmt.Sprintf(" (corr_id=%s)", corrID)
+	}
+
+	valBytes := []byte(cleanLine)
+	keyBytes := []byte(corrID)
+	if len(keyBytes) == 0 {
+		keyBytes = []byte(service)
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+
+	// 1. Publish to the service-specific topic (e.g. opencnc.logs.config-service)
+	svcTopic := fmt.Sprintf("opencnc.logs.%s", service)
+	_ = r.logWriter.WriteMessages(ctx, kafka.Message{
+		Topic: svcTopic,
+		Key:   keyBytes,
+		Value: valBytes,
+		Time:  occurredAt,
+	})
+
+	// 2. Publish to the unified clean topic
+	_ = r.logWriter.WriteMessages(ctx, kafka.Message{
+		Topic: "opencnc.logs.clean",
+		Key:   keyBytes,
+		Value: valBytes,
+		Time:  occurredAt,
+	})
 }
 
 func fmtFloat(val float64, present bool) string {

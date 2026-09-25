@@ -89,7 +89,14 @@ spec:
                 opencnc.metrics \
                 opencnc.audit \
                 opencnc.health \
-                opencnc.latencies.json
+                opencnc.latencies.json \
+                opencnc.monitoring.json \
+                opencnc.logs.clean \
+                opencnc.logs.config-service \
+                opencnc.logs.tsn-service \
+                opencnc.logs.main-service \
+                opencnc.logs.gui-service \
+                opencnc.logs.monitor-service
               do
                 /opt/kafka/bin/kafka-topics.sh \
                   --bootstrap-server kafka.opencnc.svc.cluster.local:9092 \

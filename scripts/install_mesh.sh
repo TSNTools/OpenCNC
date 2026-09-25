@@ -134,6 +134,12 @@ for dep in config-service monitor-service tsn-service main-service gui-service; 
     fi
 done
 
+# 7. Setup Grafana Kafka Datasource & Dashboard
+log "Configuring Grafana Kafka consumer & OpenCNC dashboard..."
+if [[ -x "$ROOT_DIR/scripts/setup_grafana_kafka.sh" ]]; then
+    "$ROOT_DIR/scripts/setup_grafana_kafka.sh" || log "Notice: setup_grafana_kafka.sh can be run manually anytime: ./scripts/setup_grafana_kafka.sh"
+fi
+
 echo ""
 echo "=========================================================="
 echo " Istio Service Mesh & Observability Stack are READY!"

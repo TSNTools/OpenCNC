@@ -62,6 +62,15 @@ data:
       orgId: 1
       type: loki
       url: http://loki:3100
+    - access: proxy
+      editable: true
+      isDefault: false
+      jsonData:
+        bootstrapServers: kafka.opencnc.svc.cluster.local:9092
+      name: Kafka
+      orgId: 1
+      type: hamedkarbasi93-kafka-datasource
+      uid: cfz4vv44j5v5sf
   dashboardproviders.yaml: |
     apiVersion: 1
     providers:

@@ -14,6 +14,7 @@ ROOT_DIR="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 KAFKA_BROKERS="${OBS_BROKERS:-localhost:9092}"
 KAFKA_TOPICS="${KAFKA_TOPICS:-opencnc.metrics,opencnc.events,opencnc.logs}"
 JSON_TOPIC="${KAFKA_JSON_TOPIC:-opencnc.latencies.json}"
+MONITORING_JSON_TOPIC="${KAFKA_MONITORING_JSON_TOPIC-opencnc.monitoring.json}"
 OUTPUT_DIR="${OUTPUT_DIR:-${ROOT_DIR}}"
 FROM_BEGINNING="${FROM_BEGINNING:-false}"
 GROUP_ID="${KAFKA_GROUP:-opencnc-latency-collector-$(date +%s)}"
@@ -86,26 +87,15 @@ echo "=================================================================="
 
 cd "${ROOT_DIR}"
 
-if [[ -f "${SCRIPT_DIR}/kafka_receiver" ]]; then
-    "${SCRIPT_DIR}/kafka_receiver" \
+# Run current source instead of the legacy checked-in binary.
+    go run ./common/kafka_receiver \
         -brokers="${KAFKA_BROKERS}" \
         -topics="${KAFKA_TOPICS}" \
         -json-topic="${JSON_TOPIC}" \
+        -monitoring-json-topic="${MONITORING_JSON_TOPIC}" \
         -group="${GROUP_ID}" \
         -from-beginning="${FROM_BEGINNING}" \
         -output-dir="${OUTPUT_DIR}" \
         -flush-seconds="${FLUSH_INTERVAL}" \
         -raw-csv="metrics_raw.csv" \
         -summary-csv="stream_latencies_summary.csv"
-else
-    go run ./add_stream/kafka_receiver \
-        -brokers="${KAFKA_BROKERS}" \
-        -topics="${KAFKA_TOPICS}" \
-        -json-topic="${JSON_TOPIC}" \
-        -group="${GROUP_ID}" \
-        -from-beginning="${FROM_BEGINNING}" \
-        -output-dir="${OUTPUT_DIR}" \
-        -flush-seconds="${FLUSH_INTERVAL}" \
-        -raw-csv="metrics_raw.csv" \
-        -summary-csv="stream_latencies_summary.csv"
-fi
