@@ -1,1 +1,2 @@
-config_service_resources.csv
+# Ignore CSV data files at any directory depth.
+*.[cC][sS][vV]
