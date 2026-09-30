@@ -37,106 +37,27 @@ switches:
             - name: Timecritical
               assigned-portion: 10
 
-      # Port 2: Sensor / Event Data (2 ms cycle)
-      - port-id: P2
-        gating-cycle: 2 # ms
-        traffic-classes:
-            - name: isochronous
-              assigned-portion: 20 # in %
-            - name: cyclic-sync
-              assigned-portion: 10
-            - name: cyclic-async
-              assigned-portion: 10
-            - name: alarms-events
-              assigned-portion: 10
-            - name: config-diag
-              assigned-portion: 10
-            - name: network-control
-              assigned-portion: 10
-            - name: best-effort
-              assigned-portion: 20
-            - name: Timecritical
-              assigned-portion: 10
+ 
 
-      # Port 3: Bulk / High-Bandwidth Stream (1 ms cycle)
-      - port-id: P3
-        gating-cycle: 1 # ms
-        traffic-classes:
-            - name: isochronous
-              assigned-portion: 20 # in %
-            - name: cyclic-sync
-              assigned-portion: 10
-            - name: cyclic-async
-              assigned-portion: 10
-            - name: isochronous
-              assigned-portion: 10
-            - name: config-diag
-              assigned-portion: 10
-            - name: network-control
-              assigned-portion: 10
-            - name: best-effort
-              assigned-portion: 20
-            - name: Timecritical
-              assigned-portion: 10
-
-      # Port 4: Management & Network Diagnostics (4 ms cycle)
-      - port-id: P4
-        gating-cycle: 4 # ms
-        traffic-classes:
-            - name: isochronous
-              assigned-portion: 20 # in %
-            - name: network-control
-              assigned-portion: 10
-            - name: cyclic-async
-              assigned-portion: 10
-            - name: alarms-events
-              assigned-portion: 10
-            - name: config-diag
-              assigned-portion: 10
-            - name: network-control
-              assigned-portion: 10
-            - name: best-effort
-              assigned-portion: 20
-            - name: Timecritical
-              assigned-portion: 10
-
-  # B&R: example independent cycles and allocations for each port.
+ # B&R: 8 traffic classes per port, exact multiples of 320 ns (1 ms cycle)
   - management-ip: "192.168.4.65"
     ports:
-      - port-id: P1
-        gating-cycle: 1 # ms
-        traffic-classes:
-          - name: Timecritical
-            assigned-portion: 40
-          - name: network-control
-            assigned-portion: 40
-          - name: isochronous
-            assigned-portion: 20
       - port-id: P2
         gating-cycle: 1 # ms
         traffic-classes:
-          - name: cyclic-sync
-            assigned-portion: 40
-          - name: alarms-events
-            assigned-portion: 40
-          - name: isochronous
-            assigned-portion: 20
-      - port-id: P3
-        gating-cycle: 1 # ms
-        traffic-classes:
-          - name: cyclic-async
-            assigned-portion: 40
-          - name: isochronous
-            assigned-portion: 40
           - name: Timecritical
-            assigned-portion: 20
-
-      - port-id: P4
-        gating-cycle: 1 # ms
-        traffic-classes:
+            assigned-portion: 20       # 200,000 ns (625 * 320 ns)
           - name: network-control
-            assigned-portion: 40
-          - name: config-diag
-            assigned-portion: 20
+            assigned-portion: 16       # 160,000 ns (500 * 320 ns)
           - name: isochronous
-            assigned-portion: 40
+            assigned-portion: 16       # 160,000 ns (500 * 320 ns)
+          - name: cyclic-sync
+            assigned-portion: 12       # 120,000 ns (375 * 320 ns)
+          - name: alarms-events
+            assigned-portion: 12       # 120,000 ns (375 * 320 ns)
+          - name: cyclic-async
+            assigned-portion: 8        #  80,000 ns (250 * 320 ns)
+          - name: config-diag
+            assigned-portion: 8        #  80,000 ns (250 * 320 ns)
+          - name: best-effort
+            assigned-portion: 8        #  80,000 ns (250 * 320 ns)

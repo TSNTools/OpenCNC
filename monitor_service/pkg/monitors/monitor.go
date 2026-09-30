@@ -18,7 +18,7 @@ type Monitor interface {
 	Stop()
 
 	// AddCollector registers a collector used by this monitor.
-	AddCollector(counter *monitoring.Counter, resource *monitoring.ResourceKey, session *netconf.Session, catalog *catalog.Catalog) error
+	AddCollector(counter *monitoring.Counter, resource *monitoring.ResourceKey, session *netconf.Session, catalog *catalog.Catalog, interfaceName ...string) error
 
 	// AddMeter registers a meter for this monitor's resource.
 	AddMeter(metric *monitoring.Metric, resource *monitoring.ResourceKey) error

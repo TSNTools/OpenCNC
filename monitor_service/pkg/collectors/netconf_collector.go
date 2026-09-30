@@ -20,6 +20,7 @@ import (
 
 type NetconfCollector struct {
 	target         *monitoring.ResourceKey
+	interfaceName  string
 	session        *netconf.Session
 	catalog        *counters.Catalog
 	obs            *observability.Client
@@ -33,8 +34,14 @@ func NewNetconfCollector(
 	catalog *counters.Catalog,
 	obs *observability.Client,
 	PollIntervalMs uint32,
+	interfaceNames ...string,
 ) *NetconfCollector {
+	interfaceName := target.GetPortId()
+	if len(interfaceNames) > 0 {
+		interfaceName = interfaceNames[0]
+	}
 	return &NetconfCollector{
+		interfaceName:  interfaceName,
 		target:         target,
 		session:        session,
 		catalog:        catalog,
@@ -129,7 +136,7 @@ func (c *NetconfCollector) Collect(ctx context.Context) ([]*monitoring.DataSampl
 			)
 	}
 
-	values, err := parseCounters(reply, requestedCounters, c.target)
+	values, err := parseCounters(reply, requestedCounters, c.interfaceName)
 
 	if err != nil {
 		return nil, err
@@ -233,7 +240,7 @@ type InterfaceCounters struct {
 	Counters map[string]float64
 }
 
-func parseCounters(reply string, requested []*monitoring.Counter, target *monitoring.ResourceKey) (map[string]float64, error) {
+func parseCounters(reply string, requested []*monitoring.Counter, interfaceName string) (map[string]float64, error) {
 
 	var data interfaceReply
 
@@ -281,10 +288,7 @@ func parseCounters(reply string, requested []*monitoring.Counter, target *monito
 	}
 
 	values := make(map[string]float64)
-	targetPort := ""
-	if target != nil {
-		targetPort = strings.TrimSpace(target.GetPortId())
-	}
+	targetPort := strings.TrimSpace(interfaceName)
 
 	for _, iface := range parsedInterfaces {
 		if targetPort != "" && iface.Name != targetPort {

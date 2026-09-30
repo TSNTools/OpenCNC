@@ -1667,3 +1667,15 @@ This provides a simple foundation for adding new protocols, metrics, monitoring 
 
 ```
 ```
+
+## Topology port IDs and NETCONF interface names
+
+For a port monitor, OpenCNC resolves the selected topology `Port.Id` to that
+port's `Port.Name` before matching NETCONF `interfaces/interface/name`.
+For example, a port with `id: P2` and `name: sw0p2` reads device interface
+`sw0p2`, while GUI targets, metric source IDs and Kafka `port_id` labels remain
+`P2`. Set `Name` to the exact interface name reported by the device; no numeric
+mapping is inferred. When `Name` is empty, `Id` is used for compatibility with
+existing topologies that already use interface names as IDs. Unknown port IDs
+are rejected before opening a NETCONF session. Restart an active monitor after
+changing its stored port name so the new mapping is resolved.

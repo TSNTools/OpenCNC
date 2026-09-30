@@ -3,7 +3,7 @@
 # Script: setup_grafana_kafka.sh
 # Description: Installs and configures the Kafka Datasource plugin in Grafana,
 #              sets up the Kafka data source pointing to in-cluster Kafka,
-#              and imports the OpenCNC Logs & Latency dashboard JSON.
+#              and imports the graphs-first dashboard with B&R monitoring and raw logs.
 # ==============================================================================
 
 set -euo pipefail
@@ -248,7 +248,12 @@ else:
     dash = raw
 
 # Ensure all kafka panels use the configured datasource UID
-for panel in dash.get("panels", []):
+def all_panels(panels):
+    for panel in panels:
+        yield panel
+        yield from all_panels(panel.get("panels", []))
+
+for panel in all_panels(dash.get("panels", [])):
     ds = panel.get("datasource", {})
     if isinstance(ds, dict) and ds.get("type") == "hamedkarbasi93-kafka-datasource":
         panel["datasource"]["uid"] = ds_uid

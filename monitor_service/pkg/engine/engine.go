@@ -3,6 +3,7 @@ package engine
 import (
 	"context"
 	"fmt"
+	"strings"
 	"sync"
 
 	"OpenCNC/common/observability"
@@ -103,6 +104,10 @@ func (e *Engine) StartMonitoring(resource *monitoring.ResourceKey, node *topolog
 		return fmt.Errorf("monitoring resource is nil")
 	}
 
+	interfaceName, err := resolveInterfaceName(node, resource)
+	if err != nil {
+		return err
+	}
 	id := resource.String() // unique monitor per resource
 
 	if len(counters) == 0 && len(metrics) == 0 {
@@ -138,7 +143,7 @@ func (e *Engine) StartMonitoring(resource *monitoring.ResourceKey, node *topolog
 
 	// Add collectors to the monitor
 	for _, counter := range counters {
-		err := resourceMonitor.AddCollector(counter, resource, session, e.Catalog)
+		err := resourceMonitor.AddCollector(counter, resource, session, e.Catalog, interfaceName)
 		if err != nil {
 			return fmt.Errorf("failed to add collector for counter %q: %w", counter.Name, err)
 		}
@@ -154,7 +159,7 @@ func (e *Engine) StartMonitoring(resource *monitoring.ResourceKey, node *topolog
 				return fmt.Errorf("failed to add dependency counter %q for metric %q", counterID, metric.Name)
 			}
 			counter.PollIntervalMs = metric.EvaluationIntervalMs
-			err := resourceMonitor.AddCollector(counter, resource, session, e.Catalog)
+			err := resourceMonitor.AddCollector(counter, resource, session, e.Catalog, interfaceName)
 			if err != nil {
 				return fmt.Errorf("failed to add collector for counter %q: %w", counter.Name, err)
 			}
@@ -225,4 +230,25 @@ func (e *Engine) HandleEvent(event *monitoring.MonitoringEvent) error {
 	// For the first version, simply accept the event once all configured actions have been dispatched.
 
 	return nil
+}
+
+// Resolve only the device lookup name; ResourceKey retains the topology ID.
+func resolveInterfaceName(node *topology.Node, resource *monitoring.ResourceKey) (string, error) {
+	if resource == nil {
+		return "", fmt.Errorf("monitoring resource is nil")
+	}
+	if resource.GetPortId() == "" {
+		return "", nil
+	}
+	for _, port := range node.GetPorts() {
+		if port.GetId() != resource.GetPortId() {
+			continue
+		}
+		if name := strings.TrimSpace(port.GetName()); name != "" {
+			return name, nil
+		}
+		// Existing topologies may already use device interface names as IDs.
+		return port.GetId(), nil
+	}
+	return "", fmt.Errorf("port %q not found on node %q", resource.GetPortId(), node.GetName())
 }

@@ -141,7 +141,7 @@ func (m *ResourceMonitor) Stop() {
 }
 
 // AddCollector registers a collector used by this monitor.
-func (m *ResourceMonitor) AddCollector(counter *monitoring.Counter, resource *monitoring.ResourceKey, session *netconf.Session, catalog *catalog.Catalog) error {
+func (m *ResourceMonitor) AddCollector(counter *monitoring.Counter, resource *monitoring.ResourceKey, session *netconf.Session, catalog *catalog.Catalog, interfaceName ...string) error {
 
 	if counter == nil {
 		return fmt.Errorf("counter is nil")
@@ -170,6 +170,7 @@ func (m *ResourceMonitor) AddCollector(counter *monitoring.Counter, resource *mo
 		catalog,
 		m.obs,
 		counter.PollIntervalMs,
+		interfaceName...,
 	)
 
 	if err := newCollector.AddCounter(counter); err != nil {
