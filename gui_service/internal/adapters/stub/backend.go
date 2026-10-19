@@ -562,9 +562,8 @@ func (b *Backend) GetStreams(_ context.Context) ([]domain.Stream, error) {
 		}
 
 		var rank string
-		if stream.StreamRank != nil {
-			rank = stream.StreamRank.Rank.String()
-		}
+
+		rank = stream.StreamRank.String()
 
 		var destinationMAC string
 		var sourceMAC string
@@ -1576,9 +1575,7 @@ func (b *Backend) AddStream(_ context.Context, stream domain.Stream) (domain.Ope
 				Talker: &uni.TalkerGroup{
 					StrId: streamID,
 
-					StrRank: &uni.StreamRank{
-						Rank: streamRankFromString(stream.Rank),
-					},
+					StrRank: streamRankFromString(stream.Rank),
 
 					EndStationInterfaces: []*uni.Interface{
 						talkerInterface,
@@ -1638,14 +1635,14 @@ func (b *Backend) AddStream(_ context.Context, stream domain.Stream) (domain.Ope
 	}, nil
 }
 
-func streamRankFromString(rank string) streamproto.StreamRankValue {
+func streamRankFromString(rank string) streamproto.StreamRank {
 	switch rank {
 	case "RANK_EMERGENCY":
-		return streamproto.StreamRankValue_RANK_EMERGENCY
+		return streamproto.StreamRank_RANK_EMERGENCY
 	case "RANK_NON_EMERGENCY":
-		return streamproto.StreamRankValue_RANK_NON_EMERGENCY
+		return streamproto.StreamRank_RANK_NON_EMERGENCY
 	default:
-		return streamproto.StreamRankValue_RANK_NON_EMERGENCY
+		return streamproto.StreamRank_RANK_NON_EMERGENCY
 	}
 }
 

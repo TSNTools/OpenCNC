@@ -7,12 +7,11 @@
 package stream
 
 import (
+	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
+	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
 	sync "sync"
 	unsafe "unsafe"
-
-	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
-	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 )
 
 const (
@@ -23,49 +22,49 @@ const (
 )
 
 // Stream rank values aligned with IEEE 802.1Qcc.
-type StreamRankValue int32
+type StreamRank int32
 
 const (
-	StreamRankValue_RANK_EMERGENCY     StreamRankValue = 0
-	StreamRankValue_RANK_NON_EMERGENCY StreamRankValue = 1
+	StreamRank_RANK_EMERGENCY     StreamRank = 0
+	StreamRank_RANK_NON_EMERGENCY StreamRank = 1
 )
 
-// Enum value maps for StreamRankValue.
+// Enum value maps for StreamRank.
 var (
-	StreamRankValue_name = map[int32]string{
+	StreamRank_name = map[int32]string{
 		0: "RANK_EMERGENCY",
 		1: "RANK_NON_EMERGENCY",
 	}
-	StreamRankValue_value = map[string]int32{
+	StreamRank_value = map[string]int32{
 		"RANK_EMERGENCY":     0,
 		"RANK_NON_EMERGENCY": 1,
 	}
 )
 
-func (x StreamRankValue) Enum() *StreamRankValue {
-	p := new(StreamRankValue)
+func (x StreamRank) Enum() *StreamRank {
+	p := new(StreamRank)
 	*p = x
 	return p
 }
 
-func (x StreamRankValue) String() string {
+func (x StreamRank) String() string {
 	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
 }
 
-func (StreamRankValue) Descriptor() protoreflect.EnumDescriptor {
+func (StreamRank) Descriptor() protoreflect.EnumDescriptor {
 	return file_common_structures_stream_stream_proto_enumTypes[0].Descriptor()
 }
 
-func (StreamRankValue) Type() protoreflect.EnumType {
+func (StreamRank) Type() protoreflect.EnumType {
 	return &file_common_structures_stream_stream_proto_enumTypes[0]
 }
 
-func (x StreamRankValue) Number() protoreflect.EnumNumber {
+func (x StreamRank) Number() protoreflect.EnumNumber {
 	return protoreflect.EnumNumber(x)
 }
 
-// Deprecated: Use StreamRankValue.Descriptor instead.
-func (StreamRankValue) EnumDescriptor() ([]byte, []int) {
+// Deprecated: Use StreamRank.Descriptor instead.
+func (StreamRank) EnumDescriptor() ([]byte, []int) {
 	return file_common_structures_stream_stream_proto_rawDescGZIP(), []int{0}
 }
 
@@ -331,59 +330,6 @@ func (x *TransmitOffsetRange) GetMaxNs() uint64 {
 	return 0
 }
 
-// Stream rank including rank value and priority.
-type StreamRank struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Rank          StreamRankValue        `protobuf:"varint,1,opt,name=rank,proto3,enum=stream.StreamRankValue" json:"rank,omitempty"`
-	Priority      uint32                 `protobuf:"varint,2,opt,name=priority,proto3" json:"priority,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *StreamRank) Reset() {
-	*x = StreamRank{}
-	mi := &file_common_structures_stream_stream_proto_msgTypes[4]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *StreamRank) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*StreamRank) ProtoMessage() {}
-
-func (x *StreamRank) ProtoReflect() protoreflect.Message {
-	mi := &file_common_structures_stream_stream_proto_msgTypes[4]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use StreamRank.ProtoReflect.Descriptor instead.
-func (*StreamRank) Descriptor() ([]byte, []int) {
-	return file_common_structures_stream_stream_proto_rawDescGZIP(), []int{4}
-}
-
-func (x *StreamRank) GetRank() StreamRankValue {
-	if x != nil {
-		return x.Rank
-	}
-	return StreamRankValue_RANK_EMERGENCY
-}
-
-func (x *StreamRank) GetPriority() uint32 {
-	if x != nil {
-		return x.Priority
-	}
-	return 0
-}
-
 // Unique identifier for a stream: MAC address + unique stream ID.
 // MAC address should be formatted as standard 6-byte hex string (e.g., "01:23:45:67:89:ab").
 type StreamId struct {
@@ -396,7 +342,7 @@ type StreamId struct {
 
 func (x *StreamId) Reset() {
 	*x = StreamId{}
-	mi := &file_common_structures_stream_stream_proto_msgTypes[5]
+	mi := &file_common_structures_stream_stream_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -408,7 +354,7 @@ func (x *StreamId) String() string {
 func (*StreamId) ProtoMessage() {}
 
 func (x *StreamId) ProtoReflect() protoreflect.Message {
-	mi := &file_common_structures_stream_stream_proto_msgTypes[5]
+	mi := &file_common_structures_stream_stream_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -421,7 +367,7 @@ func (x *StreamId) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use StreamId.ProtoReflect.Descriptor instead.
 func (*StreamId) Descriptor() ([]byte, []int) {
-	return file_common_structures_stream_stream_proto_rawDescGZIP(), []int{5}
+	return file_common_structures_stream_stream_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *StreamId) GetMacAddress() string {
@@ -441,8 +387,8 @@ func (x *StreamId) GetUniqueId() uint32 {
 // Describes a unicast or multicast stream with talker and listeners, traffic specs, and requirements.
 type Stream struct {
 	state      protoimpl.MessageState `protogen:"open.v1"`
-	StreamId   *StreamId              `protobuf:"bytes,1,opt,name=stream_id,json=streamId,proto3" json:"stream_id,omitempty"`       // Unique stream identifier
-	StreamRank *StreamRank            `protobuf:"bytes,2,opt,name=stream_rank,json=streamRank,proto3" json:"stream_rank,omitempty"` // Stream rank and priority
+	StreamId   *StreamId              `protobuf:"bytes,1,opt,name=stream_id,json=streamId,proto3" json:"stream_id,omitempty"`                               // Unique stream identifier
+	StreamRank StreamRank             `protobuf:"varint,2,opt,name=stream_rank,json=streamRank,proto3,enum=stream.StreamRank" json:"stream_rank,omitempty"` // Stream rank
 	// Talker endpoint node ID: must correspond to a node defined in topology
 	TalkerNodeId string `protobuf:"bytes,3,opt,name=talker_node_id,json=talkerNodeId,proto3" json:"talker_node_id,omitempty"` // Talker node ID (e.g., "switch1")
 	// Listener endpoint node IDs: each corresponds to a node defined in topology
@@ -459,7 +405,7 @@ type Stream struct {
 
 func (x *Stream) Reset() {
 	*x = Stream{}
-	mi := &file_common_structures_stream_stream_proto_msgTypes[6]
+	mi := &file_common_structures_stream_stream_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -471,7 +417,7 @@ func (x *Stream) String() string {
 func (*Stream) ProtoMessage() {}
 
 func (x *Stream) ProtoReflect() protoreflect.Message {
-	mi := &file_common_structures_stream_stream_proto_msgTypes[6]
+	mi := &file_common_structures_stream_stream_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -484,7 +430,7 @@ func (x *Stream) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Stream.ProtoReflect.Descriptor instead.
 func (*Stream) Descriptor() ([]byte, []int) {
-	return file_common_structures_stream_stream_proto_rawDescGZIP(), []int{6}
+	return file_common_structures_stream_stream_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *Stream) GetStreamId() *StreamId {
@@ -494,11 +440,11 @@ func (x *Stream) GetStreamId() *StreamId {
 	return nil
 }
 
-func (x *Stream) GetStreamRank() *StreamRank {
+func (x *Stream) GetStreamRank() StreamRank {
 	if x != nil {
 		return x.StreamRank
 	}
-	return nil
+	return StreamRank_RANK_EMERGENCY
 }
 
 func (x *Stream) GetTalkerNodeId() string {
@@ -575,18 +521,14 @@ const file_common_structures_stream_stream_proto_rawDesc = "" +
 	"\x16_transmit_offset_range\"C\n" +
 	"\x13TransmitOffsetRange\x12\x15\n" +
 	"\x06min_ns\x18\x01 \x01(\x04R\x05minNs\x12\x15\n" +
-	"\x06max_ns\x18\x02 \x01(\x04R\x05maxNs\"U\n" +
-	"\n" +
-	"StreamRank\x12+\n" +
-	"\x04rank\x18\x01 \x01(\x0e2\x17.stream.StreamRankValueR\x04rank\x12\x1a\n" +
-	"\bpriority\x18\x02 \x01(\rR\bpriority\"H\n" +
+	"\x06max_ns\x18\x02 \x01(\x04R\x05maxNs\"H\n" +
 	"\bStreamId\x12\x1f\n" +
 	"\vmac_address\x18\x01 \x01(\tR\n" +
 	"macAddress\x12\x1b\n" +
 	"\tunique_id\x18\x02 \x01(\rR\buniqueId\"\xee\x03\n" +
 	"\x06Stream\x12-\n" +
 	"\tstream_id\x18\x01 \x01(\v2\x10.stream.StreamIdR\bstreamId\x123\n" +
-	"\vstream_rank\x18\x02 \x01(\v2\x12.stream.StreamRankR\n" +
+	"\vstream_rank\x18\x02 \x01(\x0e2\x12.stream.StreamRankR\n" +
 	"streamRank\x12$\n" +
 	"\x0etalker_node_id\x18\x03 \x01(\tR\ftalkerNodeId\x12*\n" +
 	"\x11listener_node_ids\x18\x04 \x03(\tR\x0flistenerNodeIds\x12=\n" +
@@ -595,8 +537,9 @@ const file_common_structures_stream_stream_proto_rawDesc = "" +
 	"\ftraffic_spec\x18\x06 \x01(\v2\x1c.stream.TrafficSpecificationR\vtrafficSpec\x12b\n" +
 	"\x1cuser_to_network_requirements\x18\a \x01(\v2!.stream.UserToNetworkRequirementsR\x19userToNetworkRequirements\x12 \n" +
 	"\vdescription\x18\b \x01(\tR\vdescription\x12(\n" +
-	"\x10traffic_class_id\x18\t \x01(\tR\x0etrafficClassId*=\n" +
-	"\x0fStreamRankValue\x12\x12\n" +
+	"\x10traffic_class_id\x18\t \x01(\tR\x0etrafficClassId*8\n" +
+	"\n" +
+	"StreamRank\x12\x12\n" +
 	"\x0eRANK_EMERGENCY\x10\x00\x12\x16\n" +
 	"\x12RANK_NON_EMERGENCY\x10\x01B\tZ\a/streamb\x06proto3"
 
@@ -613,30 +556,28 @@ func file_common_structures_stream_stream_proto_rawDescGZIP() []byte {
 }
 
 var file_common_structures_stream_stream_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_common_structures_stream_stream_proto_msgTypes = make([]protoimpl.MessageInfo, 7)
+var file_common_structures_stream_stream_proto_msgTypes = make([]protoimpl.MessageInfo, 6)
 var file_common_structures_stream_stream_proto_goTypes = []any{
-	(StreamRankValue)(0),              // 0: stream.StreamRankValue
+	(StreamRank)(0),                   // 0: stream.StreamRank
 	(*DataFrameSpecification)(nil),    // 1: stream.DataFrameSpecification
 	(*TrafficSpecification)(nil),      // 2: stream.TrafficSpecification
 	(*UserToNetworkRequirements)(nil), // 3: stream.UserToNetworkRequirements
 	(*TransmitOffsetRange)(nil),       // 4: stream.TransmitOffsetRange
-	(*StreamRank)(nil),                // 5: stream.StreamRank
-	(*StreamId)(nil),                  // 6: stream.StreamId
-	(*Stream)(nil),                    // 7: stream.Stream
+	(*StreamId)(nil),                  // 5: stream.StreamId
+	(*Stream)(nil),                    // 6: stream.Stream
 }
 var file_common_structures_stream_stream_proto_depIdxs = []int32{
 	4, // 0: stream.UserToNetworkRequirements.transmit_offset_range:type_name -> stream.TransmitOffsetRange
-	0, // 1: stream.StreamRank.rank:type_name -> stream.StreamRankValue
-	6, // 2: stream.Stream.stream_id:type_name -> stream.StreamId
-	5, // 3: stream.Stream.stream_rank:type_name -> stream.StreamRank
-	1, // 4: stream.Stream.frame_spec:type_name -> stream.DataFrameSpecification
-	2, // 5: stream.Stream.traffic_spec:type_name -> stream.TrafficSpecification
-	3, // 6: stream.Stream.user_to_network_requirements:type_name -> stream.UserToNetworkRequirements
-	7, // [7:7] is the sub-list for method output_type
-	7, // [7:7] is the sub-list for method input_type
-	7, // [7:7] is the sub-list for extension type_name
-	7, // [7:7] is the sub-list for extension extendee
-	0, // [0:7] is the sub-list for field type_name
+	5, // 1: stream.Stream.stream_id:type_name -> stream.StreamId
+	0, // 2: stream.Stream.stream_rank:type_name -> stream.StreamRank
+	1, // 3: stream.Stream.frame_spec:type_name -> stream.DataFrameSpecification
+	2, // 4: stream.Stream.traffic_spec:type_name -> stream.TrafficSpecification
+	3, // 5: stream.Stream.user_to_network_requirements:type_name -> stream.UserToNetworkRequirements
+	6, // [6:6] is the sub-list for method output_type
+	6, // [6:6] is the sub-list for method input_type
+	6, // [6:6] is the sub-list for extension type_name
+	6, // [6:6] is the sub-list for extension extendee
+	0, // [0:6] is the sub-list for field type_name
 }
 
 func init() { file_common_structures_stream_stream_proto_init() }
@@ -651,7 +592,7 @@ func file_common_structures_stream_stream_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_common_structures_stream_stream_proto_rawDesc), len(file_common_structures_stream_stream_proto_rawDesc)),
 			NumEnums:      1,
-			NumMessages:   7,
+			NumMessages:   6,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

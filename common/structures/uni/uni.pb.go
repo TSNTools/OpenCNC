@@ -8,12 +8,11 @@ package uni
 
 import (
 	stream "OpenCNC/common/structures/stream"
+	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
+	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
 	sync "sync"
 	unsafe "unsafe"
-
-	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
-	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 )
 
 const (
@@ -22,6 +21,61 @@ const (
 	// Verify that runtime/protoimpl is sufficiently up-to-date.
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
+
+type DependencyType int32
+
+const (
+	DependencyType_TYPE_UNSPECIFIED       DependencyType = 0
+	DependencyType_STREAM_SEQUENCING      DependencyType = 1
+	DependencyType_CYCLIC_SPACING         DependencyType = 2
+	DependencyType_STREAM_SYNCHRONIZATION DependencyType = 3
+	DependencyType_END_TO_END_LATENCY     DependencyType = 4
+)
+
+// Enum value maps for DependencyType.
+var (
+	DependencyType_name = map[int32]string{
+		0: "TYPE_UNSPECIFIED",
+		1: "STREAM_SEQUENCING",
+		2: "CYCLIC_SPACING",
+		3: "STREAM_SYNCHRONIZATION",
+		4: "END_TO_END_LATENCY",
+	}
+	DependencyType_value = map[string]int32{
+		"TYPE_UNSPECIFIED":       0,
+		"STREAM_SEQUENCING":      1,
+		"CYCLIC_SPACING":         2,
+		"STREAM_SYNCHRONIZATION": 3,
+		"END_TO_END_LATENCY":     4,
+	}
+)
+
+func (x DependencyType) Enum() *DependencyType {
+	p := new(DependencyType)
+	*p = x
+	return p
+}
+
+func (x DependencyType) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (DependencyType) Descriptor() protoreflect.EnumDescriptor {
+	return file_common_structures_uni_uni_proto_enumTypes[0].Descriptor()
+}
+
+func (DependencyType) Type() protoreflect.EnumType {
+	return &file_common_structures_uni_uni_proto_enumTypes[0]
+}
+
+func (x DependencyType) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use DependencyType.Descriptor instead.
+func (DependencyType) EnumDescriptor() ([]byte, []int) {
+	return file_common_structures_uni_uni_proto_rawDescGZIP(), []int{0}
+}
 
 type UserToNetworkRequirements struct {
 	state            protoimpl.MessageState `protogen:"open.v1"`
@@ -299,50 +353,6 @@ func (x *ListenerGroup) GetInterfCap() *InterfaceCapabilities {
 	return nil
 }
 
-type StreamRank struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Rank          stream.StreamRankValue `protobuf:"varint,1,opt,name=Rank,json=rank,proto3,enum=stream.StreamRankValue" json:"Rank,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *StreamRank) Reset() {
-	*x = StreamRank{}
-	mi := &file_common_structures_uni_uni_proto_msgTypes[5]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *StreamRank) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*StreamRank) ProtoMessage() {}
-
-func (x *StreamRank) ProtoReflect() protoreflect.Message {
-	mi := &file_common_structures_uni_uni_proto_msgTypes[5]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use StreamRank.ProtoReflect.Descriptor instead.
-func (*StreamRank) Descriptor() ([]byte, []int) {
-	return file_common_structures_uni_uni_proto_rawDescGZIP(), []int{5}
-}
-
-func (x *StreamRank) GetRank() stream.StreamRankValue {
-	if x != nil {
-		return x.Rank
-	}
-	return stream.StreamRankValue(0)
-}
-
 type IeeeMacAddress struct {
 	state          protoimpl.MessageState `protogen:"open.v1"`
 	DestinationMac string                 `protobuf:"bytes,1,opt,name=DestinationMac,json=destination-mac-address,proto3" json:"DestinationMac,omitempty"`
@@ -353,7 +363,7 @@ type IeeeMacAddress struct {
 
 func (x *IeeeMacAddress) Reset() {
 	*x = IeeeMacAddress{}
-	mi := &file_common_structures_uni_uni_proto_msgTypes[6]
+	mi := &file_common_structures_uni_uni_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -365,7 +375,7 @@ func (x *IeeeMacAddress) String() string {
 func (*IeeeMacAddress) ProtoMessage() {}
 
 func (x *IeeeMacAddress) ProtoReflect() protoreflect.Message {
-	mi := &file_common_structures_uni_uni_proto_msgTypes[6]
+	mi := &file_common_structures_uni_uni_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -378,7 +388,7 @@ func (x *IeeeMacAddress) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use IeeeMacAddress.ProtoReflect.Descriptor instead.
 func (*IeeeMacAddress) Descriptor() ([]byte, []int) {
-	return file_common_structures_uni_uni_proto_rawDescGZIP(), []int{6}
+	return file_common_structures_uni_uni_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *IeeeMacAddress) GetDestinationMac() string {
@@ -405,7 +415,7 @@ type IeeeVlanTag struct {
 
 func (x *IeeeVlanTag) Reset() {
 	*x = IeeeVlanTag{}
-	mi := &file_common_structures_uni_uni_proto_msgTypes[7]
+	mi := &file_common_structures_uni_uni_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -417,7 +427,7 @@ func (x *IeeeVlanTag) String() string {
 func (*IeeeVlanTag) ProtoMessage() {}
 
 func (x *IeeeVlanTag) ProtoReflect() protoreflect.Message {
-	mi := &file_common_structures_uni_uni_proto_msgTypes[7]
+	mi := &file_common_structures_uni_uni_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -430,7 +440,7 @@ func (x *IeeeVlanTag) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use IeeeVlanTag.ProtoReflect.Descriptor instead.
 func (*IeeeVlanTag) Descriptor() ([]byte, []int) {
-	return file_common_structures_uni_uni_proto_rawDescGZIP(), []int{7}
+	return file_common_structures_uni_uni_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *IeeeVlanTag) GetPriorityCodePoint() uint32 {
@@ -461,7 +471,7 @@ type Ipv4Tuple struct {
 
 func (x *Ipv4Tuple) Reset() {
 	*x = Ipv4Tuple{}
-	mi := &file_common_structures_uni_uni_proto_msgTypes[8]
+	mi := &file_common_structures_uni_uni_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -473,7 +483,7 @@ func (x *Ipv4Tuple) String() string {
 func (*Ipv4Tuple) ProtoMessage() {}
 
 func (x *Ipv4Tuple) ProtoReflect() protoreflect.Message {
-	mi := &file_common_structures_uni_uni_proto_msgTypes[8]
+	mi := &file_common_structures_uni_uni_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -486,7 +496,7 @@ func (x *Ipv4Tuple) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Ipv4Tuple.ProtoReflect.Descriptor instead.
 func (*Ipv4Tuple) Descriptor() ([]byte, []int) {
-	return file_common_structures_uni_uni_proto_rawDescGZIP(), []int{8}
+	return file_common_structures_uni_uni_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *Ipv4Tuple) GetSrcIpAddr() string {
@@ -545,7 +555,7 @@ type Ipv6Tuple struct {
 
 func (x *Ipv6Tuple) Reset() {
 	*x = Ipv6Tuple{}
-	mi := &file_common_structures_uni_uni_proto_msgTypes[9]
+	mi := &file_common_structures_uni_uni_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -557,7 +567,7 @@ func (x *Ipv6Tuple) String() string {
 func (*Ipv6Tuple) ProtoMessage() {}
 
 func (x *Ipv6Tuple) ProtoReflect() protoreflect.Message {
-	mi := &file_common_structures_uni_uni_proto_msgTypes[9]
+	mi := &file_common_structures_uni_uni_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -570,7 +580,7 @@ func (x *Ipv6Tuple) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Ipv6Tuple.ProtoReflect.Descriptor instead.
 func (*Ipv6Tuple) Descriptor() ([]byte, []int) {
-	return file_common_structures_uni_uni_proto_rawDescGZIP(), []int{9}
+	return file_common_structures_uni_uni_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *Ipv6Tuple) GetSrcIpAddr() string {
@@ -628,7 +638,7 @@ type DataFrameSpecification struct {
 
 func (x *DataFrameSpecification) Reset() {
 	*x = DataFrameSpecification{}
-	mi := &file_common_structures_uni_uni_proto_msgTypes[10]
+	mi := &file_common_structures_uni_uni_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -640,7 +650,7 @@ func (x *DataFrameSpecification) String() string {
 func (*DataFrameSpecification) ProtoMessage() {}
 
 func (x *DataFrameSpecification) ProtoReflect() protoreflect.Message {
-	mi := &file_common_structures_uni_uni_proto_msgTypes[10]
+	mi := &file_common_structures_uni_uni_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -653,7 +663,7 @@ func (x *DataFrameSpecification) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DataFrameSpecification.ProtoReflect.Descriptor instead.
 func (*DataFrameSpecification) Descriptor() ([]byte, []int) {
-	return file_common_structures_uni_uni_proto_rawDescGZIP(), []int{10}
+	return file_common_structures_uni_uni_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *DataFrameSpecification) GetIndex() uint32 {
@@ -701,7 +711,7 @@ type Interval struct {
 
 func (x *Interval) Reset() {
 	*x = Interval{}
-	mi := &file_common_structures_uni_uni_proto_msgTypes[11]
+	mi := &file_common_structures_uni_uni_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -713,7 +723,7 @@ func (x *Interval) String() string {
 func (*Interval) ProtoMessage() {}
 
 func (x *Interval) ProtoReflect() protoreflect.Message {
-	mi := &file_common_structures_uni_uni_proto_msgTypes[11]
+	mi := &file_common_structures_uni_uni_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -726,7 +736,7 @@ func (x *Interval) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Interval.ProtoReflect.Descriptor instead.
 func (*Interval) Descriptor() ([]byte, []int) {
-	return file_common_structures_uni_uni_proto_rawDescGZIP(), []int{11}
+	return file_common_structures_uni_uni_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *Interval) GetNumerator() uint32 {
@@ -754,7 +764,7 @@ type TimeAware struct {
 
 func (x *TimeAware) Reset() {
 	*x = TimeAware{}
-	mi := &file_common_structures_uni_uni_proto_msgTypes[12]
+	mi := &file_common_structures_uni_uni_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -766,7 +776,7 @@ func (x *TimeAware) String() string {
 func (*TimeAware) ProtoMessage() {}
 
 func (x *TimeAware) ProtoReflect() protoreflect.Message {
-	mi := &file_common_structures_uni_uni_proto_msgTypes[12]
+	mi := &file_common_structures_uni_uni_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -779,7 +789,7 @@ func (x *TimeAware) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use TimeAware.ProtoReflect.Descriptor instead.
 func (*TimeAware) Descriptor() ([]byte, []int) {
-	return file_common_structures_uni_uni_proto_rawDescGZIP(), []int{12}
+	return file_common_structures_uni_uni_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *TimeAware) GetEarliestTransmitOffset() uint32 {
@@ -816,7 +826,7 @@ type TrafficSpecification struct {
 
 func (x *TrafficSpecification) Reset() {
 	*x = TrafficSpecification{}
-	mi := &file_common_structures_uni_uni_proto_msgTypes[13]
+	mi := &file_common_structures_uni_uni_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -828,7 +838,7 @@ func (x *TrafficSpecification) String() string {
 func (*TrafficSpecification) ProtoMessage() {}
 
 func (x *TrafficSpecification) ProtoReflect() protoreflect.Message {
-	mi := &file_common_structures_uni_uni_proto_msgTypes[13]
+	mi := &file_common_structures_uni_uni_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -841,7 +851,7 @@ func (x *TrafficSpecification) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use TrafficSpecification.ProtoReflect.Descriptor instead.
 func (*TrafficSpecification) Descriptor() ([]byte, []int) {
-	return file_common_structures_uni_uni_proto_rawDescGZIP(), []int{13}
+	return file_common_structures_uni_uni_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *TrafficSpecification) GetInterval() *Interval {
@@ -882,7 +892,7 @@ func (x *TrafficSpecification) GetTimeAware() *TimeAware {
 type TalkerGroup struct {
 	state                  protoimpl.MessageState     `protogen:"open.v1"`
 	StrId                  *stream.StreamId           `protobuf:"bytes,1,opt,name=StrId,json=stream-id,proto3" json:"StrId,omitempty"`
-	StrRank                *StreamRank                `protobuf:"bytes,2,opt,name=StrRank,json=stream-rank,proto3" json:"StrRank,omitempty"`
+	StrRank                stream.StreamRank          `protobuf:"varint,2,opt,name=StrRank,json=stream-rank,proto3,enum=stream.StreamRank" json:"StrRank,omitempty"`
 	EndStationInterfaces   []*Interface               `protobuf:"bytes,3,rep,name=EndStationInterfaces,json=end-station-interfaces,proto3" json:"EndStationInterfaces,omitempty"`
 	DataFrameSpecification []*DataFrameSpecification  `protobuf:"bytes,4,rep,name=DataFrameSpecification,json=data-frame-specification,proto3" json:"DataFrameSpecification,omitempty"`
 	TrafficSpecification   *TrafficSpecification      `protobuf:"bytes,5,opt,name=TrafficSpecification,json=traffic-specification,proto3" json:"TrafficSpecification,omitempty"`
@@ -894,7 +904,7 @@ type TalkerGroup struct {
 
 func (x *TalkerGroup) Reset() {
 	*x = TalkerGroup{}
-	mi := &file_common_structures_uni_uni_proto_msgTypes[14]
+	mi := &file_common_structures_uni_uni_proto_msgTypes[13]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -906,7 +916,7 @@ func (x *TalkerGroup) String() string {
 func (*TalkerGroup) ProtoMessage() {}
 
 func (x *TalkerGroup) ProtoReflect() protoreflect.Message {
-	mi := &file_common_structures_uni_uni_proto_msgTypes[14]
+	mi := &file_common_structures_uni_uni_proto_msgTypes[13]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -919,7 +929,7 @@ func (x *TalkerGroup) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use TalkerGroup.ProtoReflect.Descriptor instead.
 func (*TalkerGroup) Descriptor() ([]byte, []int) {
-	return file_common_structures_uni_uni_proto_rawDescGZIP(), []int{14}
+	return file_common_structures_uni_uni_proto_rawDescGZIP(), []int{13}
 }
 
 func (x *TalkerGroup) GetStrId() *stream.StreamId {
@@ -929,11 +939,11 @@ func (x *TalkerGroup) GetStrId() *stream.StreamId {
 	return nil
 }
 
-func (x *TalkerGroup) GetStrRank() *StreamRank {
+func (x *TalkerGroup) GetStrRank() stream.StreamRank {
 	if x != nil {
 		return x.StrRank
 	}
-	return nil
+	return stream.StreamRank(0)
 }
 
 func (x *TalkerGroup) GetEndStationInterfaces() []*Interface {
@@ -982,7 +992,7 @@ type Request struct {
 
 func (x *Request) Reset() {
 	*x = Request{}
-	mi := &file_common_structures_uni_uni_proto_msgTypes[15]
+	mi := &file_common_structures_uni_uni_proto_msgTypes[14]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -994,7 +1004,7 @@ func (x *Request) String() string {
 func (*Request) ProtoMessage() {}
 
 func (x *Request) ProtoReflect() protoreflect.Message {
-	mi := &file_common_structures_uni_uni_proto_msgTypes[15]
+	mi := &file_common_structures_uni_uni_proto_msgTypes[14]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1007,7 +1017,7 @@ func (x *Request) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Request.ProtoReflect.Descriptor instead.
 func (*Request) Descriptor() ([]byte, []int) {
-	return file_common_structures_uni_uni_proto_rawDescGZIP(), []int{15}
+	return file_common_structures_uni_uni_proto_rawDescGZIP(), []int{14}
 }
 
 func (x *Request) GetTalker() *TalkerGroup {
@@ -1032,16 +1042,18 @@ func (x *Request) GetListenerList() []*ListenerGroup {
 }
 
 type ConfigRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Version       float32                `protobuf:"fixed32,1,opt,name=Version,json=version,proto3" json:"Version,omitempty"`
-	Requests      []*Request             `protobuf:"bytes,2,rep,name=Requests,json=requests,proto3" json:"Requests,omitempty"`
+	state    protoimpl.MessageState `protogen:"open.v1"`
+	Version  float32                `protobuf:"fixed32,1,opt,name=Version,json=version,proto3" json:"Version,omitempty"`
+	Requests []*Request             `protobuf:"bytes,2,rep,name=Requests,json=requests,proto3" json:"Requests,omitempty"`
+	// Optional: inter-stream application intent.
+	Dependencies  *DependencyGroup `protobuf:"bytes,3,opt,name=Dependencies,json=dependency-group,proto3" json:"Dependencies,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *ConfigRequest) Reset() {
 	*x = ConfigRequest{}
-	mi := &file_common_structures_uni_uni_proto_msgTypes[16]
+	mi := &file_common_structures_uni_uni_proto_msgTypes[15]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1053,7 +1065,7 @@ func (x *ConfigRequest) String() string {
 func (*ConfigRequest) ProtoMessage() {}
 
 func (x *ConfigRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_common_structures_uni_uni_proto_msgTypes[16]
+	mi := &file_common_structures_uni_uni_proto_msgTypes[15]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1066,7 +1078,7 @@ func (x *ConfigRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ConfigRequest.ProtoReflect.Descriptor instead.
 func (*ConfigRequest) Descriptor() ([]byte, []int) {
-	return file_common_structures_uni_uni_proto_rawDescGZIP(), []int{16}
+	return file_common_structures_uni_uni_proto_rawDescGZIP(), []int{15}
 }
 
 func (x *ConfigRequest) GetVersion() float32 {
@@ -1083,6 +1095,13 @@ func (x *ConfigRequest) GetRequests() []*Request {
 	return nil
 }
 
+func (x *ConfigRequest) GetDependencies() *DependencyGroup {
+	if x != nil {
+		return x.Dependencies
+	}
+	return nil
+}
+
 type StatusInfo struct {
 	state          protoimpl.MessageState `protogen:"open.v1"`
 	TalkerStatus   int32                  `protobuf:"varint,1,opt,name=TalkerStatus,json=talker-status,proto3" json:"TalkerStatus,omitempty"`       // TODO: update to enum: 0 = None, 1 = ready, 2 = failed
@@ -1094,7 +1113,7 @@ type StatusInfo struct {
 
 func (x *StatusInfo) Reset() {
 	*x = StatusInfo{}
-	mi := &file_common_structures_uni_uni_proto_msgTypes[17]
+	mi := &file_common_structures_uni_uni_proto_msgTypes[16]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1106,7 +1125,7 @@ func (x *StatusInfo) String() string {
 func (*StatusInfo) ProtoMessage() {}
 
 func (x *StatusInfo) ProtoReflect() protoreflect.Message {
-	mi := &file_common_structures_uni_uni_proto_msgTypes[17]
+	mi := &file_common_structures_uni_uni_proto_msgTypes[16]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1119,7 +1138,7 @@ func (x *StatusInfo) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use StatusInfo.ProtoReflect.Descriptor instead.
 func (*StatusInfo) Descriptor() ([]byte, []int) {
-	return file_common_structures_uni_uni_proto_rawDescGZIP(), []int{17}
+	return file_common_structures_uni_uni_proto_rawDescGZIP(), []int{16}
 }
 
 func (x *StatusInfo) GetTalkerStatus() int32 {
@@ -1152,7 +1171,7 @@ type AccumulatedLatency struct {
 
 func (x *AccumulatedLatency) Reset() {
 	*x = AccumulatedLatency{}
-	mi := &file_common_structures_uni_uni_proto_msgTypes[18]
+	mi := &file_common_structures_uni_uni_proto_msgTypes[17]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1164,7 +1183,7 @@ func (x *AccumulatedLatency) String() string {
 func (*AccumulatedLatency) ProtoMessage() {}
 
 func (x *AccumulatedLatency) ProtoReflect() protoreflect.Message {
-	mi := &file_common_structures_uni_uni_proto_msgTypes[18]
+	mi := &file_common_structures_uni_uni_proto_msgTypes[17]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1177,7 +1196,7 @@ func (x *AccumulatedLatency) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AccumulatedLatency.ProtoReflect.Descriptor instead.
 func (*AccumulatedLatency) Descriptor() ([]byte, []int) {
-	return file_common_structures_uni_uni_proto_rawDescGZIP(), []int{18}
+	return file_common_structures_uni_uni_proto_rawDescGZIP(), []int{17}
 }
 
 func (x *AccumulatedLatency) GetAccumulatedLatency() uint32 {
@@ -1196,7 +1215,7 @@ type TimeAwareOffset struct {
 
 func (x *TimeAwareOffset) Reset() {
 	*x = TimeAwareOffset{}
-	mi := &file_common_structures_uni_uni_proto_msgTypes[19]
+	mi := &file_common_structures_uni_uni_proto_msgTypes[18]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1208,7 +1227,7 @@ func (x *TimeAwareOffset) String() string {
 func (*TimeAwareOffset) ProtoMessage() {}
 
 func (x *TimeAwareOffset) ProtoReflect() protoreflect.Message {
-	mi := &file_common_structures_uni_uni_proto_msgTypes[19]
+	mi := &file_common_structures_uni_uni_proto_msgTypes[18]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1221,7 +1240,7 @@ func (x *TimeAwareOffset) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use TimeAwareOffset.ProtoReflect.Descriptor instead.
 func (*TimeAwareOffset) Descriptor() ([]byte, []int) {
-	return file_common_structures_uni_uni_proto_rawDescGZIP(), []int{19}
+	return file_common_structures_uni_uni_proto_rawDescGZIP(), []int{18}
 }
 
 func (x *TimeAwareOffset) GetOffset() uint32 {
@@ -1247,7 +1266,7 @@ type InterfaceConfiguration struct {
 
 func (x *InterfaceConfiguration) Reset() {
 	*x = InterfaceConfiguration{}
-	mi := &file_common_structures_uni_uni_proto_msgTypes[20]
+	mi := &file_common_structures_uni_uni_proto_msgTypes[19]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1259,7 +1278,7 @@ func (x *InterfaceConfiguration) String() string {
 func (*InterfaceConfiguration) ProtoMessage() {}
 
 func (x *InterfaceConfiguration) ProtoReflect() protoreflect.Message {
-	mi := &file_common_structures_uni_uni_proto_msgTypes[20]
+	mi := &file_common_structures_uni_uni_proto_msgTypes[19]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1272,7 +1291,7 @@ func (x *InterfaceConfiguration) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use InterfaceConfiguration.ProtoReflect.Descriptor instead.
 func (*InterfaceConfiguration) Descriptor() ([]byte, []int) {
-	return file_common_structures_uni_uni_proto_rawDescGZIP(), []int{20}
+	return file_common_structures_uni_uni_proto_rawDescGZIP(), []int{19}
 }
 
 func (x *InterfaceConfiguration) GetInterfaceId() *InterfaceId {
@@ -1335,7 +1354,7 @@ type TalkerListenerStatus struct {
 
 func (x *TalkerListenerStatus) Reset() {
 	*x = TalkerListenerStatus{}
-	mi := &file_common_structures_uni_uni_proto_msgTypes[21]
+	mi := &file_common_structures_uni_uni_proto_msgTypes[20]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1347,7 +1366,7 @@ func (x *TalkerListenerStatus) String() string {
 func (*TalkerListenerStatus) ProtoMessage() {}
 
 func (x *TalkerListenerStatus) ProtoReflect() protoreflect.Message {
-	mi := &file_common_structures_uni_uni_proto_msgTypes[21]
+	mi := &file_common_structures_uni_uni_proto_msgTypes[20]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1360,7 +1379,7 @@ func (x *TalkerListenerStatus) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use TalkerListenerStatus.ProtoReflect.Descriptor instead.
 func (*TalkerListenerStatus) Descriptor() ([]byte, []int) {
-	return file_common_structures_uni_uni_proto_rawDescGZIP(), []int{21}
+	return file_common_structures_uni_uni_proto_rawDescGZIP(), []int{20}
 }
 
 func (x *TalkerListenerStatus) GetIndex() uint32 {
@@ -1397,7 +1416,7 @@ type StatusGroup struct {
 
 func (x *StatusGroup) Reset() {
 	*x = StatusGroup{}
-	mi := &file_common_structures_uni_uni_proto_msgTypes[22]
+	mi := &file_common_structures_uni_uni_proto_msgTypes[21]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1409,7 +1428,7 @@ func (x *StatusGroup) String() string {
 func (*StatusGroup) ProtoMessage() {}
 
 func (x *StatusGroup) ProtoReflect() protoreflect.Message {
-	mi := &file_common_structures_uni_uni_proto_msgTypes[22]
+	mi := &file_common_structures_uni_uni_proto_msgTypes[21]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1422,7 +1441,7 @@ func (x *StatusGroup) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use StatusGroup.ProtoReflect.Descriptor instead.
 func (*StatusGroup) Descriptor() ([]byte, []int) {
-	return file_common_structures_uni_uni_proto_rawDescGZIP(), []int{22}
+	return file_common_structures_uni_uni_proto_rawDescGZIP(), []int{21}
 }
 
 func (x *StatusGroup) GetStrId() *stream.StreamId {
@@ -1470,7 +1489,7 @@ type Response struct {
 
 func (x *Response) Reset() {
 	*x = Response{}
-	mi := &file_common_structures_uni_uni_proto_msgTypes[23]
+	mi := &file_common_structures_uni_uni_proto_msgTypes[22]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1482,7 +1501,7 @@ func (x *Response) String() string {
 func (*Response) ProtoMessage() {}
 
 func (x *Response) ProtoReflect() protoreflect.Message {
-	mi := &file_common_structures_uni_uni_proto_msgTypes[23]
+	mi := &file_common_structures_uni_uni_proto_msgTypes[22]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1495,7 +1514,7 @@ func (x *Response) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Response.ProtoReflect.Descriptor instead.
 func (*Response) Descriptor() ([]byte, []int) {
-	return file_common_structures_uni_uni_proto_rawDescGZIP(), []int{23}
+	return file_common_structures_uni_uni_proto_rawDescGZIP(), []int{22}
 }
 
 func (x *Response) GetStatusGroup() *StatusGroup {
@@ -1522,7 +1541,7 @@ type ConfigResponse struct {
 
 func (x *ConfigResponse) Reset() {
 	*x = ConfigResponse{}
-	mi := &file_common_structures_uni_uni_proto_msgTypes[24]
+	mi := &file_common_structures_uni_uni_proto_msgTypes[23]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1534,7 +1553,7 @@ func (x *ConfigResponse) String() string {
 func (*ConfigResponse) ProtoMessage() {}
 
 func (x *ConfigResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_common_structures_uni_uni_proto_msgTypes[24]
+	mi := &file_common_structures_uni_uni_proto_msgTypes[23]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1547,7 +1566,7 @@ func (x *ConfigResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ConfigResponse.ProtoReflect.Descriptor instead.
 func (*ConfigResponse) Descriptor() ([]byte, []int) {
-	return file_common_structures_uni_uni_proto_rawDescGZIP(), []int{24}
+	return file_common_structures_uni_uni_proto_rawDescGZIP(), []int{23}
 }
 
 func (x *ConfigResponse) GetVersion() float32 {
@@ -1562,6 +1581,224 @@ func (x *ConfigResponse) GetResponses() []*Response {
 		return x.Responses
 	}
 	return nil
+}
+
+// ///////////////////////////////////////////////
+// OPTIONAL INTER-STREAM DEPENDENCIES
+// ///////////////////////////////////////////////
+type DependencyGroup struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Dependencies  []*StreamDependency    `protobuf:"bytes,1,rep,name=Dependencies,json=dependencies,proto3" json:"Dependencies,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DependencyGroup) Reset() {
+	*x = DependencyGroup{}
+	mi := &file_common_structures_uni_uni_proto_msgTypes[24]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DependencyGroup) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DependencyGroup) ProtoMessage() {}
+
+func (x *DependencyGroup) ProtoReflect() protoreflect.Message {
+	mi := &file_common_structures_uni_uni_proto_msgTypes[24]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DependencyGroup.ProtoReflect.Descriptor instead.
+func (*DependencyGroup) Descriptor() ([]byte, []int) {
+	return file_common_structures_uni_uni_proto_rawDescGZIP(), []int{24}
+}
+
+func (x *DependencyGroup) GetDependencies() []*StreamDependency {
+	if x != nil {
+		return x.Dependencies
+	}
+	return nil
+}
+
+// Targets are ordered. For sequencing, each later target
+// stage follows the preceding stage. For group-based
+// dependencies, each target can contain multiple streams.
+type StreamDependency struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Type          DependencyType         `protobuf:"varint,1,opt,name=Type,json=dependency-type,proto3,enum=uni.DependencyType" json:"Type,omitempty"`
+	Targets       []*DependencyTarget    `protobuf:"bytes,2,rep,name=Targets,json=targets,proto3" json:"Targets,omitempty"`
+	Parameters    *DependencyParameters  `protobuf:"bytes,3,opt,name=Parameters,json=parameters,proto3" json:"Parameters,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *StreamDependency) Reset() {
+	*x = StreamDependency{}
+	mi := &file_common_structures_uni_uni_proto_msgTypes[25]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *StreamDependency) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*StreamDependency) ProtoMessage() {}
+
+func (x *StreamDependency) ProtoReflect() protoreflect.Message {
+	mi := &file_common_structures_uni_uni_proto_msgTypes[25]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use StreamDependency.ProtoReflect.Descriptor instead.
+func (*StreamDependency) Descriptor() ([]byte, []int) {
+	return file_common_structures_uni_uni_proto_rawDescGZIP(), []int{25}
+}
+
+func (x *StreamDependency) GetType() DependencyType {
+	if x != nil {
+		return x.Type
+	}
+	return DependencyType_TYPE_UNSPECIFIED
+}
+
+func (x *StreamDependency) GetTargets() []*DependencyTarget {
+	if x != nil {
+		return x.Targets
+	}
+	return nil
+}
+
+func (x *StreamDependency) GetParameters() *DependencyParameters {
+	if x != nil {
+		return x.Parameters
+	}
+	return nil
+}
+
+// One target stage can contain one or more streams.
+// RequestIds refer to Request.Id in ConfigRequest.Requests.
+type DependencyTarget struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	RequestIds    []string               `protobuf:"bytes,1,rep,name=RequestIds,json=request-ids,proto3" json:"RequestIds,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DependencyTarget) Reset() {
+	*x = DependencyTarget{}
+	mi := &file_common_structures_uni_uni_proto_msgTypes[26]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DependencyTarget) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DependencyTarget) ProtoMessage() {}
+
+func (x *DependencyTarget) ProtoReflect() protoreflect.Message {
+	mi := &file_common_structures_uni_uni_proto_msgTypes[26]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DependencyTarget.ProtoReflect.Descriptor instead.
+func (*DependencyTarget) Descriptor() ([]byte, []int) {
+	return file_common_structures_uni_uni_proto_rawDescGZIP(), []int{26}
+}
+
+func (x *DependencyTarget) GetRequestIds() []string {
+	if x != nil {
+		return x.RequestIds
+	}
+	return nil
+}
+
+// Only the parameter relevant to the selected dependency
+// should be populated. All time values are in nanoseconds.
+type DependencyParameters struct {
+	state               protoimpl.MessageState `protogen:"open.v1"`
+	HandoverIntervalNs  uint64                 `protobuf:"varint,1,opt,name=HandoverIntervalNs,json=handover-interval-ns,proto3" json:"HandoverIntervalNs,omitempty"`
+	DeviationIntervalNs uint64                 `protobuf:"varint,2,opt,name=DeviationIntervalNs,json=deviation-interval-ns,proto3" json:"DeviationIntervalNs,omitempty"`
+	E2EMaxLatencyNs     uint64                 `protobuf:"varint,3,opt,name=E2eMaxLatencyNs,json=e2e-max-latency-ns,proto3" json:"E2eMaxLatencyNs,omitempty"`
+	unknownFields       protoimpl.UnknownFields
+	sizeCache           protoimpl.SizeCache
+}
+
+func (x *DependencyParameters) Reset() {
+	*x = DependencyParameters{}
+	mi := &file_common_structures_uni_uni_proto_msgTypes[27]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DependencyParameters) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DependencyParameters) ProtoMessage() {}
+
+func (x *DependencyParameters) ProtoReflect() protoreflect.Message {
+	mi := &file_common_structures_uni_uni_proto_msgTypes[27]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DependencyParameters.ProtoReflect.Descriptor instead.
+func (*DependencyParameters) Descriptor() ([]byte, []int) {
+	return file_common_structures_uni_uni_proto_rawDescGZIP(), []int{27}
+}
+
+func (x *DependencyParameters) GetHandoverIntervalNs() uint64 {
+	if x != nil {
+		return x.HandoverIntervalNs
+	}
+	return 0
+}
+
+func (x *DependencyParameters) GetDeviationIntervalNs() uint64 {
+	if x != nil {
+		return x.DeviationIntervalNs
+	}
+	return 0
+}
+
+func (x *DependencyParameters) GetE2EMaxLatencyNs() uint64 {
+	if x != nil {
+		return x.E2EMaxLatencyNs
+	}
+	return 0
 }
 
 var File_common_structures_uni_uni_proto protoreflect.FileDescriptor
@@ -1587,10 +1824,7 @@ const file_common_structures_uni_uni_proto_rawDesc = "" +
 	"\x05StrId\x18\x02 \x01(\v2\x10.stream.StreamIdR\tstream-id\x12D\n" +
 	"\x14EndStationInterfaces\x18\x03 \x03(\v2\x0e.uni.InterfaceR\x16end-station-interfaces\x12R\n" +
 	"\fUserToNetReq\x18\x04 \x01(\v2\x1e.uni.UserToNetworkRequirementsR\x1cuser-to-network-requirements\x12E\n" +
-	"\tInterfCap\x18\x05 \x01(\v2\x1a.uni.InterfaceCapabilitiesR\x16interface-capabilities\"9\n" +
-	"\n" +
-	"StreamRank\x12+\n" +
-	"\x04Rank\x18\x01 \x01(\x0e2\x17.stream.StreamRankValueR\x04rank\"`\n" +
+	"\tInterfCap\x18\x05 \x01(\v2\x1a.uni.InterfaceCapabilitiesR\x16interface-capabilities\"`\n" +
 	"\x0eIeeeMacAddress\x12/\n" +
 	"\x0eDestinationMac\x18\x01 \x01(\tR\x17destination-mac-address\x12\x1d\n" +
 	"\tSourceMac\x18\x02 \x01(\tR\n" +
@@ -1633,10 +1867,10 @@ const file_common_structures_uni_uni_proto_rawDesc = "" +
 	"\fMaxFrameSize\x18\x03 \x01(\rR\x0emax-frame-size\x125\n" +
 	"\x15TransmissionSelection\x18\x04 \x01(\rR\x16transmission-selection\x12-\n" +
 	"\tTimeAware\x18\x05 \x01(\v2\x0e.uni.TimeAwareR\n" +
-	"time-aware\"\xf0\x03\n" +
+	"time-aware\"\xf3\x03\n" +
 	"\vTalkerGroup\x12*\n" +
-	"\x05StrId\x18\x01 \x01(\v2\x10.stream.StreamIdR\tstream-id\x12-\n" +
-	"\aStrRank\x18\x02 \x01(\v2\x0f.uni.StreamRankR\vstream-rank\x12D\n" +
+	"\x05StrId\x18\x01 \x01(\v2\x10.stream.StreamIdR\tstream-id\x120\n" +
+	"\aStrRank\x18\x02 \x01(\x0e2\x12.stream.StreamRankR\vstream-rank\x12D\n" +
 	"\x14EndStationInterfaces\x18\x03 \x03(\v2\x0e.uni.InterfaceR\x16end-station-interfaces\x12U\n" +
 	"\x16DataFrameSpecification\x18\x04 \x03(\v2\x1b.uni.DataFrameSpecificationR\x18data-frame-specification\x12N\n" +
 	"\x14TrafficSpecification\x18\x05 \x01(\v2\x19.uni.TrafficSpecificationR\x15traffic-specification\x12R\n" +
@@ -1646,10 +1880,11 @@ const file_common_structures_uni_uni_proto_rawDesc = "" +
 	"\x06Talker\x18\x01 \x01(\v2\x10.uni.TalkerGroupR\x06talker\x12\x16\n" +
 	"\x02Id\x18\x02 \x01(\tR\n" +
 	"request-id\x127\n" +
-	"\fListenerList\x18\x03 \x03(\v2\x12.uni.ListenerGroupR\rlistener-list\"S\n" +
+	"\fListenerList\x18\x03 \x03(\v2\x12.uni.ListenerGroupR\rlistener-list\"\x91\x01\n" +
 	"\rConfigRequest\x12\x18\n" +
 	"\aVersion\x18\x01 \x01(\x02R\aversion\x12(\n" +
-	"\bRequests\x18\x02 \x03(\v2\f.uni.RequestR\brequests\"}\n" +
+	"\bRequests\x18\x02 \x03(\v2\f.uni.RequestR\brequests\x12<\n" +
+	"\fDependencies\x18\x03 \x01(\v2\x14.uni.DependencyGroupR\x10dependency-group\"}\n" +
 	"\n" +
 	"StatusInfo\x12#\n" +
 	"\fTalkerStatus\x18\x01 \x01(\x05R\rtalker-status\x12'\n" +
@@ -1686,7 +1921,28 @@ const file_common_structures_uni_uni_proto_rawDesc = "" +
 	"request-id\"W\n" +
 	"\x0eConfigResponse\x12\x18\n" +
 	"\aVersion\x18\x01 \x01(\x02R\aversion\x12+\n" +
-	"\tResponses\x18\x02 \x03(\v2\r.uni.ResponseR\tresponsesB\x06Z\x04/unib\x06proto3"
+	"\tResponses\x18\x02 \x03(\v2\r.uni.ResponseR\tresponses\"L\n" +
+	"\x0fDependencyGroup\x129\n" +
+	"\fDependencies\x18\x01 \x03(\v2\x15.uni.StreamDependencyR\fdependencies\"\xb2\x01\n" +
+	"\x10StreamDependency\x122\n" +
+	"\x04Type\x18\x01 \x01(\x0e2\x13.uni.DependencyTypeR\x0fdependency-type\x12/\n" +
+	"\aTargets\x18\x02 \x03(\v2\x15.uni.DependencyTargetR\atargets\x129\n" +
+	"\n" +
+	"Parameters\x18\x03 \x01(\v2\x19.uni.DependencyParametersR\n" +
+	"parameters\"3\n" +
+	"\x10DependencyTarget\x12\x1f\n" +
+	"\n" +
+	"RequestIds\x18\x01 \x03(\tR\vrequest-ids\"\xa9\x01\n" +
+	"\x14DependencyParameters\x120\n" +
+	"\x12HandoverIntervalNs\x18\x01 \x01(\x04R\x14handover-interval-ns\x122\n" +
+	"\x13DeviationIntervalNs\x18\x02 \x01(\x04R\x15deviation-interval-ns\x12+\n" +
+	"\x0fE2eMaxLatencyNs\x18\x03 \x01(\x04R\x12e2e-max-latency-ns*\x85\x01\n" +
+	"\x0eDependencyType\x12\x14\n" +
+	"\x10TYPE_UNSPECIFIED\x10\x00\x12\x15\n" +
+	"\x11STREAM_SEQUENCING\x10\x01\x12\x12\n" +
+	"\x0eCYCLIC_SPACING\x10\x02\x12\x1a\n" +
+	"\x16STREAM_SYNCHRONIZATION\x10\x03\x12\x16\n" +
+	"\x12END_TO_END_LATENCY\x10\x04B#Z!OpenCNC/common/structures/uni;unib\x06proto3"
 
 var (
 	file_common_structures_uni_uni_proto_rawDescOnce sync.Once
@@ -1700,14 +1956,15 @@ func file_common_structures_uni_uni_proto_rawDescGZIP() []byte {
 	return file_common_structures_uni_uni_proto_rawDescData
 }
 
-var file_common_structures_uni_uni_proto_msgTypes = make([]protoimpl.MessageInfo, 25)
+var file_common_structures_uni_uni_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
+var file_common_structures_uni_uni_proto_msgTypes = make([]protoimpl.MessageInfo, 28)
 var file_common_structures_uni_uni_proto_goTypes = []any{
-	(*UserToNetworkRequirements)(nil), // 0: uni.UserToNetworkRequirements
-	(*InterfaceCapabilities)(nil),     // 1: uni.InterfaceCapabilities
-	(*InterfaceId)(nil),               // 2: uni.InterfaceId
-	(*Interface)(nil),                 // 3: uni.Interface
-	(*ListenerGroup)(nil),             // 4: uni.ListenerGroup
-	(*StreamRank)(nil),                // 5: uni.StreamRank
+	(DependencyType)(0),               // 0: uni.DependencyType
+	(*UserToNetworkRequirements)(nil), // 1: uni.UserToNetworkRequirements
+	(*InterfaceCapabilities)(nil),     // 2: uni.InterfaceCapabilities
+	(*InterfaceId)(nil),               // 3: uni.InterfaceId
+	(*Interface)(nil),                 // 4: uni.Interface
+	(*ListenerGroup)(nil),             // 5: uni.ListenerGroup
 	(*IeeeMacAddress)(nil),            // 6: uni.IeeeMacAddress
 	(*IeeeVlanTag)(nil),               // 7: uni.IeeeVlanTag
 	(*Ipv4Tuple)(nil),                 // 8: uni.Ipv4Tuple
@@ -1727,33 +1984,37 @@ var file_common_structures_uni_uni_proto_goTypes = []any{
 	(*StatusGroup)(nil),               // 22: uni.StatusGroup
 	(*Response)(nil),                  // 23: uni.Response
 	(*ConfigResponse)(nil),            // 24: uni.ConfigResponse
-	(*stream.StreamId)(nil),           // 25: stream.StreamId
-	(stream.StreamRankValue)(0),       // 26: stream.StreamRankValue
+	(*DependencyGroup)(nil),           // 25: uni.DependencyGroup
+	(*StreamDependency)(nil),          // 26: uni.StreamDependency
+	(*DependencyTarget)(nil),          // 27: uni.DependencyTarget
+	(*DependencyParameters)(nil),      // 28: uni.DependencyParameters
+	(*stream.StreamId)(nil),           // 29: stream.StreamId
+	(stream.StreamRank)(0),            // 30: stream.StreamRank
 }
 var file_common_structures_uni_uni_proto_depIdxs = []int32{
-	2,  // 0: uni.Interface.InterfaceId:type_name -> uni.InterfaceId
-	25, // 1: uni.ListenerGroup.StrId:type_name -> stream.StreamId
-	3,  // 2: uni.ListenerGroup.EndStationInterfaces:type_name -> uni.Interface
-	0,  // 3: uni.ListenerGroup.UserToNetReq:type_name -> uni.UserToNetworkRequirements
-	1,  // 4: uni.ListenerGroup.InterfCap:type_name -> uni.InterfaceCapabilities
-	26, // 5: uni.StreamRank.Rank:type_name -> stream.StreamRankValue
-	6,  // 6: uni.DataFrameSpecification.MacAddr:type_name -> uni.IeeeMacAddress
-	7,  // 7: uni.DataFrameSpecification.VlanTag:type_name -> uni.IeeeVlanTag
-	8,  // 8: uni.DataFrameSpecification.Ipv4Tup:type_name -> uni.Ipv4Tuple
-	9,  // 9: uni.DataFrameSpecification.Ipv6Tup:type_name -> uni.Ipv6Tuple
-	11, // 10: uni.TrafficSpecification.Interval:type_name -> uni.Interval
-	12, // 11: uni.TrafficSpecification.TimeAware:type_name -> uni.TimeAware
-	25, // 12: uni.TalkerGroup.StrId:type_name -> stream.StreamId
-	5,  // 13: uni.TalkerGroup.StrRank:type_name -> uni.StreamRank
-	3,  // 14: uni.TalkerGroup.EndStationInterfaces:type_name -> uni.Interface
-	10, // 15: uni.TalkerGroup.DataFrameSpecification:type_name -> uni.DataFrameSpecification
-	13, // 16: uni.TalkerGroup.TrafficSpecification:type_name -> uni.TrafficSpecification
-	0,  // 17: uni.TalkerGroup.UserToNetReq:type_name -> uni.UserToNetworkRequirements
-	1,  // 18: uni.TalkerGroup.InterfCap:type_name -> uni.InterfaceCapabilities
-	14, // 19: uni.Request.Talker:type_name -> uni.TalkerGroup
-	4,  // 20: uni.Request.ListenerList:type_name -> uni.ListenerGroup
-	15, // 21: uni.ConfigRequest.Requests:type_name -> uni.Request
-	2,  // 22: uni.InterfaceConfiguration.InterfaceId:type_name -> uni.InterfaceId
+	3,  // 0: uni.Interface.InterfaceId:type_name -> uni.InterfaceId
+	29, // 1: uni.ListenerGroup.StrId:type_name -> stream.StreamId
+	4,  // 2: uni.ListenerGroup.EndStationInterfaces:type_name -> uni.Interface
+	1,  // 3: uni.ListenerGroup.UserToNetReq:type_name -> uni.UserToNetworkRequirements
+	2,  // 4: uni.ListenerGroup.InterfCap:type_name -> uni.InterfaceCapabilities
+	6,  // 5: uni.DataFrameSpecification.MacAddr:type_name -> uni.IeeeMacAddress
+	7,  // 6: uni.DataFrameSpecification.VlanTag:type_name -> uni.IeeeVlanTag
+	8,  // 7: uni.DataFrameSpecification.Ipv4Tup:type_name -> uni.Ipv4Tuple
+	9,  // 8: uni.DataFrameSpecification.Ipv6Tup:type_name -> uni.Ipv6Tuple
+	11, // 9: uni.TrafficSpecification.Interval:type_name -> uni.Interval
+	12, // 10: uni.TrafficSpecification.TimeAware:type_name -> uni.TimeAware
+	29, // 11: uni.TalkerGroup.StrId:type_name -> stream.StreamId
+	30, // 12: uni.TalkerGroup.StrRank:type_name -> stream.StreamRank
+	4,  // 13: uni.TalkerGroup.EndStationInterfaces:type_name -> uni.Interface
+	10, // 14: uni.TalkerGroup.DataFrameSpecification:type_name -> uni.DataFrameSpecification
+	13, // 15: uni.TalkerGroup.TrafficSpecification:type_name -> uni.TrafficSpecification
+	1,  // 16: uni.TalkerGroup.UserToNetReq:type_name -> uni.UserToNetworkRequirements
+	2,  // 17: uni.TalkerGroup.InterfCap:type_name -> uni.InterfaceCapabilities
+	14, // 18: uni.Request.Talker:type_name -> uni.TalkerGroup
+	5,  // 19: uni.Request.ListenerList:type_name -> uni.ListenerGroup
+	15, // 20: uni.ConfigRequest.Requests:type_name -> uni.Request
+	25, // 21: uni.ConfigRequest.Dependencies:type_name -> uni.DependencyGroup
+	3,  // 22: uni.InterfaceConfiguration.InterfaceId:type_name -> uni.InterfaceId
 	6,  // 23: uni.InterfaceConfiguration.MacAddr:type_name -> uni.IeeeMacAddress
 	7,  // 24: uni.InterfaceConfiguration.VlanTag:type_name -> uni.IeeeVlanTag
 	8,  // 25: uni.InterfaceConfiguration.Ipv4Tup:type_name -> uni.Ipv4Tuple
@@ -1761,18 +2022,22 @@ var file_common_structures_uni_uni_proto_depIdxs = []int32{
 	19, // 27: uni.InterfaceConfiguration.TimeAwareOffset:type_name -> uni.TimeAwareOffset
 	18, // 28: uni.TalkerListenerStatus.AccumulatedLatency:type_name -> uni.AccumulatedLatency
 	20, // 29: uni.TalkerListenerStatus.InterfaceConfiguration:type_name -> uni.InterfaceConfiguration
-	25, // 30: uni.StatusGroup.StrId:type_name -> stream.StreamId
+	29, // 30: uni.StatusGroup.StrId:type_name -> stream.StreamId
 	17, // 31: uni.StatusGroup.StatusInfo:type_name -> uni.StatusInfo
-	2,  // 32: uni.StatusGroup.FailedInterfaces:type_name -> uni.InterfaceId
+	3,  // 32: uni.StatusGroup.FailedInterfaces:type_name -> uni.InterfaceId
 	21, // 33: uni.StatusGroup.StatusTalkerListener:type_name -> uni.TalkerListenerStatus
-	3,  // 34: uni.StatusGroup.EndStationInterfaces:type_name -> uni.Interface
+	4,  // 34: uni.StatusGroup.EndStationInterfaces:type_name -> uni.Interface
 	22, // 35: uni.Response.StatusGroup:type_name -> uni.StatusGroup
 	23, // 36: uni.ConfigResponse.Responses:type_name -> uni.Response
-	37, // [37:37] is the sub-list for method output_type
-	37, // [37:37] is the sub-list for method input_type
-	37, // [37:37] is the sub-list for extension type_name
-	37, // [37:37] is the sub-list for extension extendee
-	0,  // [0:37] is the sub-list for field type_name
+	26, // 37: uni.DependencyGroup.Dependencies:type_name -> uni.StreamDependency
+	0,  // 38: uni.StreamDependency.Type:type_name -> uni.DependencyType
+	27, // 39: uni.StreamDependency.Targets:type_name -> uni.DependencyTarget
+	28, // 40: uni.StreamDependency.Parameters:type_name -> uni.DependencyParameters
+	41, // [41:41] is the sub-list for method output_type
+	41, // [41:41] is the sub-list for method input_type
+	41, // [41:41] is the sub-list for extension type_name
+	41, // [41:41] is the sub-list for extension extendee
+	0,  // [0:41] is the sub-list for field type_name
 }
 
 func init() { file_common_structures_uni_uni_proto_init() }
@@ -1785,13 +2050,14 @@ func file_common_structures_uni_uni_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_common_structures_uni_uni_proto_rawDesc), len(file_common_structures_uni_uni_proto_rawDesc)),
-			NumEnums:      0,
-			NumMessages:   25,
+			NumEnums:      1,
+			NumMessages:   28,
 			NumExtensions: 0,
 			NumServices:   0,
 		},
 		GoTypes:           file_common_structures_uni_uni_proto_goTypes,
 		DependencyIndexes: file_common_structures_uni_uni_proto_depIdxs,
+		EnumInfos:         file_common_structures_uni_uni_proto_enumTypes,
 		MessageInfos:      file_common_structures_uni_uni_proto_msgTypes,
 	}.Build()
 	File_common_structures_uni_uni_proto = out.File

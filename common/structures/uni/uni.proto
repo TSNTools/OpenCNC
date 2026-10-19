@@ -1,7 +1,7 @@
 syntax = "proto3";
 package uni;
 
-option go_package = "/uni";
+option go_package = "OpenCNC/common/structures/uni;uni";
 
 import "common/structures/stream/stream.proto";
 
@@ -110,6 +110,9 @@ message Request {
 message ConfigRequest {
 	float Version = 1 [json_name="version"];
 	repeated Request Requests = 2 [json_name="requests"];
+
+	// Optional: inter-stream application intent.
+    DependencyGroup Dependencies = 3 [json_name="dependency-group"];
 }
 
 /////////////////////////////////////////////////
@@ -164,4 +167,42 @@ message Response {
 message ConfigResponse {
 	float Version = 1 [json_name="version"];
 	repeated Response Responses = 2 [json_name="responses"];
+}
+
+/////////////////////////////////////////////////
+// OPTIONAL INTER-STREAM DEPENDENCIES
+/////////////////////////////////////////////////
+message DependencyGroup {
+    repeated StreamDependency Dependencies = 1 [json_name = "dependencies"];
+}
+
+// Targets are ordered. For sequencing, each later target
+// stage follows the preceding stage. For group-based
+// dependencies, each target can contain multiple streams.
+message StreamDependency {
+    DependencyType Type = 1 [json_name = "dependency-type"];
+    repeated DependencyTarget Targets = 2 [json_name = "targets"];
+    DependencyParameters Parameters = 3 [json_name = "parameters"];
+}
+
+enum DependencyType {
+    TYPE_UNSPECIFIED = 0;
+    STREAM_SEQUENCING = 1;
+    CYCLIC_SPACING = 2;
+    STREAM_SYNCHRONIZATION = 3;
+    END_TO_END_LATENCY = 4;
+}
+
+// One target stage can contain one or more streams.
+// RequestIds refer to Request.Id in ConfigRequest.Requests.
+message DependencyTarget {
+    repeated string RequestIds = 1 [json_name = "request-ids"];
+}
+
+// Only the parameter relevant to the selected dependency
+// should be populated. All time values are in nanoseconds.
+message DependencyParameters {
+    uint64 HandoverIntervalNs = 1 [json_name = "handover-interval-ns"];
+    uint64 DeviationIntervalNs = 2 [json_name = "deviation-interval-ns"];
+    uint64 E2eMaxLatencyNs = 3 [json_name = "e2e-max-latency-ns"];
 }

@@ -201,18 +201,6 @@ func createStreamFromRequest(req *uni.Request) (*stream.Stream, error) {
 	}
 
 	// ------------------------------------------------------------
-	// Stream rank
-	// ------------------------------------------------------------
-	var rank *stream.StreamRank
-
-	if talker.StrRank != nil {
-		rank = &stream.StreamRank{
-			Rank:     talker.StrRank.Rank,
-			Priority: 0, // UNI model currently has no explicit priority
-		}
-	}
-
-	// ------------------------------------------------------------
 	// Data-frame specification
 	// ------------------------------------------------------------
 	frameSpec := createFrameSpecification(talker, listeners)
@@ -237,7 +225,7 @@ func createStreamFromRequest(req *uni.Request) (*stream.Stream, error) {
 
 	return &stream.Stream{
 		StreamId:                  streamID,
-		StreamRank:                rank,
+		StreamRank:                talker.StrRank,
 		TalkerNodeId:              talkerNodeID,
 		ListenerNodeIds:           listenerNodeIDs,
 		FrameSpec:                 frameSpec,
