@@ -29,17 +29,10 @@ remove_opencnc() {
 }
 
 remove_cluster_if_requested() {
-    local cluster_created="$1"
-
-    if [[ "$cluster_created" != "true" ]]; then
-        return
-    fi
-
     if ! command -v k3d >/dev/null 2>&1; then
         echo
-        echo "The OpenCNC installer created the k3d cluster '$CLUSTER',"
-        echo "but k3d is no longer installed."
-        echo "The cluster cannot be removed by this script."
+        echo "k3d is not installed."
+        echo "The Kubernetes cluster cannot be removed by this script."
         echo
         return
     fi
@@ -53,7 +46,7 @@ remove_cluster_if_requested() {
     fi
 
     echo
-    echo "The OpenCNC installer created the Kubernetes cluster '$CLUSTER'."
+    echo "The Kubernetes cluster '$CLUSTER' exists."
     echo
     read -r -p "Do you want to remove this Kubernetes cluster? [y/N]: " answer
 
@@ -73,15 +66,45 @@ remove_images() {
         return
     fi
 
-    log "Removing OpenCNC Docker images..."
+    log "Finding OpenCNC Docker images..."
 
-    docker image rm -f \
-        opencnc/config-service:latest \
-        opencnc/monitor-service:latest \
-        opencnc/tsn-service:latest \
-        opencnc/main-service:latest \
-        opencnc/gui-service:latest \
-        >/dev/null 2>&1 || true
+    local images
+    images="$(docker images 'opencnc/*' -aq 2>/dev/null | sort -u || true)"
+
+    if [[ -n "$images" ]]; then
+        log "Removing containers using OpenCNC images..."
+
+        local containers=""
+        local image_id
+        local container_ids
+
+        while read -r image_id; do
+            [[ -n "$image_id" ]] || continue
+
+            container_ids="$(docker ps -aq --no-trunc \
+                --filter "ancestor=$image_id" 2>/dev/null || true)"
+
+            if [[ -n "$container_ids" ]]; then
+                containers="${containers}${container_ids}"$'\n'
+            fi
+        done <<< "$images"
+
+        containers="$(printf '%s\n' "$containers" | sed '/^$/d' | sort -u)"
+
+        if [[ -n "$containers" ]]; then
+            docker rm -f $containers >/dev/null 2>&1 || true
+        fi
+
+        log "Removing OpenCNC Docker images..."
+
+        docker rmi -f $images >/dev/null 2>&1 || true
+    else
+        log "No OpenCNC Docker images found."
+    fi
+
+    log "Removing dangling Docker images..."
+
+    docker image prune -f >/dev/null 2>&1 || true
 }
 
 cleanup_state() {
@@ -89,14 +112,6 @@ cleanup_state() {
 }
 
 main() {
-    local cluster_created="false"
-
-    if [[ -f "$STATE_FILE" ]]; then
-        # shellcheck disable=SC1090
-        source "$STATE_FILE" || true
-        cluster_created="${CLUSTER_CREATED:-false}"
-    fi
-
     echo
     echo "========================================"
     echo " Uninstalling OpenCNC"
@@ -105,7 +120,7 @@ main() {
 
     remove_opencnc
     remove_images
-    remove_cluster_if_requested "$cluster_created"
+    remove_cluster_if_requested
     cleanup_state
 
     echo

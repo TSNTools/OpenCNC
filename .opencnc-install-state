@@ -1,3 +1,0 @@
-CLUSTER_CREATED=false
-CLUSTER_NAME=opencnc
-CLUSTER_CONTEXT=k3d-opencnc

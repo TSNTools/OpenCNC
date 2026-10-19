@@ -15,13 +15,23 @@ spec:
     spec:
       containers:
         - name: gui-service
-          image: opencnc/gui-service:local
+          image: opencnc/gui-service:latest
           imagePullPolicy: Never
           env:
             - name: GUI_SERVICE_HOST
               value: "0.0.0.0"
             - name: GUI_SERVICE_PORT
               value: "8080"
+
+            - name: MONITOR_SERVICE_HOST
+              value: "monitor-service"
+            - name: MONITOR_SERVICE_PORT
+              value: "5151"
+
+            - name: MAIN_SERVICE_HOST
+              value: "main-service"
+            - name: MAIN_SERVICE_GRPC_PORT
+              value: "5153"
 
             - name: ETCD_HOST
               value: "etcd"
