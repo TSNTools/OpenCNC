@@ -1,0 +1,116 @@
+
+# -----------------------------------------------------------------------------
+# GitHub Actions CI/CD Pipeline for Building and Pushing Docker Images to GHCR
+# -----------------------------------------------------------------------------
+# This pipeline automates the process of building and pushing Docker images to
+# GitHub Container Registry (GHCR) whenever code is pushed to the 'dev' branch.
+# 
+# Pipeline Overview:
+# 1. **Build Process**: 
+#    - The pipeline is triggered on a push to the 'main' branch.
+#    - It builds Docker images from the source,using Dockerfiles located within those directories.    
+#    - A unique image tag is created based on the commit's short SHA (`$GITHUB_SHA::8`).
+#    - Docker Buildx is used to build the image, and the image is tagged with the
+#      commit SHA and pushed to GitHub Container Registry (GHCR).
+# 
+# 2. **GHCR (GitHub Container Registry)**:
+#    - The images are pushed to GHCR in the format:
+#      `ghcr.io/<OWNER>/<REPO>/<SERVICE_NAME>:<IMAGE_TAG>`.
+#    - After the image is successfully pushed, it can be referenced in Helm charts
+#      or Kubernetes deployments using this exact registry and tag.
+# 
+# 3. **Helm Chart Integration**:
+#    - The image can be referenced in Kubernetes deployments via Helm charts.
+#    - The Helm chart pulls the image from GHCR using the repository, service name,
+#      and image tag. The image tag (commit SHA) ensures the deployment uses the
+#      exact version of the image that was built in the CI pipeline.
+
+name: Build, Push, and Update Deployment
+
+on:
+  push:
+    branches:
+      - main
+
+
+
+env:
+  REGISTRY: ghcr.io
+  # Define your target deployment repo here
+  DEPLOY_REPO: jittinabraham/OpenCNC_deployment
+  SERVICE_NAME: config-service
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      # 1. Checkout Source Code
+      - name: Checkout Source
+        uses: actions/checkout@v4
+
+      # 2. Login to Registry
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # 3. Build and Push Docker Image
+      - name: Build and Push
+        id: build
+        run: |
+          IMAGE_TAG=${GITHUB_SHA::8}
+          REPO_LC=$(echo "${GITHUB_REPOSITORY}" | tr '[:upper:]' '[:lower:]')
+          IMAGE="ghcr.io/${REPO_LC}/${{ env.SERVICE_NAME }}:${IMAGE_TAG}"
+          
+          docker build -t "$IMAGE" .
+          docker push "$IMAGE"
+          
+          # Export tag for next step
+          echo "NEW_TAG=$IMAGE_TAG" >> $GITHUB_ENV
+
+      # ------------------------------------------------------------------
+      # update helm
+      # ------------------------------------------------------------------
+      
+      # 4. Checkout the Deployment Repository (into a subfolder)
+      - name: Checkout Deployment Repo
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ env.DEPLOY_REPO }}
+          token: ${{ secrets.DEPLOY_PAT }} # MUST be a PAT to allow pushing
+          path: deploy-repo                # Download it to a folder named 'deploy-repo'
+
+      # 5. Update the Helm Chart and Push
+      - name: Update Helm Values
+        run: |
+          cd deploy-repo
+          
+          # Install yq (YAML processor)
+          sudo wget -qO /usr/local/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64
+          sudo chmod a+x /usr/local/bin/yq
+          
+          echo "Updating ${{ env.SERVICE_NAME }} to tag ${{ env.NEW_TAG }}"
+
+          # --- UPDATE COMMAND ---
+          # Adjust the path below to match where your values.yaml is located inside the deploy repo
+          # Example: ./charts/opencnc/values.yaml
+          VALUES_FILE="./${{ env.SERVICE_NAME }}/values.yaml"
+          
+          # This command finds 'image.tag' and replaces it
+          yq -i ".image.tag = \"${{ env.NEW_TAG }}\"" $VALUES_FILE
+          
+          # Check if git status is clean (avoid empty commits)
+          if [[ -z $(git status -s) ]]; then
+            echo "No changes to commit."
+            exit 0
+          fi
+
+          # Git Commit & Push
+          git config user.name "CI Auto-Updater"
+          git config user.email "ci@example.com"
+          
+          git add .
+          git commit -m "chore: update ${{ env.SERVICE_NAME }} image to ${{ env.NEW_TAG }}"
+          git push
