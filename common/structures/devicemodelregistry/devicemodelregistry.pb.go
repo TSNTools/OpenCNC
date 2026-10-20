@@ -21,12 +21,132 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
+type TargetKind int32
+
+const (
+	TargetKind_YANG_NODE_KIND_UNSPECIFIED TargetKind = 0
+	TargetKind_YANG_NODE_KIND_CONTAINER   TargetKind = 1
+	TargetKind_YANG_NODE_KIND_LIST        TargetKind = 2
+	TargetKind_YANG_NODE_KIND_LEAF        TargetKind = 3
+	TargetKind_YANG_NODE_KIND_LEAF_LIST   TargetKind = 4
+)
+
+// Enum value maps for TargetKind.
+var (
+	TargetKind_name = map[int32]string{
+		0: "YANG_NODE_KIND_UNSPECIFIED",
+		1: "YANG_NODE_KIND_CONTAINER",
+		2: "YANG_NODE_KIND_LIST",
+		3: "YANG_NODE_KIND_LEAF",
+		4: "YANG_NODE_KIND_LEAF_LIST",
+	}
+	TargetKind_value = map[string]int32{
+		"YANG_NODE_KIND_UNSPECIFIED": 0,
+		"YANG_NODE_KIND_CONTAINER":   1,
+		"YANG_NODE_KIND_LIST":        2,
+		"YANG_NODE_KIND_LEAF":        3,
+		"YANG_NODE_KIND_LEAF_LIST":   4,
+	}
+)
+
+func (x TargetKind) Enum() *TargetKind {
+	p := new(TargetKind)
+	*p = x
+	return p
+}
+
+func (x TargetKind) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (TargetKind) Descriptor() protoreflect.EnumDescriptor {
+	return file_common_structures_devicemodelregistry_devicemodelregistry_proto_enumTypes[0].Descriptor()
+}
+
+func (TargetKind) Type() protoreflect.EnumType {
+	return &file_common_structures_devicemodelregistry_devicemodelregistry_proto_enumTypes[0]
+}
+
+func (x TargetKind) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use TargetKind.Descriptor instead.
+func (TargetKind) EnumDescriptor() ([]byte, []int) {
+	return file_common_structures_devicemodelregistry_devicemodelregistry_proto_rawDescGZIP(), []int{0}
+}
+
+type LimitationComparison int32
+
+const (
+	LimitationComparison_LIMITATION_COMPARISON_UNSPECIFIED LimitationComparison = 0
+	LimitationComparison_LIMITATION_LESS_THAN              LimitationComparison = 1
+	LimitationComparison_LIMITATION_LESS_OR_EQUAL          LimitationComparison = 2
+	LimitationComparison_LIMITATION_GREATER_THAN           LimitationComparison = 3
+	LimitationComparison_LIMITATION_GREATER_OR_EQUAL       LimitationComparison = 4
+	LimitationComparison_LIMITATION_EQUAL                  LimitationComparison = 5
+	LimitationComparison_LIMITATION_NOT_EQUAL              LimitationComparison = 6
+)
+
+// Enum value maps for LimitationComparison.
+var (
+	LimitationComparison_name = map[int32]string{
+		0: "LIMITATION_COMPARISON_UNSPECIFIED",
+		1: "LIMITATION_LESS_THAN",
+		2: "LIMITATION_LESS_OR_EQUAL",
+		3: "LIMITATION_GREATER_THAN",
+		4: "LIMITATION_GREATER_OR_EQUAL",
+		5: "LIMITATION_EQUAL",
+		6: "LIMITATION_NOT_EQUAL",
+	}
+	LimitationComparison_value = map[string]int32{
+		"LIMITATION_COMPARISON_UNSPECIFIED": 0,
+		"LIMITATION_LESS_THAN":              1,
+		"LIMITATION_LESS_OR_EQUAL":          2,
+		"LIMITATION_GREATER_THAN":           3,
+		"LIMITATION_GREATER_OR_EQUAL":       4,
+		"LIMITATION_EQUAL":                  5,
+		"LIMITATION_NOT_EQUAL":              6,
+	}
+)
+
+func (x LimitationComparison) Enum() *LimitationComparison {
+	p := new(LimitationComparison)
+	*p = x
+	return p
+}
+
+func (x LimitationComparison) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (LimitationComparison) Descriptor() protoreflect.EnumDescriptor {
+	return file_common_structures_devicemodelregistry_devicemodelregistry_proto_enumTypes[1].Descriptor()
+}
+
+func (LimitationComparison) Type() protoreflect.EnumType {
+	return &file_common_structures_devicemodelregistry_devicemodelregistry_proto_enumTypes[1]
+}
+
+func (x LimitationComparison) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use LimitationComparison.Descriptor instead.
+func (LimitationComparison) EnumDescriptor() ([]byte, []int) {
+	return file_common_structures_devicemodelregistry_devicemodelregistry_proto_rawDescGZIP(), []int{1}
+}
+
 type DeviceModel struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Name          string                 `protobuf:"bytes,1,opt,name=name,json=model-name,proto3" json:"name,omitempty"`
-	Vendor        string                 `protobuf:"bytes,2,opt,name=vendor,proto3" json:"vendor,omitempty"`
-	Version       string                 `protobuf:"bytes,3,opt,name=version,proto3" json:"version,omitempty"`
-	YangFiles     []*YangModule          `protobuf:"bytes,4,rep,name=yangFiles,json=yang-files,proto3" json:"yangFiles,omitempty"`
+	state     protoimpl.MessageState `protogen:"open.v1"`
+	Name      string                 `protobuf:"bytes,1,opt,name=name,json=model-name,proto3" json:"name,omitempty"`
+	Vendor    string                 `protobuf:"bytes,2,opt,name=vendor,proto3" json:"vendor,omitempty"`
+	Version   string                 `protobuf:"bytes,3,opt,name=version,proto3" json:"version,omitempty"`
+	YangFiles []*YangModule          `protobuf:"bytes,4,rep,name=yangFiles,json=yang-files,proto3" json:"yangFiles,omitempty"`
+	// the concept is still under test
+	// An empty limitations list should mean no implementation-specific limitations are registered,
+	// not necessarily that the device has no limitations at all
+	Limitations   []*DeviceLimitation `protobuf:"bytes,5,rep,name=limitations,proto3" json:"limitations,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -85,6 +205,13 @@ func (x *DeviceModel) GetVersion() string {
 func (x *DeviceModel) GetYangFiles() []*YangModule {
 	if x != nil {
 		return x.YangFiles
+	}
+	return nil
+}
+
+func (x *DeviceModel) GetLimitations() []*DeviceLimitation {
+	if x != nil {
+		return x.Limitations
 	}
 	return nil
 }
@@ -149,23 +276,205 @@ func (x *YangModule) GetDescription() string {
 	return ""
 }
 
+type DeviceLimitation struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// XPath identifying the target node in the standard YANG model.
+	TargetPath string `protobuf:"bytes,1,opt,name=target_path,json=targetPath,proto3" json:"target_path,omitempty"`
+	// Property to evaluate.
+	// !!! maybe think about defining all the possible properties of the standard
+	//
+	//	yang containers and leafs in a separate yang file, because string is not
+	//	convenient for automated parsing at the optimizer.
+	Parameter *LimitationParameter `protobuf:"bytes,2,opt,name=parameter,proto3" json:"parameter,omitempty"`
+	// Comparison applied to the evaluated value.
+	Comparison LimitationComparison `protobuf:"varint,3,opt,name=comparison,proto3,enum=devicemodelregistry.LimitationComparison" json:"comparison,omitempty"`
+	// Constant threshold.
+	Threshold     float64 `protobuf:"fixed64,4,opt,name=threshold,proto3" json:"threshold,omitempty"`
+	Description   string  `protobuf:"bytes,5,opt,name=description,proto3" json:"description,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DeviceLimitation) Reset() {
+	*x = DeviceLimitation{}
+	mi := &file_common_structures_devicemodelregistry_devicemodelregistry_proto_msgTypes[2]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DeviceLimitation) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DeviceLimitation) ProtoMessage() {}
+
+func (x *DeviceLimitation) ProtoReflect() protoreflect.Message {
+	mi := &file_common_structures_devicemodelregistry_devicemodelregistry_proto_msgTypes[2]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DeviceLimitation.ProtoReflect.Descriptor instead.
+func (*DeviceLimitation) Descriptor() ([]byte, []int) {
+	return file_common_structures_devicemodelregistry_devicemodelregistry_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *DeviceLimitation) GetTargetPath() string {
+	if x != nil {
+		return x.TargetPath
+	}
+	return ""
+}
+
+func (x *DeviceLimitation) GetParameter() *LimitationParameter {
+	if x != nil {
+		return x.Parameter
+	}
+	return nil
+}
+
+func (x *DeviceLimitation) GetComparison() LimitationComparison {
+	if x != nil {
+		return x.Comparison
+	}
+	return LimitationComparison_LIMITATION_COMPARISON_UNSPECIFIED
+}
+
+func (x *DeviceLimitation) GetThreshold() float64 {
+	if x != nil {
+		return x.Threshold
+	}
+	return 0
+}
+
+func (x *DeviceLimitation) GetDescription() string {
+	if x != nil {
+		return x.Description
+	}
+	return ""
+}
+
+type LimitationParameter struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Name          string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	Unit          string                 `protobuf:"bytes,2,opt,name=unit,proto3" json:"unit,omitempty"`
+	Description   string                 `protobuf:"bytes,3,opt,name=description,proto3" json:"description,omitempty"`
+	TargetKind    TargetKind             `protobuf:"varint,4,opt,name=target_kind,json=target-node-kind,proto3,enum=devicemodelregistry.TargetKind" json:"target_kind,omitempty"` // e.g. length applies to kind list
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *LimitationParameter) Reset() {
+	*x = LimitationParameter{}
+	mi := &file_common_structures_devicemodelregistry_devicemodelregistry_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *LimitationParameter) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*LimitationParameter) ProtoMessage() {}
+
+func (x *LimitationParameter) ProtoReflect() protoreflect.Message {
+	mi := &file_common_structures_devicemodelregistry_devicemodelregistry_proto_msgTypes[3]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use LimitationParameter.ProtoReflect.Descriptor instead.
+func (*LimitationParameter) Descriptor() ([]byte, []int) {
+	return file_common_structures_devicemodelregistry_devicemodelregistry_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *LimitationParameter) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *LimitationParameter) GetUnit() string {
+	if x != nil {
+		return x.Unit
+	}
+	return ""
+}
+
+func (x *LimitationParameter) GetDescription() string {
+	if x != nil {
+		return x.Description
+	}
+	return ""
+}
+
+func (x *LimitationParameter) GetTargetKind() TargetKind {
+	if x != nil {
+		return x.TargetKind
+	}
+	return TargetKind_YANG_NODE_KIND_UNSPECIFIED
+}
+
 var File_common_structures_devicemodelregistry_devicemodelregistry_proto protoreflect.FileDescriptor
 
 const file_common_structures_devicemodelregistry_devicemodelregistry_proto_rawDesc = "" +
 	"\n" +
-	"?common/structures/devicemodelregistry/devicemodelregistry.proto\x12\x13devicemodelregistry\"\x99\x01\n" +
+	"?common/structures/devicemodelregistry/devicemodelregistry.proto\x12\x13devicemodelregistry\"\xe2\x01\n" +
 	"\vDeviceModel\x12\x18\n" +
 	"\x04name\x18\x01 \x01(\tR\n" +
 	"model-name\x12\x16\n" +
 	"\x06vendor\x18\x02 \x01(\tR\x06vendor\x12\x18\n" +
 	"\aversion\x18\x03 \x01(\tR\aversion\x12>\n" +
 	"\tyangFiles\x18\x04 \x03(\v2\x1f.devicemodelregistry.YangModuleR\n" +
-	"yang-files\"h\n" +
+	"yang-files\x12G\n" +
+	"\vlimitations\x18\x05 \x03(\v2%.devicemodelregistry.DeviceLimitationR\vlimitations\"h\n" +
 	"\n" +
 	"YangModule\x12\x17\n" +
 	"\x04name\x18\x01 \x01(\tR\tfile-name\x12\x1f\n" +
 	"\brevision\x18\x02 \x01(\tR\rfile-revision\x12 \n" +
-	"\vdescription\x18\x03 \x01(\tR\vdescriptionB\x17Z\x15./devicemodelregistryb\x06proto3"
+	"\vdescription\x18\x03 \x01(\tR\vdescription\"\x86\x02\n" +
+	"\x10DeviceLimitation\x12\x1f\n" +
+	"\vtarget_path\x18\x01 \x01(\tR\n" +
+	"targetPath\x12F\n" +
+	"\tparameter\x18\x02 \x01(\v2(.devicemodelregistry.LimitationParameterR\tparameter\x12I\n" +
+	"\n" +
+	"comparison\x18\x03 \x01(\x0e2).devicemodelregistry.LimitationComparisonR\n" +
+	"comparison\x12\x1c\n" +
+	"\tthreshold\x18\x04 \x01(\x01R\tthreshold\x12 \n" +
+	"\vdescription\x18\x05 \x01(\tR\vdescription\"\xa7\x01\n" +
+	"\x13LimitationParameter\x12\x12\n" +
+	"\x04name\x18\x01 \x01(\tR\x04name\x12\x12\n" +
+	"\x04unit\x18\x02 \x01(\tR\x04unit\x12 \n" +
+	"\vdescription\x18\x03 \x01(\tR\vdescription\x12F\n" +
+	"\vtarget_kind\x18\x04 \x01(\x0e2\x1f.devicemodelregistry.TargetKindR\x10target-node-kind*\x9a\x01\n" +
+	"\n" +
+	"TargetKind\x12\x1e\n" +
+	"\x1aYANG_NODE_KIND_UNSPECIFIED\x10\x00\x12\x1c\n" +
+	"\x18YANG_NODE_KIND_CONTAINER\x10\x01\x12\x17\n" +
+	"\x13YANG_NODE_KIND_LIST\x10\x02\x12\x17\n" +
+	"\x13YANG_NODE_KIND_LEAF\x10\x03\x12\x1c\n" +
+	"\x18YANG_NODE_KIND_LEAF_LIST\x10\x04*\xe3\x01\n" +
+	"\x14LimitationComparison\x12%\n" +
+	"!LIMITATION_COMPARISON_UNSPECIFIED\x10\x00\x12\x18\n" +
+	"\x14LIMITATION_LESS_THAN\x10\x01\x12\x1c\n" +
+	"\x18LIMITATION_LESS_OR_EQUAL\x10\x02\x12\x1b\n" +
+	"\x17LIMITATION_GREATER_THAN\x10\x03\x12\x1f\n" +
+	"\x1bLIMITATION_GREATER_OR_EQUAL\x10\x04\x12\x14\n" +
+	"\x10LIMITATION_EQUAL\x10\x05\x12\x18\n" +
+	"\x14LIMITATION_NOT_EQUAL\x10\x06B\x17Z\x15./devicemodelregistryb\x06proto3"
 
 var (
 	file_common_structures_devicemodelregistry_devicemodelregistry_proto_rawDescOnce sync.Once
@@ -179,18 +488,27 @@ func file_common_structures_devicemodelregistry_devicemodelregistry_proto_rawDes
 	return file_common_structures_devicemodelregistry_devicemodelregistry_proto_rawDescData
 }
 
-var file_common_structures_devicemodelregistry_devicemodelregistry_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
+var file_common_structures_devicemodelregistry_devicemodelregistry_proto_enumTypes = make([]protoimpl.EnumInfo, 2)
+var file_common_structures_devicemodelregistry_devicemodelregistry_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
 var file_common_structures_devicemodelregistry_devicemodelregistry_proto_goTypes = []any{
-	(*DeviceModel)(nil), // 0: devicemodelregistry.DeviceModel
-	(*YangModule)(nil),  // 1: devicemodelregistry.YangModule
+	(TargetKind)(0),             // 0: devicemodelregistry.TargetKind
+	(LimitationComparison)(0),   // 1: devicemodelregistry.LimitationComparison
+	(*DeviceModel)(nil),         // 2: devicemodelregistry.DeviceModel
+	(*YangModule)(nil),          // 3: devicemodelregistry.YangModule
+	(*DeviceLimitation)(nil),    // 4: devicemodelregistry.DeviceLimitation
+	(*LimitationParameter)(nil), // 5: devicemodelregistry.LimitationParameter
 }
 var file_common_structures_devicemodelregistry_devicemodelregistry_proto_depIdxs = []int32{
-	1, // 0: devicemodelregistry.DeviceModel.yangFiles:type_name -> devicemodelregistry.YangModule
-	1, // [1:1] is the sub-list for method output_type
-	1, // [1:1] is the sub-list for method input_type
-	1, // [1:1] is the sub-list for extension type_name
-	1, // [1:1] is the sub-list for extension extendee
-	0, // [0:1] is the sub-list for field type_name
+	3, // 0: devicemodelregistry.DeviceModel.yangFiles:type_name -> devicemodelregistry.YangModule
+	4, // 1: devicemodelregistry.DeviceModel.limitations:type_name -> devicemodelregistry.DeviceLimitation
+	5, // 2: devicemodelregistry.DeviceLimitation.parameter:type_name -> devicemodelregistry.LimitationParameter
+	1, // 3: devicemodelregistry.DeviceLimitation.comparison:type_name -> devicemodelregistry.LimitationComparison
+	0, // 4: devicemodelregistry.LimitationParameter.target_kind:type_name -> devicemodelregistry.TargetKind
+	5, // [5:5] is the sub-list for method output_type
+	5, // [5:5] is the sub-list for method input_type
+	5, // [5:5] is the sub-list for extension type_name
+	5, // [5:5] is the sub-list for extension extendee
+	0, // [0:5] is the sub-list for field type_name
 }
 
 func init() { file_common_structures_devicemodelregistry_devicemodelregistry_proto_init() }
@@ -203,13 +521,14 @@ func file_common_structures_devicemodelregistry_devicemodelregistry_proto_init()
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_common_structures_devicemodelregistry_devicemodelregistry_proto_rawDesc), len(file_common_structures_devicemodelregistry_devicemodelregistry_proto_rawDesc)),
-			NumEnums:      0,
-			NumMessages:   2,
+			NumEnums:      2,
+			NumMessages:   4,
 			NumExtensions: 0,
 			NumServices:   0,
 		},
 		GoTypes:           file_common_structures_devicemodelregistry_devicemodelregistry_proto_goTypes,
 		DependencyIndexes: file_common_structures_devicemodelregistry_devicemodelregistry_proto_depIdxs,
+		EnumInfos:         file_common_structures_devicemodelregistry_devicemodelregistry_proto_enumTypes,
 		MessageInfos:      file_common_structures_devicemodelregistry_devicemodelregistry_proto_msgTypes,
 	}.Build()
 	File_common_structures_devicemodelregistry_devicemodelregistry_proto = out.File

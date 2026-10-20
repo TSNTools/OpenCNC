@@ -8,6 +8,11 @@ message DeviceModel {
     string vendor = 2 [json_name="vendor"];
     string version = 3 [json_name="version"];
     repeated YangModule yangFiles = 4 [json_name="yang-files"];
+    
+    // the concept is still under test
+    // An empty limitations list should mean no implementation-specific limitations are registered,
+    // not necessarily that the device has no limitations at all
+    repeated DeviceLimitation limitations = 5;
    
 }
 
@@ -15,4 +20,52 @@ message YangModule {
     string name = 1 [json_name="file-name"];
     string revision = 2 [json_name="file-revision"];
     string description = 3 [json_name="description"];
+}
+
+////////////////////////////////////////////////////////////
+///////// limitations of the actual implementation /////////
+////////////////////////////////////////////////////////////
+
+message DeviceLimitation {
+    // XPath identifying the target node in the standard YANG model.
+    string target_path = 1;
+
+    // Property to evaluate. 
+    // !!! maybe think about defining all the possible properties of the standard
+    //  yang containers and leafs in a separate yang file, because string is not
+    //  convenient for automated parsing at the optimizer.
+    LimitationParameter parameter = 2;
+
+    // Comparison applied to the evaluated value.
+    LimitationComparison comparison = 3;
+
+    // Constant threshold.
+    double threshold = 4;
+
+    string description = 5;
+}
+
+message LimitationParameter {
+    string name = 1;
+    string unit = 2;
+    string description = 3;
+    TargetKind target_kind = 4 [json_name = "target-node-kind"]; // e.g. length applies to kind list
+}
+
+enum TargetKind {
+    YANG_NODE_KIND_UNSPECIFIED = 0;
+    YANG_NODE_KIND_CONTAINER = 1;
+    YANG_NODE_KIND_LIST = 2;
+    YANG_NODE_KIND_LEAF = 3;
+    YANG_NODE_KIND_LEAF_LIST = 4;
+}
+
+enum LimitationComparison {
+    LIMITATION_COMPARISON_UNSPECIFIED = 0;
+    LIMITATION_LESS_THAN = 1;
+    LIMITATION_LESS_OR_EQUAL = 2;
+    LIMITATION_GREATER_THAN = 3;
+    LIMITATION_GREATER_OR_EQUAL = 4;
+    LIMITATION_EQUAL = 5;
+    LIMITATION_NOT_EQUAL = 6;
 }
