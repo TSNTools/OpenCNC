@@ -30,7 +30,24 @@ func StartOptimization(
 ) (*forwarding_plane.ForwardingPlaneModel, error) {
 
 	fpm := createForwardingPlaneModel(ctx, obs)
-	// TODO: Implement the optimization logic here.
+	if fpm == nil {
+		return nil, fmt.Errorf("failed to create forwarding-plane model")
+	}
+	// the optimization logic here.
+	// Temporary request-side integration only.
+
+	if os.Getenv("OAAS_REQUEST_ONLY") == "true" {
+		receipt, snapshotID, err := submitOptimizationJob(ctx, task, fpm)
+
+		if err != nil {
+			fmt.Printf("[OAAS] Optimization submission failed: %v\n", err)
+		} else {
+			fmt.Printf(
+				"[OAAS] Job %s accepted (status: %s), snapshot: %s\n",
+				receipt.JobID, receipt.Status, snapshotID,
+			)
+		}
+	}
 
 	// If optimization fails, fall back to the default schedule.
 	topoConfig, err := store.GetTopologyConfiguration(defaultSchedID)
