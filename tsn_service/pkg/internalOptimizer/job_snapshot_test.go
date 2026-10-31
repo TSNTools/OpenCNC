@@ -1,7 +1,6 @@
 package internalOptimizer
 
 import (
-	"fmt"
 	"testing"
 
 	"OpenCNC/common/structures/topology_config"
@@ -11,29 +10,7 @@ import (
 )
 
 func TestJobSnapshotMapping(t *testing.T) {
-	// Simulate etcd storage.
-	storage := make(map[string][]byte)
-
-	originalWrite := snapshotWrite
-	originalRead := snapshotRead
-
-	t.Cleanup(func() {
-		snapshotWrite = originalWrite
-		snapshotRead = originalRead
-	})
-
-	snapshotWrite = func(data []byte, key string) error {
-		storage[key] = append([]byte(nil), data...)
-		return nil
-	}
-
-	snapshotRead = func(key string) ([]byte, error) {
-		data, ok := storage[key]
-		if !ok {
-			return nil, fmt.Errorf("key not found: %s", key)
-		}
-		return append([]byte(nil), data...), nil
-	}
+	useFakeSnapshotStore(t)
 
 	original := &forwardingplane.ForwardingPlaneModel{
 		Configuration: &topology_config.TopologyConfig{

@@ -11,8 +11,10 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
-func TestOptimizationSnapshotRoundTrip(t *testing.T) {
-	// Simulate etcd using an in-memory map.
+// Simulate etcd using an in-memory map.
+func useFakeSnapshotStore(t *testing.T) {
+	t.Helper()
+
 	storage := make(map[string][]byte)
 
 	originalWrite := snapshotWrite
@@ -31,10 +33,14 @@ func TestOptimizationSnapshotRoundTrip(t *testing.T) {
 	snapshotRead = func(key string) ([]byte, error) {
 		data, ok := storage[key]
 		if !ok {
-			return nil, fmt.Errorf("snapshot not found")
+			return nil, fmt.Errorf("key not found: %s", key)
 		}
 		return append([]byte(nil), data...), nil
 	}
+}
+
+func TestOptimizationSnapshotRoundTrip(t *testing.T) {
+	useFakeSnapshotStore(t)
 
 	// Sample complete CNC model.
 	model := &forwardingplane.ForwardingPlaneModel{

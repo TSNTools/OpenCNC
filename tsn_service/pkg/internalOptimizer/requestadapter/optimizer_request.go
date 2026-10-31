@@ -41,7 +41,8 @@ type DependencyGroup struct {
 	Parameters map[string]any `json:"parameters"`
 }
 
-// RequestOptions contains ONLY information the bridge cannot safely infer
+// RequestOptions contains information not safely inferred from
+// OpenCNC's OptimizationTask and ForwardingPlaneModel.
 // from OptimizationTask and ForwardingPlaneModel.
 type RequestOptions struct {
 	Mechanisms []MechanismSelection
@@ -55,7 +56,7 @@ type RequestOptions struct {
 	// Optional:  Extra hardware information, such as maximum GCL entries ||| external capability inventory in v1.4 capabilities format.
 	// Merged by device ID and port ID; explicitly provided values take precedence.
 	//
-	AdditionalCapabilities map[string]any // a way to provide hardware information to this Go Bridge from an external source.
+	AdditionalCapabilities map[string]any // a way to provide hardware information to this OpenCNC request adapte from an external source.
 	// Example
 	// {
 	//   "AdditionalCapabilities": {
@@ -82,11 +83,15 @@ type RequestOptions struct {
 	DependencyGroups []DependencyGroup `json:"dependencyGroups,omitempty"`
 }
 
-// BuildOptimizerRequest assembles the standardized OaaS v1.4 JSON request.
-// IMPORTANT: Persist the complete original CNC model in snapshot storage
-// BEFORE calling this method, since the JSON intentionally excludes CNC fields.
-// This function enforces local cross-field checks AND the v1.4 JSON Schema.
-// Network feasibility checks remain the responsibility of downstream services.
+// BuildOptimizerRequest converts OpenCNC protobuf data into
+// the standardized OaaS Optimizer Request v1.4.
+//
+// The original ForwardingPlaneModel must be preserved by the caller
+// before submitting the request.
+//
+// This function performs local consistency checks.
+// Full JSON Schema validation is handled by the OaaS Manager.
+// Network feasibility is checked separately.
 func BuildOptimizerRequest(
 	task *optimizationcontract.OptimizationTask,
 	model *forwardingplane.ForwardingPlaneModel,
@@ -115,16 +120,8 @@ func BuildOptimizerRequest(
 		return nil, errors.New("reliability policy supplied without FRER mechanism")
 	}
 
-	mappedTask, err := ExtractOptimizationTask(task)
+	taskJSON, err := ExtractOptimizationTask(task)
 	if err != nil {
-		return nil, err
-	}
-	taskData, err := json.Marshal(mappedTask)
-	if err != nil {
-		return nil, err
-	}
-	var taskJSON map[string]any
-	if err := json.Unmarshal(taskData, &taskJSON); err != nil {
 		return nil, err
 	}
 	if len(options.TrafficClasses) > 0 {
@@ -327,7 +324,7 @@ func applyStreamOptions(forwarding map[string]any, controls map[string]StreamOpt
 				return fmt.Errorf("stream %s: application endpoints required for placement", key)
 			}
 			// OaaS placement stream endpoints replace physical CNC endpoints.
-			// The complete physical definitions remain in the SQLite snapshot.
+			// The original CNC model is preserved separately by the caller.
 			delete(definition, "talkerNodeId")
 			delete(definition, "listenerNodeIds")
 			definition["talkerApplicationId"] = options.TalkerApplicationID
@@ -395,7 +392,7 @@ func validateStreamScope(task map[string]any, forwarding map[string]any) error {
 	if scope == nil {
 		return nil
 	}
-	references, _ := scope["streamIds"].([]any)
+	references, _ := scope["streamIds"].([]string)
 	if len(references) == 0 {
 		return nil
 	}
@@ -409,8 +406,7 @@ func validateStreamScope(task map[string]any, forwarding map[string]any) error {
 			known[id] = true
 		}
 	}
-	for _, raw := range references {
-		id, _ := raw.(string)
+	for _, id := range references {
 		if !known[id] {
 			return fmt.Errorf("scope.streamIds contains unknown stream %q; CNC stream aliases need explicit mapping to StreamKey", id)
 		}

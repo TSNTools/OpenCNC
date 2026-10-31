@@ -3,7 +3,6 @@ package internalOptimizer
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"os"
 	"testing"
 
@@ -69,23 +68,7 @@ func TestLiveManagerSubmission(t *testing.T) {
 	}
 
 	// Simulated etcd; the Manager itself is real.
-	storage := make(map[string][]byte)
-	oldWrite, oldRead := snapshotWrite, snapshotRead
-	t.Cleanup(func() {
-		snapshotWrite, snapshotRead = oldWrite, oldRead
-	})
-
-	snapshotWrite = func(data []byte, key string) error {
-		storage[key] = append([]byte(nil), data...)
-		return nil
-	}
-	snapshotRead = func(key string) ([]byte, error) {
-		data, ok := storage[key]
-		if !ok {
-			return nil, fmt.Errorf("missing key: %s", key)
-		}
-		return append([]byte(nil), data...), nil
-	}
+	useFakeSnapshotStore(t)
 
 	// Actual request conversion and submission to the live Manager.
 	receipt, snapshotID, err := submitOptimizationJob(

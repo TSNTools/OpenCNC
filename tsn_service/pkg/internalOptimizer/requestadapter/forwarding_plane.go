@@ -22,13 +22,14 @@ func StreamKey(macAddress string, uniqueID uint32) string {
 	return strings.ToLower(macAddress) + "/" + strconv.FormatUint(uint64(uniqueID), 10)
 }
 
-// ExtractForwardingPlane converts OpenCNC's full protobuf model to the
-// optimization-relevant subset permitted by the CURRENT JSON v1.4 schema.
-// Pass the bytes of optimizer-request.schema.json as schemaJSON.
+// ExtractForwardingPlane converts OpenCNC's ForwardingPlaneModel
+// into the subset supported by OaaS Contract v1.4.
 //
-// The request adapter must snapshot the full protobuf BEFORE calling this function.
-// It intentionally does NOT transfer CNC administrative fields, model revision,
-// optimizer decisionVariables, applications, or FRER policy extensions.
+// The original CNC model is preserved separately by the caller
+// before submitting the optimization request.
+//
+// CNC-specific fields not supported by the contract are excluded.
+// This function does not modify the original protobuf.
 func ExtractForwardingPlane(
 	model *forwardingplane.ForwardingPlaneModel,
 	schemaJSON []byte,
@@ -125,7 +126,13 @@ func ExtractForwardingPlane(
 	if err != nil {
 		return nil, err
 	}
-	return projected.(map[string]any), nil
+	// This handles if a future schema change produces an unexpected structure.
+	result, ok := projected.(map[string]any)
+	if !ok {
+		return nil, fmt.Errorf("projected forwarding plane is not an object")
+	}
+
+	return result, nil
 }
 
 // ExtractPortCapabilities converts the *known* per-port mechanism flags
