@@ -12,7 +12,8 @@ import (
 	"time"
 )
 
-// This helper only submits a job. It does not treat 202 Accepted as optimization success. i'll handle job completion separately.
+// This helper only submits a job. It does not treat 202 Accepted as optimization success.
+// will handle job completion separately.
 func submitOaaSRequest(ctx context.Context, requestJSON []byte) ([]byte, error) {
 	url := os.Getenv("OAAS_MANAGER_JOBS_URL")
 	if url == "" {

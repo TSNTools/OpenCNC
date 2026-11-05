@@ -31,7 +31,7 @@ type DependencyGroup struct {
 	Parameters map[string]any `json:"parameters"`
 }
 
-// to contain information that is not available from optimizationTask.proto or forwardingPlaneModel.proto
+// to contain info that is not available from optimizationTask.proto or forwardingPlaneModel.proto
 type RequestOptions struct {
 	Mechanisms []MechanismSelection
 
@@ -50,7 +50,7 @@ type RequestOptions struct {
 	//   "AdditionalCapabilities": {
 	//     "devices": [
 	//       {
-	//         "node": "SW1",
+	//         "nodeId": "SW1",
 	//         "mechanisms": {
 	//           "TAS": {
 	//             "maxGclEntries": 64

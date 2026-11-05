@@ -383,13 +383,13 @@ func mergeCapabilities(cncCaps map[string]any, additional map[string]any) (map[s
 			if !ok {
 				return nil, errors.New("capabilities device must be an object")
 			}
-			name, ok := device["node"].(string)
+			name, ok := device["nodeId"].(string)
 			if !ok || name == "" || within[name] {
 				return nil, fmt.Errorf("capabilities contains missing or duplicate node %q", name)
 			}
 			within[name] = true
 			if indexed[name] == nil {
-				indexed[name] = map[string]any{"node": name}
+				indexed[name] = map[string]any{"nodeId": name}
 			}
 			mergeJSONObjects(indexed[name], device)
 		}

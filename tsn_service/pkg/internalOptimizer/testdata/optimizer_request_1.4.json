@@ -1,0 +1,448 @@
+{
+  "forwardingPlane": {
+    "configuration": {
+      "linkConfigs": [],
+      "nodeConfigs": [
+        {
+          "nodeId": "SW1",
+          "portConfigs": [
+            {
+              "pcpConfig": {
+                "trafficClassTable": [
+                  {
+                    "egressQueueId": 3,
+                    "priority": 3
+                  },
+                  {
+                    "egressQueueId": 4,
+                    "priority": 4
+                  }
+                ]
+              },
+              "pcpMappingEnabled": true,
+              "portId": "s1-out",
+              "queueConfigs": []
+            }
+          ]
+        },
+        {
+          "nodeId": "SW2",
+          "portConfigs": [
+            {
+              "pcpConfig": {
+                "trafficClassTable": [
+                  {
+                    "egressQueueId": 3,
+                    "priority": 3
+                  },
+                  {
+                    "egressQueueId": 4,
+                    "priority": 4
+                  }
+                ]
+              },
+              "pcpMappingEnabled": true,
+              "portId": "s2-out",
+              "queueConfigs": []
+            }
+          ]
+        },
+        {
+          "nodeId": "ES1",
+          "portConfigs": [
+            {
+              "pcpConfig": {
+                "trafficClassTable": [
+                  {
+                    "egressQueueId": 3,
+                    "priority": 3
+                  }
+                ]
+              },
+              "pcpMappingEnabled": true,
+              "portId": "e1",
+              "queueConfigs": []
+            }
+          ]
+        }
+      ]
+    },
+    "metadata": {
+      "modelId": "network-multi-001"
+    },
+    "streams": [
+      {
+        "configuration": {
+          "enabled": true,
+          "path": [
+            {
+              "bridgeId": "SW1",
+              "egressPortId": "s1-out",
+              "hopNumber": 0,
+              "ingressPortId": "s1-in"
+            },
+            {
+              "bridgeId": "SW2",
+              "egressPortId": "s2-out",
+              "hopNumber": 1,
+              "ingressPortId": "s2-in"
+            }
+          ],
+          "pcp": 3,
+          "queueAssignments": [
+            {
+              "egressPortId": "s1-out",
+              "queueId": 3
+            },
+            {
+              "egressPortId": "s2-out",
+              "queueId": 3
+            }
+          ]
+        },
+        "decisionVariables": {
+          "placement": "fixed",
+          "routing": "fixed",
+          "scheduling": "optimize"
+        },
+        "definition": {
+          "id": "02:00:00:00:00:01/1",
+          "listenerNodeIds": [
+            "ES2"
+          ],
+          "streamId": {
+            "macAddress": "02:00:00:00:00:01",
+            "uniqueId": 1
+          },
+          "streamRank": "RANK_NON_EMERGENCY",
+          "talkerNodeId": "ES1",
+          "trafficClassId": "M1",
+          "trafficSpec": {
+            "interFrameGapBytes": 12,
+            "intervalNs": 1000000,
+            "maxFrameSize": 500,
+            "maxIntervalFrames": 1,
+            "serializationOverheadBytes": 8
+          },
+          "userToNetworkRequirements": {
+            "maxBandwidthBps": 0,
+            "maxJitterNs": 0,
+            "maxLatencyNs": 1000000,
+            "maxLossRate": 0,
+            "numSeamlessTrees": 0
+          }
+        }
+      },
+      {
+        "configuration": {
+          "enabled": true,
+          "path": [
+            {
+              "bridgeId": "SW1",
+              "egressPortId": "s1-out",
+              "hopNumber": 0,
+              "ingressPortId": "s1-in"
+            },
+            {
+              "bridgeId": "SW2",
+              "egressPortId": "s2-out",
+              "hopNumber": 1,
+              "ingressPortId": "s2-in"
+            }
+          ],
+          "pcp": 3,
+          "queueAssignments": [
+            {
+              "egressPortId": "s1-out",
+              "queueId": 3
+            },
+            {
+              "egressPortId": "s2-out",
+              "queueId": 3
+            }
+          ]
+        },
+        "decisionVariables": {
+          "placement": "fixed",
+          "routing": "fixed",
+          "scheduling": "optimize"
+        },
+        "definition": {
+          "id": "02:00:00:00:00:01/2",
+          "listenerNodeIds": [
+            "ES2"
+          ],
+          "streamId": {
+            "macAddress": "02:00:00:00:00:01",
+            "uniqueId": 2
+          },
+          "streamRank": "RANK_NON_EMERGENCY",
+          "talkerNodeId": "ES1",
+          "trafficClassId": "M1",
+          "trafficSpec": {
+            "interFrameGapBytes": 12,
+            "intervalNs": 1000000,
+            "maxFrameSize": 800,
+            "maxIntervalFrames": 2,
+            "serializationOverheadBytes": 8
+          },
+          "userToNetworkRequirements": {
+            "maxBandwidthBps": 0,
+            "maxJitterNs": 0,
+            "maxLatencyNs": 800000,
+            "maxLossRate": 0,
+            "numSeamlessTrees": 0
+          }
+        }
+      }
+    ],
+    "topology": {
+      "links": [
+        {
+          "bandwidth_mbps": 1000,
+          "destination_node": "SW1",
+          "destination_port": "s1-in",
+          "id": "L1",
+          "propagation_delay_ns": 200,
+          "source_node": "ES1",
+          "source_port": "e1"
+        },
+        {
+          "bandwidth_mbps": 1000,
+          "destination_node": "SW2",
+          "destination_port": "s2-in",
+          "id": "L2",
+          "propagation_delay_ns": 500,
+          "source_node": "SW1",
+          "source_port": "s1-out"
+        },
+        {
+          "bandwidth_mbps": 1000,
+          "destination_node": "ES2",
+          "destination_port": "e2",
+          "id": "L3",
+          "propagation_delay_ns": 200,
+          "source_node": "SW2",
+          "source_port": "s2-out"
+        }
+      ],
+      "nodes": [
+        {
+          "name": "ES1",
+          "ports": [
+            {
+              "capabilities": {
+                "maximumTransmissionUnit": 0,
+                "mode": "FD",
+                "port_speed": 1000,
+                "supportedPcpValues": [],
+                "supportedVlanIds": [],
+                "supportsCqf": false,
+                "supportsInterfaceTimeOffset": false,
+                "supportsStreamFiltering": false,
+                "supportsTimeSync": false
+              },
+              "id": "e1",
+              "number_of_queues": 8
+            }
+          ],
+          "type": "END_STATION"
+        },
+        {
+          "name": "SW1",
+          "ports": [
+            {
+              "capabilities": {
+                "maximumTransmissionUnit": 0,
+                "mode": "FD",
+                "port_speed": 1000,
+                "supportedPcpValues": [],
+                "supportedVlanIds": [],
+                "supportsCqf": false,
+                "supportsInterfaceTimeOffset": false,
+                "supportsStreamFiltering": false,
+                "supportsTimeSync": false
+              },
+              "id": "s1-in",
+              "number_of_queues": 8
+            },
+            {
+              "capabilities": {
+                "maximumTransmissionUnit": 0,
+                "mode": "FD",
+                "port_speed": 1000,
+                "supportedPcpValues": [],
+                "supportedVlanIds": [],
+                "supportsCqf": false,
+                "supportsInterfaceTimeOffset": false,
+                "supportsStreamFiltering": false,
+                "supportsTimeSync": false
+              },
+              "id": "s1-out",
+              "number_of_queues": 8
+            }
+          ],
+          "properties": {
+            "processing_delay_ns": 1200
+          },
+          "type": "BRIDGE"
+        },
+        {
+          "name": "SW2",
+          "ports": [
+            {
+              "capabilities": {
+                "maximumTransmissionUnit": 0,
+                "mode": "FD",
+                "port_speed": 1000,
+                "supportedPcpValues": [],
+                "supportedVlanIds": [],
+                "supportsCqf": false,
+                "supportsInterfaceTimeOffset": false,
+                "supportsStreamFiltering": false,
+                "supportsTimeSync": false
+              },
+              "id": "s2-in",
+              "number_of_queues": 8
+            },
+            {
+              "capabilities": {
+                "maximumTransmissionUnit": 0,
+                "mode": "FD",
+                "port_speed": 1000,
+                "supportedPcpValues": [],
+                "supportedVlanIds": [],
+                "supportsCqf": false,
+                "supportsInterfaceTimeOffset": false,
+                "supportsStreamFiltering": false,
+                "supportsTimeSync": false
+              },
+              "id": "s2-out",
+              "number_of_queues": 8
+            }
+          ],
+          "properties": {
+            "processing_delay_ns": 1800
+          },
+          "type": "BRIDGE"
+        },
+        {
+          "name": "ES2",
+          "ports": [
+            {
+              "capabilities": {
+                "maximumTransmissionUnit": 0,
+                "mode": "FD",
+                "port_speed": 1000,
+                "supportedPcpValues": [],
+                "supportedVlanIds": [],
+                "supportsCqf": false,
+                "supportsInterfaceTimeOffset": false,
+                "supportsStreamFiltering": false,
+                "supportsTimeSync": false
+              },
+              "id": "e2",
+              "number_of_queues": 8
+            }
+          ],
+          "type": "END_STATION"
+        }
+      ]
+    }
+  },
+  "optimizationTask": {
+    "taskId": "task-multi-005",
+    "trigger": "USER_REQUEST",
+    "intent": "INITIAL_CONFIGURATION",
+    "objectives": [
+      {
+        "metric": "MINIMIZE_LATENCY",
+        "priority": 1,
+        "weight": 1
+      }
+    ],
+    "scope": {
+      "streamIds": [
+        "02:00:00:00:00:01/1",
+        "02:00:00:00:00:01/2"
+      ]
+    }
+  },
+  "mechanisms": [
+    {
+      "name": "CBS"
+    }
+  ],
+  "operation": "configuration",
+  "schemaVersion": "1.4",
+  "capabilities": {
+    "devices": [
+      {
+        "nodeId": "SW1",
+        "ports": {
+          "s1-in": {
+            "mechanisms": {
+              "CBS": {
+                "supported": false
+              },
+              "FRER": {
+                "supported": false
+              },
+              "TAS": {
+                "framePreemptionSupported": false,
+                "supported": false
+              }
+            }
+          },
+          "s1-out": {
+            "mechanisms": {
+              "CBS": {
+                "supported": true
+              },
+              "FRER": {
+                "supported": false
+              },
+              "TAS": {
+                "framePreemptionSupported": false,
+                "supported": false
+              }
+            }
+          }
+        }
+      },
+      {
+        "nodeId": "SW2",
+        "ports": {
+          "s2-in": {
+            "mechanisms": {
+              "CBS": {
+                "supported": false
+              },
+              "FRER": {
+                "supported": false
+              },
+              "TAS": {
+                "framePreemptionSupported": false,
+                "supported": false
+              }
+            }
+          },
+          "s2-out": {
+            "mechanisms": {
+              "CBS": {
+                "supported": true
+              },
+              "FRER": {
+                "supported": false
+              },
+              "TAS": {
+                "framePreemptionSupported": false,
+                "supported": false
+              }
+            }
+          }
+        }
+      }
+    ]
+  }
+}

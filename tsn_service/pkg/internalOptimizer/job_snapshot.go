@@ -1,3 +1,4 @@
+// links a Manager jobId to the saved snapshotr
 package internalOptimizer
 
 import (
@@ -22,7 +23,7 @@ func jobSnapshotKey(jobID string) (string, error) {
 	return jobSnapshotPrefix + encoded, nil
 }
 
-// Associate a Manager job with its preserved CNC snapshot.
+// link a manager's job id with its preserved CNC snapshot.
 func saveJobSnapshotLink(jobID, snapshotID string) error {
 	key, err := jobSnapshotKey(jobID)
 	if err != nil {
@@ -37,7 +38,7 @@ func saveJobSnapshotLink(jobID, snapshotID string) error {
 	return snapshotWrite([]byte(snapshotID), key)
 }
 
-// Retrieve the original CNC model belonging to a Manager job.
+// fetch original cnc snapshot for the manager's job id
 func loadSnapshotForJob(
 	jobID string,
 ) (*forwardingplane.ForwardingPlaneModel, error) {

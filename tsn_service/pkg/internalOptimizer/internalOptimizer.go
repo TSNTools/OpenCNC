@@ -37,15 +37,26 @@ func StartOptimization(
 	// Temporary request-side integration only.
 
 	if os.Getenv("OAAS_REQUEST_ONLY") == "true" {
-		receipt, snapshotID, err := submitOptimizationJob(ctx, task, fpm)
+		deviceModels, err := loadNodeDeviceModels(fpm)
 
 		if err != nil {
-			fmt.Printf("[OAAS] Optimization submission failed: %v\n", err)
+			fmt.Printf("[OAAS] DeviceModel lookup failed; skipping submission: %v\n", err)
 		} else {
 			fmt.Printf(
-				"[OAAS] Job %s accepted (status: %s), snapshot: %s\n",
-				receipt.JobID, receipt.Status, snapshotID,
+				"[OAAS] Loaded DeviceModels for %d nodes\n",
+				len(deviceModels),
 			)
+
+			receipt, snapshotID, err := submitOptimizationJob(ctx, task, fpm, deviceModels)
+
+			if err != nil {
+				fmt.Printf("[OAAS] Optimization submission failed: %v\n", err)
+			} else {
+				fmt.Printf(
+					"[OAAS] Job %s accepted (status: %s), snapshot: %s\n",
+					receipt.JobID, receipt.Status, snapshotID,
+				)
+			}
 		}
 	}
 

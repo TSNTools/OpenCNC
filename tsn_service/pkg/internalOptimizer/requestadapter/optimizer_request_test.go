@@ -23,9 +23,10 @@ func TestBuildOptimizerRequestV13(t *testing.T) {
 			key: {Routing: "optimize", Scheduling: "optimize"},
 		},
 		AdditionalCapabilities: map[string]any{"devices": []any{
-			map[string]any{"node": "SW1", "ports": map[string]any{
+			map[string]any{"nodeId": "SW1", "ports": map[string]any{
 				"P2": map[string]any{"mechanisms": map[string]any{
 					"CBS": map[string]any{"supportedQueues": []any{5, 6}},
+					"TAS": map[string]any{"maxGclEntries": 512},
 				}},
 			}},
 		}},
@@ -56,12 +57,26 @@ func TestBuildOptimizerRequestV13(t *testing.T) {
 	var supportedQueues bool
 	for _, item := range caps {
 		device := item.(map[string]any)
-		if device["node"] != "SW1" {
+		if device["nodeId"] != "SW1" {
 			continue
 		}
 		ports := device["ports"].(map[string]any)
 		cbsp2 := ports["P2"].(map[string]any)["mechanisms"].(map[string]any)["CBS"].(map[string]any)
 		supportedQueues = len(cbsp2["supportedQueues"].([]any)) == 2
+		mechanisms := ports["P2"].(map[string]any)["mechanisms"].(map[string]any)
+
+		tas := mechanisms["TAS"].(map[string]any)
+		if tas["maxGclEntries"] != float64(512) {
+			t.Fatalf("TAS maxGclEntries not merged: %v", tas)
+		}
+
+		if tas["supported"] != true {
+			t.Fatal("existing TAS support flag was lost")
+		}
+
+		if cbsp2["supported"] != true {
+			t.Fatal("existing CBS support flag was lost")
+		}
 	}
 	if !supportedQueues {
 		t.Fatal("external capability inventory merge failed")

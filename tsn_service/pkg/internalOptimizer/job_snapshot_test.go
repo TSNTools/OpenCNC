@@ -1,3 +1,4 @@
+// verifies Manager job ID → snapshot ID mapping.
 package internalOptimizer
 
 import (

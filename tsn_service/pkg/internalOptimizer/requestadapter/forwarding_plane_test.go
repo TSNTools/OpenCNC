@@ -141,3 +141,44 @@ func TestForwardingPlaneRejectsDisabledPort(t *testing.T) {
 		t.Fatalf("expected unsafe topology rejection, got %v", err)
 	}
 }
+
+func TestExtractPortMechanismCapabilities(t *testing.T) {
+	input := strings.Replace(
+		testForwardingPlane,
+		`"supportsCbs":true,"supportsTas":true`,
+		`"supportsCbs":true,"supportsTas":true,"supportsFrer":true,"supportsFramePreemption":true`,
+		1,
+	)
+
+	if input == testForwardingPlane {
+		t.Fatal("test fixture modification failed")
+	}
+
+	model := parseForwardingPlane(t, input)
+	caps := ExtractPortCapabilities(model)
+
+	devices := caps["devices"].([]any)
+	if len(devices) != 1 {
+		t.Fatalf("expected 1 device, got %d", len(devices))
+	}
+
+	device := devices[0].(map[string]any)
+	if device["nodeId"] != "SW1" {
+		t.Fatalf("unexpected device: %v", device["nodeId"])
+	}
+
+	port := device["ports"].(map[string]any)["P2"].(map[string]any)
+	mechanisms := port["mechanisms"].(map[string]any)
+
+	for _, name := range []string{"CBS", "TAS", "FRER"} {
+		mechanism := mechanisms[name].(map[string]any)
+		if mechanism["supported"] != true {
+			t.Errorf("%s support was not mapped", name)
+		}
+	}
+
+	tas := mechanisms["TAS"].(map[string]any)
+	if tas["framePreemptionSupported"] != true {
+		t.Error("frame preemption support was not mapped")
+	}
+}

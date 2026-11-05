@@ -1,3 +1,4 @@
+// Checks that referenced application IDs actually exist. Important for future placement optimization.
 package requestadapter
 
 import "fmt"

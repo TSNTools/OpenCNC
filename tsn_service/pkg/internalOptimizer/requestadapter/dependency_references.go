@@ -1,3 +1,4 @@
+// Checks that stream dependencies reference valid streams.
 package requestadapter
 
 import "fmt"

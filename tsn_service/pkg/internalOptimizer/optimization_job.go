@@ -1,7 +1,8 @@
-// This will let us test the actual production code without starting CNC.
+// handles the entire request submission
 package internalOptimizer
 
 import (
+	"OpenCNC/common/structures/devicemodelregistry"
 	"context"
 	"fmt"
 
@@ -13,9 +14,11 @@ func submitOptimizationJob(
 	ctx context.Context,
 	task *optimizer.OptimizationTask,
 	fpm *forwardingplane.ForwardingPlaneModel,
+	deviceModels map[string]*devicemodelregistry.DeviceModel,
+
 ) (*ManagerJobReceipt, string, error) {
 
-	requestJSON, err := buildOaaSRequest(task, fpm)
+	requestJSON, err := buildOaaSRequestWithDeviceModels(task, fpm, deviceModels)
 	if err != nil {
 		return nil, "", fmt.Errorf("request conversion: %w", err)
 	}

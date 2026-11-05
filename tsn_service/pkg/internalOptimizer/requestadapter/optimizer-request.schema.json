@@ -1067,10 +1067,10 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "node"
+        "nodeId"
       ],
       "properties": {
-        "node": {
+        "nodeId": {
           "type": "string",
           "description": "Node ID whose physical TSN capabilities are described."
         },

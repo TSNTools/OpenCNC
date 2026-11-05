@@ -1,3 +1,4 @@
+// Extracts optimization-relevant information from the CNC forwarding plane, including topology, streams, configuration and available capabilities.
 package requestadapter
 
 import (
@@ -172,8 +173,8 @@ func ExtractPortCapabilities(model *forwardingplane.ForwardingPlaneModel) map[st
 		}
 		if len(ports) != 0 {
 			devices = append(devices, map[string]any{
-				"node":  node.GetName(),
-				"ports": ports,
+				"nodeId": node.GetName(),
+				"ports":  ports,
 			})
 		}
 	}

@@ -1,3 +1,4 @@
+// Test HTTP submission with a mock Manager.
 package internalOptimizer
 
 import (

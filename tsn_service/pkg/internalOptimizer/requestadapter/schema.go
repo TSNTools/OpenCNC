@@ -1,3 +1,4 @@
+// Makes the JSON contract available directly inside the compiled Go program.
 package requestadapter
 
 import _ "embed"

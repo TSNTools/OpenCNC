@@ -1,3 +1,4 @@
+// Verify the original FPM is preserved correctly.
 package internalOptimizer
 
 import (

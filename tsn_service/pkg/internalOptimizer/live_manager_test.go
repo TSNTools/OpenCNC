@@ -1,3 +1,4 @@
+// Submits a real request to the running OaaS Manager.
 package internalOptimizer
 
 import (
@@ -72,7 +73,7 @@ func TestLiveManagerSubmission(t *testing.T) {
 
 	// Actual request conversion and submission to the live Manager.
 	receipt, snapshotID, err := submitOptimizationJob(
-		context.Background(), &task, &fpm,
+		context.Background(), &task, &fpm, nil,
 	)
 	if err != nil {
 		t.Fatal(err)

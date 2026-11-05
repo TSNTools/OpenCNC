@@ -1,3 +1,4 @@
+// prepares optional/additional inputs for constructing the request
 package internalOptimizer
 
 import (
