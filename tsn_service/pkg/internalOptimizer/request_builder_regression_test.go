@@ -95,6 +95,37 @@ func TestRequestJSONUnchangedWithDeviceModels(t *testing.T) {
 	if !bytes.Equal(before, after) {
 		t.Fatal("Contract v1.4 JSON unexpectedly changed")
 	}
+	t.Run("B6ProductionDefaultDecisions", func(t *testing.T) {
+		var request struct {
+			ForwardingPlane struct {
+				Streams []struct {
+					DecisionVariables struct {
+						Routing    string `json:"routing"`
+						Scheduling string `json:"scheduling"`
+						Placement  string `json:"placement"`
+					} `json:"decisionVariables"`
+				} `json:"streams"`
+			} `json:"forwardingPlane"`
+		}
+
+		if err := json.Unmarshal(before, &request); err != nil {
+			t.Fatal(err)
+		}
+
+		streams := request.ForwardingPlane.Streams
+		if len(streams) == 0 {
+			t.Fatal("expected at least one stream")
+		}
+
+		for i, stream := range streams {
+			d := stream.DecisionVariables
+			if d.Routing != "fixed" ||
+				d.Scheduling != "optimize" ||
+				d.Placement != "fixed" {
+				t.Fatalf("stream %d: unexpected decisions: %+v", i, d)
+			}
+		}
+	})
 
 	if os.Getenv("OAAS_EXPORT_JSON") == "1" {
 		cncTask, err := protojson.Marshal(&task)

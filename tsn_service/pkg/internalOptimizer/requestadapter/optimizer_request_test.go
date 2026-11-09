@@ -385,3 +385,83 @@ func TestB4ObjectiveAndConstraintZeros(t *testing.T) {
 		t.Fatal("constraint zero value was not preserved")
 	}
 }
+
+// This verifies the adapter's decision flags, not yet that the optimizer enforces a fixed schedule.
+func TestB6MixedPerStreamDecisions(t *testing.T) {
+	id1 := "02:00:00:00:00:01/1"
+	id2 := "02:00:00:00:00:01/2"
+
+	forwarding := p2Forwarding(id1, true)
+	forwarding["streams"] = append(
+		forwarding["streams"].([]any),
+		map[string]any{
+			"definition":    map[string]any{"id": id2},
+			"configuration": map[string]any{},
+		},
+	)
+
+	err := applyStreamOptions(
+		forwarding,
+		map[string]StreamOptions{
+			id2: {
+				Routing:    "optimize",
+				Scheduling: "fixed",
+			},
+		},
+		"configuration",
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	streams := forwarding["streams"].([]any)
+	first := streams[0].(map[string]any)["decisionVariables"].(map[string]any)
+	second := streams[1].(map[string]any)["decisionVariables"].(map[string]any)
+
+	if first["routing"] != "fixed" ||
+		first["scheduling"] != "optimize" ||
+		first["placement"] != "fixed" {
+		t.Fatalf("unexpected first stream decisions: %v", first)
+	}
+
+	if second["routing"] != "optimize" ||
+		second["scheduling"] != "fixed" ||
+		second["placement"] != "fixed" {
+		t.Fatalf("unexpected second stream decisions: %v", second)
+	}
+}
+
+// to verify that an existing stream can be marked for modification while its route and scheduling decisions remain preserve.
+func TestB6ReconfigurationDecisions(t *testing.T) {
+	id := "02:00:00:00:00:01/1"
+	forwarding := p2Forwarding(id, true)
+
+	err := applyStreamOptions(
+		forwarding,
+		map[string]StreamOptions{
+			id: {
+				Routing:    "preserve",
+				Scheduling: "preserve",
+				Placement:  "fixed",
+				Change:     "modify",
+			},
+		},
+		"reconfiguration",
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	stream := forwarding["streams"].([]any)[0].(map[string]any)
+	decisions := stream["decisionVariables"].(map[string]any)
+
+	if decisions["routing"] != "preserve" ||
+		decisions["scheduling"] != "preserve" ||
+		decisions["placement"] != "fixed" {
+		t.Fatalf("unexpected decisions: %v", decisions)
+	}
+
+	if stream["change"] != "modify" {
+		t.Fatalf("expected change=modify, got %v", stream["change"])
+	}
+}
