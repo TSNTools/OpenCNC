@@ -1,11 +1,8 @@
-// Makes the JSON contract available directly inside the compiled Go program.
 package requestadapter
 
-import _ "embed"
+import tsncontracts "github.com/Kashaf14/tsn-optimization-contracts"
 
-//go:embed optimizer-request.schema.json
-var optimizerRequestSchema []byte
-
+// SchemaJSON returns the schema from the shared contract package.
 func SchemaJSON() []byte {
-	return append([]byte(nil), optimizerRequestSchema...)
+	return tsncontracts.OptimizerRequestSchemaJSON()
 }

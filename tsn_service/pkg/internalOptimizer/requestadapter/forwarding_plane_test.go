@@ -2,7 +2,6 @@ package requestadapter
 
 import (
 	"encoding/json"
-	"os"
 	"strings"
 	"testing"
 
@@ -41,13 +40,7 @@ const testForwardingPlane = `{
 
 func loadV13Schema(t *testing.T) []byte {
 	t.Helper()
-	// go test ./... runs each package test from its own directory.
-	path := "optimizer-request.schema.json"
-	b, err := os.ReadFile(path)
-	if err != nil {
-		t.Fatalf("cannot read v1.3 schema at %s: %v", path, err)
-	}
-	return b
+	return SchemaJSON()
 }
 
 func parseForwardingPlane(t *testing.T, input string) *forwardingplane.ForwardingPlaneModel {

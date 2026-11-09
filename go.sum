@@ -2,6 +2,8 @@ git.cs.kau.se/hamzchah/opencnc_kafka-exporter/logger v0.0.0-20230914104133-72a70
 git.cs.kau.se/hamzchah/opencnc_kafka-exporter/logger v0.0.0-20230914104133-72a7039493d7/go.mod h1:RsEatNI49t3GbzROxbpqr5EyuFRhjpQ3rRvHVs6Y208=
 github.com/Kashaf14/tsn-optimization-contracts v0.0.0-20261109125159-b915671d5d89 h1:oCmCIHJtEgNgMES4iDpjJJ/aBPpmV8yb7+ArSFE9KfU=
 github.com/Kashaf14/tsn-optimization-contracts v0.0.0-20261109125159-b915671d5d89/go.mod h1:lIfkmt1aCmaGVOWgTD4oT9JnN3sKXI8p2eTVFEIiwV8=
+github.com/Kashaf14/tsn-optimization-contracts v0.0.0-20261109154522-f343def0b22e h1:4d0vliuuiMLmt4uLJ67pZn+pQ/wgNgbIq8XMCw08ESk=
+github.com/Kashaf14/tsn-optimization-contracts v0.0.0-20261109154522-f343def0b22e/go.mod h1:lIfkmt1aCmaGVOWgTD4oT9JnN3sKXI8p2eTVFEIiwV8=
 github.com/Shopify/sarama v1.38.1 h1:lqqPUPQZ7zPqYlWpTh+LQ9bhYNu2xJL6k1SJN4WVe2A=
 github.com/Shopify/sarama v1.38.1/go.mod h1:iwv9a67Ha8VNa+TifujYoWGxWnu2kNVAQdSdZ4X2o5g=
 github.com/Shopify/toxiproxy/v2 v2.5.0 h1:i4LPT+qrSlKNtQf5QliVjdP08GyAH8+BUIc9gT0eahc=
