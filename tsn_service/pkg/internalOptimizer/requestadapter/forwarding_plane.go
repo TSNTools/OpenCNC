@@ -66,6 +66,18 @@ func ExtractForwardingPlane(
 	// ProtoJSON honors field names/enum spellings from OpenCNC and emits uint64
 	// values as decimal strings; the recursive projection below converts those
 	// numbers to JSON integers according to the OaaS schema.
+
+	// B4: Zero-value handling limitation.
+	// OpenCNC max_jitter_ns is a non-optional protobuf uint64.
+	// Therefore, protobuf cannot distinguish an omitted value
+	// from an explicitly supplied zero.
+	//
+	// As clarified by Hamza (3 Nov 2026), maxJitterNs=0
+	// represents a strict zero-jitter requirement, not N/A.
+	//
+	// The current adapter preserves zero. Supporting an
+	// unspecified jitter value separately would require
+	// an agreed presence-aware representation.
 	data, err := (protojson.MarshalOptions{EmitUnpopulated: true}).Marshal(model)
 	if err != nil {
 		return nil, fmt.Errorf("marshal OpenCNC forwarding plane: %w", err)

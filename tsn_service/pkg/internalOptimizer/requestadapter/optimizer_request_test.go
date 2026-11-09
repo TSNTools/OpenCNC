@@ -319,3 +319,69 @@ func TestRejectsUnknownApplicationReference(t *testing.T) {
 		t.Fatalf("expected unknown application rejection, got: %v", err)
 	}
 }
+func TestB4ChangePolicyFalseAndAbsent(t *testing.T) {
+	task := &optimizationcontract.OptimizationTask{
+		TaskId: "b4-test",
+		ChangePolicy: &optimizationcontract.ChangePolicy{
+			AllowPathChanges: false,
+		},
+	}
+
+	result, err := ExtractOptimizationTask(task)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	policy := result["changePolicy"].(map[string]any)
+
+	if value, exists := policy["allowPathChanges"]; !exists || value != false {
+		t.Fatalf("expected allowPathChanges=false, got %v", value)
+	}
+
+	task.ChangePolicy = nil
+
+	result, err = ExtractOptimizationTask(task)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if _, exists := result["changePolicy"]; exists {
+		t.Fatal("absent changePolicy should be omitted")
+	}
+}
+func TestB4ObjectiveAndConstraintZeros(t *testing.T) {
+	task := &optimizationcontract.OptimizationTask{
+		TaskId: "b4-zero-test",
+		Objectives: []*optimizationcontract.Objective{
+			{
+				Metric:   optimizationcontract.Metric_MINIMIZE_LATENCY,
+				Priority: 0,
+				Weight:   0,
+			},
+		},
+		Constraints: []*optimizationcontract.Constraint{
+			{
+				Type: &optimizationcontract.Type{
+					Id: optimizationcontract.TypeId_MAX_JITTER,
+				},
+				Value: 0,
+			},
+		},
+	}
+
+	result, err := ExtractOptimizationTask(task)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	objectives := result["objectives"].([]map[string]any)
+	if objectives[0]["priority"] != int32(0) ||
+		objectives[0]["weight"] != float64(0) {
+		t.Fatal("objective zero values were not preserved")
+	}
+
+	constraints := result["constraints"].([]map[string]any)
+	if constraints[0]["value"] != float64(0) {
+		t.Fatal("constraint zero value was not preserved")
+	}
+}
