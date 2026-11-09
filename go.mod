@@ -17,7 +17,7 @@ require (
 )
 
 require (
-	github.com/Kashaf14/tsn-optimization-contracts v0.0.0-20261109154522-f343def0b22e
+	github.com/Kashaf14/tsn-optimization-contracts v0.1.0
 	github.com/Shopify/sarama v1.38.1 // indirect
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
 	github.com/eapache/go-resiliency v1.3.0 // indirect
