@@ -137,8 +137,11 @@ func TestBuildRequestRejectsUnmappedScopeStream(t *testing.T) {
 		Scope: &optimizationcontract.Scope{StreamIds: []string{"f1"}},
 	}, model, loadV13Schema(t), RequestOptions{
 		Mechanisms: []MechanismSelection{{Name: "CBS"}},
+		Streams: map[string]StreamOptions{
+			StreamKey("02:00:00:00:00:01", 1): {Routing: "optimize"},
+		},
 	})
-	if err == nil || !strings.Contains(err.Error(), "scope.streamIds") {
+	if err == nil || !strings.Contains(err.Error(), `Scope stream ID "f1" must identify exactly one stream`) {
 		t.Fatalf("expected unknown CNC scope alias error, got %v", err)
 	}
 }
@@ -235,5 +238,84 @@ func TestP2UnknownStreamOptionRejectedBeforeMissingPath(t *testing.T) {
 	}, "configuration")
 	if err == nil || !strings.Contains(err.Error(), "unknown derived stream ID") {
 		t.Fatalf("expected unknown stream ID rejection, got %v", err)
+	}
+}
+
+func TestRejectsUnknownDependencyStream(t *testing.T) {
+	model := parseForwardingPlane(t, testForwardingPlane)
+
+	task := &optimizationcontract.OptimizationTask{
+		TaskId: "task-dependency-test",
+		Intent: optimizationcontract.Intent_INITIAL_CONFIGURATION,
+	}
+
+	key := StreamKey("02:00:00:00:00:01", 1)
+
+	_, err := BuildOptimizerRequest(
+		task,
+		model,
+		loadV13Schema(t),
+		RequestOptions{
+			Mechanisms: []MechanismSelection{{Name: "CBS"}},
+			Streams: map[string]StreamOptions{
+				key: {Routing: "optimize"},
+			},
+			DependencyGroups: []DependencyGroup{
+				{
+					Type: "STREAM_SEQUENCING",
+					Target: [][]string{
+						{key},
+						{"missing-stream"},
+					},
+					Parameters: map[string]any{
+						"handoverIntervalNs": 0,
+					},
+				},
+			},
+		},
+	)
+
+	if err == nil || !strings.Contains(err.Error(), "Unknown stream reference: missing-stream") {
+		t.Fatalf("expected dependency reference rejection, got: %v", err)
+	}
+}
+
+func TestRejectsUnknownApplicationReference(t *testing.T) {
+	model := parseForwardingPlane(t, testForwardingPlane)
+
+	task := &optimizationcontract.OptimizationTask{
+		TaskId: "task-app-reference-test",
+		Intent: optimizationcontract.Intent_INITIAL_CONFIGURATION,
+	}
+
+	key := StreamKey("02:00:00:00:00:01", 1)
+
+	_, err := BuildOptimizerRequest(
+		task,
+		model,
+		loadV13Schema(t),
+		RequestOptions{
+			Mechanisms: []MechanismSelection{{Name: "CBS"}},
+			Streams: map[string]StreamOptions{
+				key: {
+					Routing:                "optimize",
+					TalkerApplicationID:    "unknown-app",
+					ListenerApplicationIDs: []string{"listener-app"},
+				},
+			},
+			Applications: []map[string]any{
+				{
+					"id": "listener-app",
+					"placement": map[string]any{
+						"mode": "fixed",
+						"node": "ES2",
+					},
+				},
+			},
+		},
+	)
+
+	if err == nil || !strings.Contains(err.Error(), "unknown-app") {
+		t.Fatalf("expected unknown application rejection, got: %v", err)
 	}
 }

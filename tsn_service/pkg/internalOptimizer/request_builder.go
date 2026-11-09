@@ -52,4 +52,5 @@ func buildOaaSRequestWithDeviceModels(
 		requestadapter.SchemaJSON(),
 		options,
 	)
+
 }

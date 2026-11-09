@@ -1,14 +1,14 @@
 package internalOptimizer
 
 import (
-	"bytes"
-	"encoding/json"
-	"os"
-	"testing"
-
 	"OpenCNC/common/structures/devicemodelregistry"
 	forwardingplane "OpenCNC/tsn_service/pkg/structures/forwarding_plane"
 	optimizer "OpenCNC/tsn_service/pkg/structures/optimization_contract"
+	"bytes"
+	"encoding/json"
+	"os"
+	"strings"
+	"testing"
 
 	"google.golang.org/protobuf/encoding/protojson"
 )
@@ -133,4 +133,11 @@ func TestRequestJSONUnchangedWithDeviceModels(t *testing.T) {
 		t.Logf("JSON files saved in: %s", dir)
 	}
 
+	// A duplicated CNC topology node must be rejected by shared validation.
+	fpm.Topology.Nodes = append(fpm.Topology.Nodes, fpm.Topology.Nodes[0])
+
+	_, err = buildOaaSRequest(&task, &fpm)
+	if err == nil || !strings.Contains(err.Error(), "Duplicate node ID") {
+		t.Fatalf("expected duplicate node rejection, got: %v", err)
+	}
 }

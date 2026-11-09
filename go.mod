@@ -17,6 +17,7 @@ require (
 )
 
 require (
+	github.com/Kashaf14/tsn-optimization-contracts v0.0.0-20261109125159-b915671d5d89 // indirect
 	github.com/Shopify/sarama v1.38.1 // indirect
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
 	github.com/eapache/go-resiliency v1.3.0 // indirect
@@ -44,6 +45,7 @@ require (
 	github.com/rcrowley/go-metrics v0.0.0-20201227073835-cf1acfcdf475 // indirect
 	github.com/sagikazarmark/locafero v0.7.0 // indirect
 	github.com/sagikazarmark/slog-shim v0.1.0 // indirect
+	github.com/santhosh-tekuri/jsonschema/v6 v6.0.3 // indirect
 	github.com/sourcegraph/conc v0.3.0 // indirect
 	github.com/spf13/afero v1.12.0 // indirect
 	github.com/spf13/cast v1.7.1 // indirect

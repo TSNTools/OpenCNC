@@ -9,6 +9,8 @@ import (
 
 	forwardingplane "OpenCNC/tsn_service/pkg/structures/forwarding_plane"
 	optimizationcontract "OpenCNC/tsn_service/pkg/structures/optimization_contract"
+
+	tsncontracts "github.com/Kashaf14/tsn-optimization-contracts"
 )
 
 // NOTE: The original ForwardingPlaneModel must be preserved by the caller
@@ -76,9 +78,6 @@ func BuildOptimizerRequest(
 			return nil, errors.New("reconfiguration requires current forwardingPlane.configuration")
 		}
 	}
-	if err := validateStreamScope(taskJSON, forwarding); err != nil {
-		return nil, err
-	}
 	if err := applyStreamOptions(forwarding, options.Streams, operation); err != nil {
 		return nil, err
 	}
@@ -87,9 +86,6 @@ func BuildOptimizerRequest(
 	}
 	if usesApplicationEndpoints(options.Streams) && len(options.Applications) == 0 {
 		return nil, errors.New("application placement requires applications definitions")
-	}
-	if err := validateApplicationReferences(forwarding, options.Applications); err != nil {
-		return nil, err
 	}
 
 	caps, err := mergeCapabilities(ExtractPortCapabilities(model), options.AdditionalCapabilities)
@@ -111,9 +107,6 @@ func BuildOptimizerRequest(
 		request["applications"] = options.Applications
 	}
 	if len(options.DependencyGroups) > 0 {
-		if err := validateDependencyReferences(forwarding, options.DependencyGroups); err != nil {
-			return nil, err
-		}
 		request["dependencyGroups"] = options.DependencyGroups
 	}
 	if options.Reliability != nil {
@@ -125,6 +118,10 @@ func BuildOptimizerRequest(
 	result, err := json.MarshalIndent(request, "", "  ")
 	if err != nil {
 		return nil, fmt.Errorf("serialize optimizer request: %w", err)
+	}
+
+	if err := tsncontracts.ValidateOptimizerRequestJSON(result); err != nil {
+		return nil, fmt.Errorf("Contract v1.4 validation failed: %w", err)
 	}
 	return result, nil
 }
@@ -313,36 +310,6 @@ func applyEthernetOverhead(forwarding map[string]any, controls map[string]Stream
 			} else if _, alreadyPresent := spec[field.name]; !alreadyPresent {
 				spec[field.name] = field.defaultAmount
 			}
-		}
-	}
-	return nil
-}
-
-// validateStreamScope prevents passing CNC-local aliases (e.g. "f1") where
-// the contract's stable derived IDs (e.g. "mac/1") are required. An explicit
-// alias translation can be added when the CNC's stream_ids convention is known.
-func validateStreamScope(task map[string]any, forwarding map[string]any) error {
-	scope, _ := task["scope"].(map[string]any)
-	if scope == nil {
-		return nil
-	}
-	references, _ := scope["streamIds"].([]string)
-	if len(references) == 0 {
-		return nil
-	}
-	known := make(map[string]bool)
-	streams, _ := forwarding["streams"].([]any)
-	for _, raw := range streams {
-		stream, _ := raw.(map[string]any)
-		definition, _ := stream["definition"].(map[string]any)
-		id, _ := definition["id"].(string)
-		if id != "" {
-			known[id] = true
-		}
-	}
-	for _, id := range references {
-		if !known[id] {
-			return fmt.Errorf("scope.streamIds contains unknown stream %q; CNC stream aliases need explicit mapping to StreamKey", id)
 		}
 	}
 	return nil
