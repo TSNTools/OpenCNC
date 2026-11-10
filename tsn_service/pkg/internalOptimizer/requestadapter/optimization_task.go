@@ -4,6 +4,7 @@ package requestadapter
 import (
 	"errors"
 
+	forwardingplane "OpenCNC/tsn_service/pkg/structures/forwarding_plane"
 	optimizationcontract "OpenCNC/tsn_service/pkg/structures/optimization_contract"
 )
 
@@ -137,4 +138,38 @@ func ExtractOptimizationTask(
 	}
 
 	return result, nil
+}
+
+// normalizeTaskScopeStreamIDs maps OpenCNC's StreamId.AsKey() references
+// to the stable stream definition IDs derived by ExtractForwardingPlane.
+// Unknown references are intentionally retained so shared semantic validation
+// rejects them; we must not silently remove an out-of-scope or stale ID.
+func normalizeTaskScopeStreamIDs(taskJSON map[string]any, model *forwardingplane.ForwardingPlaneModel) {
+	scope, ok := taskJSON["scope"].(map[string]any)
+	if !ok {
+		return
+	}
+	ids, ok := scope["streamIds"].([]string)
+	if !ok {
+		return
+	}
+
+	byCNCKey := make(map[string]string, len(model.GetStreams()))
+	for _, entry := range model.GetStreams() {
+		if entry == nil || entry.GetDefinition() == nil || entry.GetDefinition().GetStreamId() == nil {
+			continue // ExtractForwardingPlane checks these before this function is called.
+		}
+		id := entry.GetDefinition().GetStreamId()
+		byCNCKey[id.AsKey()] = StreamKey(id.GetMacAddress(), id.GetUniqueId())
+	}
+
+	mapped := make([]string, len(ids))
+	for i, id := range ids {
+		if derived, exists := byCNCKey[id]; exists {
+			mapped[i] = derived
+		} else {
+			mapped[i] = id
+		}
+	}
+	scope["streamIds"] = mapped
 }

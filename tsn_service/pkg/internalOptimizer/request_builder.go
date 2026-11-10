@@ -3,6 +3,7 @@ package internalOptimizer
 
 import (
 	"fmt"
+	"os"
 
 	"OpenCNC/common/structures/devicemodelregistry"
 	"OpenCNC/tsn_service/pkg/internalOptimizer/requestadapter"
@@ -32,6 +33,28 @@ func buildOaaSRequestWithDeviceModels(
 		return nil, err
 	}
 
+	// B10 - Running CNC = integration testing only.
+	// Explicitly allow routing optimization for test streams.
+	if os.Getenv("OAAS_B10_OPTIMIZE_ROUTING") == "true" {
+		options.Streams = make(map[string]requestadapter.StreamOptions)
+
+		for _, stream := range fpm.GetStreams() {
+			if stream == nil || stream.GetDefinition() == nil ||
+				stream.GetDefinition().GetStreamId() == nil {
+				return nil, fmt.Errorf("B10: stream definition or ID missing")
+			}
+
+			id := stream.GetDefinition().GetStreamId()
+			key := requestadapter.StreamKey(
+				id.GetMacAddress(),
+				id.GetUniqueId(),
+			)
+
+			options.Streams[key] = requestadapter.StreamOptions{
+				Routing: "optimize",
+			}
+		}
+	}
 	if len(deviceModels) > 0 {
 		limitsByNode, err := collectTASGCLLimitsByNode(deviceModels)
 		if err != nil {

@@ -1,20 +1,22 @@
 package internalOptimizer
 
 import (
-	"OpenCNC/common/structures/devicemodelregistry"
-	forwardingplane "OpenCNC/tsn_service/pkg/structures/forwarding_plane"
-	optimizer "OpenCNC/tsn_service/pkg/structures/optimization_contract"
 	"bytes"
 	"encoding/json"
 	"os"
 	"strings"
 	"testing"
 
+	"OpenCNC/common/structures/devicemodelregistry"
+	forwardingplane "OpenCNC/tsn_service/pkg/structures/forwarding_plane"
+	optimizer "OpenCNC/tsn_service/pkg/structures/optimization_contract"
+
 	"google.golang.org/protobuf/encoding/protojson"
 )
 
 func TestRequestJSONUnchangedWithDeviceModels(t *testing.T) {
 	t.Setenv("OAAS_MECHANISM", "CBS")
+	t.Setenv("OAAS_B10_OPTIMIZE_ROUTING", "false")
 
 	data, err := os.ReadFile("testdata/realistic_cnc_request.json")
 	if err != nil {
@@ -123,6 +125,46 @@ func TestRequestJSONUnchangedWithDeviceModels(t *testing.T) {
 				d.Scheduling != "optimize" ||
 				d.Placement != "fixed" {
 				t.Fatalf("stream %d: unexpected decisions: %+v", i, d)
+			}
+		}
+	})
+
+	// B10: The opt-in test flag must set routing=optimize for all fixture streams.
+	// Run this BEFORE the deliberate duplicate-node mutation below.
+	t.Run("B10OptimizeRoutingFlag", func(t *testing.T) {
+		t.Setenv("OAAS_B10_OPTIMIZE_ROUTING", "true")
+
+		result, err := buildOaaSRequest(&task, &fpm)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		var request struct {
+			ForwardingPlane struct {
+				Streams []struct {
+					DecisionVariables struct {
+						Routing    string `json:"routing"`
+						Scheduling string `json:"scheduling"`
+						Placement  string `json:"placement"`
+					} `json:"decisionVariables"`
+				} `json:"streams"`
+			} `json:"forwardingPlane"`
+		}
+
+		if err := json.Unmarshal(result, &request); err != nil {
+			t.Fatal(err)
+		}
+
+		if len(request.ForwardingPlane.Streams) == 0 {
+			t.Fatal("expected streams")
+		}
+
+		for i, stream := range request.ForwardingPlane.Streams {
+			d := stream.DecisionVariables
+			if d.Routing != "optimize" ||
+				d.Scheduling != "optimize" ||
+				d.Placement != "fixed" {
+				t.Fatalf("stream %d: unexpected B10 decisions: %+v", i, d)
 			}
 		}
 	})
