@@ -465,3 +465,27 @@ func TestB6ReconfigurationDecisions(t *testing.T) {
 		t.Fatalf("expected change=modify, got %v", stream["change"])
 	}
 }
+
+// This will verify the adapter's zero-value conversion. It will not prove that the optimizer prevents changes when the fields are omitted. That still requires a receiving-side check.
+func TestB4ZeroChangeLimitsOmitted(t *testing.T) {
+	task := &optimizationcontract.OptimizationTask{
+		TaskId:       "b4-zero-limits",
+		ChangePolicy: &optimizationcontract.ChangePolicy{},
+	}
+
+	result, err := ExtractOptimizationTask(task)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	policy := result["changePolicy"].(map[string]any)
+
+	for _, field := range []string{
+		"maxChangedStreams",
+		"maxConfigurationChanges",
+	} {
+		if _, exists := policy[field]; exists {
+			t.Fatalf("%s should be omitted when zero", field)
+		}
+	}
+}
