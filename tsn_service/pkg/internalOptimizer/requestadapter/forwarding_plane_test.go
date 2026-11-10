@@ -175,3 +175,29 @@ func TestExtractPortMechanismCapabilities(t *testing.T) {
 		t.Error("frame preemption support was not mapped")
 	}
 }
+
+func TestB4ZeroJitterPreserved(t *testing.T) {
+	input := strings.Replace(
+		testForwardingPlane,
+		`"maxLatencyNs":"1000000"`,
+		`"maxLatencyNs":"1000000","maxJitterNs":"0"`,
+		1,
+	)
+
+	model := parseForwardingPlane(t, input)
+
+	result, err := ExtractForwardingPlane(model, SchemaJSON())
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	streams := result["streams"].([]any)
+	definition := streams[0].(map[string]any)["definition"].(map[string]any)
+
+	requirements := definition["userToNetworkRequirements"].(map[string]any)
+
+	value, exists := requirements["maxJitterNs"]
+	if !exists || value != uint64(0) {
+		t.Fatalf("expected maxJitterNs=0, got %v", value)
+	}
+}
