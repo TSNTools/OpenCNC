@@ -33,34 +33,20 @@ func StartOptimization(
 	if fpm == nil {
 		return nil, fmt.Errorf("failed to create forwarding-plane model")
 	}
-	// the optimization logic here.
-	// Temporary request-side integration only.
 
-	if os.Getenv("OAAS_REQUEST_ONLY") == "true" {
+	if os.Getenv("OAAS_FULL_FLOW") == "true" {
 		deviceModels, err := loadNodeDeviceModels(fpm)
-
 		if err != nil {
-			fmt.Printf("[OAAS] DeviceModel lookup failed; skipping submission: %v\n", err)
-		} else {
-			fmt.Printf(
-				"[OAAS] Loaded DeviceModels for %d nodes\n",
-				len(deviceModels),
-			)
-
-			receipt, snapshotID, err := submitOptimizationJob(ctx, task, fpm, deviceModels)
-
-			if err != nil {
-				fmt.Printf("[OAAS] Optimization submission failed: %v\n", err)
-			} else {
-				fmt.Printf(
-					"[OAAS] Job %s accepted (status: %s), snapshot: %s\n",
-					receipt.JobID, receipt.Status, snapshotID,
-				)
-			}
+			return nil, fmt.Errorf("OaaS DeviceModel lookup: %w", err)
 		}
+		updated, err := executeOptimizationJob(ctx, task, fpm, deviceModels)
+		if err != nil {
+			return nil, fmt.Errorf("OaaS optimization: %w", err)
+		}
+		return updated, nil
 	}
 
-	// If optimization fails, fall back to the default schedule.
+	// Temporary legacy behavior while full OaaS integration is disabled.
 	topoConfig, err := store.GetTopologyConfiguration(defaultSchedID)
 	if err != nil {
 		if obs != nil {
