@@ -1,3 +1,15 @@
+// Currently understands CBS queue fields
+
+// Other configuration fields: not yet implemented
+// For example, today it understands:
+
+// nodeId → portId → queueId → CBS parameters
+
+// In the future, if TAS is supported, we extend the same translator to understand:
+
+// nodeId → portId → GCL schedule
+
+// We do not need a separate tas_merge.go merely because the optimizer is TAS. The translator should depend on the requested configuration changes, not the optimizer's name.
 package internalOptimizer
 
 import (

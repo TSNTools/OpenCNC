@@ -2,6 +2,7 @@
 package internalOptimizer
 
 import (
+	"bytes"
 	"context"
 	"encoding/base64"
 	"encoding/json"
@@ -363,17 +364,34 @@ func TestLiveManagerCBSInitialConfigurationCycle(t *testing.T) {
 	t.Log("NOT TESTED: CNC notification, etcd snapshot, independent response validation, FPM apply")
 }
 
-// TestLiveManagerCBSFullWorkflowReturnsUpdatedFPM is a controlled, opt-in
-// integration test of the actual internalOptimizer orchestration function.
-// It provides the CNC task/model fixture (the real initial trigger is absent),
-// and replaces ONLY OpenCNC's snapshot store with an in-memory fake.
-// Manager HTTP, optimizer selection/execution, shared v0.2.0 response
-// validation and OpenCNC FPM delta application are exercised by production code.
-// This is NOT a production-trigger, etcd, hardware or deployment test.
+// TestLiveManagerCBSFullWorkflowReturnsUpdatedFPM keeps the existing opt-in
+// live Manager/CBS test with in-memory storage. The CNC trigger is simulated.
 func TestLiveManagerCBSFullWorkflowReturnsUpdatedFPM(t *testing.T) {
 	if os.Getenv("OAAS_LIVE_CBS_FULL_FLOW") != "1" {
 		t.Skip("opt in with OAAS_LIVE_CBS_FULL_FLOW=1")
 	}
+	runLiveManagerCBSFullWorkflow(t, false)
+}
+
+// (R6) exercises the exact same
+// production workflow against a separate local etcd instance. It never
+// invokes a real CNC trigger or deploys any resulting configuration.
+func TestLiveManagerCBSRealEtcdFullWorkflow(t *testing.T) {
+	if os.Getenv("OAAS_R6_REAL_ETCD") != "1" {
+		t.Skip("opt in with OAAS_R6_REAL_ETCD=1")
+	}
+	// Default OpenCNC etcd is normally on port 2379. R6 requires a separate
+	// local instance at port 12379; the user must confirm that it is isolated.
+	if os.Getenv("ETCD_HOST") != "127.0.0.1" || os.Getenv("ETCD_PORT") != "12379" {
+		t.Fatal("R6 requires a separate isolated etcd instance at 127.0.0.1:12379")
+	}
+	runLiveManagerCBSFullWorkflow(t, true)
+}
+
+// runLiveManagerCBSFullWorkflow shares all functional assertions between R5
+// (in-memory store) and R6 (real isolated etcd), avoiding a duplicate test.
+func runLiveManagerCBSFullWorkflow(t *testing.T, realEtcd bool) {
+	t.Helper()
 
 	jobsURL := os.Getenv("OAAS_MANAGER_JOBS_URL")
 	if jobsURL == "" {
@@ -397,11 +415,21 @@ func TestLiveManagerCBSFullWorkflowReturnsUpdatedFPM(t *testing.T) {
 		t.Fatalf("expected initial configuration, got %s", task.GetIntent())
 	}
 	before := proto.Clone(original).(*forwardingplane.ForwardingPlaneModel)
+	// The independently generated expected request must exactly match the
+	// bytes later loaded from the store for this submitted job.
+	expectedRequestJSON, err := buildOaaSRequestWithDeviceModels(task, original, nil)
+	if err != nil {
+		t.Fatalf("build expected OptimizerRequest: %v", err)
+	}
 
-	// Only the etcd-backed Go snapshot read/write functions are replaced.
-	// Capture the independently issued job ID from its saved request key.
-	useFakeSnapshotStore(t)
-	fakeWrite := snapshotWrite
+	// R5 uses the existing in-memory store. R6 retains the production
+	// etcd read/write functions from snapshot_store.go and B8.
+	if !realEtcd {
+		useFakeSnapshotStore(t)
+	}
+	// Capture the job ID from the original request's storage key while
+	// delegating the write unchanged to the selected underlying store.
+	originalWrite := snapshotWrite
 	var jobID string
 	snapshotWrite = func(data []byte, key string) error {
 		if strings.HasPrefix(key, jobSnapshotPrefix) && strings.HasSuffix(key, ".request") {
@@ -412,9 +440,9 @@ func TestLiveManagerCBSFullWorkflowReturnsUpdatedFPM(t *testing.T) {
 			}
 			jobID = string(decoded)
 		}
-		return fakeWrite(data, key)
+		return originalWrite(data, key)
 	}
-	t.Cleanup(func() { snapshotWrite = fakeWrite })
+	t.Cleanup(func() { snapshotWrite = originalWrite })
 
 	ctx, cancel := context.WithTimeout(context.Background(), 90*time.Second)
 	defer cancel()
@@ -434,6 +462,9 @@ func TestLiveManagerCBSFullWorkflowReturnsUpdatedFPM(t *testing.T) {
 	requestJSON, err := loadJobRequest(jobID)
 	if err != nil || len(requestJSON) == 0 {
 		t.Fatalf("original submitted request not preserved for job %s: %v", jobID, err)
+	}
+	if !bytes.Equal(requestJSON, expectedRequestJSON) {
+		t.Fatal("stored request differs from the exact bytes expected for this CNC input")
 	}
 	preserved, err := loadSnapshotForJob(jobID)
 	if err != nil || !proto.Equal(preserved, before) {
@@ -539,5 +570,10 @@ func TestLiveManagerCBSFullWorkflowReturnsUpdatedFPM(t *testing.T) {
 	t.Logf("PASS: real Manager job %s selected CBS and returned v1.3 success", jobID)
 	t.Log("PASS: OpenCNC used its production submission, retrieval, shared Go response validation, and application workflow")
 	t.Logf("PASS: %d CBS queue configurations changed; original FPM and unrelated fields preserved", changedQueues)
-	t.Log("NOT TESTED: actual CNC trigger, real etcd persistence, physical deployment, independent feasibility/hardware limits")
+	if realEtcd {
+		t.Log("PASS R6: original request and FPM persisted through real isolated etcd; original FPM unchanged after application")
+		t.Log("NOT TESTED: actual CNC trigger, etcd restart within this test, physical deployment, independent feasibility/hardware limits")
+	} else {
+		t.Log("NOT TESTED: actual CNC trigger, real etcd persistence, physical deployment, independent feasibility/hardware limits")
+	}
 }
