@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"reflect"
+	"time"
 
 	"OpenCNC/tsn_service/pkg/internalOptimizer/requestadapter"
 	forwardingplane "OpenCNC/tsn_service/pkg/structures/forwarding_plane"
@@ -190,9 +191,16 @@ func validateRetrievedOptimizerPayload(jobID string, optimizerJSON []byte) (*val
 
 // It validates but DOES NOT apply optimizer changes or return an updated FPM.
 func waitAndValidateOptimizationResult(ctx context.Context, jobID string) (*validatedOptimizationResult, error) {
-	resultJSON, err := waitForCompletedManagerResult(ctx, jobID)
+	return waitAndValidateOptimizationResultWithTimings(ctx, jobID, nil)
+}
+
+func waitAndValidateOptimizationResultWithTimings(ctx context.Context, jobID string, timings *oaasTimingRecorder) (*validatedOptimizationResult, error) {
+	resultJSON, err := waitForCompletedManagerResultWithTimings(ctx, jobID, timings)
 	if err != nil {
 		return nil, fmt.Errorf("retrieve completed Manager result: %w", err)
 	}
-	return validateRetrievedOptimizerPayload(jobID, resultJSON)
+	started := time.Now()
+	validated, err := validateRetrievedOptimizerPayload(jobID, resultJSON)
+	timings.record("oaas_response_validation_ms", started, err == nil)
+	return validated, err
 }

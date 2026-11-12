@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"time"
 
 	"OpenCNC/common/observability"
 	store "OpenCNC/common/store-wrapper"
@@ -29,20 +30,39 @@ func StartOptimization(
 	allRequestData []*uni.Request,
 ) (*forwarding_plane.ForwardingPlaneModel, error) {
 
+	// Only the approved OaaS path is instrumented. The legacy path is unchanged.
+	fullFlow := os.Getenv("OAAS_FULL_FLOW") == "true"
+	totalStarted := time.Now()
+	dataStarted := totalStarted
+	var timings *oaasTimingRecorder
+	completed := false
+	if fullFlow {
+		timings = newOAASTimingRecorder(obs)
+		defer func() {
+			timings.record("oaas_cnc_total_ms", totalStarted, completed)
+			timings.publish()
+		}()
+	}
+
 	fpm := createForwardingPlaneModel(ctx, obs)
 	if fpm == nil {
+		if fullFlow {
+			timings.record("oaas_cnc_data_ms", dataStarted, false)
+		}
 		return nil, fmt.Errorf("failed to create forwarding-plane model")
 	}
 
-	if os.Getenv("OAAS_FULL_FLOW") == "true" {
+	if fullFlow {
 		deviceModels, err := loadNodeDeviceModels(fpm)
+		timings.record("oaas_cnc_data_ms", dataStarted, err == nil)
 		if err != nil {
 			return nil, fmt.Errorf("OaaS DeviceModel lookup: %w", err)
 		}
-		updated, err := executeOptimizationJob(ctx, task, fpm, deviceModels)
+		updated, err := executeOptimizationJobWithTimings(ctx, task, fpm, deviceModels, timings)
 		if err != nil {
 			return nil, fmt.Errorf("OaaS optimization: %w", err)
 		}
+		completed = true
 		return updated, nil
 	}
 

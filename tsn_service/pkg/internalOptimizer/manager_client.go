@@ -179,23 +179,39 @@ func fetchManagerJobStatus(ctx context.Context, client *http.Client, jobID strin
 	return parseManagerJobStatus(body, jobID)
 }
 
-func fetchCompletedManagerJobResult(ctx context.Context, client *http.Client, jobID string) (json.RawMessage, error) {
+func fetchCompletedManagerJobResultWithTimings(ctx context.Context, client *http.Client, jobID string, timings *oaasTimingRecorder) (json.RawMessage, error) {
+	started := time.Now()
 	endpoint, err := managerJobEndpoint(jobID, true)
 	if err != nil {
+		timings.record("oaas_result_retrieve_ms", started, false)
 		return nil, err
 	}
 	body, err := managerGetJSON(ctx, client, endpoint)
+	timings.record("oaas_result_retrieve_ms", started, err == nil)
 	if err != nil {
 		return nil, err
 	}
-	// This parser (from the preceding step) checks the trusted job ID and
-	// COMPLETED status in the result envelope before extracting optimizerResult.
-	return parseCompletedManagerResult(body, jobID)
+	// This parser checks the job ID and completed status before extracting
+	// optimizerResult. Parsing is timed separately from HTTP retrieval.
+	started = time.Now()
+	result, err := parseCompletedManagerResult(body, jobID)
+	timings.record("oaas_result_parse_ms", started, err == nil)
+	return result, err
 }
 
-// waits => completed =>  => retrieves optimizerResult only (nothing else).
-// Nonterminal states remain pending until a bounded timeout or cancellation.
+// Wait for a COMPLETED Manager status, then retrieve the result separately.
 func waitForCompletedManagerResult(ctx context.Context, jobID string) (json.RawMessage, error) {
+	return waitForCompletedManagerResultWithTimings(ctx, jobID, nil)
+}
+
+func waitForCompletedManagerResultWithTimings(ctx context.Context, jobID string, timings *oaasTimingRecorder) (json.RawMessage, error) {
+	started := time.Now()
+	waitFinished := false
+	defer func() {
+		if !waitFinished {
+			timings.record("oaas_wait_ms", started, false)
+		}
+	}()
 	ctx, cancel := context.WithTimeout(ctx, managerPollTimeout)
 	defer cancel()
 	client := &http.Client{Timeout: managerGetTimeout}
@@ -207,7 +223,9 @@ func waitForCompletedManagerResult(ctx context.Context, jobID string) (json.RawM
 		}
 		switch status {
 		case "COMPLETED":
-			return fetchCompletedManagerJobResult(ctx, client, jobID)
+			timings.record("oaas_wait_ms", started, true)
+			waitFinished = true
+			return fetchCompletedManagerJobResultWithTimings(ctx, client, jobID, timings)
 		case "FAILED", "CANCELLED", "CANCELED", "TIMED_OUT", "EXPIRED":
 			return nil, fmt.Errorf("Manager job %s ended with status %s", jobID, status)
 		}
