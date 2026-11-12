@@ -188,7 +188,6 @@ func validateRetrievedOptimizerPayload(jobID string, optimizerJSON []byte) (*val
 	}, nil
 }
 
-// waitAndValidateOptimizationResult is the only intended entry to Step 4.
 // It validates but DOES NOT apply optimizer changes or return an updated FPM.
 func waitAndValidateOptimizationResult(ctx context.Context, jobID string) (*validatedOptimizationResult, error) {
 	resultJSON, err := waitForCompletedManagerResult(ctx, jobID)

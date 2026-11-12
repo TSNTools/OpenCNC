@@ -74,7 +74,6 @@ func parseManagerJobReceipt(data []byte) (*ManagerJobReceipt, error) {
 	return &receipt, nil
 }
 
-// Consolidated from manager_poll.go
 const (
 	managerPollInterval     = 500 * time.Millisecond
 	managerPollTimeout      = 60 * time.Second
@@ -134,7 +133,7 @@ func managerGetJSON(ctx context.Context, client *http.Client, endpoint string) (
 	return body, nil
 }
 
-// parseManagerJobStatus accepts the flat status form used for job receipts
+// accepts the flat status form used for job receipts
 // and, if present, the nested job form used in Manager result envelopes.
 // In both cases the returned jobId must equal the trusted submitted job ID.
 func parseManagerJobStatus(data []byte, expectedJobID string) (string, error) {
@@ -194,9 +193,7 @@ func fetchCompletedManagerJobResult(ctx context.Context, client *http.Client, jo
 	return parseCompletedManagerResult(body, jobID)
 }
 
-// waitForCompletedManagerResult waits for a completed Manager job and retrieves
-// its optimizerResult. It does NOT assert solution success, validate the v1.3
-// contract, or apply changes to a forwarding-plane model. Those are later steps.
+// waits => completed =>  => retrieves optimizerResult only (nothing else).
 // Nonterminal states remain pending until a bounded timeout or cancellation.
 func waitForCompletedManagerResult(ctx context.Context, jobID string) (json.RawMessage, error) {
 	ctx, cancel := context.WithTimeout(ctx, managerPollTimeout)
@@ -227,8 +224,7 @@ func waitForCompletedManagerResult(ctx context.Context, jobID string) (json.RawM
 	}
 }
 
-// Consolidated from manager_result.go
-// ManagerJobResult holds only the fields needed to extract a completed job's
+// holds only the fields needed to extract a completed job's
 // optimizer response. It is a Manager envelope, not an OptimizerResponse v1.3.
 // Extraction does not validate the optimizer response or authorize application.
 type ManagerJobResult struct {
@@ -239,7 +235,7 @@ type ManagerJobResult struct {
 	OptimizerResult json.RawMessage `json:"optimizerResult"`
 }
 
-// parseCompletedManagerResult extracts the raw optimizer payload only after
+// extracts the raw optimizer payload only after
 // checking the trusted Manager job identifier and completed state.
 // The caller MUST subsequently apply shared structural/semantic validation
 // against the original request and preserved forwarding-plane model.
