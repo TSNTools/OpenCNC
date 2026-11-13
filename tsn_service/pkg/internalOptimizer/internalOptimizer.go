@@ -16,7 +16,10 @@ import (
 	forwarding_plane "OpenCNC/tsn_service/pkg/structures/forwarding_plane"
 	optimizer "OpenCNC/tsn_service/pkg/structures/optimization_contract"
 
+	"path/filepath"
+
 	"github.com/ghodss/yaml"
+	"google.golang.org/protobuf/encoding/protojson"
 )
 
 var defaultSchedID = "default_schedule"
@@ -30,6 +33,15 @@ func StartOptimization(
 	allRequestData []*uni.Request,
 ) (*forwarding_plane.ForwardingPlaneModel, error) {
 
+	if os.Getenv("OAAS_CAPTURE_INPUTS") == "1" {
+		fmt.Printf(
+			"[OAAS-CAPTURE] StartOptimization entered: taskID=%s intent=%s trigger=%s requests=%d\n",
+			task.GetTaskId(),
+			task.GetIntent().String(),
+			task.GetTrigger().String(),
+			len(allRequestData),
+		)
+	}
 	// Only the approved OaaS path is instrumented. The legacy path is unchanged.
 	fullFlow := os.Getenv("OAAS_FULL_FLOW") == "true"
 	totalStarted := time.Now()
@@ -51,7 +63,38 @@ func StartOptimization(
 		}
 		return nil, fmt.Errorf("failed to create forwarding-plane model")
 	}
+	if fullFlow && os.Getenv("OAAS_CAPTURE_INPUTS") == "1" {
+		dir, err := os.MkdirTemp("", "oaas-cnc-capture-")
+		if err != nil {
+			return nil, err
+		}
 
+		marshal := protojson.MarshalOptions{Indent: "  "}
+
+		taskJSON, err := marshal.Marshal(task)
+		if err != nil {
+			return nil, err
+		}
+
+		fpmJSON, err := marshal.Marshal(fpm)
+		if err != nil {
+			return nil, err
+		}
+
+		if err := os.WriteFile(
+			filepath.Join(dir, "optimization_task.json"), taskJSON, 0600,
+		); err != nil {
+			return nil, err
+		}
+
+		if err := os.WriteFile(
+			filepath.Join(dir, "forwarding_plane.json"), fpmJSON, 0600,
+		); err != nil {
+			return nil, err
+		}
+
+		fmt.Printf("[OAAS-CAPTURE] Input JSON saved in %s\n", dir)
+	}
 	if fullFlow {
 		deviceModels, err := loadNodeDeviceModels(fpm)
 		timings.record("oaas_cnc_data_ms", dataStarted, err == nil)
