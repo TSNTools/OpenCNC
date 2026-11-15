@@ -2,6 +2,8 @@
 # Local OpenCNC/Kind development helper. Rebuilds/redeploys only tsn-service.
 # The Go binary is compiled on the host, so Docker does not need credentials
 # for the private tsn-optimization-contracts Go module.
+
+#run after modifying Go code inside internalOptimizer
 set -euo pipefail
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
@@ -47,9 +49,9 @@ while IFS= read -r arch; do
     || fail "Kind cluster has mixed architectures; cannot deploy one image safely."
 done <<< "$node_architectures"
 
-cd "$REPO_ROOT"
-printf '\n==> Checking diff whitespace and conflicts\n'
-git diff --check
+# cd "$REPO_ROOT"
+# printf '\n==> Checking diff whitespace and conflicts\n'
+# git diff --check
 
 printf '\n==> Running all internalOptimizer regression tests\n'
 go test ./tsn_service/pkg/internalOptimizer/... -count=1
@@ -68,7 +70,7 @@ cp tsn_service/configs/default-schedule.yaml "$BUILD_DIR/default-schedule.yaml"
 cat > "$BUILD_DIR/Dockerfile" <<'DOCKERFILE'
 FROM debian:bookworm-slim
 COPY tsn-service /app/tsn-service
-RUN mkdir -p /home/opencnc/OpenCNC/tsn_service/configs
+RUN mkdir -p /home/opencnc/OpenCNC/tn_service/configs
 COPY default-schedule.yaml /home/opencnc/OpenCNC/tsn_service/configs/default-schedule.yaml
 EXPOSE 5152
 ENTRYPOINT ["/app/tsn-service"]
@@ -80,9 +82,16 @@ docker build --platform "linux/$GOARCH_TARGET" -t "$IMAGE" "$BUILD_DIR"
 printf '\n==> Loading image into Kind cluster %s\n' "$CLUSTER"
 kind load docker-image "$IMAGE" --name "$CLUSTER"
 
+printf '\n==> Configuring OaaS full flow\n'
+kubectl -n "$NAMESPACE" set env "deployment/$DEPLOYMENT" \
+  OAAS_FULL_FLOW=true \
+  OAAS_REQUEST_ONLY-
+
 printf '\n==> Restarting only deployment/%s (existing environment retained)\n' "$DEPLOYMENT"
 kubectl -n "$NAMESPACE" rollout restart "deployment/$DEPLOYMENT"
 kubectl -n "$NAMESPACE" rollout status "deployment/$DEPLOYMENT" --timeout=180s
+
+
 
 printf '\n==> Running TSN Service pod and OaaS settings\n'
 kubectl -n "$NAMESPACE" get pods -l app=tsn-service

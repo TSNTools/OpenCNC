@@ -127,7 +127,7 @@ elif [[ -n "${OAAS_MANAGER_DIR:-}" ]]; then
   printf 'OaaS Manager healthy at localhost:8000\n'
 else
   printf 'Manager is not reachable. To start it too, rerun with:\n'
-  printf '  OAAS_MANAGER_DIR=/absolute/path/to/manager-directory %q\n' "$0"
+  printf '  OAAS_MANAGER_DIR=/Users/kashaf/Desktop/THESIS/TSN-OPTIMIZER-FRAMEWORK/optimizer-manager %q\n' "$0"
 fi
 
 note "Checking TSN Service OaaS settings"
