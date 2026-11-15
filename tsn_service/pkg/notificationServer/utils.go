@@ -3,6 +3,7 @@ package notificationServer
 import (
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	storewrapper "OpenCNC/common/store-wrapper"
@@ -61,20 +62,65 @@ func CreateOptimizationTask(requests []*uni.Request) (*optimizer.OptimizationTas
 }
 
 func endpointNodeID(interfaces []*uni.Interface) (string, error) {
-	if len(interfaces) == 0 {
-		return "", errors.New("no endpoint interface")
+	if len(interfaces) == 0 || interfaces[0] == nil ||
+		interfaces[0].InterfaceId == nil {
+		return "", errors.New("missing endpoint interface")
 	}
 
-	iface := interfaces[0]
-	if iface == nil || iface.InterfaceId == nil {
-		return "", errors.New("missing interface ID")
+	macAddress := strings.TrimSpace(interfaces[0].InterfaceId.MacAddress)
+	if macAddress == "" {
+		return "", errors.New("missing interface MAC address")
 	}
 
-	if iface.InterfaceId.InterfaceName == "" {
-		return "", errors.New("missing interface name: " + iface.InterfaceId.String())
+	// Find the topology node containing the port with this MAC address.
+	topo, err := storewrapper.GetTopology()
+	if err != nil {
+		return "", fmt.Errorf("failed to read topology: %w", err)
+	}
+	if topo == nil {
+		return "", errors.New("topology is nil")
 	}
 
-	return iface.InterfaceId.InterfaceName, nil
+	var matchedNode string
+
+	for _, node := range topo.GetNodes() {
+		if node == nil {
+			continue
+		}
+
+		for _, port := range node.GetPorts() {
+			if port == nil || port.GetMacAddress() == "" {
+				continue
+			}
+
+			if strings.EqualFold(port.GetMacAddress(), macAddress) {
+				if node.GetName() == "" {
+					return "", fmt.Errorf(
+						"port with MAC %q belongs to an unnamed node",
+						macAddress,
+					)
+				}
+
+				if matchedNode != "" && matchedNode != node.GetName() {
+					return "", fmt.Errorf(
+						"MAC address %q belongs to multiple nodes",
+						macAddress,
+					)
+				}
+
+				matchedNode = node.GetName()
+			}
+		}
+	}
+
+	if matchedNode == "" {
+		return "", fmt.Errorf(
+			"no topology node found for MAC address %q",
+			macAddress,
+		)
+	}
+
+	return matchedNode, nil
 }
 
 func createFrameSpecification(talker *uni.TalkerGroup, listeners []*uni.ListenerGroup) *stream.DataFrameSpecification {
@@ -223,6 +269,12 @@ func createStreamFromRequest(req *uni.Request) (*stream.Stream, error) {
 		talker.UserToNetReq,
 	)
 
+	// TEMPORARY CBS PILOT (Hamza, 15 November 2026):
+	// Traffic classes are normally assigned through policy or optimization.
+	// Since OpenCNC's policy integration is not yet available, use "M1"
+	// for the current controlled CBS integration test.
+	// This is not derived from PCP and is not a production classification rule.
+	// Remove this hardcoded assignment when policy integration is available.
 	return &stream.Stream{
 		StreamId:                  streamID,
 		StreamRank:                talker.StrRank,
@@ -232,5 +284,6 @@ func createStreamFromRequest(req *uni.Request) (*stream.Stream, error) {
 		TrafficSpec:               trafficSpec,
 		UserToNetworkRequirements: requirements,
 		Description:               req.GetId(),
+		TrafficClassId:            "M1",
 	}, nil
 }
