@@ -1,9 +1,11 @@
 #!/usr/bin/env bash
+# It rebuilds the TSN Service with your latest Go changes, runs the internal optimizer tests, and redeploys only tsn-service to your local Kind cluster.
 # Local OpenCNC/Kind development helper. Rebuilds/redeploys only tsn-service.
 # The Go binary is compiled on the host, so Docker does not need credentials
 # for the private tsn-optimization-contracts Go module.
 
 #run after modifying Go code inside internalOptimizer
+# Note: The script also enables OAAS_FULL_FLOW=true.
 set -euo pipefail
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
