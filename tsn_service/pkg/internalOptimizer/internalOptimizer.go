@@ -101,7 +101,7 @@ func StartOptimization(
 		if err != nil {
 			return nil, fmt.Errorf("OaaS DeviceModel lookup: %w", err)
 		}
-		updated, err := executeOptimizationJobWithTimings(ctx, task, fpm, deviceModels, timings)
+		updated, err := executeOptimizationJobWithTimings(ctx, task, fpm, deviceModels, timings, allRequestData...)
 		if err != nil {
 			return nil, fmt.Errorf("OaaS optimization: %w", err)
 		}

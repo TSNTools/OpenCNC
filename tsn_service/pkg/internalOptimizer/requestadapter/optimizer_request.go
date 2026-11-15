@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"os"
+	"path/filepath"
 	"sort"
 
 	forwardingplane "OpenCNC/tsn_service/pkg/structures/forwarding_plane"
@@ -119,6 +121,20 @@ func BuildOptimizerRequest(
 	result, err := json.MarshalIndent(request, "", "  ")
 	if err != nil {
 		return nil, fmt.Errorf("serialize optimizer request: %w", err)
+	}
+
+	if os.Getenv("OAAS_CAPTURE_INPUTS") == "1" {
+		dir, captureErr := os.MkdirTemp("", "oaas-request-v14-")
+		if captureErr == nil {
+			path := filepath.Join(dir, "optimizer_request_v1.4.json")
+			captureErr = os.WriteFile(path, result, 0600)
+			if captureErr == nil {
+				fmt.Printf("[OAAS-CAPTURE] OptimizerRequest v1.4 saved in %s\n", path)
+			}
+		}
+		if captureErr != nil {
+			fmt.Printf("[OAAS-CAPTURE] Request capture failed: %v\n", captureErr)
+		}
 	}
 
 	if err := tsncontracts.ValidateOptimizerRequestJSON(result); err != nil {

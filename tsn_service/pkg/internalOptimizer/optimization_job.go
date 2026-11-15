@@ -8,6 +8,7 @@ import (
 
 	"OpenCNC/common/observability"
 	"OpenCNC/common/structures/devicemodelregistry"
+	"OpenCNC/common/structures/uni"
 	forwardingplane "OpenCNC/tsn_service/pkg/structures/forwarding_plane"
 	optimizer "OpenCNC/tsn_service/pkg/structures/optimization_contract"
 )
@@ -39,9 +40,10 @@ func submitOptimizationJobWithTimings(
 	fpm *forwardingplane.ForwardingPlaneModel,
 	deviceModels map[string]*devicemodelregistry.DeviceModel,
 	timings *oaasTimingRecorder,
+	uniRequests ...*uni.Request,
 ) (*ManagerJobReceipt, string, error) {
 	started := time.Now()
-	requestJSON, err := buildOaaSRequestWithDeviceModels(task, fpm, deviceModels)
+	requestJSON, err := buildOaaSRequestWithDeviceModels(task, fpm, deviceModels, uniRequests...)
 	timings.record("oaas_request_build_ms", started, err == nil)
 	if err != nil {
 		return nil, "", fmt.Errorf("request conversion: %w", err)
@@ -118,8 +120,9 @@ func executeOptimizationJobWithTimings(
 	fpm *forwardingplane.ForwardingPlaneModel,
 	deviceModels map[string]*devicemodelregistry.DeviceModel,
 	timings *oaasTimingRecorder,
+	uniRequests ...*uni.Request,
 ) (*forwardingplane.ForwardingPlaneModel, error) {
-	receipt, _, err := submitOptimizationJobWithTimings(ctx, task, fpm, deviceModels, timings)
+	receipt, _, err := submitOptimizationJobWithTimings(ctx, task, fpm, deviceModels, timings, uniRequests...)
 	if err != nil {
 		return nil, fmt.Errorf("submit optimization job: %w", err)
 	}
