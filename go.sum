@@ -1,13 +1,7 @@
 git.cs.kau.se/hamzchah/opencnc_kafka-exporter/logger v0.0.0-20230914104133-72a7039493d7 h1:9+J2UT3GbWzudgaTr/QtVYe31rQgmN+47z9A48E9O7U=
 git.cs.kau.se/hamzchah/opencnc_kafka-exporter/logger v0.0.0-20230914104133-72a7039493d7/go.mod h1:RsEatNI49t3GbzROxbpqr5EyuFRhjpQ3rRvHVs6Y208=
-github.com/Kashaf14/tsn-optimization-contracts v0.0.0-20261109125159-b915671d5d89 h1:oCmCIHJtEgNgMES4iDpjJJ/aBPpmV8yb7+ArSFE9KfU=
-github.com/Kashaf14/tsn-optimization-contracts v0.0.0-20261109125159-b915671d5d89/go.mod h1:lIfkmt1aCmaGVOWgTD4oT9JnN3sKXI8p2eTVFEIiwV8=
-github.com/Kashaf14/tsn-optimization-contracts v0.0.0-20261109154522-f343def0b22e h1:4d0vliuuiMLmt4uLJ67pZn+pQ/wgNgbIq8XMCw08ESk=
-github.com/Kashaf14/tsn-optimization-contracts v0.0.0-20261109154522-f343def0b22e/go.mod h1:lIfkmt1aCmaGVOWgTD4oT9JnN3sKXI8p2eTVFEIiwV8=
-github.com/Kashaf14/tsn-optimization-contracts v0.1.0 h1:gGUBLQiv/BRoC532TBEHLB1B+FaRVwD800IZccnJ/d8=
-github.com/Kashaf14/tsn-optimization-contracts v0.1.0/go.mod h1:lIfkmt1aCmaGVOWgTD4oT9JnN3sKXI8p2eTVFEIiwV8=
-github.com/Kashaf14/tsn-optimization-contracts v0.2.0 h1:FDQZFcqfArXrgL87LFxYKUYb2c9ch1qqBg/F0bkgaf8=
-github.com/Kashaf14/tsn-optimization-contracts v0.2.0/go.mod h1:lIfkmt1aCmaGVOWgTD4oT9JnN3sKXI8p2eTVFEIiwV8=
+github.com/Kashaf14/tsn-optimization-contracts v0.2.1 h1:EqyzUJoFaVDPq76LTBK+zJhiK4i4PqeujoAz9KacFG4=
+github.com/Kashaf14/tsn-optimization-contracts v0.2.1/go.mod h1:lIfkmt1aCmaGVOWgTD4oT9JnN3sKXI8p2eTVFEIiwV8=
 github.com/Shopify/sarama v1.38.1 h1:lqqPUPQZ7zPqYlWpTh+LQ9bhYNu2xJL6k1SJN4WVe2A=
 github.com/Shopify/sarama v1.38.1/go.mod h1:iwv9a67Ha8VNa+TifujYoWGxWnu2kNVAQdSdZ4X2o5g=
 github.com/Shopify/toxiproxy/v2 v2.5.0 h1:i4LPT+qrSlKNtQf5QliVjdP08GyAH8+BUIc9gT0eahc=
@@ -26,6 +20,8 @@ github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSs
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc h1:U9qPSI2PIWSS1VwoXQT9A3Wy9MM3WgvqSxFWenqJduM=
 github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
+github.com/dlclark/regexp2 v1.11.0 h1:G/nrcoOa7ZXlpoa/91N3X7mM3r8eIlMBBJZvsz/mxKI=
+github.com/dlclark/regexp2 v1.11.0/go.mod h1:DHkYz0B9wPfa6wondMfaivmHpzrQ3v9q8cnmRbL6yW8=
 github.com/eapache/go-resiliency v1.3.0 h1:RRL0nge+cWGlxXbUzJ7yMcq6w2XBEr19dCN6HECGaT0=
 github.com/eapache/go-resiliency v1.3.0/go.mod h1:5yPzW0MIvSe0JDsv0v+DvcjEv2FyD6iZYSs1ZI+iQho=
 github.com/eapache/go-xerial-snappy v0.0.0-20230111030713-bf00bc1b83b6 h1:8yY/I9ndfrgrXUbOGObLHKBR4Fl3nZXwM2c7OYTT8hM=
@@ -269,8 +265,6 @@ google.golang.org/genproto/googleapis/rpc v0.0.0-20250303144028-a0af3efb3deb h1:
 google.golang.org/genproto/googleapis/rpc v0.0.0-20250303144028-a0af3efb3deb/go.mod h1:LuRYeWDFV6WOn90g357N17oMCaxpgCnbi/44qJvDn2I=
 google.golang.org/grpc v1.71.1 h1:ffsFWr7ygTUscGPI0KKK6TLrGz0476KUvvsbqWK0rPI=
 google.golang.org/grpc v1.71.1/go.mod h1:H0GRtasmQOh9LkFoCPDu3ZrwUtD1YGE+b2vYBYd/8Ec=
-google.golang.org/protobuf v1.36.6 h1:z1NpPI8ku2WgiWnf+t9wTPsn6eP1L7ksHUlkfLvd9xY=
-google.golang.org/protobuf v1.36.6/go.mod h1:jduwjTPXsFjZGTmRluh+L6NjiWu7pchiJ2/5YcXBHnY=
 google.golang.org/protobuf v1.36.12 h1:pJOKDDOyeXErUroCihFAd5LQuwXBSpVnKGrj5o/fwxc=
 google.golang.org/protobuf v1.36.12/go.mod h1:HTf+CrKn2C3g5S8VImy6tdcUvCska2kB7j23XfzDpco=
 gopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405/go.mod h1:Co6ibVJAznAaIkqp8huTwlJQCZ016jof/cbN4VW5Yz0=

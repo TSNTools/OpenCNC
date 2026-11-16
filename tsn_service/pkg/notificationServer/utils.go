@@ -284,6 +284,6 @@ func createStreamFromRequest(req *uni.Request) (*stream.Stream, error) {
 		TrafficSpec:               trafficSpec,
 		UserToNetworkRequirements: requirements,
 		Description:               req.GetId(),
-		TrafficClassId:            "M1",
+		TrafficClassId:            "Critical",
 	}, nil
 }

@@ -76,6 +76,11 @@ func buildOaaSRequestWithDeviceModels(
 			}
 		}
 	}
+
+	if err := setAddStreamChanges(task, requestFPM, &options); err != nil {
+		return nil, err
+	}
+
 	if len(deviceModels) > 0 {
 		limitsByNode, err := collectTASGCLLimitsByNode(deviceModels)
 		if err != nil {
@@ -97,4 +102,64 @@ func buildOaaSRequestWithDeviceModels(
 		options,
 	)
 
+}
+
+func setAddStreamChanges(
+	task *optimizer.OptimizationTask,
+	fpm *forwarding_plane.ForwardingPlaneModel,
+	options *requestadapter.RequestOptions,
+) error {
+	if task.GetIntent() != optimizer.Intent_ADD_STREAM {
+		return nil
+	}
+
+	// The ADD_STREAM scope identifies newly submitted streams.
+	// Mark them "add"; mark other FPM streams "none".
+	// This is OaaS reconfiguration metadata, not a Zhao CBS requirement.
+	scope := task.GetScope()
+	if scope == nil || len(scope.GetStreamIds()) == 0 {
+		return fmt.Errorf("ADD_STREAM requires scope.streamIds")
+	}
+
+	added := make(map[string]bool)
+	for _, id := range scope.GetStreamIds() {
+		if id == "" || added[id] {
+			return fmt.Errorf("invalid or duplicate stream ID %q", id)
+		}
+		added[id] = true
+	}
+
+	if options.Streams == nil {
+		options.Streams = make(map[string]requestadapter.StreamOptions)
+	}
+
+	for _, stream := range fpm.GetStreams() {
+		if stream == nil || stream.GetDefinition() == nil ||
+			stream.GetDefinition().GetStreamId() == nil {
+			return fmt.Errorf("ADD_STREAM: missing FPM stream ID")
+		}
+
+		id := stream.GetDefinition().GetStreamId()
+		key := requestadapter.StreamKey(id.GetMacAddress(), id.GetUniqueId())
+
+		change := "none"
+		if added[id.AsKey()] || added[key] {
+			change = "add"
+			delete(added, id.AsKey())
+			delete(added, key)
+		}
+
+		opt := options.Streams[key]
+		if opt.Change != "" && opt.Change != change {
+			return fmt.Errorf("conflicting change for stream %q", key)
+		}
+		opt.Change = change
+		options.Streams[key] = opt
+	}
+
+	for id := range added {
+		return fmt.Errorf("ADD_STREAM stream %q not found in FPM", id)
+	}
+
+	return nil
 }
