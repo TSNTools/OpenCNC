@@ -13,7 +13,7 @@ import (
 )
 
 // These tests exercise native projection after an assumed successful shared
-// validation report. The shared v0.2.1 semantic validator has its own tests;
+// validation report. The shared v0.2.2 semantic validator has its own tests;
 // these unit tests are NOT a live Manager-to-CNC integration test.
 func nativeRouteApplyOriginal() *forwardingplane.ForwardingPlaneModel {
 	original := responseApplyOriginal()

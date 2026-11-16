@@ -31,7 +31,7 @@ import (
 // reconfiguration and other delta types remain unsupported. Future mappings
 // should extend only supported change paths, not optimizer-specific mergers.
 // Unsupported paths fail closed. No deployment or storage write occurs here.
-// The caller must supply a result validated by shared contract v0.2.1.
+// The caller must supply a result validated by shared contract v0.2.2.
 func applyValidatedOptimizerResponse(
 	validated *validatedOptimizationResult,
 ) (*forwardingplane.ForwardingPlaneModel, error) {
@@ -86,7 +86,7 @@ func applyValidatedOptimizerResponse(
 		}
 	}
 
-	// The shared v0.2.1 validator authorizes only new, single-listener CBS
+	// The shared v0.2.2 validator authorizes only new, single-listener CBS
 	// optimize-routes. Parse the native projection defensively as well: never
 	// silently ignore an unsupported stream field or overwrite an old route.
 	if routeJSON, hasRoutes := changes["streams"]; hasRoutes {
@@ -286,7 +286,7 @@ type responseCBSRecordDelta struct {
 	Description       *string `json:"description"`
 }
 
-// The JSON representations below deliberately expose only the v0.2.1 CBS
+// The JSON representations below deliberately expose only the v0.2.2 CBS
 // route delta: composite identity plus a complete nonempty path replacement.
 // A pointer for uniqueId/hopNumber distinguishes missing fields from zero.
 type nativeRouteID struct {
