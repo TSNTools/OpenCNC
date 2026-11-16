@@ -26,12 +26,12 @@ import (
 // onto the PRESERVED native ForwardingPlaneModel. The mapping is driven by
 // solution.changes fields, NOT by optimizer ID or algorithm type.
 //
-// Phase 1 supports CBS queue changes and existing-stream generated paths from
-// configuration-only CBS results. Full routing optimization, stream additions,
-// reconfiguration and other delta types remain unsupported. Future mappings
+// Phase 1 supports CBS queue changes, existing-stream paths, and staged
+// ADD_STREAM path/PCP reconciliation. Other native response fields remain
+// unsupported and fail closed. Future mappings
 // should extend only supported change paths, not optimizer-specific mergers.
 // Unsupported paths fail closed. No deployment or storage write occurs here.
-// The caller must supply a result validated by shared contract v0.2.2.
+// The caller must supply a result validated by the pinned shared contract.
 func applyValidatedOptimizerResponse(
 	validated *validatedOptimizationResult,
 ) (*forwardingplane.ForwardingPlaneModel, error) {
@@ -81,14 +81,19 @@ func applyValidatedOptimizerResponse(
 	}
 
 	for path := range changes {
-		if path != "configuration" && path != "streams" {
+		if path != "configuration" && path != "streams" && path != "streamAdditions" {
 			return nil, fmt.Errorf("unsupported response change path %q", path)
 		}
 	}
 
-	// The shared v0.2.2 validator authorizes only new, single-listener CBS
-	// optimize-routes. Parse the native projection defensively as well: never
+	// Shared validation precedes native application. Parse the supported
+	// stream projection defensively as well: never
 	// silently ignore an unsupported stream field or overwrite an old route.
+	if additionJSON, hasAdditions := changes["streamAdditions"]; hasAdditions {
+		if err := applyStagedStreamAdditions(clone, additionJSON); err != nil {
+			return nil, fmt.Errorf("apply staged stream additions: %w", err)
+		}
+	}
 	if routeJSON, hasRoutes := changes["streams"]; hasRoutes {
 		if err := applyGeneratedStreamPaths(clone, routeJSON); err != nil {
 			return nil, fmt.Errorf("apply generated stream paths: %w", err)
@@ -118,8 +123,10 @@ func applyValidatedOptimizerResponse(
 		return nil, fmt.Errorf("unsupported or invalid configuration change: %w", err)
 	}
 	if len(configuration.NodeConfigs) == 0 {
-		if _, hasRoutes := changes["streams"]; !hasRoutes {
-			return nil, fmt.Errorf("applicable response contains no node updates")
+		_, hasRoutes := changes["streams"]
+		_, hasAdditions := changes["streamAdditions"]
+		if !hasRoutes && !hasAdditions {
+			return nil, fmt.Errorf("applicable response contains no node updates or stream paths")
 		}
 		if proto.Equal(clone, validated.Original) {
 			return nil, fmt.Errorf("response update did not change the preserved forwarding-plane model")
