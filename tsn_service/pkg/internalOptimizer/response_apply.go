@@ -1,9 +1,5 @@
-// Currently understands CBS queue fields
-
-// Other configuration fields: not yet implemented
-// For example, today it understands:
-
-// nodeId → portId → queueId → CBS parameters
+// Phase 1 response projection: CBS queue updates and validated generated
+// stream paths. Unrelated configuration, topology and metadata are preserved.
 
 // In the future, if TAS is supported, we extend the same translator to understand:
 
@@ -18,6 +14,8 @@ import (
 	"fmt"
 
 	"OpenCNC/common/structures/qav"
+	"OpenCNC/common/structures/stream"
+	streamconfig "OpenCNC/common/structures/stream_config"
 	"OpenCNC/common/structures/topology_config"
 	forwardingplane "OpenCNC/tsn_service/pkg/structures/forwarding_plane"
 
@@ -28,19 +26,20 @@ import (
 // onto the PRESERVED native ForwardingPlaneModel. The mapping is driven by
 // solution.changes fields, NOT by optimizer ID or algorithm type.
 //
-// Phase 1 supports only configuration.nodeConfigs[].portConfigs[].queueConfigs[]
-// scheduling and CBS fields. Future mechanism mappings should extend the
-// supported change paths here, rather than adding algorithm-specific mergers.
-// Unsupported paths fail closed. No state is deployed or written to storage.
-// The caller must supply a result that passed the shared v0.2.0 validator.
+// Phase 1 supports CBS queue changes and existing-stream generated paths from
+// configuration-only CBS results. Full routing optimization, stream additions,
+// reconfiguration and other delta types remain unsupported. Future mappings
+// should extend only supported change paths, not optimizer-specific mergers.
+// Unsupported paths fail closed. No deployment or storage write occurs here.
+// The caller must supply a result validated by shared contract v0.2.1.
 func applyValidatedOptimizerResponse(
 	validated *validatedOptimizationResult,
 ) (*forwardingplane.ForwardingPlaneModel, error) {
 	if validated == nil || validated.Original == nil || validated.Validation == nil {
 		return nil, fmt.Errorf("response application requires a validated result and preserved original model")
 	}
-	if validated.Original.GetTopology() == nil || validated.Original.GetConfiguration() == nil {
-		return nil, fmt.Errorf("response application requires preserved topology and configuration")
+	if validated.Original.GetTopology() == nil {
+		return nil, fmt.Errorf("response application requires preserved topology")
 	}
 
 	// Read the generic result envelope without imposing an algorithm-specific
@@ -82,11 +81,28 @@ func applyValidatedOptimizerResponse(
 	}
 
 	for path := range changes {
-		if path != "configuration" {
+		if path != "configuration" && path != "streams" {
 			return nil, fmt.Errorf("unsupported response change path %q", path)
 		}
 	}
-	if bytes.Equal(bytes.TrimSpace(changes["configuration"]), []byte("null")) {
+
+	// The shared v0.2.1 validator authorizes only new, single-listener CBS
+	// optimize-routes. Parse the native projection defensively as well: never
+	// silently ignore an unsupported stream field or overwrite an old route.
+	if routeJSON, hasRoutes := changes["streams"]; hasRoutes {
+		if err := applyGeneratedStreamPaths(clone, routeJSON); err != nil {
+			return nil, fmt.Errorf("apply generated stream paths: %w", err)
+		}
+	}
+
+	configJSON, hasConfiguration := changes["configuration"]
+	if !hasConfiguration {
+		if proto.Equal(clone, validated.Original) {
+			return nil, fmt.Errorf("response update did not change the preserved forwarding-plane model")
+		}
+		return clone, nil // Validated path-only response.
+	}
+	if bytes.Equal(bytes.TrimSpace(configJSON), []byte("null")) {
 		return nil, fmt.Errorf("configuration change must be an object")
 	}
 
@@ -96,15 +112,26 @@ func applyValidatedOptimizerResponse(
 	var configuration struct {
 		NodeConfigs []responseNodeDelta `json:"nodeConfigs"`
 	}
-	decoder := json.NewDecoder(bytes.NewReader(changes["configuration"]))
+	decoder := json.NewDecoder(bytes.NewReader(configJSON))
 	decoder.DisallowUnknownFields()
 	if err := decoder.Decode(&configuration); err != nil {
 		return nil, fmt.Errorf("unsupported or invalid configuration change: %w", err)
 	}
 	if len(configuration.NodeConfigs) == 0 {
-		return nil, fmt.Errorf("applicable response contains no node updates")
+		if _, hasRoutes := changes["streams"]; !hasRoutes {
+			return nil, fmt.Errorf("applicable response contains no node updates")
+		}
+		if proto.Equal(clone, validated.Original) {
+			return nil, fmt.Errorf("response update did not change the preserved forwarding-plane model")
+		}
+		return clone, nil // Explicit empty CBS section plus validated routes.
 	}
 
+	// A path-only response does not require a preexisting topology configuration.
+	// Preserve the previous fail-closed behavior for CBS queue changes here.
+	if clone.Configuration == nil {
+		return nil, fmt.Errorf("CBS queue updates require preserved topology configuration")
+	}
 	physicalPorts := make(map[string]map[string]int32)
 	for _, node := range clone.GetTopology().GetNodes() {
 		if node == nil || node.GetName() == "" {
@@ -257,6 +284,106 @@ type responseCBSRecordDelta struct {
 	HiCreditBytes     *uint64 `json:"hiCreditBytes"`
 	LoCreditBytes     *uint64 `json:"loCreditBytes"`
 	Description       *string `json:"description"`
+}
+
+// The JSON representations below deliberately expose only the v0.2.1 CBS
+// route delta: composite identity plus a complete nonempty path replacement.
+// A pointer for uniqueId/hopNumber distinguishes missing fields from zero.
+type nativeRouteID struct {
+	MacAddress string  `json:"macAddress"`
+	UniqueID   *uint32 `json:"uniqueId"`
+}
+type nativeRouteHop struct {
+	HopNumber     *uint32 `json:"hopNumber"`
+	BridgeID      string  `json:"bridgeId"`
+	IngressPortID string  `json:"ingressPortId"`
+	EgressPortID  string  `json:"egressPortId"`
+}
+type nativeRouteConfiguration struct {
+	Path []nativeRouteHop `json:"path"`
+}
+type nativeRouteUpdate struct {
+	StreamID      *nativeRouteID            `json:"streamId"`
+	Configuration *nativeRouteConfiguration `json:"configuration"`
+}
+type nativeStreamKey struct {
+	MacAddress string
+	UniqueID   uint32
+}
+
+func applyGeneratedStreamPaths(model *forwardingplane.ForwardingPlaneModel, raw json.RawMessage) error {
+	var updates []nativeRouteUpdate
+	decoder := json.NewDecoder(bytes.NewReader(raw))
+	decoder.DisallowUnknownFields()
+	if err := decoder.Decode(&updates); err != nil {
+		return fmt.Errorf("invalid or unsupported stream route update: %w", err)
+	}
+	if len(updates) == 0 {
+		return fmt.Errorf("stream route updates must be nonempty")
+	}
+
+	// Resolve native identities only; do not merge by list position or by the
+	// OaaS-only string definition.id. Duplicate original identities fail closed.
+	originals := make(map[nativeStreamKey]*forwardingplane.StreamModel)
+	for i, item := range model.GetStreams() {
+		if item == nil || item.GetDefinition() == nil || item.GetDefinition().GetStreamId() == nil {
+			return fmt.Errorf("original streams[%d] is missing its definition or stream identity", i)
+		}
+		identity := item.GetDefinition().GetStreamId()
+		if identity.GetMacAddress() == "" {
+			return fmt.Errorf("original streams[%d] has an empty MAC address", i)
+		}
+		key := nativeStreamKey{identity.GetMacAddress(), identity.GetUniqueId()}
+		if _, exists := originals[key]; exists {
+			return fmt.Errorf("duplicate original stream identity %s/%d", key.MacAddress, key.UniqueID)
+		}
+		originals[key] = item
+	}
+
+	seen := make(map[nativeStreamKey]bool)
+	for i, update := range updates {
+		if update.StreamID == nil || update.StreamID.MacAddress == "" || update.StreamID.UniqueID == nil ||
+			update.Configuration == nil || len(update.Configuration.Path) == 0 {
+			return fmt.Errorf("stream route update %d requires composite streamId and nonempty configuration.path", i)
+		}
+		key := nativeStreamKey{update.StreamID.MacAddress, *update.StreamID.UniqueID}
+		if seen[key] {
+			return fmt.Errorf("duplicate route update for stream %s/%d", key.MacAddress, key.UniqueID)
+		}
+		seen[key] = true
+		original, exists := originals[key]
+		if !exists {
+			return fmt.Errorf("route update refers to unknown original stream %s/%d", key.MacAddress, key.UniqueID)
+		}
+		if len(original.GetConfiguration().GetPath()) != 0 {
+			return fmt.Errorf("route update would overwrite an existing path for stream %s/%d", key.MacAddress, key.UniqueID)
+		}
+		if cfgID := original.GetConfiguration().GetStreamId(); cfgID != nil &&
+			!proto.Equal(cfgID, original.GetDefinition().GetStreamId()) {
+			return fmt.Errorf("original stream configuration identity differs from definition for %s/%d", key.MacAddress, key.UniqueID)
+		}
+
+		hops := make([]*streamconfig.StreamHop, 0, len(update.Configuration.Path))
+		for j, hop := range update.Configuration.Path {
+			if hop.HopNumber == nil || *hop.HopNumber != uint32(j) ||
+				hop.BridgeID == "" || hop.IngressPortID == "" || hop.EgressPortID == "" {
+				return fmt.Errorf("stream %s/%d has invalid hop %d", key.MacAddress, key.UniqueID, j)
+			}
+			hops = append(hops, &streamconfig.StreamHop{
+				HopNumber: *hop.HopNumber, BridgeId: hop.BridgeID,
+				IngressPortId: hop.IngressPortID, EgressPortId: hop.EgressPortID,
+			})
+		}
+		if original.Configuration == nil {
+			// A new configuration needs its identity. For an existing one,
+			// preserve all fields (including an absent streamId) except path.
+			original.Configuration = &streamconfig.StreamConfiguration{
+				StreamId: proto.Clone(original.GetDefinition().GetStreamId()).(*stream.StreamId),
+			}
+		}
+		original.Configuration.Path = hops
+	}
+	return nil
 }
 
 func findOrAppendNodeConfig(config *topology_config.TopologyConfig, nodeID string) (*topology_config.NodeConfig, error) {
