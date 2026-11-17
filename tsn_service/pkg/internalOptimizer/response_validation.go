@@ -61,6 +61,9 @@ func contractBaselineForJob(
 	var request struct {
 		SchemaVersion   string          `json:"schemaVersion"`
 		ForwardingPlane json.RawMessage `json:"forwardingPlane"`
+		Mechanisms      []struct {
+			Name string `json:"name"`
+		} `json:"mechanisms"`
 	}
 	if err := json.Unmarshal(requestJSON, &request); err != nil {
 		return nil, fmt.Errorf("decode saved original request: %w", err)
@@ -90,13 +93,76 @@ func contractBaselineForJob(
 	if err := json.Unmarshal(projectedJSON, &savedProjection); err != nil {
 		return nil, fmt.Errorf("decode preserved forwarding-plane projection: %w", err)
 	}
+	// Verify that the submitted request matches the preserved CNC model.
+	//
+	// For CBS, the request builder may add default PCP-to-queue mappings
+	// to a temporary copy. These are optimization-input assumptions,
+	// not changes to the actual CNC configuration.
+	//
+	// Accept only the exact deterministic PCP fallback produced by our
+	// existing request builder. Reject all other differences.
+	// Never modify the preserved original FPM.
+	hasCBS := false
+	for _, mechanism := range request.Mechanisms {
+		if mechanism.Name == "CBS" {
+			hasCBS = true
+			break
+		}
+	}
+
 	for _, field := range []string{"topology", "configuration"} {
 		requested, hasRequested := requestedPlane[field]
 		preserved, hasPreserved := savedProjection[field]
-		if hasRequested != hasPreserved ||
-			(hasRequested && !jsonEquivalent(requested, preserved)) {
-			return nil, fmt.Errorf("saved request %s differs from preserved native forwarding plane", field)
+
+		if hasRequested != hasPreserved {
+			return nil, fmt.Errorf(
+				"saved request %s differs from preserved native forwarding plane",
+				field,
+			)
 		}
+
+		if !hasRequested || jsonEquivalent(requested, preserved) {
+			continue
+		}
+
+		// Only CBS configuration may contain request-only PCP defaults.
+		// Topology differences must always be rejected.
+		if field == "configuration" && hasCBS {
+			expectedFPM, err := withDefaultPCPQueueMappings(original)
+			if err != nil {
+				return nil, fmt.Errorf(
+					"reconstruct expected CBS PCP mappings: %w", err,
+				)
+			}
+
+			expectedPlane, err := requestadapter.ExtractForwardingPlane(
+				expectedFPM,
+				requestadapter.SchemaJSON(),
+			)
+			if err != nil {
+				return nil, fmt.Errorf(
+					"project expected CBS request configuration: %w", err,
+				)
+			}
+
+			expectedConfigJSON, err := json.Marshal(
+				expectedPlane["configuration"],
+			)
+			if err != nil {
+				return nil, fmt.Errorf(
+					"marshal expected CBS configuration: %w", err,
+				)
+			}
+
+			if jsonEquivalent(requested, expectedConfigJSON) {
+				continue
+			}
+		}
+
+		return nil, fmt.Errorf(
+			"saved request %s differs from preserved native forwarding plane",
+			field,
+		)
 	}
 
 	// Compare stable identities, not entire stream documents: the original
