@@ -191,6 +191,36 @@ func fetchCompletedManagerJobResultWithTimings(ctx context.Context, client *http
 	if err != nil {
 		return nil, err
 	}
+
+	if os.Getenv("OAAS_CAPTURE_INPUTS") == "1" {
+		capture, captureErr := os.CreateTemp(
+			"", "oaas-manager-response-*.json",
+		)
+
+		if captureErr != nil {
+			fmt.Printf(
+				"[OAAS-CAPTURE] Manager response capture failed: %v\n",
+				captureErr,
+			)
+		} else {
+			_, writeErr := capture.Write(body)
+			closeErr := capture.Close()
+
+			if writeErr != nil || closeErr != nil {
+				_ = os.Remove(capture.Name())
+				fmt.Printf(
+					"[OAAS-CAPTURE] Manager response capture failed: "+
+						"write=%v close=%v\n",
+					writeErr, closeErr,
+				)
+			} else {
+				fmt.Printf(
+					"[OAAS-CAPTURE] Manager response JSON saved in %s jobID=%s\n",
+					capture.Name(), jobID,
+				)
+			}
+		}
+	}
 	// This parser checks the job ID and completed status before extracting
 	// optimizerResult. Parsing is timed separately from HTTP retrieval.
 	started = time.Now()

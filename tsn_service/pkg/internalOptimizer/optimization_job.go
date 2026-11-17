@@ -4,6 +4,7 @@ package internalOptimizer
 import (
 	"context"
 	"fmt"
+	"os"
 	"time"
 
 	"OpenCNC/common/observability"
@@ -73,7 +74,14 @@ func submitOptimizationJobWithTimings(
 	if timings != nil {
 		timings.jobID = receipt.JobID
 	}
-
+	if os.Getenv("OAAS_CAPTURE_INPUTS") == "1" {
+		fmt.Printf(
+			"[OAAS-CAPTURE] Manager receipt: taskID=%s jobID=%s status=%s\n",
+			task.GetTaskId(),
+			receipt.JobID,
+			receipt.Status,
+		)
+	}
 	started = time.Now()
 	if err := saveJobSnapshotLink(receipt.JobID, snapshotID); err != nil {
 		timings.record("oaas_job_bookkeeping_ms", started, false)

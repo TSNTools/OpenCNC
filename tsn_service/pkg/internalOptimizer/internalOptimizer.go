@@ -48,6 +48,7 @@ func StartOptimization(
 	dataStarted := totalStarted
 	var timings *oaasTimingRecorder
 	completed := false
+	captureDir := ""
 	if fullFlow {
 		timings = newOAASTimingRecorder(obs)
 		defer func() {
@@ -68,6 +69,7 @@ func StartOptimization(
 		if err != nil {
 			return nil, err
 		}
+		captureDir = dir
 
 		marshal := protojson.MarshalOptions{Indent: "  "}
 
@@ -104,6 +106,35 @@ func StartOptimization(
 		updated, err := executeOptimizationJobWithTimings(ctx, task, fpm, deviceModels, timings, allRequestData...)
 		if err != nil {
 			return nil, fmt.Errorf("OaaS optimization: %w", err)
+		}
+		// saving json in oaas-captures/
+		if captureDir != "" {
+			marshal := protojson.MarshalOptions{Indent: "  "}
+			data, captureErr := marshal.Marshal(updated)
+
+			if captureErr != nil {
+				fmt.Printf(
+					"[OAAS-CAPTURE] StartOptimization return capture failed: %v\n",
+					captureErr,
+				)
+			} else {
+				path := filepath.Join(
+					captureDir,
+					"start_optimization_return.json",
+				)
+
+				if captureErr := os.WriteFile(path, data, 0600); captureErr != nil {
+					fmt.Printf(
+						"[OAAS-CAPTURE] StartOptimization return capture failed: %v\n",
+						captureErr,
+					)
+				} else {
+					fmt.Printf(
+						"[OAAS-CAPTURE] StartOptimization return JSON saved in %s\n",
+						path,
+					)
+				}
+			}
 		}
 		completed = true
 		return updated, nil
