@@ -201,3 +201,98 @@ func TestB4ZeroJitterPreserved(t *testing.T) {
 		t.Fatalf("expected maxJitterNs=0, got %v", value)
 	}
 }
+
+func TestTASInputFieldMapping(t *testing.T) {
+	input := strings.Replace(
+		testForwardingPlane,
+		`"name":"SW1","type":"BRIDGE"`,
+		`"name":"SW1","type":"BRIDGE","properties":{"processing_delay_ns":1200}`,
+		1,
+	)
+
+	input = strings.Replace(
+		input,
+		`"supportsCbs":true,"supportsTas":true`,
+		`"supportsCbs":true,"supportsTas":true,"supportsTimeSync":true,"mode":"FD"`,
+		1,
+	)
+
+	input = strings.Replace(
+		input,
+		`"portId":"P2","pcpMappingEnabled":true`,
+		`"portId":"P2","pcpMappingEnabled":true,"queueConfigs":[{"queueId":5,"scheduling":"TIME_AWARE_SCHEDULING"}]`,
+		1,
+	)
+
+	for _, tc := range []struct {
+		name   string
+		offset string
+		exists bool
+		value  uint64
+	}{
+		{"MissingOffset", "", false, 0},
+		{"ZeroOffset", `,"timeAwareOffsetNs":"0"`, true, 0},
+		{"NonZeroOffset", `,"timeAwareOffsetNs":"5000"`, true, 5000},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			modified := strings.Replace(
+				input,
+				`"configuration":{"pcp":5}`,
+				`"configuration":{"pcp":5`+tc.offset+`}`,
+				1,
+			)
+
+			model := parseForwardingPlane(t, modified)
+
+			result, err := ExtractForwardingPlane(model, SchemaJSON())
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			topology := result["topology"].(map[string]any)
+			nodes := topology["nodes"].([]any)
+			sw := nodes[1].(map[string]any)
+
+			properties := sw["properties"].(map[string]any)
+			if properties["processing_delay_ns"] != uint64(1200) {
+				t.Fatal("processing delay not preserved")
+			}
+
+			ports := sw["ports"].([]any)
+			caps := ports[1].(map[string]any)["capabilities"].(map[string]any)
+
+			if caps["supportsTimeSync"] != true || caps["mode"] != "FD" {
+				t.Fatal("TAS port capabilities not preserved")
+			}
+
+			config := result["configuration"].(map[string]any)
+			nc := config["nodeConfigs"].([]any)[0].(map[string]any)
+			pc := nc["portConfigs"].([]any)[0].(map[string]any)
+
+			queues := pc["queueConfigs"].([]any)
+			queue := queues[0].(map[string]any)
+
+			if queue["scheduling"] != "TIME_AWARE_SCHEDULING" {
+				t.Fatal("TAS queue scheduling not preserved")
+			}
+
+			gcl := pc["gcl"].(map[string]any)
+			if gcl["cycleTime"] != uint64(1000000) {
+				t.Fatal("GCL cycle time not preserved")
+			}
+
+			streams := result["streams"].([]any)
+			sc := streams[0].(map[string]any)["configuration"].(map[string]any)
+
+			value, exists := sc["timeAwareOffsetNs"]
+
+			if exists != tc.exists {
+				t.Fatal("incorrect offset presence")
+			}
+
+			if exists && value != tc.value {
+				t.Fatalf("unexpected offset: %v", value)
+			}
+		})
+	}
+}
