@@ -12,21 +12,25 @@ import (
 func buildRequestOptions() (requestadapter.RequestOptions, error) {
 	mechanism := os.Getenv("OAAS_MECHANISM")
 
-	// Initial integration supports CBS only.
-	if mechanism != "CBS" {
+	// CBS remains supported. TAS is explicitly opt-in.
+	if mechanism != "CBS" && mechanism != "TAS" {
 		return requestadapter.RequestOptions{},
-			fmt.Errorf("expected OAAS_MECHANISM=CBS, got %q", mechanism)
+			fmt.Errorf("expected OAAS_MECHANISM=CBS or TAS, got %q", mechanism)
 	}
 
 	selection := requestadapter.MechanismSelection{
 		Name: mechanism,
 	}
 
-	// Optional request-level CBS constraint.
-	// The CBS solver separately requires a valid bound for computation.
+	// This constraint belongs only to CBS.
 	raw := strings.TrimSpace(os.Getenv("OAAS_CBS_MAX_BE_FRAME_SIZE_BYTES"))
 
 	if raw != "" {
+		if mechanism != "CBS" {
+			return requestadapter.RequestOptions{},
+				fmt.Errorf("OAAS_CBS_MAX_BE_FRAME_SIZE_BYTES is CBS-only; unset it for TAS")
+		}
+
 		beFrameSize, err := strconv.ParseUint(raw, 10, 64)
 		if err != nil || beFrameSize == 0 {
 			return requestadapter.RequestOptions{},

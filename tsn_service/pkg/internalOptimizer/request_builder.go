@@ -2,14 +2,15 @@
 package internalOptimizer
 
 import (
-	"fmt"
-	"os"
-
 	"OpenCNC/common/structures/devicemodelregistry"
 	"OpenCNC/common/structures/uni"
 	"OpenCNC/tsn_service/pkg/internalOptimizer/requestadapter"
 	forwarding_plane "OpenCNC/tsn_service/pkg/structures/forwarding_plane"
 	optimizer "OpenCNC/tsn_service/pkg/structures/optimization_contract"
+	"fmt"
+	"os"
+
+	"google.golang.org/protobuf/proto"
 )
 
 // temporary for tests passing
@@ -162,4 +163,101 @@ func setAddStreamChanges(
 	}
 
 	return nil
+}
+
+func prepareTASFullScopeTask(
+	task *optimizer.OptimizationTask,
+	fpm *forwarding_plane.ForwardingPlaneModel,
+	streamOptions map[string]requestadapter.StreamOptions,
+) (*optimizer.OptimizationTask, error) {
+	if task.GetIntent() != optimizer.Intent_ADD_STREAM {
+		return nil, fmt.Errorf("TAS pilot requires ADD_STREAM")
+	}
+
+	policy := task.GetChangePolicy()
+
+	if policy == nil ||
+		!policy.GetAllowScheduleChanges() ||
+		!policy.GetPreserveExistingStreams() {
+		return nil, fmt.Errorf(
+			"TAS requires allowScheduleChanges=true and preserveExistingStreams=true",
+		)
+	}
+
+	if policy.GetMaxConfigurationChanges() == 0 {
+		return nil, fmt.Errorf(
+			"TAS requires a positive maxConfigurationChanges",
+		)
+	}
+
+	scope := task.GetScope()
+	if scope == nil || len(scope.GetStreamIds()) == 0 {
+		return nil, fmt.Errorf("ADD_STREAM requires new stream IDs")
+	}
+	if len(scope.GetNodeIds()) > 0 || len(scope.GetLinkIds()) > 0 {
+		return nil, fmt.Errorf(
+			"TAS full reconfiguration does not support restricted node/link scope",
+		)
+	}
+
+	allIDs := make([]string, 0, len(fpm.GetStreams()))
+	seen := make(map[string]bool)
+	added, existing := 0, 0
+
+	for _, stream := range fpm.GetStreams() {
+		if stream == nil || stream.GetDefinition() == nil ||
+			stream.GetDefinition().GetStreamId() == nil {
+			return nil, fmt.Errorf("TAS: missing stream definition or ID")
+		}
+
+		id := stream.GetDefinition().GetStreamId()
+		key := requestadapter.StreamKey(
+			id.GetMacAddress(), id.GetUniqueId(),
+		)
+
+		if seen[key] {
+			return nil, fmt.Errorf("TAS: duplicate stream %q", key)
+		}
+		seen[key] = true
+
+		switch streamOptions[key].Change {
+		case "add":
+			added++
+		case "none":
+			existing++
+		default:
+			return nil, fmt.Errorf(
+				"TAS: unsupported or missing change for %q", key,
+			)
+		}
+
+		allIDs = append(allIDs, key)
+	}
+
+	if added == 0 || existing == 0 {
+		return nil, fmt.Errorf(
+			"TAS full reconfiguration requires both existing and new streams",
+		)
+	}
+
+	if uint64(added) > uint64(policy.GetMaxChangedStreams()) {
+		return nil, fmt.Errorf(
+			"TAS: maxChangedStreams cannot cover %d new streams", added,
+		)
+	}
+
+	// Never modify CNC's original optimization task.
+
+	copyTask := proto.Clone(task).(*optimizer.OptimizationTask)
+	copyTask.Scope.StreamIds = allIDs
+
+	// TAS uses fixed routes and queues.
+	// Restrict permissions only in the request copy.
+	copyTask.ChangePolicy.AllowPathChanges = false
+	copyTask.ChangePolicy.AllowQueueChanges = false
+	copyTask.ChangePolicy.AllowVlanChanges = false
+	copyTask.ChangePolicy.AllowStreamMigration = false
+
+	return copyTask, nil
+
 }
