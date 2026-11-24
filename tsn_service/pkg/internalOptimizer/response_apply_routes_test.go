@@ -301,3 +301,52 @@ func TestApplyValidatedOptimizerResponseStillRejectsCBSQueuesWithoutTopologyConf
 		t.Fatal("rejected CBS update mutated preserved original")
 	}
 }
+
+func TestApplyValidatedStreamOffset(t *testing.T) {
+	original := nativeRouteApplyOriginal()
+
+	original.Streams[0].Configuration.Path =
+		[]*streamconfig.StreamHop{{
+			HopNumber:     0,
+			BridgeId:      "SW1",
+			IngressPortId: "P1",
+			EgressPortId:  "P4",
+		}}
+
+	before := proto.Clone(original)
+
+	payload := `{
+        "status": "success",
+        "solution": {
+            "changes": {
+                "streams": [{
+                    "streamId": {
+                        "macAddress": "02:00:00:00:00:01",
+                        "uniqueId": 7
+                    },
+                    "configuration": {
+                        "timeAwareOffsetNs": 0
+                    }
+                }]
+            }
+        }
+    }`
+
+	updated, err := applyValidatedOptimizerResponse(
+		validatedFixture(original, true, payload),
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	expected := proto.Clone(original).(*forwardingplane.ForwardingPlaneModel)
+	expected.Streams[0].Configuration.TimeAwareOffsetNs = proto.Uint64(0)
+
+	if !proto.Equal(updated, expected) {
+		t.Fatal("incorrect offset or unrelated fields modified")
+	}
+
+	if !proto.Equal(original, before) {
+		t.Fatal("original model was modified")
+	}
+}

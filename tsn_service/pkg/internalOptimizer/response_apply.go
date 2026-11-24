@@ -9,9 +9,12 @@
 package internalOptimizer
 
 import (
+	"OpenCNC/common/structures/qbv"
 	"bytes"
 	"encoding/json"
 	"fmt"
+
+	"google.golang.org/protobuf/encoding/protojson"
 
 	"OpenCNC/common/structures/qav"
 	"OpenCNC/common/structures/stream"
@@ -191,8 +194,20 @@ func applyValidatedOptimizerResponse(
 			if err != nil {
 				return nil, err
 			}
-			if len(portDelta.QueueConfigs) == 0 {
-				return nil, fmt.Errorf("configuration update port %s/%s has no queue updates", nodeDelta.NodeID, portDelta.PortID)
+			if len(portDelta.QueueConfigs) == 0 && len(portDelta.GCL) == 0 {
+				return nil, fmt.Errorf(
+					"configuration update port %s/%s has no supported updates",
+					nodeDelta.NodeID, portDelta.PortID,
+				)
+			}
+
+			if len(portDelta.GCL) > 0 {
+				gcl, err := decodeResponseGCL(portDelta.GCL)
+				if err != nil {
+					return nil, fmt.Errorf("apply GCL: %w", err)
+				}
+
+				port.Gcl = gcl
 			}
 			seenQueues := make(map[uint32]bool)
 			for _, queueDelta := range portDelta.QueueConfigs {
@@ -277,6 +292,7 @@ type responseNodeDelta struct {
 type responsePortDelta struct {
 	PortID       string               `json:"portId"`
 	QueueConfigs []responseQueueDelta `json:"queueConfigs"`
+	GCL          json.RawMessage      `json:"gcl"`
 }
 type responseQueueDelta struct {
 	QueueID    uint32                   `json:"queueId"`
@@ -307,7 +323,8 @@ type nativeRouteHop struct {
 	EgressPortID  string  `json:"egressPortId"`
 }
 type nativeRouteConfiguration struct {
-	Path []nativeRouteHop `json:"path"`
+	Path              []nativeRouteHop `json:"path"`
+	TimeAwareOffsetNs *uint64          `json:"timeAwareOffsetNs"`
 }
 type nativeRouteUpdate struct {
 	StreamID      *nativeRouteID            `json:"streamId"`
@@ -350,7 +367,9 @@ func applyGeneratedStreamPaths(model *forwardingplane.ForwardingPlaneModel, raw 
 	seen := make(map[nativeStreamKey]bool)
 	for i, update := range updates {
 		if update.StreamID == nil || update.StreamID.MacAddress == "" || update.StreamID.UniqueID == nil ||
-			update.Configuration == nil || len(update.Configuration.Path) == 0 {
+			update.Configuration == nil ||
+			(len(update.Configuration.Path) == 0 &&
+				update.Configuration.TimeAwareOffsetNs == nil) {
 			return fmt.Errorf("stream route update %d requires composite streamId and nonempty configuration.path", i)
 		}
 		key := nativeStreamKey{update.StreamID.MacAddress, *update.StreamID.UniqueID}
@@ -362,7 +381,8 @@ func applyGeneratedStreamPaths(model *forwardingplane.ForwardingPlaneModel, raw 
 		if !exists {
 			return fmt.Errorf("route update refers to unknown original stream %s/%d", key.MacAddress, key.UniqueID)
 		}
-		if len(original.GetConfiguration().GetPath()) != 0 {
+		if len(update.Configuration.Path) > 0 &&
+			len(original.GetConfiguration().GetPath()) != 0 {
 			return fmt.Errorf("route update would overwrite an existing path for stream %s/%d", key.MacAddress, key.UniqueID)
 		}
 		if cfgID := original.GetConfiguration().GetStreamId(); cfgID != nil &&
@@ -388,7 +408,14 @@ func applyGeneratedStreamPaths(model *forwardingplane.ForwardingPlaneModel, raw 
 				StreamId: proto.Clone(original.GetDefinition().GetStreamId()).(*stream.StreamId),
 			}
 		}
-		original.Configuration.Path = hops
+		if len(update.Configuration.Path) > 0 {
+			original.Configuration.Path = hops
+		}
+
+		if update.Configuration.TimeAwareOffsetNs != nil {
+			original.Configuration.TimeAwareOffsetNs =
+				proto.Uint64(*update.Configuration.TimeAwareOffsetNs)
+		}
 	}
 	return nil
 }
@@ -470,4 +497,49 @@ func findOrAppendCBSConfig(queue *topology_config.QueueConfig, queueID uint32) (
 	found = &qav.CbsQueueConfig{EgressQueueId: queueID}
 	queue.Cbs = append(queue.Cbs, found)
 	return found, true, nil
+}
+
+func decodeResponseGCL(raw json.RawMessage) (*qbv.GateControlList, error) {
+	var data map[string]json.RawMessage
+
+	if err := json.Unmarshal(raw, &data); err != nil {
+		return nil, err
+	}
+
+	var entries []map[string]json.RawMessage
+
+	if err := json.Unmarshal(data["entries"], &entries); err != nil {
+		return nil, err
+	}
+
+	// These OaaS annotations have no corresponding CNC fields.
+	for _, entry := range entries {
+		delete(entry, "startTimeNs")
+		delete(entry, "streamIds")
+		delete(entry, "openTrafficClasses")
+	}
+
+	encoded, err := json.Marshal(entries)
+	if err != nil {
+		return nil, err
+	}
+
+	data["entries"] = encoded
+
+	nativeJSON, err := json.Marshal(data)
+	if err != nil {
+		return nil, err
+	}
+
+	var gcl qbv.GateControlList
+
+	if err := protojson.Unmarshal(nativeJSON, &gcl); err != nil {
+		return nil, err
+	}
+
+	if gcl.GetCycleTime() == 0 || len(gcl.GetEntries()) == 0 {
+		return nil, fmt.Errorf("incomplete GCL schedule")
+	}
+
+	return &gcl, nil
 }

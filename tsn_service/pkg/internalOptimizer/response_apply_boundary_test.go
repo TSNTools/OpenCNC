@@ -11,6 +11,8 @@ import (
 	forwardingplane "OpenCNC/tsn_service/pkg/structures/forwarding_plane"
 	optimizationcontract "OpenCNC/tsn_service/pkg/structures/optimization_contract"
 
+	"OpenCNC/common/structures/qbv"
+
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
 )
@@ -228,5 +230,174 @@ func TestBoundaryRealSharedValidationRejectsMissingRouteNoOp(t *testing.T) {
 	validated, err := validateRetrievedOptimizerPayload(jobID, []byte(successfulNoChangeCBSResponse))
 	if err == nil || validated != nil || !strings.Contains(err.Error(), "Missing optimize-route") {
 		t.Fatalf("successful no-op must not skip missing generated route: validated=%v, err=%v", validated, err)
+	}
+}
+
+func TestBoundaryRealSharedValidationThenTASApplication(t *testing.T) {
+	useFakeSnapshotStore(t)
+
+	_, original := originalRequestAndSnapshotForResponseTest(t)
+
+	t.Setenv("OAAS_MECHANISM", "TAS")
+	t.Setenv("OAAS_B10_OPTIMIZE_ROUTING", "false")
+	t.Setenv("OAAS_CBS_MAX_BE_FRAME_SIZE_BYTES", "")
+
+	// Declare TAS support for the synthetic test topology.
+	for _, node := range original.GetTopology().GetNodes() {
+		for _, port := range node.GetPorts() {
+			if caps := port.GetCapabilities(); caps != nil {
+				caps.SupportsTas = true
+				caps.SupportsTimeSync = true
+			}
+		}
+	}
+
+	// Reuse the existing CNC task fixture.
+	data, err := os.ReadFile("testdata/realistic_cnc_request.json")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var fixture struct {
+		OptimizationTask json.RawMessage `json:"optimizationTask"`
+	}
+
+	if err := json.Unmarshal(data, &fixture); err != nil {
+		t.Fatal(err)
+	}
+
+	var task optimizationcontract.OptimizationTask
+	if err := protojson.Unmarshal(fixture.OptimizationTask, &task); err != nil {
+		t.Fatal(err)
+	}
+
+	before := proto.Clone(original)
+
+	request, err := buildOaaSRequest(&task, original)
+	if err != nil {
+		t.Fatalf("build TAS request: %v", err)
+	}
+
+	const jobID = "job-boundary-tas"
+	saveResponseContextForTest(t, jobID, request, original)
+
+	payload := `{
+        "schemaVersion": "1.3",
+        "optimizer": {
+            "id": "test-tas",
+            "name": "TAS",
+            "version": "test"
+        },
+        "optimizedAgainst": null,
+        "status": "success",
+        "solution": {
+            "type": "configuration",
+            "representation": "partial",
+            "changes": {
+                "configuration": {
+                    "nodeConfigs": [{
+                        "nodeId": "SW1",
+                        "portConfigs": [{
+                            "portId": "s1-out",
+                            "gcl": {
+                                "scheduleId": "tas-test",
+                                "cycleTime": 1000000,
+                                "adminState": "ENABLED",
+                                "entries": [
+                                    {
+                                        "index": 0,
+                                        "startTimeNs": 0,
+                                        "timeInterval": 10000,
+                                        "gateStates": "CA=="
+                                    },
+                                    {
+                                        "index": 1,
+                                        "startTimeNs": 10000,
+                                        "timeInterval": 990000,
+                                        "gateStates": "AQ=="
+                                    }
+                                ]
+                            }
+                        }]
+                    }]
+                },
+                "streams": [{
+                    "streamId": {
+                        "macAddress": "02:00:00:00:00:01",
+                        "uniqueId": 1
+                    },
+                    "configuration": {
+                        "timeAwareOffsetNs": 0
+                    }
+                }]
+            }
+        },
+        "outcome": {
+            "feasibility": "feasible",
+            "optimality": "notProven",
+            "configurationChanged": true
+        },
+        "kpis": {},
+        "warnings": [],
+        "errors": []
+    }`
+
+	// Actual shared contract validation.
+	validated, err := validateRetrievedOptimizerPayload(
+		jobID, []byte(payload),
+	)
+	if err != nil {
+		t.Fatalf("shared TAS validation failed: %v", err)
+	}
+
+	if validated.Validation == nil || !validated.Validation.Applicable {
+		t.Fatal("TAS response must be applicable")
+	}
+
+	// Native response application.
+	updated, err := applyValidatedOptimizerResponse(validated)
+	if err != nil {
+		t.Fatalf("native TAS application failed: %v", err)
+	}
+
+	expected := proto.Clone(original).(*forwardingplane.ForwardingPlaneModel)
+
+	expected.Streams[0].Configuration.TimeAwareOffsetNs = proto.Uint64(0)
+
+	for _, node := range expected.Configuration.NodeConfigs {
+		if node.GetNodeId() != "SW1" {
+			continue
+		}
+
+		for _, port := range node.PortConfigs {
+			if port.GetPortId() == "s1-out" {
+				port.Gcl = &qbv.GateControlList{
+					ScheduleId: "tas-test",
+					CycleTime:  1000000,
+					AdminState: qbv.AdminState_ENABLED,
+					Entries: []*qbv.GateControlEntry{
+						{
+							Index:        0,
+							TimeInterval: 10000,
+							GateStates:   []byte{8},
+						},
+						{
+							Index:        1,
+							TimeInterval: 990000,
+							GateStates:   []byte{1},
+						},
+					},
+				}
+			}
+		}
+	}
+
+	if !proto.Equal(updated, expected) {
+		t.Fatal("incorrect TAS mapping or unrelated fields modified")
+	}
+
+	if !proto.Equal(original, before) ||
+		!proto.Equal(validated.Original, before) {
+		t.Fatal("preserved original model was modified")
 	}
 }

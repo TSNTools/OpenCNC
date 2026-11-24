@@ -258,3 +258,84 @@ func TestApplyValidatedOptimizerResponseRejectsChangesInNoOp(t *testing.T) {
 		t.Fatalf("nonempty changes cannot be a no-op: model=%v err=%v", got, err)
 	}
 }
+
+func TestApplyValidatedGCLResponse(t *testing.T) {
+	original := responseApplyOriginal()
+
+	// Initial configuration: no existing GCL.
+	original.Configuration.NodeConfigs[0].PortConfigs[0].Gcl = nil
+
+	before := proto.Clone(original)
+
+	payload := `{
+        "status": "success",
+        "solution": {
+            "changes": {
+                "configuration": {
+                    "nodeConfigs": [{
+                        "nodeId": "SW1",
+                        "portConfigs": [{
+                            "portId": "P4",
+                            "gcl": {
+                                "scheduleId": "tas-SW1-P4",
+                                "cycleTime": 1000000,
+                                "adminState": "ENABLED",
+                                "entries": [
+                                    {
+                                        "index": 0,
+                                        "startTimeNs": 0,
+                                        "timeInterval": 4160,
+                                        "gateStates": "IA==",
+                                        "streamIds": ["f1"]
+                                    },
+                                    {
+                                        "index": 1,
+                                        "startTimeNs": 4160,
+                                        "timeInterval": 995840,
+                                        "gateStates": "AQ=="
+                                    }
+                                ]
+                            }
+                        }]
+                    }]
+                }
+            }
+        }
+    }`
+
+	updated, err := applyValidatedOptimizerResponse(
+		validatedFixture(original, true, payload),
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	expected := proto.Clone(original).(*forwardingplane.ForwardingPlaneModel)
+
+	expected.Configuration.NodeConfigs[0].PortConfigs[0].Gcl =
+		&qbv.GateControlList{
+			ScheduleId: "tas-SW1-P4",
+			CycleTime:  1000000,
+			AdminState: qbv.AdminState_ENABLED,
+			Entries: []*qbv.GateControlEntry{
+				{
+					Index:        0,
+					TimeInterval: 4160,
+					GateStates:   []byte{32},
+				},
+				{
+					Index:        1,
+					TimeInterval: 995840,
+					GateStates:   []byte{1},
+				},
+			},
+		}
+
+	if !proto.Equal(updated, expected) {
+		t.Fatal("incorrect GCL mapping or unrelated fields modified")
+	}
+
+	if !proto.Equal(original, before) {
+		t.Fatal("original model was modified")
+	}
+}
