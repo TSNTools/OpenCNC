@@ -293,7 +293,7 @@ type responseCBSRecordDelta struct {
 	Description       *string `json:"description"`
 }
 
-// The JSON representations below deliberately expose only the v0.2.2 CBS
+// The JSON representations below deliberately expose only the v0.2.3 CBS
 // route delta: composite identity plus a complete nonempty path replacement.
 // A pointer for uniqueId/hopNumber distinguishes missing fields from zero.
 type nativeRouteID struct {
