@@ -1,15 +1,17 @@
 package internalOptimizer
 
 import (
-	"bytes"
-	"encoding/json"
-	"os"
-	"strings"
-	"testing"
-
 	"OpenCNC/common/structures/devicemodelregistry"
 	forwardingplane "OpenCNC/tsn_service/pkg/structures/forwarding_plane"
 	optimizer "OpenCNC/tsn_service/pkg/structures/optimization_contract"
+	"bytes"
+	"encoding/json"
+	"os"
+	"reflect"
+	"strings"
+	"testing"
+
+	"google.golang.org/protobuf/proto"
 
 	"google.golang.org/protobuf/encoding/protojson"
 )
@@ -169,6 +171,96 @@ func TestRequestJSONUnchangedWithDeviceModels(t *testing.T) {
 		}
 	})
 
+	t.Run("GenericTASRequest", func(t *testing.T) {
+		t.Setenv("OAAS_MECHANISM", "TAS")
+		t.Setenv("OAAS_CBS_MAX_BE_FRAME_SIZE_BYTES", "")
+		t.Setenv("OAAS_B10_OPTIMIZE_ROUTING", "false")
+
+		for _, intent := range []optimizer.Intent{
+			optimizer.Intent_INITIAL_CONFIGURATION,
+			optimizer.Intent_ADD_STREAM,
+		} {
+			t.Run(intent.String(), func(t *testing.T) {
+				testTask := proto.Clone(&task).(*optimizer.OptimizationTask)
+				testTask.Intent = intent
+
+				if intent == optimizer.Intent_ADD_STREAM {
+					testTask.Scope.StreamIds = []string{
+						"02:00:00:00:00:01/2",
+					}
+
+					testTask.ChangePolicy = &optimizer.ChangePolicy{
+						AllowPathChanges:        true,
+						AllowScheduleChanges:    true,
+						AllowQueueChanges:       true,
+						PreserveExistingStreams: true,
+						MaxChangedStreams:       2,
+						MaxConfigurationChanges: 10,
+					}
+				}
+
+				originalTask := proto.Clone(testTask)
+				originalFPM := proto.Clone(&fpm)
+
+				result, err := buildOaaSRequest(testTask, &fpm)
+				if err != nil {
+					t.Fatal(err)
+				}
+
+				var request struct {
+					OptimizationTask struct {
+						Intent string `json:"intent"`
+						Scope  struct {
+							StreamIDs []string `json:"streamIds"`
+						} `json:"scope"`
+						ChangePolicy map[string]any `json:"changePolicy"`
+					} `json:"optimizationTask"`
+				}
+
+				if err := json.Unmarshal(result, &request); err != nil {
+					t.Fatal(err)
+				}
+
+				got := request.OptimizationTask
+
+				if got.Intent != intent.String() {
+					t.Fatal("optimization intent changed")
+				}
+
+				if !reflect.DeepEqual(
+					got.Scope.StreamIDs,
+					testTask.GetScope().GetStreamIds(),
+				) {
+					t.Fatal("optimization scope changed")
+				}
+
+				if intent == optimizer.Intent_ADD_STREAM {
+					expectedPolicy := map[string]any{
+						"allowPathChanges":        true,
+						"allowScheduleChanges":    true,
+						"allowQueueChanges":       true,
+						"allowVlanChanges":        false,
+						"allowStreamMigration":    false,
+						"preserveExistingStreams": true,
+						"maxChangedStreams":       float64(2),
+						"maxConfigurationChanges": float64(10),
+					}
+
+					if !reflect.DeepEqual(got.ChangePolicy, expectedPolicy) {
+						t.Fatalf("change policy modified: %+v", got.ChangePolicy)
+					}
+				}
+
+				if !proto.Equal(testTask, originalTask) {
+					t.Fatal("original task modified")
+				}
+
+				if !proto.Equal(&fpm, originalFPM) {
+					t.Fatal("original FPM modified")
+				}
+			})
+		}
+	})
 	if os.Getenv("OAAS_EXPORT_JSON") == "1" {
 		cncTask, err := protojson.Marshal(&task)
 		if err != nil {
