@@ -17,7 +17,7 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
-// These tests exercise the actual shared v0.2.3 validation path with a
+// These tests exercise the actual shared v0.2.4 validation path with a
 // preserved OpenCNC snapshot, followed by native application. They do NOT
 // exercise a live OaaS Manager, CBS computation, or hardware deployment.
 func boundaryRequestAndOriginal(t *testing.T) ([]byte, *forwardingplane.ForwardingPlaneModel, []map[string]any) {
@@ -138,7 +138,7 @@ func TestBoundaryRealSharedValidationThenNativeGeneratedRoute(t *testing.T) {
 
 	validated, err := validateRetrievedOptimizerPayload(jobID, boundaryResponse(t, original, path, false))
 	if err != nil {
-		t.Fatalf("actual shared v0.2.3 validation rejected generated route: %v", err)
+		t.Fatalf("actual shared v0.2.4 validation rejected generated route: %v", err)
 	}
 	if validated.Validation == nil || !validated.Validation.Applicable {
 		t.Fatalf("valid route response should be semantically applicable: %+v", validated.Validation)
