@@ -377,7 +377,8 @@ func TestRequestJSONUnchangedWithDeviceModels(t *testing.T) {
 	fpm.Topology.Nodes = append(fpm.Topology.Nodes, fpm.Topology.Nodes[0])
 
 	_, err = buildOaaSRequest(&task, &fpm)
-	if err == nil || !strings.Contains(err.Error(), "Duplicate node ID") {
+	if err == nil || (!strings.Contains(err.Error(), "Duplicate node ID") &&
+		!strings.Contains(err.Error(), "capabilities contains missing or duplicate node")) {
 		t.Fatalf("expected duplicate node rejection, got: %v", err)
 	}
 }

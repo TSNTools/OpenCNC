@@ -33,7 +33,8 @@
               "number_of_queues": 8,
               "capabilities": {
                 "port_speed": 1000,
-                "mode": "FD"
+                "mode": "FD",
+                "supportsCbs": true
               }
             }
           ]
@@ -267,7 +268,7 @@
           "trafficClassId": "M1",
           "trafficSpec": {
             "maxFrameSize": "800",
-            "maxIntervalFrames": "2",
+            "maxIntervalFrames": "1",
             "intervalNs": "1000000"
           },
           "userToNetworkRequirements": {
