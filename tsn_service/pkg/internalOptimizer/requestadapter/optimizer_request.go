@@ -75,6 +75,11 @@ func BuildOptimizerRequest(
 	if err != nil {
 		return nil, fmt.Errorf("forwarding-plane extraction: %w", err)
 	}
+	if options.CNCQueuePriorityOrder {
+		if err := ApplyCNCQueuePriorities(forwarding, model); err != nil {
+			return nil, fmt.Errorf("CNC queue priority input: %w", err)
+		}
+	}
 	normalizeTaskScopeStreamIDs(taskJSON, model)
 	if operation == "reconfiguration" {
 		if _, ok := forwarding["configuration"].(map[string]any); !ok {

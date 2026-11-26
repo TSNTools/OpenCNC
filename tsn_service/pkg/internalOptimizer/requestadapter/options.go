@@ -35,6 +35,10 @@ type DependencyGroup struct {
 type RequestOptions struct {
 	Mechanisms []MechanismSelection
 
+	// CNCQueuePriorityOrder enables the explicit eight-queue CBS pilot ordering.
+	// This is an OpenCNC request policy, not a shared contract default.
+	CNCQueuePriorityOrder bool
+
 	// Optional OaaS-only scope restriction. OpenCNC Scope has no trafficClasses.
 	TrafficClasses []string
 

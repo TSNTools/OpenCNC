@@ -94,6 +94,10 @@ func TestPCPQueueDefaultReachesV14Request(t *testing.T) {
 					PortConfigs []struct {
 						PortID            string `json:"portId"`
 						PcpMappingEnabled *bool  `json:"pcpMappingEnabled"`
+					QueuePriorityTable []struct {
+						QueueID int `json:"queueId"`
+						SchedulingPriority int `json:"schedulingPriority"`
+					} `json:"queuePriorityTable"`
 						PcpConfig         struct {
 							TrafficClassTable []struct {
 								Priority      uint32 `json:"priority"`
@@ -118,6 +122,17 @@ func TestPCPQueueDefaultReachesV14Request(t *testing.T) {
 			}
 			if port.PcpMappingEnabled == nil || !*port.PcpMappingEnabled {
 				t.Fatal("default PCP mapping was not enabled in the v1.4 request")
+			}
+			if len(port.QueuePriorityTable) != 8 {
+				t.Fatalf("expected eight explicit queue priorities, got %d", len(port.QueuePriorityTable))
+			}
+			for i, entry := range port.QueuePriorityTable {
+				if entry.QueueID != i || entry.SchedulingPriority != 8-i {
+					t.Fatalf("unexpected queue priority: %+v", entry)
+				}
+			}
+			if _, err := contractBaselineForJob(built, &fpm); err != nil {
+				t.Fatalf("request priority baseline rejected: %v", err)
 			}
 			entries := port.PcpConfig.TrafficClassTable
 			if len(entries) != 8 {

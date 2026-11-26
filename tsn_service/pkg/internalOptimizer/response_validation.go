@@ -99,8 +99,8 @@ func contractBaselineForJob(
 	// to a temporary copy. These are optimization-input assumptions,
 	// not changes to the actual CNC configuration.
 	//
-	// Accept only the exact deterministic PCP fallback produced by our
-	// existing request builder. Reject all other differences.
+	// Accept only the exact deterministic PCP fallback and optional queue
+	// priority enrichment produced by our request builder. Reject other differences.
 	// Never modify the preserved original FPM.
 	hasCBS := false
 	for _, mechanism := range request.Mechanisms {
@@ -125,7 +125,7 @@ func contractBaselineForJob(
 			continue
 		}
 
-		// Only CBS configuration may contain request-only PCP defaults.
+		// Only CBS configuration may contain request-only PCP defaults and ranks.
 		// Topology differences must always be rejected.
 		if field == "configuration" && hasCBS {
 			expectedFPM, err := withDefaultPCPQueueMappings(original)
@@ -154,6 +154,17 @@ func contractBaselineForJob(
 				)
 			}
 
+			// Retain compatibility with previously saved jobs without ranks.
+			if jsonEquivalent(requested, expectedConfigJSON) {
+				continue
+			}
+			if err := requestadapter.ApplyCNCQueuePriorities(expectedPlane, expectedFPM); err != nil {
+				return nil, fmt.Errorf("reconstruct expected CBS queue priorities: %w", err)
+			}
+			expectedConfigJSON, err = json.Marshal(expectedPlane["configuration"])
+			if err != nil {
+				return nil, fmt.Errorf("marshal expected CBS priority configuration: %w", err)
+			}
 			if jsonEquivalent(requested, expectedConfigJSON) {
 				continue
 			}

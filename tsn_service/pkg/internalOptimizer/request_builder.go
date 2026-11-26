@@ -47,6 +47,7 @@ func buildOaaSRequestWithDeviceModels(
 	// Apply defaults to the request-only copy, never the preserved FPM.
 	for _, mechanism := range options.Mechanisms {
 		if mechanism.Name == "CBS" {
+			options.CNCQueuePriorityOrder = true
 			requestFPM, err = withDefaultPCPQueueMappings(requestFPM)
 			if err != nil {
 				return nil, fmt.Errorf("CBS PCP-to-queue fallback: %w", err)
