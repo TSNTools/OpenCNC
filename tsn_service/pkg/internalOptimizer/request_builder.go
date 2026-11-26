@@ -88,12 +88,11 @@ func buildOaaSRequestWithDeviceModels(
 			return nil, fmt.Errorf("device limitation extraction: %w", err)
 		}
 
-		if len(limitsByNode) > 0 {
-			fmt.Printf(
-				"[OAAS] Found TAS GCL limitations for %d nodes; port mapping pending\n",
-				len(limitsByNode),
-			)
+		additional, err := mapTASGCLLimitsToPorts(requestFPM, limitsByNode)
+		if err != nil {
+			return nil, fmt.Errorf("device limitation port mapping: %w", err)
 		}
+		options.AdditionalCapabilities = additional
 	}
 
 	return requestadapter.BuildOptimizerRequest(

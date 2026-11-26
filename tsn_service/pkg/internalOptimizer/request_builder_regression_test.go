@@ -99,6 +99,81 @@ func TestRequestJSONUnchangedWithDeviceModels(t *testing.T) {
 	if !bytes.Equal(before, after) {
 		t.Fatal("Contract v1.4 JSON unexpectedly changed")
 	}
+	t.Run("B1GCLCapabilities", func(t *testing.T) {
+		// Synthetic limitation; this is not a measured hardware value.
+		testFPM := proto.Clone(&fpm).(*forwardingplane.ForwardingPlaneModel)
+		var nodeID, portID string
+		for _, node := range testFPM.GetTopology().GetNodes() {
+			if node.GetType().String() != "BRIDGE" {
+				continue
+			}
+			for _, port := range node.GetPorts() {
+				if port.GetCapabilities() == nil {
+					continue
+				}
+				port.GetCapabilities().SupportsTas = true
+				nodeID, portID = node.GetName(), port.GetId()
+				break
+			}
+			if portID != "" {
+				break
+			}
+		}
+		if portID == "" {
+			t.Fatal("fixture has no bridge port with capabilities")
+		}
+		original := proto.Clone(testFPM)
+		baseline, err := buildOaaSRequest(&task, testFPM)
+		if err != nil {
+			t.Fatal(err)
+		}
+		mapped, err := buildOaaSRequestWithDeviceModels(&task, testFPM,
+			map[string]*devicemodelregistry.DeviceModel{nodeID: b1SyntheticGCLModel(64)})
+		if err != nil {
+			t.Fatal(err)
+		}
+		var want, got map[string]any
+		if err := json.Unmarshal(baseline, &want); err != nil {
+			t.Fatal(err)
+		}
+		if err := json.Unmarshal(mapped, &got); err != nil {
+			t.Fatal(err)
+		}
+		// Add the expected numeric limit to all TAS-capable ports of this node.
+		// Comparing the entire request also checks that existing flags and
+		// unrelated fields remain unchanged.
+		found := false
+		for _, raw := range want["capabilities"].(map[string]any)["devices"].([]any) {
+			device := raw.(map[string]any)
+			if device["nodeId"] != nodeID {
+				continue
+			}
+			for id, rawPort := range device["ports"].(map[string]any) {
+				tas := rawPort.(map[string]any)["mechanisms"].(map[string]any)["TAS"].(map[string]any)
+				if tas["supported"] == true {
+					tas["maxGclEntries"] = float64(64)
+					if id == portID {
+						found = true
+					}
+				}
+			}
+		}
+		if !found || !reflect.DeepEqual(want, got) {
+			t.Fatal("request capability enrichment differs from expected mapping")
+		}
+		if !proto.Equal(original, testFPM) {
+			t.Fatal("original FPM modified")
+		}
+		// Absent limitations must not fabricate a numeric hardware limit.
+		empty, err := buildOaaSRequestWithDeviceModels(&task, testFPM,
+			map[string]*devicemodelregistry.DeviceModel{nodeID: {}})
+		if err != nil {
+			t.Fatal(err)
+		}
+		if !bytes.Equal(baseline, empty) {
+			t.Fatal("request unexpectedly changed with empty limitations")
+		}
+	})
 	t.Run("B6ProductionDefaultDecisions", func(t *testing.T) {
 		var request struct {
 			ForwardingPlane struct {
