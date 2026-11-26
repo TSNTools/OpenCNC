@@ -60,10 +60,16 @@ func boundaryRequestAndOriginal(t *testing.T) ([]byte, *forwardingplane.Forwardi
 	}
 	firstID := original.GetStreams()[0].GetDefinition().GetStreamId()
 	key := requestadapter.StreamKey(firstID.GetMacAddress(), firstID.GetUniqueId())
+	requestFPM, err := withDefaultPCPQueueMappings(original)
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	request, err := requestadapter.BuildOptimizerRequest(
-		&task, original, requestadapter.SchemaJSON(),
+		&task, requestFPM, requestadapter.SchemaJSON(),
 		requestadapter.RequestOptions{
-			Mechanisms: []requestadapter.MechanismSelection{{Name: "CBS"}},
+			CNCQueuePriorityOrder: true,
+			Mechanisms:            []requestadapter.MechanismSelection{{Name: "CBS"}},
 			Streams: map[string]requestadapter.StreamOptions{
 				key: {Routing: "optimize", Scheduling: "optimize", Placement: "fixed"},
 			},

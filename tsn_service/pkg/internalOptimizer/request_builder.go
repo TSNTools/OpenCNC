@@ -42,17 +42,11 @@ func buildOaaSRequestWithDeviceModels(
 		return nil, err
 	}
 
-	// Hamza (15 November 2026): For CBS, use explicit PCP-to-queue mappings
-	// from the FPM first; when absent, assume OpenCNC's default mapping.
-	// Apply defaults to the request-only copy, never the preserved FPM.
-	for _, mechanism := range options.Mechanisms {
-		if mechanism.Name == "CBS" {
-			requestFPM, err = withDefaultPCPQueueMappings(requestFPM)
-			if err != nil {
-				return nil, fmt.Errorf("CBS PCP-to-queue fallback: %w", err)
-			}
-			break
-		}
+	options.CNCQueuePriorityOrder = true
+
+	requestFPM, err = withDefaultPCPQueueMappings(requestFPM)
+	if err != nil {
+		return nil, fmt.Errorf("PCP-to-queue fallback: %w", err)
 	}
 
 	// B10 - Running CNC = integration testing only.

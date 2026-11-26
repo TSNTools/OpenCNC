@@ -51,6 +51,11 @@ func baselinePCPRequestForTest(
 	if err != nil {
 		t.Fatal(err)
 	}
+	if err := requestadapter.ApplyCNCQueuePriorities(
+		plane, requestCopy,
+	); err != nil {
+		t.Fatal(err)
+	}
 
 	request := map[string]any{
 		"schemaVersion":   "1.4",
@@ -122,13 +127,20 @@ func TestBaselineRejectsUnexpectedPCPMapping(t *testing.T) {
 }
 
 // The CBS fallback must not be accepted for unrelated mechanisms.
-func TestBaselineRejectsPCPFallbackWithoutCBS(t *testing.T) {
+// PCP fallback is independent of the optimization mechanism.
+func TestBaselineAcceptsPCPFallbackForTAS(t *testing.T) {
 	original := baselinePCPTestFPM()
+	before := proto.Clone(original)
+
 	request := baselinePCPRequestForTest(t, original, "TAS")
 
 	_, err := contractBaselineForJob(request, original)
-	if err == nil || !strings.Contains(err.Error(), "configuration differs") {
-		t.Fatalf("non-CBS fallback should be rejected: %v", err)
+	if err != nil {
+		t.Fatalf("expected PCP fallback to be accepted: %v", err)
+	}
+
+	if !proto.Equal(original, before) {
+		t.Fatal("original FPM was modified")
 	}
 }
 

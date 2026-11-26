@@ -102,36 +102,17 @@ func contractBaselineForJob(
 	// Accept only the exact deterministic PCP fallback produced by our
 	// existing request builder. Reject all other differences.
 	// Never modify the preserved original FPM.
-	hasCBS := false
-	for _, mechanism := range request.Mechanisms {
-		if mechanism.Name == "CBS" {
-			hasCBS = true
-			break
-		}
-	}
 
 	for _, field := range []string{"topology", "configuration"} {
 		requested, hasRequested := requestedPlane[field]
-		preserved, hasPreserved := savedProjection[field]
+		expected, hasExpected := savedProjection[field]
 
-		if hasRequested != hasPreserved {
-			return nil, fmt.Errorf(
-				"saved request %s differs from preserved native forwarding plane",
-				field,
-			)
-		}
-
-		if !hasRequested || jsonEquivalent(requested, preserved) {
-			continue
-		}
-
-		// Only CBS configuration may contain request-only PCP defaults.
-		// Topology differences must always be rejected.
-		if field == "configuration" && hasCBS {
+		// Reconstruct the expected request-only configuration.
+		if field == "configuration" {
 			expectedFPM, err := withDefaultPCPQueueMappings(original)
 			if err != nil {
 				return nil, fmt.Errorf(
-					"reconstruct expected CBS PCP mappings: %w", err,
+					"reconstruct expected PCP mappings: %w", err,
 				)
 			}
 
@@ -141,28 +122,38 @@ func contractBaselineForJob(
 			)
 			if err != nil {
 				return nil, fmt.Errorf(
-					"project expected CBS request configuration: %w", err,
+					"project expected request configuration: %w", err,
 				)
 			}
 
-			expectedConfigJSON, err := json.Marshal(
-				expectedPlane["configuration"],
-			)
-			if err != nil {
+			if err := requestadapter.ApplyCNCQueuePriorities(
+				expectedPlane, expectedFPM,
+			); err != nil {
 				return nil, fmt.Errorf(
-					"marshal expected CBS configuration: %w", err,
+					"reconstruct expected queue priorities: %w", err,
 				)
 			}
 
-			if jsonEquivalent(requested, expectedConfigJSON) {
-				continue
+			config, exists := expectedPlane["configuration"]
+			hasExpected = exists
+
+			if exists {
+				expected, err = json.Marshal(config)
+				if err != nil {
+					return nil, fmt.Errorf(
+						"marshal expected configuration: %w", err,
+					)
+				}
 			}
 		}
 
-		return nil, fmt.Errorf(
-			"saved request %s differs from preserved native forwarding plane",
-			field,
-		)
+		if hasRequested != hasExpected ||
+			(hasRequested && !jsonEquivalent(requested, expected)) {
+			return nil, fmt.Errorf(
+				"saved request %s differs from preserved native forwarding plane",
+				field,
+			)
+		}
 	}
 
 	// Compare stable identities, not entire stream documents: the original
