@@ -18,8 +18,9 @@ import (
 // NOTE: The original ForwardingPlaneModel must be preserved by the caller
 // before submitting the request.
 // This function performs local consistency checks.
-// Full JSON Schema validation is handled by the OaaS Manager.
-// Network feasibility is checked separately.
+// CNC performs shared JSON Schema and device validation.
+// The OaaS Manager performs its own semantic validation.
+// // Network feasibility is checked separately.
 
 // assembles entire request contract JSON
 // optimization_task.go ────┐
@@ -143,7 +144,7 @@ func BuildOptimizerRequest(
 		}
 	}
 
-	if err := tsncontracts.ValidateOptimizerRequestJSON(result); err != nil {
+	if err := tsncontracts.ValidateCNCRequestJSON(result); err != nil {
 		return nil, fmt.Errorf("Contract v1.4 validation failed: %w", err)
 	}
 	return result, nil
