@@ -498,7 +498,7 @@ func runLiveManagerCBSFullWorkflow(t *testing.T, realEtcd bool) {
 		t.Fatalf("decode Manager envelope: %v", err)
 	}
 	if envelope.Job.JobID != jobID || envelope.Job.Status != "COMPLETED" ||
-		envelope.Selection.SelectedOptimizerID != "CBS" ||
+		envelope.Selection.SelectedOptimizerID != "zhao-cbs" ||
 		envelope.OptimizerResult.SchemaVersion != "1.3" ||
 		envelope.OptimizerResult.Status != "success" {
 		t.Fatalf("unexpected Manager job identity/selection/result: %+v", envelope)
@@ -576,4 +576,102 @@ func runLiveManagerCBSFullWorkflow(t *testing.T, realEtcd bool) {
 	} else {
 		t.Log("NOT TESTED: actual CNC trigger, real etcd persistence, physical deployment, independent feasibility/hardware limits")
 	}
+}
+
+func TestLiveManagerTASFullWorkflowReturnsUpdatedFPM(t *testing.T) {
+	if os.Getenv("OAAS_LIVE_TAS_FULL_FLOW") != "1" {
+		t.Skip("opt-in live TAS test")
+	}
+
+	task := integrationFixtureTask(t)
+	_, original := originalRequestAndSnapshotForResponseTest(t)
+
+	t.Setenv("OAAS_MECHANISM", "TAS")
+	t.Setenv("OAAS_B10_OPTIMIZE_ROUTING", "false")
+	t.Setenv("OAAS_CBS_MAX_BE_FRAME_SIZE_BYTES", "")
+	t.Setenv("OAAS_MANAGER_JOBS_URL",
+		"http://127.0.0.1:8000/api/v1/jobs")
+
+	// Synthetic TAS-capable test topology.
+	for _, node := range original.GetTopology().GetNodes() {
+		for _, port := range node.GetPorts() {
+			if caps := port.GetCapabilities(); caps != nil {
+				caps.SupportsTas = true
+				caps.SupportsTimeSync = true
+				caps.MaximumTransmissionUnit = 1500
+			}
+		}
+	}
+
+	// Configure the existing PCP 3 queues for TAS.
+	for _, node := range original.Configuration.NodeConfigs {
+		for _, port := range node.PortConfigs {
+			port.QueueConfigs = []*topology_config.QueueConfig{{
+				QueueId: 3,
+				Scheduling: topology_config.
+					SchedulingModel_TIME_AWARE_SCHEDULING.Enum(),
+			}}
+		}
+	}
+
+	before := proto.Clone(original)
+
+	useFakeSnapshotStore(t)
+
+	ctx, cancel := context.WithTimeout(
+		context.Background(), 90*time.Second,
+	)
+	defer cancel()
+
+	updated, err := executeOptimizationJob(
+		ctx, task, original, nil,
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if updated == nil || proto.Equal(updated, original) {
+		t.Fatal("expected updated forwarding-plane model")
+	}
+
+	if !proto.Equal(original, before) {
+		t.Fatal("original model was modified")
+	}
+
+	gclCount := 0
+
+	for _, node := range updated.GetConfiguration().GetNodeConfigs() {
+		for _, port := range node.GetPortConfigs() {
+			if gcl := port.GetGcl(); gcl != nil {
+				gclCount++
+				t.Logf("GCL: %s/%s, cycle=%d, entries=%d",
+					node.GetNodeId(),
+					port.GetPortId(),
+					gcl.GetCycleTime(),
+					len(gcl.GetEntries()),
+				)
+			}
+		}
+	}
+
+	if gclCount != 3 {
+		t.Fatalf("expected 3 GCL schedules, got %d", gclCount)
+	}
+
+	offsetCount := 0
+
+	for _, stream := range updated.GetStreams() {
+		if cfg := stream.GetConfiguration(); cfg != nil &&
+			cfg.TimeAwareOffsetNs != nil {
+			offsetCount++
+			t.Logf("Stream offset: %d ns",
+				cfg.GetTimeAwareOffsetNs())
+		}
+	}
+
+	if offsetCount == 0 {
+		t.Fatal("no stream offsets applied")
+	}
+
+	t.Log("PASS: live TAS workflow returned updated FPM")
 }
